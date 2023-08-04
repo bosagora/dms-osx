@@ -63,7 +63,7 @@ function getTestAccounts() {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
-const config: HardhatUserConfig = {
+const config = {
     solidity: {
         compilers: [
             {
