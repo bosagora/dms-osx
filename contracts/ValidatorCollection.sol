@@ -5,11 +5,18 @@ pragma solidity ^0.8.0;
 ///
 contract ValidatorCollection {
 
+    enum Status {
+        INVALID,
+        ACTIVE,
+        STOP,
+        EXIT
+    }
+
     struct ValidatorData {
         address account;
         uint256 startTimestamp;
         uint256 balance;
-        uint256 status;
+        Status status;
     }
 
     ValidatorData[] public items;
