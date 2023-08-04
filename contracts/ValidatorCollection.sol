@@ -13,14 +13,10 @@ contract ValidatorCollection {
     }
 
     struct ValidatorData {
-        /// 검증자의 지갑주소
-        address validator;
-        /// 검증자로서 역할을 수행할 수 있는 시작 시간
-        uint256 start;
-        /// 검증자의 예치금
-        uint256 balance;
-        /// 검증자의 상태
-        Status status;
+        address validator; // 검증자의 지갑주소
+        uint256 start; // 검증자로서 역할을 수행할 수 있는 시작 시간
+        uint256 balance; // 검증자의 예치금
+        Status status; // 검증자의 상태
     }
 
     /// @notice 검증자 데이타가 저장되는 배열
