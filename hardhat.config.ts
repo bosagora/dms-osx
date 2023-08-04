@@ -73,15 +73,7 @@ const config: HardhatUserConfig = {
                         enabled: true,
                         runs: 2000,
                     },
-                    outputSelection: {
-                        "*": {
-                            "*": ["storageLayout"],
-                        },
-                    },
                 },
-            },
-            {
-                version: "0.8.16",
             },
         ],
     },
