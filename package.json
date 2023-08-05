@@ -16,7 +16,9 @@
         "lint": "node_modules/.bin/tslint --config tslint.json \"{src,test}/**/*.ts\"",
         "lint-fix": "node_modules/.bin/tslint --fix --config tslint.json \"{src,test}/**/*.ts\"",
         "prettier": "node_modules/.bin/prettier --write --config .prettierrc 'contracts/**/*.{json,sol,ts,js,md}' 'src/**/*.{json,sol,ts,js,md}' 'test/**/*.{json,sol,ts,js,md}'",
-        "docgen": "hardhat docgen"
+        "docgen": "hardhat docgen",
+        "debug:Ledger": "node_modules/.bin/hardhat test test/Ledger.test.ts",
+        "debug:Validator": "node_modules/.bin/hardhat test test/ValidatorCollection.test.ts"
     },
     "repository": {
         "type": "git",
