@@ -137,4 +137,22 @@ describe("Test for LinkCollection", () => {
         await contract.connect(validator1).makeActiveItems();
         assert.deepStrictEqual((await contract.getActiveItemsLength()).toString(), "2");
     });
+
+    it("Voluntary Exit 1", async () => {
+        const balanceBefore = await tokenContract.balanceOf(contract.address);
+        await expect(contract.connect(validator1).exit()).to.emit(contract, "Exited").withArgs(validator1.address);
+        let item = await contract.validators(validator1.address);
+        assert.deepStrictEqual(item.validator, validator1.address);
+        assert.deepStrictEqual(item.status, 3);
+        assert.deepStrictEqual(item.balance.toString(), "0");
+        const balanceAfter = await tokenContract.balanceOf(contract.address);
+        assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
+
+        await contract.connect(validator2).makeActiveItems();
+        assert.deepStrictEqual((await contract.getActiveItemsLength()).toString(), "1");
+    });
+
+    it("Voluntary Exit 2", async () => {
+        await expect(contract.connect(validator2).exit()).to.revertedWith("Last validator'");
+    });
 });
