@@ -67,7 +67,9 @@ describe("Test for LinkCollection", () => {
     it("Deposit 25,000", async () => {
         for (const elem of validators) {
             await tokenContract.connect(elem).approve(contract.address, halfAmount.value);
-            await contract.connect(elem).deposit(halfAmount.value);
+            await expect(contract.connect(elem).deposit(halfAmount.value))
+                .to.emit(contract, "Deposited")
+                .withArgs(elem.address, halfAmount.value, halfAmount.value);
             let item = await contract.validators(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 2);
@@ -78,7 +80,9 @@ describe("Test for LinkCollection", () => {
     it("Deposit 50,000", async () => {
         for (const elem of validators) {
             await tokenContract.connect(elem).approve(contract.address, halfAmount.value);
-            await contract.connect(elem).deposit(halfAmount.value);
+            await expect(contract.connect(elem).deposit(halfAmount.value))
+                .to.emit(contract, "Deposited")
+                .withArgs(elem.address, halfAmount.value, amount.value);
             let item = await contract.validators(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 1);

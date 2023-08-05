@@ -32,6 +32,8 @@ contract ValidatorCollection {
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event Added(address validator, uint256 start, uint256 balance, Status status);
+    /// @notice 자금이 입급될 때 발생되는 이벤트
+    event Deposited(address validator, uint256 amount, uint256 balance);
 
     /// @notice 생성자
     /// @param _validators 초기에 설정될 검증자이다. 예치금이 예치된 후 그 즉시 활성화 된다.
@@ -67,5 +69,7 @@ contract ValidatorCollection {
         validators[msg.sender].balance += _amount;
 
         if (validators[msg.sender].balance >= MINIMUM_DEPOSIT_AMOUNT) validators[msg.sender].status = Status.ACTIVE;
+
+        emit Deposited(msg.sender, _amount, validators[msg.sender].balance);
     }
 }
