@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "link-email-wallet/contracts/LinkCollection.sol";
 import "./ValidatorCollection.sol";
 
 /// @notice 마일리지와 토큰의 원장
@@ -25,24 +26,30 @@ contract Ledger {
 
     address public tokenAddress;
     address public validatorAddress;
+    address public linkCollectionAddress;
 
     IERC20 private token;
     ValidatorCollection private validatorCollection;
+    LinkCollection private linkCollection;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event SavedPurchase(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
     /// @notice 마일리지가 지급될 때 발생되는 이벤트
     event ProvidedMileage(bytes32 email, uint256 amount);
+    /// @notice 토큰이 지급될 때 발생되는 이벤트
+    event ProvidedToken(bytes32 email, uint256 amount);
 
     /// @notice 생성자
     /// @param _tokenAddress 토큰의 주소
     /// @param _validatorAddress 검증자컬랙션의 주소
-    constructor(address _tokenAddress, address _validatorAddress) {
+    constructor(address _tokenAddress, address _validatorAddress, address _linkCollectionAddress) {
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
+        linkCollectionAddress = _linkCollectionAddress;
 
         token = IERC20(_tokenAddress);
         validatorCollection = ValidatorCollection(_validatorAddress);
+        linkCollection = LinkCollection(_linkCollectionAddress);
     }
 
     modifier onlyValidator(address _account) {
@@ -81,8 +88,13 @@ contract Ledger {
         purchaseIdList.push(_purchaseId);
         purchaseMap[_purchaseId] = data;
 
-        uint256 mileage = _amount / 100;
-        provideMileage(_userEmail, mileage);
+        if (linkCollection.toAddress(_userEmail) == address(0x00)) {
+            uint256 mileage = _amount / 100;
+            provideMileage(_userEmail, mileage);
+        } else {
+            uint256 amount = _amount / 100;
+            provideToken(_userEmail, amount);
+        }
 
         emit SavedPurchase(_purchaseId, _timestamp, _amount, _userEmail, _franchiseeId);
     }
@@ -95,5 +107,16 @@ contract Ledger {
         mileageLedger[_email] += _amount;
 
         emit ProvidedMileage(_email, _amount);
+    }
+
+    /// @notice 토큰을 지급합니다.
+    /// @dev 구매데아타를 확인한 후 호출됩니다.
+    /// @param _email 이메일 해시
+    /// @param _amount 지급할 토큰
+    function provideToken(bytes32 _email, uint256 _amount) internal {
+        // TODO 예치기능이 완료시 재단의 잔고를 빼주는 기능 추가
+        tokenLedger[_email] += _amount;
+
+        emit ProvidedToken(_email, _amount);
     }
 }
