@@ -41,6 +41,8 @@ contract ValidatorCollection {
     event RequestedRegistration(address requester);
     /// @notice 검증자의 강제 탈퇴가 요청 되었을 때 발생되는 이벤트
     event RequestedExit(address requester, address validator);
+    /// @notice 검증자의 자발적 탈퇴가 완료되었을 때 발생되는 이벤트
+    event Exited(address validator);
 
     /// @notice 생성자
     /// @param _validators 초기에 설정될 검증자이다. 예치금이 예치된 후 그 즉시 활성화 된다.
@@ -140,5 +142,25 @@ contract ValidatorCollection {
                 activeItems.push(items[i]);
             }
         }
+    }
+
+    /// @notice 자발적으로 탈퇴하기 위해 사용되는 함수입니다.
+    function exit() public {
+        ValidatorData memory item = validators[msg.sender];
+        require(item.validator == msg.sender, "Not validator");
+        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "Invalid validator");
+
+        makeActiveItems();
+        require(activeItems.length > 1, "Last validator");
+
+        validators[msg.sender].status = Status.EXIT;
+
+        if (validators[msg.sender].balance > 0) {
+            IERC20 token = IERC20(tokenAddress);
+            token.transfer(msg.sender, validators[msg.sender].balance);
+            validators[msg.sender].balance = 0;
+        }
+
+        emit Exited(msg.sender);
     }
 }
