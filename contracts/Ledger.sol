@@ -39,9 +39,18 @@ contract Ledger {
     /// @notice 마일리지가 지급될 때 발생되는 이벤트
     event ProvidedMileage(bytes32 email, uint256 amount);
     /// @notice 토큰이 지급될 때 발생되는 이벤트
-    event ProvidedToken(bytes32 email, uint256 amount);
+    event ProvidedToken(bytes32 email, uint256 amount, uint256 amountToken);
     /// @notice 마일리지로 지불을 완료했을 때 발생하는 이벤트
     event PaidMileage(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
+    /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
+    event PaidToken(
+        string purchaseId,
+        uint256 timestamp,
+        uint256 amount,
+        uint256 amountToken,
+        bytes32 userEmail,
+        string franchiseeId
+    );
 
     /// @notice 생성자
     /// @param _tokenAddress 토큰의 주소
@@ -119,12 +128,20 @@ contract Ledger {
     /// @param _amount 지급할 토큰
     function provideToken(bytes32 _email, uint256 _amount) internal {
         // TODO 예치기능이 완료시 재단의 잔고를 빼주는 기능 추가
-        tokenLedger[_email] += _amount;
+        // TODO 토큰가격에 의해 지급량을 결정하도록 수정
+        uint256 amountToken = _amount;
+        tokenLedger[_email] += amountToken;
 
-        emit ProvidedToken(_email, _amount);
+        emit ProvidedToken(_email, _amount, amountToken);
     }
 
-    /// @notice
+    /// @notice 마일리지를 구매에 사용하는 함수
+    /// @param _purchaseId 구매 아이디
+    /// @param _amount 구매 금액
+    /// @param _userEmail 구매한 사용자의 이메일 해시
+    /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _signer 구매자의 주소
+    /// @param _signature 서명
     function payMileage(
         string memory _purchaseId,
         uint256 _amount,
@@ -147,5 +164,40 @@ contract Ledger {
         nonce[_signer]++;
 
         emit PaidMileage(_purchaseId, block.timestamp, _amount, _userEmail, _franchiseeId);
+    }
+
+    /// @notice 토큰을 구매에 사용하는 함수
+    /// @param _purchaseId 구매 아이디
+    /// @param _amount 구매 금액
+    /// @param _userEmail 구매한 사용자의 이메일 해시
+    /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _signer 구매자의 주소
+    /// @param _signature 서명
+    function payToken(
+        string memory _purchaseId,
+        uint256 _amount,
+        bytes32 _userEmail,
+        string memory _franchiseeId,
+        address _signer,
+        bytes calldata _signature
+    ) public {
+        bytes32 dataHash = keccak256(
+            abi.encode(_purchaseId, _amount, _userEmail, _franchiseeId, _signer, nonce[_signer])
+        );
+        require(ECDSA.recover(dataHash, _signature) == _signer, "Invalid signature");
+        address userAddress = linkCollection.toAddress(_userEmail);
+        require(userAddress != address(0x00), "Unregistered email-address");
+        require(userAddress == _signer, "Invalid address");
+
+        // TODO 예치기능이 완료시 재단의 잔고를 더해 주는 기능 추가
+        // TODO 토큰가격에 의해 사용량을 결정하도록 수정
+        uint256 amountToken = _amount;
+        require(tokenLedger[_userEmail] >= amountToken, "Insufficient balance");
+
+        tokenLedger[_userEmail] -= amountToken;
+
+        nonce[_signer]++;
+
+        emit PaidToken(_purchaseId, block.timestamp, _amount, amountToken, _userEmail, _franchiseeId);
     }
 }
