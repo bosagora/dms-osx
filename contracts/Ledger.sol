@@ -12,6 +12,8 @@ contract Ledger {
     mapping(bytes32 => uint256) public mileageLedger;
     /// @notice 토큰의 원장
     mapping(bytes32 => uint256) public tokenLedger;
+    /// @notice 서명검증에 사용될 Nonce
+    mapping(address => uint256) public nonce;
 
     struct PurchaseData {
         string purchaseId;
