@@ -35,7 +35,9 @@ contract ValidatorCollection {
     /// @notice 자금이 입급될 때 발생되는 이벤트
     event Deposited(address validator, uint256 amount, uint256 balance);
     /// @notice 검증자의 등록요청이 되었을 때 발생되는 이벤트
-    event RequestedRegistration(address validator);
+    event RequestedRegistration(address requester);
+    /// @notice 검증자의 강제 탈퇴가 요청 되었을 때 발생되는 이벤트
+    event RequestedExit(address requester, address validator);
 
     /// @notice 생성자
     /// @param _validators 초기에 설정될 검증자이다. 예치금이 예치된 후 그 즉시 활성화 된다.
@@ -94,5 +96,23 @@ contract ValidatorCollection {
         validators[msg.sender] = item;
 
         emit RequestedRegistration(msg.sender);
+    }
+
+    /// @notice 검증자의 강제탈퇴를 신청합니다.
+    function requestExit(address validator) public {
+        ValidatorData memory item = validators[msg.sender];
+        require(item.validator == msg.sender, "Not validator");
+        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "Invalid validator");
+
+        require(validators[validator].status != Status.INVALID, "Not validator");
+        validators[validator].status = Status.EXIT;
+
+        if (validators[validator].balance > 0) {
+            IERC20 token = IERC20(tokenAddress);
+            token.transfer(validator, validators[validator].balance);
+            validators[validator].balance = 0;
+        }
+
+        emit RequestedExit(msg.sender, validator);
     }
 }

@@ -9,6 +9,7 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
 import * as hre from "hardhat";
+import { BigNumber } from "ethers";
 
 chai.use(solidity);
 
@@ -103,7 +104,7 @@ describe("Test for LinkCollection", () => {
         );
     });
 
-    it("Request participation", async () => {
+    it("Request registration", async () => {
         await tokenContract.connect(deployer).transfer(user1.address, amount.value);
         await tokenContract.connect(user1).approve(contract.address, amount.value);
         await expect(contract.connect(user1).requestRegistration())
@@ -113,5 +114,18 @@ describe("Test for LinkCollection", () => {
         assert.deepStrictEqual(item.validator, user1.address);
         assert.deepStrictEqual(item.status, 1);
         assert.deepStrictEqual(item.balance, amount.value);
+    });
+
+    it("Request exit", async () => {
+        const balanceBefore = await tokenContract.balanceOf(contract.address);
+        await expect(contract.connect(validator1).requestExit(user1.address))
+            .to.emit(contract, "RequestedExit")
+            .withArgs(validator1.address, user1.address);
+        let item = await contract.validators(user1.address);
+        assert.deepStrictEqual(item.validator, user1.address);
+        assert.deepStrictEqual(item.status, 3);
+        assert.deepStrictEqual(item.balance.toString(), "0");
+        const balanceAfter = await tokenContract.balanceOf(contract.address);
+        assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
     });
 });
