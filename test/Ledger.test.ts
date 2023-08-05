@@ -196,7 +196,10 @@ describe("Test for Ledger", () => {
             .to.emit(ledgerContract, "SavedPurchase")
             .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
             .emit(ledgerContract, "ProvidedToken")
-            .withArgs(emailHash, amt);
+            .withNamedArgs({
+                email: emailHash,
+                amount: amt,
+            });
         expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance);
         expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance.add(amt));
     });
@@ -392,6 +395,173 @@ describe("Test for Ledger", () => {
                 )
         )
             .to.emit(ledgerContract, "PaidMileage")
+            .withNamedArgs({
+                purchaseId: purchase.purchaseId,
+                amount: purchase.amount,
+                userEmail: emailHash,
+                franchiseeId: purchase.franchiseeId,
+            });
+    });
+
+    it("Pay token - Invalid signature", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 100,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payToken(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user2.address,
+                    signature
+                )
+        ).to.be.revertedWith("Invalid signature");
+    });
+
+    it("Pay token - Unregistered email-address", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 100,
+            userEmail: "b@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payToken(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user1.address,
+                    signature
+                )
+        ).to.be.revertedWith("Unregistered email-address");
+    });
+
+    it("Pay token - Invalid address", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 100,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user2.address);
+        const signature = await ContractUtils.signPayment(
+            user2,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payToken(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user2.address,
+                    signature
+                )
+        ).to.be.revertedWith("Invalid address");
+    });
+
+    it("Pay token - Insufficient balance", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 10000,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payToken(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user1.address,
+                    signature
+                )
+        ).to.be.revertedWith("Insufficient balance");
+    });
+
+    it("Pay token - Success", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 1,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payToken(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user1.address,
+                    signature
+                )
+        )
+            .to.emit(ledgerContract, "PaidToken")
             .withNamedArgs({
                 purchaseId: purchase.purchaseId,
                 amount: purchase.amount,
