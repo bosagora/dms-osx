@@ -14,7 +14,7 @@ chai.use(solidity);
 
 describe("Test for LinkCollection", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3] = provider.getWallets();
+    const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     let contract: ValidatorCollection;
@@ -88,5 +88,30 @@ describe("Test for LinkCollection", () => {
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
         }
+    });
+
+    it("Request participation - already validator", async () => {
+        await tokenContract.connect(deployer).transfer(validator1.address, amount.value);
+        await tokenContract.connect(validator1).approve(contract.address, amount.value);
+        await expect(contract.connect(validator1).requestRegistration()).to.be.revertedWith("Already validator");
+    });
+
+    it("Request participation - not allowed deposit", async () => {
+        await tokenContract.connect(user1).approve(contract.address, amount.value);
+        await expect(contract.connect(user1).requestRegistration()).to.be.revertedWith(
+            "ERC20: transfer amount exceeds balance"
+        );
+    });
+
+    it("Request participation", async () => {
+        await tokenContract.connect(deployer).transfer(user1.address, amount.value);
+        await tokenContract.connect(user1).approve(contract.address, amount.value);
+        await expect(contract.connect(user1).requestRegistration())
+            .to.emit(contract, "RequestedRegistration")
+            .withArgs(user1.address);
+        let item = await contract.validators(user1.address);
+        assert.deepStrictEqual(item.validator, user1.address);
+        assert.deepStrictEqual(item.status, 1);
+        assert.deepStrictEqual(item.balance, amount.value);
     });
 });

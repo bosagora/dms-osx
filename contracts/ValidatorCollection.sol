@@ -34,6 +34,8 @@ contract ValidatorCollection {
     event Added(address validator, uint256 start, uint256 balance, Status status);
     /// @notice 자금이 입급될 때 발생되는 이벤트
     event Deposited(address validator, uint256 amount, uint256 balance);
+    /// @notice 검증자의 등록요청이 되었을 때 발생되는 이벤트
+    event RequestedRegistration(address validator);
 
     /// @notice 생성자
     /// @param _validators 초기에 설정될 검증자이다. 예치금이 예치된 후 그 즉시 활성화 된다.
@@ -71,5 +73,26 @@ contract ValidatorCollection {
         if (validators[msg.sender].balance >= MINIMUM_DEPOSIT_AMOUNT) validators[msg.sender].status = Status.ACTIVE;
 
         emit Deposited(msg.sender, _amount, validators[msg.sender].balance);
+    }
+
+    /// @notice 신규검증자의 등록을 신청합니다.
+    function requestRegistration() public {
+        require(validators[msg.sender].status == Status.INVALID, "Already validator");
+
+        IERC20 token = IERC20(tokenAddress);
+        require(MINIMUM_DEPOSIT_AMOUNT <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
+        token.transferFrom(msg.sender, address(this), MINIMUM_DEPOSIT_AMOUNT);
+
+        ValidatorData memory item = ValidatorData({
+            validator: msg.sender,
+            start: block.timestamp + 86500 * 7,
+            balance: MINIMUM_DEPOSIT_AMOUNT,
+            status: Status.ACTIVE
+        });
+
+        items.push(msg.sender);
+        validators[msg.sender] = item;
+
+        emit RequestedRegistration(msg.sender);
     }
 }
