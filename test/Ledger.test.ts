@@ -1,4 +1,4 @@
-import { Ledger, Token, ValidatorCollection } from "../typechain-types";
+import { Ledger, LinkCollection, Token, ValidatorCollection } from "../typechain-types";
 import { Amount } from "./helper/Amount";
 import { ContractUtils } from "./helper/ContractUtils";
 
@@ -61,12 +61,13 @@ const purchaseData: PurchaseData[] = [
 
 describe("Test for Ledger", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3] = provider.getWallets();
+    const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
+    let linkCollectionContract: LinkCollection;
 
     const amount = Amount.make(50000, 18);
 
@@ -99,10 +100,17 @@ describe("Test for Ledger", () => {
         }
         await validatorContract.connect(validator1).makeActiveItems();
 
+        const linkCollectionFactory = await hre.ethers.getContractFactory("LinkCollection");
+        linkCollectionContract = (await linkCollectionFactory
+            .connect(deployer)
+            .deploy(validators.map((m) => m.address))) as LinkCollection;
+        await linkCollectionContract.deployed();
+        await linkCollectionContract.deployTransaction.wait();
+
         const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
         ledgerContract = (await ledgerFactory
             .connect(deployer)
-            .deploy(tokenContract.address, validatorContract.address)) as Ledger;
+            .deploy(tokenContract.address, validatorContract.address, linkCollectionContract.address)) as Ledger;
         await ledgerContract.deployed();
         await ledgerContract.deployTransaction.wait();
     });
@@ -150,5 +158,78 @@ describe("Test for Ledger", () => {
         }
         for (let key of expected.keys())
             expect(await ledgerContract.mileageLedger(key)).to.deep.equal(expected.get(key));
+    });
+
+    it("Link email-address", async () => {
+        const nonce = await linkCollectionContract.nonce(user1.address);
+        const email = "a@example.com";
+        const hash = ContractUtils.sha256String(email);
+        const signature = await ContractUtils.sign(user1, hash, nonce);
+        await expect(linkCollectionContract.connect(validators[0]).add(hash, user1.address, signature))
+            .to.emit(linkCollectionContract, "Added")
+            .withArgs(hash, user1.address);
+    });
+
+    it("Save Purchase Data - email and address are registered", async () => {
+        const purchase = {
+            purchaseId: "P000006",
+            timestamp: 1672844400,
+            amount: 10000,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+        const amt = Math.floor(purchase.amount / 100);
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
+        const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
+        await expect(
+            ledgerContract
+                .connect(validator1)
+                .savePurchase(
+                    purchase.purchaseId,
+                    purchase.timestamp,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId
+                )
+        )
+            .to.emit(ledgerContract, "SavedPurchase")
+            .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
+            .emit(ledgerContract, "ProvidedToken")
+            .withArgs(emailHash, amt);
+        expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance);
+        expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance.add(amt));
+    });
+
+    it("Save Purchase Data - email and address are not registered", async () => {
+        const purchase = {
+            purchaseId: "P000007",
+            timestamp: 1672844400,
+            amount: 10000,
+            userEmail: "b@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const amt = Math.floor(purchase.amount / 100);
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
+        const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
+        await expect(
+            ledgerContract
+                .connect(validator1)
+                .savePurchase(
+                    purchase.purchaseId,
+                    purchase.timestamp,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId
+                )
+        )
+            .to.emit(ledgerContract, "SavedPurchase")
+            .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
+            .emit(ledgerContract, "ProvidedMileage")
+            .withArgs(emailHash, amt);
+        expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
+        expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance);
     });
 });
