@@ -9,11 +9,10 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
 import * as hre from "hardhat";
-import { BigNumber } from "ethers";
 
 chai.use(solidity);
 
-describe("Test for LinkCollection", () => {
+describe("Test for ValidatorCollection", () => {
     const provider = hre.waffle.provider;
     const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
 
@@ -153,6 +152,6 @@ describe("Test for LinkCollection", () => {
     });
 
     it("Voluntary Exit 2", async () => {
-        await expect(contract.connect(validator2).exit()).to.revertedWith("Last validator'");
+        await expect(contract.connect(validator2).exit()).to.revertedWith("Last validator");
     });
 });
