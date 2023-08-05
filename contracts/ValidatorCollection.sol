@@ -28,6 +28,9 @@ contract ValidatorCollection {
     /// @notice 검증자 데이타가 저장되는 배열
     address[] public items;
 
+    /// @notice 유효한 검증자 데이타가 저장되는 배열
+    address[] public activeItems;
+
     mapping(address => ValidatorData) public validators;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
@@ -114,5 +117,28 @@ contract ValidatorCollection {
         }
 
         emit RequestedExit(msg.sender, validator);
+    }
+
+    function makeActiveItems() public {
+        ValidatorData memory item = validators[msg.sender];
+        require(item.validator == msg.sender, "Not validator");
+        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "Invalid validator");
+
+        _makeActiveItems();
+    }
+
+    function getActiveItemsLength() public view returns (uint256 length) {
+        return activeItems.length;
+    }
+
+    function _makeActiveItems() internal {
+        while (activeItems.length > 0) activeItems.pop();
+        for (uint256 i = 0; i < items.length; ++i) {
+            ValidatorData memory item = validators[items[i]];
+
+            if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
+                activeItems.push(items[i]);
+            }
+        }
     }
 }
