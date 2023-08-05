@@ -61,7 +61,7 @@ const purchaseData: PurchaseData[] = [
 
 describe("Test for Ledger", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
+    const [deployer, validator1, validator2, validator3, relay, user1, user2] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     let validatorContract: ValidatorCollection;
@@ -231,5 +231,172 @@ describe("Test for Ledger", () => {
             .withArgs(emailHash, amt);
         expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
         expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance);
+    });
+
+    it("Pay mileage - Invalid signature", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 100,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payMileage(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user2.address,
+                    signature
+                )
+        ).to.be.revertedWith("Invalid signature");
+    });
+
+    it("Pay mileage - Unregistered email-address", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 100,
+            userEmail: "b@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payMileage(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user1.address,
+                    signature
+                )
+        ).to.be.revertedWith("Unregistered email-address");
+    });
+
+    it("Pay mileage - Invalid address", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 100,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user2.address);
+        const signature = await ContractUtils.signPayment(
+            user2,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payMileage(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user2.address,
+                    signature
+                )
+        ).to.be.revertedWith("Invalid address");
+    });
+
+    it("Pay mileage - Insufficient balance", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 10000,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payMileage(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user1.address,
+                    signature
+                )
+        ).to.be.revertedWith("Insufficient balance");
+    });
+
+    it("Pay mileage - Success", async () => {
+        const purchase = {
+            purchaseId: "P000008",
+            amount: 100,
+            userEmail: "a@example.com",
+            franchiseeId: "F000600",
+        };
+
+        const emailHash = ContractUtils.sha256String(purchase.userEmail);
+        const nonce = await ledgerContract.nonce(user1.address);
+        const signature = await ContractUtils.signPayment(
+            user1,
+            purchase.purchaseId,
+            purchase.amount,
+            emailHash,
+            purchase.franchiseeId,
+            nonce
+        );
+        await expect(
+            ledgerContract
+                .connect(relay)
+                .payMileage(
+                    purchase.purchaseId,
+                    purchase.amount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    user1.address,
+                    signature
+                )
+        )
+            .to.emit(ledgerContract, "PaidMileage")
+            .withNamedArgs({
+                purchaseId: purchase.purchaseId,
+                amount: purchase.amount,
+                userEmail: emailHash,
+                franchiseeId: purchase.franchiseeId,
+            });
     });
 });

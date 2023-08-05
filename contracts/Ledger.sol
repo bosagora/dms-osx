@@ -40,6 +40,8 @@ contract Ledger {
     event ProvidedMileage(bytes32 email, uint256 amount);
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(bytes32 email, uint256 amount);
+    /// @notice 마일리지로 지불을 완료했을 때 발생하는 이벤트
+    event PaidMileage(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
 
     /// @notice 생성자
     /// @param _tokenAddress 토큰의 주소
@@ -120,5 +122,30 @@ contract Ledger {
         tokenLedger[_email] += _amount;
 
         emit ProvidedToken(_email, _amount);
+    }
+
+    /// @notice
+    function payMileage(
+        string memory _purchaseId,
+        uint256 _amount,
+        bytes32 _userEmail,
+        string memory _franchiseeId,
+        address _signer,
+        bytes calldata _signature
+    ) public {
+        bytes32 dataHash = keccak256(
+            abi.encode(_purchaseId, _amount, _userEmail, _franchiseeId, _signer, nonce[_signer])
+        );
+        require(ECDSA.recover(dataHash, _signature) == _signer, "Invalid signature");
+        address userAddress = linkCollection.toAddress(_userEmail);
+        require(userAddress != address(0x00), "Unregistered email-address");
+        require(userAddress == _signer, "Invalid address");
+        require(mileageLedger[_userEmail] >= _amount, "Insufficient balance");
+
+        mileageLedger[_userEmail] -= _amount;
+
+        nonce[_signer]++;
+
+        emit PaidMileage(_purchaseId, block.timestamp, _amount, _userEmail, _franchiseeId);
     }
 }
