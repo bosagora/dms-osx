@@ -55,6 +55,10 @@ contract Ledger {
     event Deposited(address depositor, uint256 amount, uint256 balance);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
     event Withdrawn(address withdrawer, uint256 amount, uint256 balance);
+    /// @notice 마일리지를 토큰으로 교환했을 때 발생하는 이벤트
+    event ExchangedMileageToToken(bytes32 email, uint256 amountMileage, uint256 amountToken);
+    /// @notice 토큰을 마일리지로 교환했을 때 발생하는 이벤트
+    event ExchangedTokenToMileage(bytes32 email, uint256 amountToken, uint256 amountMileage);
 
     /// @notice 생성자
     /// @param _tokenAddress 토큰의 주소
@@ -139,6 +143,7 @@ contract Ledger {
     }
 
     /// @notice 마일리지를 구매에 사용하는 함수
+    /// @dev 중계서버를 통해서 호출됩니다.
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
     /// @param _userEmail 구매한 사용자의 이메일 해시
@@ -170,6 +175,7 @@ contract Ledger {
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
+    /// @dev 중계서버를 통해서 호출됩니다.
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
     /// @param _userEmail 구매한 사용자의 이메일 해시
@@ -241,5 +247,67 @@ contract Ledger {
         tokenLedger[userEmail] -= _amount;
 
         emit Withdrawn(msg.sender, _amount, tokenLedger[userEmail]);
+    }
+
+    /// @notice 마일리지를 토큰으로 교환합니다
+    /// @dev 중계서버를 통해서 호출됩니다.
+    /// @param _userEmail 사용자의 이메일 해시
+    /// @param _amountMileage 교환할 마일리지의 량
+    /// @param _signer 사용자의 주소
+    /// @param _signature 서명
+    function exchangeMileageToToken(
+        bytes32 _userEmail,
+        uint256 _amountMileage,
+        address _signer,
+        bytes calldata _signature
+    ) public {
+        bytes32 dataHash = keccak256(abi.encode(_userEmail, _amountMileage, _signer, nonce[_signer]));
+        require(ECDSA.recover(dataHash, _signature) == _signer, "Invalid signature");
+        address userAddress = linkCollection.toAddress(_userEmail);
+        require(userAddress != address(0x00), "Unregistered email-address");
+        require(userAddress == _signer, "Invalid address");
+
+        require(mileageLedger[_userEmail] >= _amountMileage, "Insufficient balance");
+
+        mileageLedger[_userEmail] -= _amountMileage;
+
+        uint256 amountToken = convertMileageToToken(_amountMileage);
+        tokenLedger[_userEmail] += amountToken;
+        // TODO 예치기능이 완료시 재단의 잔고를 빼 주는 기능 추가
+
+        nonce[_signer]++;
+
+        emit ExchangedMileageToToken(_userEmail, _amountMileage, amountToken);
+    }
+
+    /// @notice 토큰을 마일리지로 교환합니다
+    /// @dev 중계서버를 통해서 호출됩니다.
+    /// @param _userEmail 사용자의 이메일 해시
+    /// @param _amountToken 교환할 토큰의 량
+    /// @param _signer 사용자의 주소
+    /// @param _signature 서명
+    function exchangeTokenToMileage(
+        bytes32 _userEmail,
+        uint256 _amountToken,
+        address _signer,
+        bytes calldata _signature
+    ) public {
+        bytes32 dataHash = keccak256(abi.encode(_userEmail, _amountToken, _signer, nonce[_signer]));
+        require(ECDSA.recover(dataHash, _signature) == _signer, "Invalid signature");
+        address userAddress = linkCollection.toAddress(_userEmail);
+        require(userAddress != address(0x00), "Unregistered email-address");
+        require(userAddress == _signer, "Invalid address");
+
+        require(tokenLedger[_userEmail] >= _amountToken, "Insufficient balance");
+
+        tokenLedger[_userEmail] -= _amountToken;
+        // TODO 예치기능이 완료시 재단의 잔고를 더해 주는 기능 추가
+
+        uint256 amountMileage = convertTokenToMileage(_amountToken);
+        mileageLedger[_userEmail] += amountMileage;
+
+        nonce[_signer]++;
+
+        emit ExchangedTokenToMileage(_userEmail, _amountToken, amountMileage);
     }
 }

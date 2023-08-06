@@ -50,7 +50,6 @@ export class ContractUtils {
         const sig = signer._signingKey().signDigest(hre.ethers.utils.keccak256(encodedResult));
         return Promise.resolve(hre.ethers.utils.joinSignature(sig));
     }
-
     public static signPayment(
         signer: Wallet,
         purchaseId: string,
@@ -62,6 +61,20 @@ export class ContractUtils {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["string", "uint256", "bytes32", "string", "address", "uint256"],
             [purchaseId, amount, userEmail, franchiseeId, signer.address, nonce]
+        );
+        const sig = signer._signingKey().signDigest(hre.ethers.utils.keccak256(encodedResult));
+        return Promise.resolve(hre.ethers.utils.joinSignature(sig));
+    }
+
+    public static signExchange(
+        signer: Wallet,
+        userEmail: string,
+        amount: BigNumberish,
+        nonce: BigNumberish
+    ): Promise<string> {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "uint256", "address", "uint256"],
+            [userEmail, amount, signer.address, nonce]
         );
         const sig = signer._signingKey().signDigest(hre.ethers.utils.keccak256(encodedResult));
         return Promise.resolve(hre.ethers.utils.joinSignature(sig));
