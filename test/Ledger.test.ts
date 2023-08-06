@@ -647,4 +647,125 @@ describe("Test for Ledger", () => {
             expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(oldTokenBalance.sub(amount.value));
         });
     });
+
+    context("Exchange token to mileage", () => {
+        before("Deposit token", async () => {
+            await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
+            await expect(ledgerContract.connect(users[0]).deposit(amount.value)).to.emit(ledgerContract, "Deposited");
+        });
+
+        it("Invalid signature", async () => {
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeTokenToMileage(emailHashes[0], amount.value, users[1].address, signature)
+            ).to.revertedWith("Invalid signature");
+        });
+
+        it("Unregistered email-address", async () => {
+            const nonce = await ledgerContract.nonce(users[1].address);
+            const signature = await ContractUtils.signExchange(users[1], emailHashes[1], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeTokenToMileage(emailHashes[1], amount.value, users[1].address, signature)
+            ).to.revertedWith("Unregistered email-address");
+        });
+
+        it("Invalid address", async () => {
+            const nonce = await ledgerContract.nonce(users[1].address);
+            const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeTokenToMileage(emailHashes[0], amount.value, users[1].address, signature)
+            ).to.revertedWith("Invalid address");
+        });
+
+        it("Insufficient balance", async () => {
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value.mul(100), nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeTokenToMileage(emailHashes[0], amount.value.mul(100), users[0].address, signature)
+            ).to.revertedWith("Insufficient balance");
+        });
+
+        it("Success", async () => {
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeTokenToMileage(emailHashes[0], amount.value, users[0].address, signature)
+            )
+                .to.emit(ledgerContract, "ExchangedTokenToMileage")
+                .withNamedArgs({
+                    email: emailHashes[0],
+                    amountToken: amount.value,
+                    amountMileage: amount.value,
+                });
+        });
+    });
+
+    context("Exchange mileage to token", () => {
+        it("Invalid signature", async () => {
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeMileageToToken(emailHashes[0], amount.value, users[1].address, signature)
+            ).to.revertedWith("Invalid signature");
+        });
+
+        it("Unregistered email-address", async () => {
+            const nonce = await ledgerContract.nonce(users[1].address);
+            const signature = await ContractUtils.signExchange(users[1], emailHashes[1], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeMileageToToken(emailHashes[1], amount.value, users[1].address, signature)
+            ).to.revertedWith("Unregistered email-address");
+        });
+
+        it("Invalid address", async () => {
+            const nonce = await ledgerContract.nonce(users[1].address);
+            const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeMileageToToken(emailHashes[0], amount.value, users[1].address, signature)
+            ).to.revertedWith("Invalid address");
+        });
+
+        it("Insufficient balance", async () => {
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value.mul(100), nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeMileageToToken(emailHashes[0], amount.value.mul(100), users[0].address, signature)
+            ).to.revertedWith("Insufficient balance");
+        });
+
+        it("Success", async () => {
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value, nonce);
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .exchangeMileageToToken(emailHashes[0], amount.value, users[0].address, signature)
+            )
+                .to.emit(ledgerContract, "ExchangedMileageToToken")
+                .withNamedArgs({
+                    email: emailHashes[0],
+                    amountMileage: amount.value,
+                    amountToken: amount.value,
+                });
+        });
+    });
 });
