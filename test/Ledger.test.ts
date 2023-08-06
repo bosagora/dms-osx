@@ -61,7 +61,8 @@ const purchaseData: PurchaseData[] = [
 
 describe("Test for Ledger", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, relay, user1, user2, user3] = provider.getWallets();
+    const [deployer, foundation, validator1, validator2, validator3, relay, user1, user2, user3] =
+        provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     const users = [user1, user2, user3];
@@ -72,7 +73,10 @@ describe("Test for Ledger", () => {
     let ledgerContract: Ledger;
     let linkCollectionContract: LinkCollection;
 
-    const amount = Amount.make(50000, 18);
+    const amount = Amount.make(50_000, 18);
+    const assetAmount = Amount.make(10_000_000, 18);
+    const foundationEmail = "foundation@example.com";
+    const foundationAccount = ContractUtils.sha256String(foundationEmail);
 
     before(async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
@@ -113,7 +117,12 @@ describe("Test for Ledger", () => {
         const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
         ledgerContract = (await ledgerFactory
             .connect(deployer)
-            .deploy(tokenContract.address, validatorContract.address, linkCollectionContract.address)) as Ledger;
+            .deploy(
+                foundationAccount,
+                tokenContract.address,
+                validatorContract.address,
+                linkCollectionContract.address
+            )) as Ledger;
         await ledgerContract.deployed();
         await ledgerContract.deployTransaction.wait();
     });
@@ -125,6 +134,30 @@ describe("Test for Ledger", () => {
         for (const elem of emails) {
             emailHashes.push(ContractUtils.sha256String(elem));
         }
+    });
+
+    context("Prepare asset", () => {
+        it("Register foundation's account", async () => {
+            const nonce = await linkCollectionContract.nonce(foundation.address);
+            const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
+            await expect(
+                linkCollectionContract.connect(validators[0]).add(foundationAccount, foundation.address, signature)
+            )
+                .to.emit(linkCollectionContract, "Added")
+                .withArgs(foundationAccount, foundation.address);
+        });
+
+        it("Deposit foundation's token", async () => {
+            await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+            await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+            await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
+                .to.emit(ledgerContract, "Deposited")
+                .withNamedArgs({
+                    depositor: foundation.address,
+                    amount: assetAmount.value,
+                    balance: assetAmount.value,
+                });
+        });
     });
 
     context("Save Purchase Data", () => {
@@ -206,6 +239,7 @@ describe("Test for Ledger", () => {
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
             const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
+            const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
             await expect(
                 ledgerContract
                     .connect(validators[0])
@@ -226,6 +260,9 @@ describe("Test for Ledger", () => {
                 });
             expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance);
             expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance.add(amt));
+            expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                oldFoundationTokenBalance.sub(amt)
+            );
         });
 
         it("Save Purchase Data - email and address are not registered", async () => {
@@ -567,6 +604,7 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
@@ -596,6 +634,9 @@ describe("Test for Ledger", () => {
                     userEmail: emailHash,
                     franchiseeId: purchase.franchiseeId,
                 });
+            expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                oldFoundationTokenBalance.add(purchase.amount)
+            );
         });
     });
 
@@ -695,6 +736,7 @@ describe("Test for Ledger", () => {
         });
 
         it("Success", async () => {
+            const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value, nonce);
             await expect(
@@ -708,6 +750,9 @@ describe("Test for Ledger", () => {
                     amountToken: amount.value,
                     amountMileage: amount.value,
                 });
+            expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                oldFoundationTokenBalance.add(amount.value)
+            );
         });
     });
 
@@ -753,6 +798,7 @@ describe("Test for Ledger", () => {
         });
 
         it("Success", async () => {
+            const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amount.value, nonce);
             await expect(
@@ -766,6 +812,9 @@ describe("Test for Ledger", () => {
                     amountMileage: amount.value,
                     amountToken: amount.value,
                 });
+            expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                oldFoundationTokenBalance.sub(amount.value)
+            );
         });
     });
 });
