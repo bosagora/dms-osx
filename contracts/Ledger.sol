@@ -128,8 +128,7 @@ contract Ledger {
     /// @param _amount 지급할 토큰
     function provideToken(bytes32 _email, uint256 _amount) internal {
         // TODO 예치기능이 완료시 재단의 잔고를 빼주는 기능 추가
-        // TODO 토큰가격에 의해 지급량을 결정하도록 수정
-        uint256 amountToken = _amount;
+        uint256 amountToken = convertMileageToToken(_amount);
         tokenLedger[_email] += amountToken;
 
         emit ProvidedToken(_email, _amount, amountToken);
@@ -190,8 +189,7 @@ contract Ledger {
         require(userAddress == _signer, "Invalid address");
 
         // TODO 예치기능이 완료시 재단의 잔고를 더해 주는 기능 추가
-        // TODO 토큰가격에 의해 사용량을 결정하도록 수정
-        uint256 amountToken = _amount;
+        uint256 amountToken = convertMileageToToken(_amount);
         require(tokenLedger[_userEmail] >= amountToken, "Insufficient balance");
 
         tokenLedger[_userEmail] -= amountToken;
@@ -199,5 +197,15 @@ contract Ledger {
         nonce[_signer]++;
 
         emit PaidToken(_purchaseId, block.timestamp, _amount, amountToken, _userEmail, _franchiseeId);
+    }
+
+    function convertMileageToToken(uint256 amount) internal view returns (uint256) {
+        // TODO 토큰가격정보를 이용하여 변환되도록 수정해야 한다
+        return amount;
+    }
+
+    function convertTokenToMileage(uint256 amount) internal view returns (uint256) {
+        // TODO 토큰가격정보를 이용하여 변환되도록 수정해야 한다
+        return amount;
     }
 }
