@@ -61,9 +61,11 @@ const purchaseData: PurchaseData[] = [
 
 describe("Test for Ledger", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, relay, user1, user2] = provider.getWallets();
+    const [deployer, validator1, validator2, validator3, relay, user1, user2, user3] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
+    const users = [user1, user2, user3];
+    const emails = ["a@example.com", "b@example.com", "c@example.com"];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
@@ -98,7 +100,7 @@ describe("Test for Ledger", () => {
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
         }
-        await validatorContract.connect(validator1).makeActiveItems();
+        await validatorContract.connect(validators[0]).makeActiveItems();
 
         const linkCollectionFactory = await hre.ethers.getContractFactory("LinkCollection");
         linkCollectionContract = (await linkCollectionFactory
@@ -115,23 +117,123 @@ describe("Test for Ledger", () => {
         await ledgerContract.deployTransaction.wait();
     });
 
-    it("Save Purchase Data - Not validator", async () => {
-        for (const purchase of purchaseData) {
-            const hash = ContractUtils.sha256String(purchase.userEmail);
-            await expect(
-                ledgerContract
-                    .connect(deployer)
-                    .savePurchase(purchase.purchaseId, purchase.timestamp, purchase.amount, hash, purchase.franchiseeId)
-            ).to.be.revertedWith("Not validator");
-        }
-    });
+    context("Save Purchase Data", () => {
+        it("Save Purchase Data - Not validator", async () => {
+            for (const purchase of purchaseData) {
+                const hash = ContractUtils.sha256String(purchase.userEmail);
+                await expect(
+                    ledgerContract
+                        .connect(deployer)
+                        .savePurchase(
+                            purchase.purchaseId,
+                            purchase.timestamp,
+                            purchase.amount,
+                            hash,
+                            purchase.franchiseeId
+                        )
+                ).to.be.revertedWith("Not validator");
+            }
+        });
 
-    it("Save Purchase Data", async () => {
-        for (const purchase of purchaseData) {
+        it("Save Purchase Data", async () => {
+            for (const purchase of purchaseData) {
+                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                await expect(
+                    ledgerContract
+                        .connect(validators[0])
+                        .savePurchase(
+                            purchase.purchaseId,
+                            purchase.timestamp,
+                            purchase.amount,
+                            emailHash,
+                            purchase.franchiseeId
+                        )
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId
+                    )
+                    .emit(ledgerContract, "ProvidedMileage")
+                    .withArgs(emailHash, Math.floor(purchase.amount / 100));
+            }
+        });
+
+        it("Check balances", async () => {
+            const expected: Map<string, number> = new Map<string, number>();
+            for (const purchase of purchaseData) {
+                const key = ContractUtils.sha256String(purchase.userEmail);
+                const oldValue = expected.get(key);
+                const mileage = Math.floor(purchase.amount / 100);
+                if (oldValue !== undefined) expected.set(key, oldValue + mileage);
+                else expected.set(key, mileage);
+            }
+            for (let key of expected.keys())
+                expect(await ledgerContract.mileageLedger(key)).to.deep.equal(expected.get(key));
+        });
+
+        it("Link email-address", async () => {
+            const nonce = await linkCollectionContract.nonce(users[0].address);
+            const hash = ContractUtils.sha256String(emails[0]);
+            const signature = await ContractUtils.sign(users[0], hash, nonce);
+            await expect(linkCollectionContract.connect(validators[0]).add(hash, users[0].address, signature))
+                .to.emit(linkCollectionContract, "Added")
+                .withArgs(hash, users[0].address);
+        });
+
+        it("Save Purchase Data - email and address are registered", async () => {
+            const purchase = {
+                purchaseId: "P000006",
+                timestamp: 1672844400,
+                amount: 10000,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
+            const amt = Math.floor(purchase.amount / 100);
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
+            const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
             await expect(
                 ledgerContract
-                    .connect(validator1)
+                    .connect(validators[0])
+                    .savePurchase(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId
+                    )
+            )
+                .to.emit(ledgerContract, "SavedPurchase")
+                .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
+                .emit(ledgerContract, "ProvidedToken")
+                .withNamedArgs({
+                    email: emailHash,
+                    amount: amt,
+                });
+            expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance);
+            expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance.add(amt));
+        });
+
+        it("Save Purchase Data - email and address are not registered", async () => {
+            const purchase = {
+                purchaseId: "P000007",
+                timestamp: 1672844400,
+                amount: 10000,
+                userEmail: "b@example.com",
+                franchiseeId: "F000600",
+            };
+
+            const amt = Math.floor(purchase.amount / 100);
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
+            const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
+            await expect(
+                ledgerContract
+                    .connect(validators[0])
                     .savePurchase(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -143,430 +245,347 @@ describe("Test for Ledger", () => {
                 .to.emit(ledgerContract, "SavedPurchase")
                 .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
                 .emit(ledgerContract, "ProvidedMileage")
-                .withArgs(emailHash, Math.floor(purchase.amount / 100));
-        }
+                .withArgs(emailHash, amt);
+            expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
+            expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance);
+        });
     });
 
-    it("Check balances", async () => {
-        const expected: Map<string, number> = new Map<string, number>();
-        for (const purchase of purchaseData) {
-            const key = ContractUtils.sha256String(purchase.userEmail);
-            const oldValue = expected.get(key);
-            const mileage = Math.floor(purchase.amount / 100);
-            if (oldValue !== undefined) expected.set(key, oldValue + mileage);
-            else expected.set(key, mileage);
-        }
-        for (let key of expected.keys())
-            expect(await ledgerContract.mileageLedger(key)).to.deep.equal(expected.get(key));
+    context("Pay mileage", () => {
+        it("Pay mileage - Invalid signature", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 100,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
+
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payMileage(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[1].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Invalid signature");
+        });
+
+        it("Pay mileage - Unregistered email-address", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 100,
+                userEmail: "b@example.com",
+                franchiseeId: "F000600",
+            };
+
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payMileage(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[0].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Unregistered email-address");
+        });
+
+        it("Pay mileage - Invalid address", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 100,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
+
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[1].address);
+            const signature = await ContractUtils.signPayment(
+                users[1],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payMileage(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[1].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Invalid address");
+        });
+
+        it("Pay mileage - Insufficient balance", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 10000,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
+
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payMileage(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[0].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Insufficient balance");
+        });
+
+        it("Pay mileage - Success", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 100,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
+
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payMileage(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[0].address,
+                        signature
+                    )
+            )
+                .to.emit(ledgerContract, "PaidMileage")
+                .withNamedArgs({
+                    purchaseId: purchase.purchaseId,
+                    amount: purchase.amount,
+                    userEmail: emailHash,
+                    franchiseeId: purchase.franchiseeId,
+                });
+        });
     });
 
-    it("Link email-address", async () => {
-        const nonce = await linkCollectionContract.nonce(user1.address);
-        const email = "a@example.com";
-        const hash = ContractUtils.sha256String(email);
-        const signature = await ContractUtils.sign(user1, hash, nonce);
-        await expect(linkCollectionContract.connect(validators[0]).add(hash, user1.address, signature))
-            .to.emit(linkCollectionContract, "Added")
-            .withArgs(hash, user1.address);
-    });
+    context("Pay token", () => {
+        it("Pay token - Invalid signature", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 100,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
 
-    it("Save Purchase Data - email and address are registered", async () => {
-        const purchase = {
-            purchaseId: "P000006",
-            timestamp: 1672844400,
-            amount: 10000,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
-        const amt = Math.floor(purchase.amount / 100);
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
-        const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
-        await expect(
-            ledgerContract
-                .connect(validator1)
-                .savePurchase(
-                    purchase.purchaseId,
-                    purchase.timestamp,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId
-                )
-        )
-            .to.emit(ledgerContract, "SavedPurchase")
-            .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
-            .emit(ledgerContract, "ProvidedToken")
-            .withNamedArgs({
-                email: emailHash,
-                amount: amt,
-            });
-        expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance);
-        expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance.add(amt));
-    });
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payToken(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[1].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Invalid signature");
+        });
 
-    it("Save Purchase Data - email and address are not registered", async () => {
-        const purchase = {
-            purchaseId: "P000007",
-            timestamp: 1672844400,
-            amount: 10000,
-            userEmail: "b@example.com",
-            franchiseeId: "F000600",
-        };
+        it("Pay token - Unregistered email-address", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 100,
+                userEmail: "b@example.com",
+                franchiseeId: "F000600",
+            };
 
-        const amt = Math.floor(purchase.amount / 100);
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
-        const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
-        await expect(
-            ledgerContract
-                .connect(validator1)
-                .savePurchase(
-                    purchase.purchaseId,
-                    purchase.timestamp,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId
-                )
-        )
-            .to.emit(ledgerContract, "SavedPurchase")
-            .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
-            .emit(ledgerContract, "ProvidedMileage")
-            .withArgs(emailHash, amt);
-        expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
-        expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance);
-    });
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payToken(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[0].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Unregistered email-address");
+        });
 
-    it("Pay mileage - Invalid signature", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 100,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
+        it("Pay token - Invalid address", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 100,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
 
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payMileage(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user2.address,
-                    signature
-                )
-        ).to.be.revertedWith("Invalid signature");
-    });
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[1].address);
+            const signature = await ContractUtils.signPayment(
+                users[1],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payToken(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[1].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Invalid address");
+        });
 
-    it("Pay mileage - Unregistered email-address", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 100,
-            userEmail: "b@example.com",
-            franchiseeId: "F000600",
-        };
+        it("Pay token - Insufficient balance", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 10000,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
 
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payMileage(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user1.address,
-                    signature
-                )
-        ).to.be.revertedWith("Unregistered email-address");
-    });
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payToken(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[0].address,
+                        signature
+                    )
+            ).to.be.revertedWith("Insufficient balance");
+        });
 
-    it("Pay mileage - Invalid address", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 100,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
+        it("Pay token - Success", async () => {
+            const purchase = {
+                purchaseId: "P000008",
+                amount: 1,
+                userEmail: "a@example.com",
+                franchiseeId: "F000600",
+            };
 
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user2.address);
-        const signature = await ContractUtils.signPayment(
-            user2,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payMileage(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user2.address,
-                    signature
-                )
-        ).to.be.revertedWith("Invalid address");
-    });
-
-    it("Pay mileage - Insufficient balance", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 10000,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
-
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payMileage(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user1.address,
-                    signature
-                )
-        ).to.be.revertedWith("Insufficient balance");
-    });
-
-    it("Pay mileage - Success", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 100,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
-
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payMileage(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user1.address,
-                    signature
-                )
-        )
-            .to.emit(ledgerContract, "PaidMileage")
-            .withNamedArgs({
-                purchaseId: purchase.purchaseId,
-                amount: purchase.amount,
-                userEmail: emailHash,
-                franchiseeId: purchase.franchiseeId,
-            });
-    });
-
-    it("Pay token - Invalid signature", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 100,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
-
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payToken(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user2.address,
-                    signature
-                )
-        ).to.be.revertedWith("Invalid signature");
-    });
-
-    it("Pay token - Unregistered email-address", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 100,
-            userEmail: "b@example.com",
-            franchiseeId: "F000600",
-        };
-
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payToken(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user1.address,
-                    signature
-                )
-        ).to.be.revertedWith("Unregistered email-address");
-    });
-
-    it("Pay token - Invalid address", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 100,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
-
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user2.address);
-        const signature = await ContractUtils.signPayment(
-            user2,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payToken(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user2.address,
-                    signature
-                )
-        ).to.be.revertedWith("Invalid address");
-    });
-
-    it("Pay token - Insufficient balance", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 10000,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
-
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payToken(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user1.address,
-                    signature
-                )
-        ).to.be.revertedWith("Insufficient balance");
-    });
-
-    it("Pay token - Success", async () => {
-        const purchase = {
-            purchaseId: "P000008",
-            amount: 1,
-            userEmail: "a@example.com",
-            franchiseeId: "F000600",
-        };
-
-        const emailHash = ContractUtils.sha256String(purchase.userEmail);
-        const nonce = await ledgerContract.nonce(user1.address);
-        const signature = await ContractUtils.signPayment(
-            user1,
-            purchase.purchaseId,
-            purchase.amount,
-            emailHash,
-            purchase.franchiseeId,
-            nonce
-        );
-        await expect(
-            ledgerContract
-                .connect(relay)
-                .payToken(
-                    purchase.purchaseId,
-                    purchase.amount,
-                    emailHash,
-                    purchase.franchiseeId,
-                    user1.address,
-                    signature
-                )
-        )
-            .to.emit(ledgerContract, "PaidToken")
-            .withNamedArgs({
-                purchaseId: purchase.purchaseId,
-                amount: purchase.amount,
-                userEmail: emailHash,
-                franchiseeId: purchase.franchiseeId,
-            });
+            const emailHash = ContractUtils.sha256String(purchase.userEmail);
+            const nonce = await ledgerContract.nonce(users[0].address);
+            const signature = await ContractUtils.signPayment(
+                users[0],
+                purchase.purchaseId,
+                purchase.amount,
+                emailHash,
+                purchase.franchiseeId,
+                nonce
+            );
+            await expect(
+                ledgerContract
+                    .connect(relay)
+                    .payToken(
+                        purchase.purchaseId,
+                        purchase.amount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        users[0].address,
+                        signature
+                    )
+            )
+                .to.emit(ledgerContract, "PaidToken")
+                .withNamedArgs({
+                    purchaseId: purchase.purchaseId,
+                    amount: purchase.amount,
+                    userEmail: emailHash,
+                    franchiseeId: purchase.franchiseeId,
+                });
+        });
     });
 });
