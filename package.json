@@ -19,7 +19,8 @@
         "docgen": "hardhat docgen",
         "debug:Ledger": "node_modules/.bin/hardhat test test/Ledger.test.ts",
         "debug:Validator": "node_modules/.bin/hardhat test test/ValidatorCollection.test.ts",
-        "debug:TokenPrice": "node_modules/.bin/hardhat test test/TokenPrice.test.ts"
+        "debug:TokenPrice": "node_modules/.bin/hardhat test test/TokenPrice.test.ts",
+        "debug:FranchiseeCollection": "node_modules/.bin/hardhat test test/FranchiseeCollection.test.ts"
     },
     "repository": {
         "type": "git",
