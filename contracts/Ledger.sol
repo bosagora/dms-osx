@@ -26,6 +26,7 @@ contract Ledger {
     mapping(string => PurchaseData) public purchaseMap;
     string[] public purchaseIdList;
 
+    bytes32 public foundationAccount;
     address public tokenAddress;
     address public validatorAddress;
     address public linkCollectionAddress;
@@ -61,9 +62,17 @@ contract Ledger {
     event ExchangedTokenToMileage(bytes32 email, uint256 amountToken, uint256 amountMileage);
 
     /// @notice 생성자
+    /// @param _foundationAccount 재단의 계정
     /// @param _tokenAddress 토큰의 주소
     /// @param _validatorAddress 검증자컬랙션의 주소
-    constructor(address _tokenAddress, address _validatorAddress, address _linkCollectionAddress) {
+    /// @param _linkCollectionAddress 이메일-지갑주소 링크 컨트랙트
+    constructor(
+        bytes32 _foundationAccount,
+        address _tokenAddress,
+        address _validatorAddress,
+        address _linkCollectionAddress
+    ) {
+        foundationAccount = _foundationAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;
@@ -135,9 +144,11 @@ contract Ledger {
     /// @param _email 이메일 해시
     /// @param _amount 지급할 토큰
     function provideToken(bytes32 _email, uint256 _amount) internal {
-        // TODO 예치기능이 완료시 재단의 잔고를 빼주는 기능 추가
         uint256 amountToken = convertMileageToToken(_amount);
+
+        require(tokenLedger[foundationAccount] >= amountToken, "Insufficient foundation balance");
         tokenLedger[_email] += amountToken;
+        tokenLedger[foundationAccount] -= amountToken;
 
         emit ProvidedToken(_email, _amount, amountToken);
     }
@@ -198,11 +209,11 @@ contract Ledger {
         require(userAddress != address(0x00), "Unregistered email-address");
         require(userAddress == _signer, "Invalid address");
 
-        // TODO 예치기능이 완료시 재단의 잔고를 더해 주는 기능 추가
         uint256 amountToken = convertMileageToToken(_amount);
         require(tokenLedger[_userEmail] >= amountToken, "Insufficient balance");
 
         tokenLedger[_userEmail] -= amountToken;
+        tokenLedger[foundationAccount] += amountToken;
 
         nonce[_signer]++;
 
@@ -269,11 +280,13 @@ contract Ledger {
 
         require(mileageLedger[_userEmail] >= _amountMileage, "Insufficient balance");
 
+        uint256 amountToken = convertMileageToToken(_amountMileage);
+        require(tokenLedger[foundationAccount] >= amountToken, "Insufficient foundation balance");
+
         mileageLedger[_userEmail] -= _amountMileage;
 
-        uint256 amountToken = convertMileageToToken(_amountMileage);
         tokenLedger[_userEmail] += amountToken;
-        // TODO 예치기능이 완료시 재단의 잔고를 빼 주는 기능 추가
+        tokenLedger[foundationAccount] -= amountToken;
 
         nonce[_signer]++;
 
@@ -301,7 +314,7 @@ contract Ledger {
         require(tokenLedger[_userEmail] >= _amountToken, "Insufficient balance");
 
         tokenLedger[_userEmail] -= _amountToken;
-        // TODO 예치기능이 완료시 재단의 잔고를 더해 주는 기능 추가
+        tokenLedger[foundationAccount] += _amountToken;
 
         uint256 amountMileage = convertTokenToMileage(_amountToken);
         mileageLedger[_userEmail] += amountMileage;
