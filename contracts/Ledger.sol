@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "link-email-wallet/contracts/LinkCollection.sol";
 import "./ValidatorCollection.sol";
+import "./TokenPrice.sol";
 
 /// @notice 마일리지와 토큰의 원장
 contract Ledger {
@@ -30,10 +31,12 @@ contract Ledger {
     address public tokenAddress;
     address public validatorAddress;
     address public linkCollectionAddress;
+    address public tokenPriceAddress;
 
     IERC20 private token;
     ValidatorCollection private validatorCollection;
     LinkCollection private linkCollection;
+    TokenPrice private tokenPrice;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event SavedPurchase(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
@@ -63,23 +66,27 @@ contract Ledger {
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
-    /// @param _tokenAddress 토큰의 주소
-    /// @param _validatorAddress 검증자컬랙션의 주소
-    /// @param _linkCollectionAddress 이메일-지갑주소 링크 컨트랙트
+    /// @param _tokenAddress 토큰컨트랙트의 주소
+    /// @param _validatorAddress 검증자컬랙션 컨트랙트의 주소
+    /// @param _linkCollectionAddress 이메일-지갑주소 링크 컨트랙트의 주소
+    /// @param _tokenPriceAddress 토큰가격을 제공하는 컨트랙트의 주소
     constructor(
         bytes32 _foundationAccount,
         address _tokenAddress,
         address _validatorAddress,
-        address _linkCollectionAddress
+        address _linkCollectionAddress,
+        address _tokenPriceAddress
     ) {
         foundationAccount = _foundationAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;
+        tokenPriceAddress = _tokenPriceAddress;
 
         token = IERC20(_tokenAddress);
         validatorCollection = ValidatorCollection(_validatorAddress);
         linkCollection = LinkCollection(_linkCollectionAddress);
+        tokenPrice = TokenPrice(_tokenPriceAddress);
     }
 
     modifier onlyValidator(address _account) {
@@ -221,13 +228,13 @@ contract Ledger {
     }
 
     function convertMileageToToken(uint256 amount) internal view returns (uint256) {
-        // TODO 토큰가격정보를 이용하여 변환되도록 수정해야 한다
-        return amount;
+        uint256 price = tokenPrice.get("KRW");
+        return (amount * tokenPrice.MULTIPLE()) / price;
     }
 
     function convertTokenToMileage(uint256 amount) internal view returns (uint256) {
-        // TODO 토큰가격정보를 이용하여 변환되도록 수정해야 한다
-        return amount;
+        uint256 price = tokenPrice.get("KRW");
+        return (amount * price) / tokenPrice.MULTIPLE();
     }
 
     /// @notice 토큰을 예치합니다.
