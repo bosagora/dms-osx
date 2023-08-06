@@ -620,4 +620,31 @@ describe("Test for Ledger", () => {
             expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(oldTokenBalance.add(amount.value));
         });
     });
+
+    context("Withdraw token", () => {
+        it("Withdraw token - Unregistered email-address", async () => {
+            await expect(ledgerContract.connect(users[1]).withdraw(amount.value)).to.revertedWith(
+                "Unregistered email-address"
+            );
+        });
+
+        it("Withdraw token - Insufficient balance", async () => {
+            const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+            await expect(ledgerContract.connect(users[0]).withdraw(oldTokenBalance.add(1))).to.revertedWith(
+                "Insufficient balance"
+            );
+        });
+
+        it("Withdraw token - Success", async () => {
+            const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+            await expect(ledgerContract.connect(users[0]).withdraw(amount.value))
+                .to.emit(ledgerContract, "Withdrawn")
+                .withNamedArgs({
+                    withdrawer: users[0].address,
+                    amount: amount.value,
+                    balance: oldTokenBalance.sub(amount.value),
+                });
+            expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(oldTokenBalance.sub(amount.value));
+        });
+    });
 });
