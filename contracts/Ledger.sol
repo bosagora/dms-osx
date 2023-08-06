@@ -51,7 +51,10 @@ contract Ledger {
         bytes32 userEmail,
         string franchiseeId
     );
+    /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(address depositor, uint256 amount, uint256 balance);
+    /// @notice 토큰을 인출했을 때 발생하는 이벤트
+    event Withdrawn(address withdrawer, uint256 amount, uint256 balance);
 
     /// @notice 생성자
     /// @param _tokenAddress 토큰의 주소
@@ -210,7 +213,7 @@ contract Ledger {
         return amount;
     }
 
-    /// @notice 트콘을 예치합니다.
+    /// @notice 토큰을 예치합니다.
     /// @param _amount 금액
     function deposit(uint256 _amount) public {
         bytes32 userEmail = linkCollection.toHash(msg.sender);
@@ -223,5 +226,20 @@ contract Ledger {
         tokenLedger[userEmail] += _amount;
 
         emit Deposited(msg.sender, _amount, tokenLedger[userEmail]);
+    }
+
+    /// @notice 토큰을 인출합니다.
+    /// @param _amount 금액
+    function withdraw(uint256 _amount) public {
+        bytes32 userEmail = linkCollection.toHash(msg.sender);
+        require(userEmail != bytes32(0x00), "Unregistered email-address");
+
+        IERC20 token = IERC20(tokenAddress);
+        require(_amount <= tokenLedger[userEmail], "Insufficient balance");
+        token.transfer(msg.sender, _amount);
+
+        tokenLedger[userEmail] -= _amount;
+
+        emit Withdrawn(msg.sender, _amount, tokenLedger[userEmail]);
     }
 }
