@@ -10,6 +10,7 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
 import * as hre from "hardhat";
+import { BigNumber } from "ethers";
 
 chai.use(solidity);
 
@@ -164,13 +165,14 @@ describe("Test for Ledger", () => {
         it("Save Purchase Data - Not validator", async () => {
             for (const purchase of purchaseData) {
                 const hash = ContractUtils.sha256String(purchase.userEmail);
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 await expect(
                     ledgerContract
                         .connect(deployer)
                         .savePurchase(
                             purchase.purchaseId,
                             purchase.timestamp,
-                            purchase.amount,
+                            purchaseAmount,
                             hash,
                             purchase.franchiseeId
                         )
@@ -181,37 +183,34 @@ describe("Test for Ledger", () => {
         it("Save Purchase Data", async () => {
             for (const purchase of purchaseData) {
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const amt = purchaseAmount.div(100);
                 await expect(
                     ledgerContract
                         .connect(validators[0])
                         .savePurchase(
                             purchase.purchaseId,
                             purchase.timestamp,
-                            purchase.amount,
+                            purchaseAmount,
                             emailHash,
                             purchase.franchiseeId
                         )
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
-                    .withArgs(
-                        purchase.purchaseId,
-                        purchase.timestamp,
-                        purchase.amount,
-                        emailHash,
-                        purchase.franchiseeId
-                    )
+                    .withArgs(purchase.purchaseId, purchase.timestamp, purchaseAmount, emailHash, purchase.franchiseeId)
                     .emit(ledgerContract, "ProvidedMileage")
-                    .withArgs(emailHash, Math.floor(purchase.amount / 100));
+                    .withArgs(emailHash, amt);
             }
         });
 
         it("Check balances", async () => {
-            const expected: Map<string, number> = new Map<string, number>();
+            const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
             for (const purchase of purchaseData) {
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const key = ContractUtils.sha256String(purchase.userEmail);
                 const oldValue = expected.get(key);
-                const mileage = Math.floor(purchase.amount / 100);
-                if (oldValue !== undefined) expected.set(key, oldValue + mileage);
+                const mileage = purchaseAmount.div(100);
+                if (oldValue !== undefined) expected.set(key, oldValue.add(mileage));
                 else expected.set(key, mileage);
             }
             for (let key of expected.keys())
@@ -235,7 +234,8 @@ describe("Test for Ledger", () => {
                 userEmail: "a@example.com",
                 franchiseeId: "F000600",
             };
-            const amt = Math.floor(purchase.amount / 100);
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
+            const amt = purchaseAmount.div(100);
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
             const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
@@ -246,13 +246,13 @@ describe("Test for Ledger", () => {
                     .savePurchase(
                         purchase.purchaseId,
                         purchase.timestamp,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId
                     )
             )
                 .to.emit(ledgerContract, "SavedPurchase")
-                .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
+                .withArgs(purchase.purchaseId, purchase.timestamp, purchaseAmount, emailHash, purchase.franchiseeId)
                 .emit(ledgerContract, "ProvidedToken")
                 .withNamedArgs({
                     email: emailHash,
@@ -274,7 +274,8 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
-            const amt = Math.floor(purchase.amount / 100);
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
+            const amt = purchaseAmount.div(100);
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
             const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
@@ -284,13 +285,13 @@ describe("Test for Ledger", () => {
                     .savePurchase(
                         purchase.purchaseId,
                         purchase.timestamp,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId
                     )
             )
                 .to.emit(ledgerContract, "SavedPurchase")
-                .withArgs(purchase.purchaseId, purchase.timestamp, purchase.amount, emailHash, purchase.franchiseeId)
+                .withArgs(purchase.purchaseId, purchase.timestamp, purchaseAmount, emailHash, purchase.franchiseeId)
                 .emit(ledgerContract, "ProvidedMileage")
                 .withArgs(emailHash, amt);
             expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
@@ -307,12 +308,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -322,7 +324,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payMileage(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[1].address,
@@ -339,12 +341,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -354,7 +357,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payMileage(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[0].address,
@@ -371,12 +374,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[1].address);
             const signature = await ContractUtils.signPayment(
                 users[1],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -386,7 +390,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payMileage(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[1].address,
@@ -403,12 +407,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -418,7 +423,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payMileage(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[0].address,
@@ -435,12 +440,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -450,7 +456,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payMileage(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[0].address,
@@ -460,7 +466,7 @@ describe("Test for Ledger", () => {
                 .to.emit(ledgerContract, "PaidMileage")
                 .withNamedArgs({
                     purchaseId: purchase.purchaseId,
-                    amount: purchase.amount,
+                    amount: purchaseAmount,
                     userEmail: emailHash,
                     franchiseeId: purchase.franchiseeId,
                 });
@@ -476,12 +482,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -491,7 +498,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payToken(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[1].address,
@@ -508,12 +515,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -523,7 +531,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payToken(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[0].address,
@@ -540,12 +548,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[1].address);
             const signature = await ContractUtils.signPayment(
                 users[1],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -555,7 +564,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payToken(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[1].address,
@@ -572,12 +581,13 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -587,7 +597,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payToken(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[0].address,
@@ -604,13 +614,14 @@ describe("Test for Ledger", () => {
                 franchiseeId: "F000600",
             };
 
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
             const emailHash = ContractUtils.sha256String(purchase.userEmail);
             const nonce = await ledgerContract.nonce(users[0].address);
             const signature = await ContractUtils.signPayment(
                 users[0],
                 purchase.purchaseId,
-                purchase.amount,
+                purchaseAmount,
                 emailHash,
                 purchase.franchiseeId,
                 nonce
@@ -620,7 +631,7 @@ describe("Test for Ledger", () => {
                     .connect(relay)
                     .payToken(
                         purchase.purchaseId,
-                        purchase.amount,
+                        purchaseAmount,
                         emailHash,
                         purchase.franchiseeId,
                         users[0].address,
@@ -630,12 +641,12 @@ describe("Test for Ledger", () => {
                 .to.emit(ledgerContract, "PaidToken")
                 .withNamedArgs({
                     purchaseId: purchase.purchaseId,
-                    amount: purchase.amount,
+                    amount: purchaseAmount,
                     userEmail: emailHash,
                     franchiseeId: purchase.franchiseeId,
                 });
             expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
-                oldFoundationTokenBalance.add(purchase.amount)
+                oldFoundationTokenBalance.add(purchaseAmount)
             );
         });
     });
