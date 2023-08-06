@@ -236,7 +236,6 @@ contract Ledger {
         bytes32 userEmail = linkCollection.toHash(msg.sender);
         require(userEmail != bytes32(0x00), "Unregistered email-address");
 
-        IERC20 token = IERC20(tokenAddress);
         require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
         token.transferFrom(msg.sender, address(this), _amount);
 
@@ -251,7 +250,6 @@ contract Ledger {
         bytes32 userEmail = linkCollection.toHash(msg.sender);
         require(userEmail != bytes32(0x00), "Unregistered email-address");
 
-        IERC20 token = IERC20(tokenAddress);
         require(_amount <= tokenLedger[userEmail], "Insufficient balance");
         token.transfer(msg.sender, _amount);
 
