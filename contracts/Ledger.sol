@@ -51,6 +51,7 @@ contract Ledger {
         bytes32 userEmail,
         string franchiseeId
     );
+    event Deposited(address depositor, uint256 amount, uint256 balance);
 
     /// @notice 생성자
     /// @param _tokenAddress 토큰의 주소
@@ -207,5 +208,20 @@ contract Ledger {
     function convertTokenToMileage(uint256 amount) internal view returns (uint256) {
         // TODO 토큰가격정보를 이용하여 변환되도록 수정해야 한다
         return amount;
+    }
+
+    /// @notice 트콘을 예치합니다.
+    /// @param _amount 금액
+    function deposit(uint256 _amount) public {
+        bytes32 userEmail = linkCollection.toHash(msg.sender);
+        require(userEmail != bytes32(0x00), "Unregistered email-address");
+
+        IERC20 token = IERC20(tokenAddress);
+        require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
+        token.transferFrom(msg.sender, address(this), _amount);
+
+        tokenLedger[userEmail] += _amount;
+
+        emit Deposited(msg.sender, _amount, tokenLedger[userEmail]);
     }
 }

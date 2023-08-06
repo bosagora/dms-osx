@@ -66,6 +66,7 @@ describe("Test for Ledger", () => {
     const validators = [validator1, validator2, validator3];
     const users = [user1, user2, user3];
     const emails = ["a@example.com", "b@example.com", "c@example.com"];
+    const emailHashes: string[] = [];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
@@ -115,6 +116,15 @@ describe("Test for Ledger", () => {
             .deploy(tokenContract.address, validatorContract.address, linkCollectionContract.address)) as Ledger;
         await ledgerContract.deployed();
         await ledgerContract.deployTransaction.wait();
+    });
+
+    before(async () => {
+        for (const elem of users) {
+            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
+        }
+        for (const elem of emails) {
+            emailHashes.push(ContractUtils.sha256String(elem));
+        }
     });
 
     context("Save Purchase Data", () => {
@@ -586,6 +596,28 @@ describe("Test for Ledger", () => {
                     userEmail: emailHash,
                     franchiseeId: purchase.franchiseeId,
                 });
+        });
+    });
+
+    context("Deposit token", () => {
+        it("Deposit token - Unregistered email-address", async () => {
+            await tokenContract.connect(users[1]).approve(ledgerContract.address, amount.value);
+            await expect(ledgerContract.connect(users[1]).deposit(amount.value)).to.revertedWith(
+                "Unregistered email-address"
+            );
+        });
+
+        it("Deposit token - Success", async () => {
+            const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+            await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
+            await expect(ledgerContract.connect(users[0]).deposit(amount.value))
+                .to.emit(ledgerContract, "Deposited")
+                .withNamedArgs({
+                    depositor: users[0].address,
+                    amount: amount.value,
+                    balance: oldTokenBalance.add(amount.value),
+                });
+            expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(oldTokenBalance.add(amount.value));
         });
     });
 });
