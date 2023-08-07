@@ -39,6 +39,45 @@ function getAccounts() {
         accounts.push(process.env.OWNER);
     }
 
+    if (
+        process.env.VALIDATOR1 !== undefined &&
+        process.env.VALIDATOR1.trim() !== "" &&
+        reg_bytes64.test(process.env.VALIDATOR1)
+    ) {
+        accounts.push(process.env.VALIDATOR1);
+    }
+
+    if (
+        process.env.VALIDATOR2 !== undefined &&
+        process.env.VALIDATOR2.trim() !== "" &&
+        reg_bytes64.test(process.env.VALIDATOR2)
+    ) {
+        accounts.push(process.env.VALIDATOR2);
+    }
+
+    if (
+        process.env.VALIDATOR3 !== undefined &&
+        process.env.VALIDATOR3.trim() !== "" &&
+        reg_bytes64.test(process.env.VALIDATOR3)
+    ) {
+        accounts.push(process.env.VALIDATOR3);
+    }
+
+    if (
+        process.env.VALIDATOR4 !== undefined &&
+        process.env.VALIDATOR4.trim() !== "" &&
+        reg_bytes64.test(process.env.VALIDATOR4)
+    ) {
+        accounts.push(process.env.VALIDATOR4);
+    }
+
+    if (
+        process.env.VALIDATOR5 !== undefined &&
+        process.env.VALIDATOR5.trim() !== "" &&
+        reg_bytes64.test(process.env.VALIDATOR5)
+    ) {
+        accounts.push(process.env.VALIDATOR5);
+    }
     return accounts;
 }
 
@@ -46,7 +85,7 @@ function getTestAccounts() {
     const accounts: HardhatNetworkAccountUserConfig[] = [];
     const defaultBalance = utils.parseEther("2000000").toString();
 
-    const n = 12;
+    const n = 50;
     for (let i = 0; i < n; ++i) {
         accounts.push({
             privateKey: Wallet.createRandom().privateKey,
@@ -90,7 +129,7 @@ const config = {
             url: process.env.MAIN_NET_URL || "",
             chainId: 2151,
             accounts: getAccounts(),
-            deploy: ["./deploy"],
+            deploy: ["./deploy/mainnet"],
         },
         testnet: {
             url: process.env.TEST_NET_URL || "",
@@ -100,9 +139,9 @@ const config = {
         },
         localhost: {
             url: "http://localhost:8545",
-            chainId: 1337,
+            chainId: 24680,
             accounts: getAccounts(),
-            deploy: ["./deploy"],
+            deploy: ["./deploy/localhost"],
         },
     },
     namedAccounts: {
@@ -111,6 +150,21 @@ const config = {
         },
         owner: {
             default: 1,
+        },
+        validator1: {
+            default: 2,
+        },
+        validator2: {
+            default: 3,
+        },
+        validator3: {
+            default: 4,
+        },
+        validator4: {
+            default: 5,
+        },
+        validator5: {
+            default: 6,
         },
     },
     gasReporter: {
