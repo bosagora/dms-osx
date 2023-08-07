@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "link-email-wallet/contracts/LinkCollection.sol";
 import "./ValidatorCollection.sol";
 import "./TokenPrice.sol";
+import "./FranchiseeCollection.sol";
 
 /// @notice 마일리지와 토큰의 원장
 contract Ledger {
@@ -32,16 +33,20 @@ contract Ledger {
     address public validatorAddress;
     address public linkCollectionAddress;
     address public tokenPriceAddress;
+    address public franchiseeCollectionAddress;
 
     IERC20 private token;
     ValidatorCollection private validatorCollection;
     LinkCollection private linkCollection;
     TokenPrice private tokenPrice;
+    FranchiseeCollection private franchiseeCollection;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event SavedPurchase(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
     /// @notice 마일리지가 지급될 때 발생되는 이벤트
     event ProvidedMileage(bytes32 email, uint256 amount);
+    /// @notice 마일리지가 지급될 때 발생되는 이벤트
+    event ProvidedMileageToFranchisee(bytes32 email, uint256 amount);
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(bytes32 email, uint256 amount, uint256 amountToken);
     /// @notice 마일리지로 지불을 완료했을 때 발생하는 이벤트
@@ -70,23 +75,27 @@ contract Ledger {
     /// @param _validatorAddress 검증자컬랙션 컨트랙트의 주소
     /// @param _linkCollectionAddress 이메일-지갑주소 링크 컨트랙트의 주소
     /// @param _tokenPriceAddress 토큰가격을 제공하는 컨트랙트의 주소
+    /// @param _franchiseeCollectionAddress 가맹점 컬랙션 컨트랙트의 주소
     constructor(
         bytes32 _foundationAccount,
         address _tokenAddress,
         address _validatorAddress,
         address _linkCollectionAddress,
-        address _tokenPriceAddress
+        address _tokenPriceAddress,
+        address _franchiseeCollectionAddress
     ) {
         foundationAccount = _foundationAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;
         tokenPriceAddress = _tokenPriceAddress;
+        franchiseeCollectionAddress = _franchiseeCollectionAddress;
 
         token = IERC20(_tokenAddress);
         validatorCollection = ValidatorCollection(_validatorAddress);
         linkCollection = LinkCollection(_linkCollectionAddress);
         tokenPrice = TokenPrice(_tokenPriceAddress);
+        franchiseeCollection = FranchiseeCollection(_franchiseeCollectionAddress);
     }
 
     modifier onlyValidator(address _account) {
@@ -125,13 +134,13 @@ contract Ledger {
         purchaseIdList.push(_purchaseId);
         purchaseMap[_purchaseId] = data;
 
+        uint256 mileage = _amount / 100;
         if (linkCollection.toAddress(_userEmail) == address(0x00)) {
-            uint256 mileage = _amount / 100;
             provideMileage(_userEmail, mileage);
         } else {
-            uint256 amount = _amount / 100;
-            provideToken(_userEmail, amount);
+            provideToken(_userEmail, mileage);
         }
+        franchiseeCollection.addProvidedMileage(_franchiseeId, mileage);
 
         emit SavedPurchase(_purchaseId, _timestamp, _amount, _userEmail, _franchiseeId);
     }
@@ -186,6 +195,15 @@ contract Ledger {
         require(mileageLedger[_userEmail] >= _amount, "Insufficient balance");
 
         mileageLedger[_userEmail] -= _amount;
+        franchiseeCollection.addUsedMileage(_franchiseeId, _amount);
+
+        uint256 clearAmount = franchiseeCollection.getClearMileage(_franchiseeId);
+        if (clearAmount > 0) {
+            franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
+            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.getItem(_franchiseeId);
+            mileageLedger[franchisee.email] += clearAmount;
+            emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+        }
 
         nonce[_signer]++;
 
@@ -221,6 +239,15 @@ contract Ledger {
 
         tokenLedger[_userEmail] -= amountToken;
         tokenLedger[foundationAccount] += amountToken;
+        franchiseeCollection.addUsedMileage(_franchiseeId, _amount);
+
+        uint256 clearAmount = franchiseeCollection.getClearMileage(_franchiseeId);
+        if (clearAmount > 0) {
+            franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
+            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.getItem(_franchiseeId);
+            mileageLedger[franchisee.email] += clearAmount;
+            emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+        }
 
         nonce[_signer]++;
 
