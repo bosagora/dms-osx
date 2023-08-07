@@ -1,4 +1,11 @@
-import { Ledger, LinkCollection, Token, TokenPrice, ValidatorCollection } from "../typechain-types";
+import {
+    FranchiseeCollection,
+    Ledger,
+    LinkCollection,
+    Token,
+    TokenPrice,
+    ValidatorCollection,
+} from "../typechain-types";
 import { Amount } from "./helper/Amount";
 import { ContractUtils } from "./helper/ContractUtils";
 
@@ -39,6 +46,7 @@ describe("Test for Ledger", () => {
     let ledgerContract: Ledger;
     let linkCollectionContract: LinkCollection;
     let tokenPriceContract: TokenPrice;
+    let franchiseeCollection: FranchiseeCollection;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -101,6 +109,14 @@ describe("Test for Ledger", () => {
         await tokenPriceContract.connect(validators[0]).set("KRW", price);
     };
 
+    const deployFranchiseeCollection = async () => {
+        const franchiseeCollectionFactory = await hre.ethers.getContractFactory("FranchiseeCollection");
+        franchiseeCollection = (await franchiseeCollectionFactory
+            .connect(deployer)
+            .deploy(validatorContract.address)) as FranchiseeCollection;
+        await franchiseeCollection.deployed();
+        await franchiseeCollection.deployTransaction.wait();
+    };
     const deployLedger = async () => {
         const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
         ledgerContract = (await ledgerFactory
@@ -110,10 +126,13 @@ describe("Test for Ledger", () => {
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
-                tokenPriceContract.address
+                tokenPriceContract.address,
+                franchiseeCollection.address
             )) as Ledger;
         await ledgerContract.deployed();
         await ledgerContract.deployTransaction.wait();
+
+        await franchiseeCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
     };
 
     const deployAllContract = async () => {
@@ -122,8 +141,42 @@ describe("Test for Ledger", () => {
         await depositValidators();
         await deployLinkCollection();
         await deployTokenPrice();
+        await deployFranchiseeCollection();
         await deployLedger();
     };
+
+    interface IFranchiseeData {
+        franchiseeId: string;
+        timestamp: number;
+        email: string;
+    }
+    const franchiseeData: IFranchiseeData[] = [
+        {
+            franchiseeId: "F000100",
+            timestamp: 0,
+            email: "f1@example.com",
+        },
+        {
+            franchiseeId: "F000200",
+            timestamp: 0,
+            email: "f2@example.com",
+        },
+        {
+            franchiseeId: "F000300",
+            timestamp: 0,
+            email: "f3@example.com",
+        },
+        {
+            franchiseeId: "F000400",
+            timestamp: 0,
+            email: "f4@example.com",
+        },
+        {
+            franchiseeId: "F000500",
+            timestamp: 0,
+            email: "f5@example.com",
+        },
+    ];
 
     context("Save Purchase Data & Pay (mileage, token)", () => {
         const purchaseData: PurchaseData[] = [
@@ -166,6 +219,18 @@ describe("Test for Ledger", () => {
 
         before("Deploy", async () => {
             await deployAllContract();
+        });
+
+        context("Prepare franchisee data", () => {
+            it("Add Franchisee Data", async () => {
+                for (const elem of franchiseeData) {
+                    const email = ContractUtils.sha256String(elem.email);
+                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
+                        .to.emit(franchiseeCollection, "Added")
+                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                }
+                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+            });
         });
 
         context("Prepare foundation's asset", () => {
@@ -703,6 +768,18 @@ describe("Test for Ledger", () => {
             }
         });
 
+        context("Prepare franchisee data", () => {
+            it("Add Franchisee Data", async () => {
+                for (const elem of franchiseeData) {
+                    const email = ContractUtils.sha256String(elem.email);
+                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
+                        .to.emit(franchiseeCollection, "Added")
+                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                }
+                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+            });
+        });
+
         context("Prepare email-address", () => {
             it("Link email-address", async () => {
                 const nonce = await linkCollectionContract.nonce(users[0].address);
@@ -801,6 +878,18 @@ describe("Test for Ledger", () => {
             for (const elem of users) {
                 await tokenContract.connect(deployer).transfer(elem.address, amount.value);
             }
+        });
+
+        context("Prepare franchisee data", () => {
+            it("Add Franchisee Data", async () => {
+                for (const elem of franchiseeData) {
+                    const email = ContractUtils.sha256String(elem.email);
+                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
+                        .to.emit(franchiseeCollection, "Added")
+                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                }
+                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+            });
         });
 
         context("Prepare email-address", () => {
@@ -958,6 +1047,282 @@ describe("Test for Ledger", () => {
                 expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.sub(amountToken)
                 );
+            });
+        });
+    });
+
+    context("Clearing for franchisees", () => {
+        const purchaseData: PurchaseData[] = [
+            {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                userEmail: "a@example.com",
+                franchiseeId: "F000100",
+            },
+            {
+                purchaseId: "P000002",
+                timestamp: 1675522800,
+                amount: 10000,
+                userEmail: "a@example.com",
+                franchiseeId: "F000100",
+            },
+            {
+                purchaseId: "P000003",
+                timestamp: 1677942000,
+                amount: 10000,
+                userEmail: "a@example.com",
+                franchiseeId: "F000100",
+            },
+            {
+                purchaseId: "P000004",
+                timestamp: 1680620400,
+                amount: 10000,
+                userEmail: "b@example.com",
+                franchiseeId: "F000200",
+            },
+            {
+                purchaseId: "P000005",
+                timestamp: 1683212400,
+                amount: 10000,
+                userEmail: "b@example.com",
+                franchiseeId: "F000300",
+            },
+            {
+                purchaseId: "P000005",
+                timestamp: 1683212400,
+                amount: 10000,
+                userEmail: "b@example.com",
+                franchiseeId: "F000400",
+            },
+        ];
+
+        before("Deploy", async () => {
+            await deployAllContract();
+        });
+
+        before("Prepare Token", async () => {
+            for (const elem of users) {
+                await tokenContract.connect(deployer).transfer(elem.address, amount.value);
+            }
+        });
+
+        context("Prepare franchisee data", () => {
+            it("Add Franchisee Data", async () => {
+                for (const elem of franchiseeData) {
+                    const email = ContractUtils.sha256String(elem.email);
+                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
+                        .to.emit(franchiseeCollection, "Added")
+                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                }
+                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+            });
+        });
+
+        context("Prepare foundation's asset", () => {
+            it("Register foundation's account", async () => {
+                const nonce = await linkCollectionContract.nonce(foundation.address);
+                const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
+                await expect(
+                    linkCollectionContract.connect(validators[0]).add(foundationAccount, foundation.address, signature)
+                )
+                    .to.emit(linkCollectionContract, "Added")
+                    .withArgs(foundationAccount, foundation.address);
+            });
+
+            it("Deposit foundation's token", async () => {
+                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        depositor: foundation.address,
+                        amount: assetAmount.value,
+                        balance: assetAmount.value,
+                    });
+            });
+        });
+
+        context("Save Purchase Data", () => {
+            it("Save Purchase Data", async () => {
+                for (const purchase of purchaseData) {
+                    const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const amt = purchaseAmount.div(100);
+                    await expect(
+                        ledgerContract
+                            .connect(validators[0])
+                            .savePurchase(
+                                purchase.purchaseId,
+                                purchase.timestamp,
+                                purchaseAmount,
+                                emailHash,
+                                purchase.franchiseeId
+                            )
+                    )
+                        .to.emit(ledgerContract, "SavedPurchase")
+                        .withArgs(
+                            purchase.purchaseId,
+                            purchase.timestamp,
+                            purchaseAmount,
+                            emailHash,
+                            purchase.franchiseeId
+                        )
+                        .emit(ledgerContract, "ProvidedMileage")
+                        .withArgs(emailHash, amt);
+                }
+            });
+
+            it("Check balances", async () => {
+                const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
+                for (const purchase of purchaseData) {
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const key = ContractUtils.sha256String(purchase.userEmail);
+                    const oldValue = expected.get(key);
+                    const mileage = purchaseAmount.div(100);
+                    if (oldValue !== undefined) expected.set(key, oldValue.add(mileage));
+                    else expected.set(key, mileage);
+                }
+                for (const key of expected.keys())
+                    expect(await ledgerContract.mileageLedger(key)).to.deep.equal(expected.get(key));
+            });
+
+            it("Check franchisee data", async () => {
+                const franchisee1 = await franchiseeCollection.getItem("F000100");
+                expect(franchisee1.providedMileage).to.equal(Amount.make(10000 * 3, 18).value.div(100));
+                const franchisee2 = await franchiseeCollection.getItem("F000200");
+                expect(franchisee2.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                const franchisee3 = await franchiseeCollection.getItem("F000300");
+                expect(franchisee3.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                const franchisee4 = await franchiseeCollection.getItem("F000400");
+                expect(franchisee4.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+            });
+        });
+
+        context("Prepare email-address", () => {
+            it("Link email-address", async () => {
+                const nonce = await linkCollectionContract.nonce(users[0].address);
+                const hash = emailHashes[0];
+                const signature = await ContractUtils.sign(users[0], hash, nonce);
+                await expect(linkCollectionContract.connect(validators[0]).add(hash, users[0].address, signature))
+                    .to.emit(linkCollectionContract, "Added")
+                    .withArgs(hash, users[0].address);
+            });
+        });
+
+        context("Pay mileage", () => {
+            it("Pay mileage - Success", async () => {
+                const purchase = {
+                    purchaseId: "P000008",
+                    amount: 300,
+                    userEmail: "a@example.com",
+                    franchiseeId: "F000200",
+                };
+
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const nonce = await ledgerContract.nonce(users[0].address);
+                const signature = await ContractUtils.signPayment(
+                    users[0],
+                    purchase.purchaseId,
+                    purchaseAmount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    nonce
+                );
+                await expect(
+                    ledgerContract
+                        .connect(relay)
+                        .payMileage(
+                            purchase.purchaseId,
+                            purchaseAmount,
+                            emailHash,
+                            purchase.franchiseeId,
+                            users[0].address,
+                            signature
+                        )
+                )
+                    .to.emit(ledgerContract, "ProvidedMileageToFranchisee")
+                    .to.emit(ledgerContract, "PaidMileage")
+                    .withNamedArgs({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        userEmail: emailHash,
+                        franchiseeId: purchase.franchiseeId,
+                    });
+                const franchisee2 = await franchiseeCollection.getItem("F000200");
+                expect(franchisee2.providedMileage).to.equal(Amount.make(100, 18).value);
+                expect(franchisee2.usedMileage).to.equal(Amount.make(300, 18).value);
+                expect(franchisee2.clearedMileage).to.equal(Amount.make(200, 18).value);
+            });
+        });
+
+        context("Deposit token", () => {
+            it("Deposit token - Success", async () => {
+                const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+                await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
+                await expect(ledgerContract.connect(users[0]).deposit(amount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        depositor: users[0].address,
+                        amount: amount.value,
+                        balance: oldTokenBalance.add(amount.value),
+                    });
+                expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(
+                    oldTokenBalance.add(amount.value)
+                );
+            });
+        });
+
+        context("Pay token", () => {
+            it("Pay token - Success", async () => {
+                const purchase = {
+                    purchaseId: "P000008",
+                    amount: 500,
+                    userEmail: "a@example.com",
+                    franchiseeId: "F000300",
+                };
+
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const tokenAmount = purchaseAmount.mul(multiple).div(price);
+                const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
+                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const nonce = await ledgerContract.nonce(users[0].address);
+                const signature = await ContractUtils.signPayment(
+                    users[0],
+                    purchase.purchaseId,
+                    purchaseAmount,
+                    emailHash,
+                    purchase.franchiseeId,
+                    nonce
+                );
+                await expect(
+                    ledgerContract
+                        .connect(relay)
+                        .payToken(
+                            purchase.purchaseId,
+                            purchaseAmount,
+                            emailHash,
+                            purchase.franchiseeId,
+                            users[0].address,
+                            signature
+                        )
+                )
+                    .to.emit(ledgerContract, "ProvidedMileageToFranchisee")
+                    .to.emit(ledgerContract, "PaidToken")
+                    .withNamedArgs({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        userEmail: emailHash,
+                        franchiseeId: purchase.franchiseeId,
+                    });
+                expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                    oldFoundationTokenBalance.add(tokenAmount)
+                );
+                const franchisee3 = await franchiseeCollection.getItem("F000300");
+                expect(franchisee3.providedMileage).to.equal(Amount.make(100, 18).value);
+                expect(franchisee3.usedMileage).to.equal(Amount.make(500, 18).value);
+                expect(franchisee3.clearedMileage).to.equal(Amount.make(400, 18).value);
             });
         });
     });
