@@ -100,7 +100,7 @@ const config = {
         },
         localhost: {
             url: "http://localhost:8545",
-            chainId: 1337,
+            chainId: 24680,
             accounts: getAccounts(),
             deploy: ["./deploy"],
         },
