@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "link-email-wallet/contracts/LinkCollection.sol";
+import "link-email-wallet-osx-artifacts/contracts/LinkCollection.sol";
 import "./ValidatorCollection.sol";
 import "./TokenPrice.sol";
 import "./FranchiseeCollection.sol";
