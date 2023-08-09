@@ -1,0 +1,72 @@
+{
+    "name": "dms-osx-artifacts",
+    "version": "1.0.0",
+    "description": "Smart contracts that decentralized mileage systems",
+    "files": [
+        "**/*.sol"
+    ],
+    "scripts": {
+        "test": "hardhat test",
+        "clean": "hardhat clean",
+        "build": "hardhat compile",
+        "build:npm": "rollup --config rollup.config.ts",
+        "deploy:hardhat": "npx hardhat deploy",
+        "deploy:mainnet": "npx hardhat deploy --network mainnet",
+        "deploy:testnet": "npx hardhat deploy --network testnet",
+        "deploy:localhost": "npx hardhat deploy --network localhost",
+        "lint": "node_modules/.bin/tslint --config tslint.json \\\"{src,test}/**/*.ts\\\"",
+        "lint-fix": "node_modules/.bin/tslint --fix --config tslint.json \\\"{src,test}/**/*.ts\\\"",
+        "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
+        "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write",
+        "docgen": "hardhat docgen",
+        "debug:Ledger": "node_modules/.bin/hardhat test test/Ledger.test.ts",
+        "debug:Validator": "node_modules/.bin/hardhat test test/ValidatorCollection.test.ts",
+        "debug:TokenPrice": "node_modules/.bin/hardhat test test/TokenPrice.test.ts",
+        "debug:FranchiseeCollection": "node_modules/.bin/hardhat test test/FranchiseeCollection.test.ts"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/bosagora/dms-osx.git"
+    },
+    "author": "BOSagora Foundation",
+    "license": "MIT",
+    "bugs": {
+        "url": ""
+    },
+    "homepage": "",
+    "devDependencies": {
+        "@nomiclabs/hardhat-ethers": "^2.2.1",
+        "@nomiclabs/hardhat-waffle": "^2.0.2",
+        "@openzeppelin/contracts": "^4.8.2",
+        "@rollup/plugin-json": "^4.1.0",
+        "@rollup/plugin-typescript": "^8.3.1",
+        "@typechain/ethers-v5": "^10.1.0",
+        "@typechain/hardhat": "^6.1.2",
+        "@types/chai": "^4.3.5",
+        "@types/mocha": "^10.0.0",
+        "@types/node": "^12.20.43",
+        "assert": "^2.0.0",
+        "chai": "^4.3.7",
+        "chai-http": "^4.3.7",
+        "dotenv": "^10.0.0",
+        "ethereum-waffle": "^4.0.10",
+        "ethers": "^5.6.9",
+        "hardhat": "^2.12.7",
+        "hardhat-deploy": "^0.9.26",
+        "hardhat-gas-reporter": "^1.0.7",
+        "link-email-wallet": "^1.0.0",
+        "mocha": "10.1.0",
+        "prettier": "^2.5.1",
+        "prettier-plugin-solidity": "^1.1.1",
+        "rollup": "^2.70.1",
+        "rollup-plugin-dts": "^4.2.0",
+        "solhint": "^3.3.6",
+        "solidity-coverage": "^0.8.2",
+        "solidity-docgen": "^0.6.0-beta.35",
+        "ts-node": "^10.5.0",
+        "tslint": "^6.1.3",
+        "tslint-config-prettier": "^1.18.0",
+        "typechain": "^8.1.0",
+        "typescript": "^4.5.5"
+    }
+}
