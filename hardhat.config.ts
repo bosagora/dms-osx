@@ -1,6 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-web3";
 import "@typechain/hardhat";
 import * as dotenv from "dotenv";
 import { utils, Wallet } from "ethers";
