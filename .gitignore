@@ -141,3 +141,5 @@ artifacts
 
 *.iml
 /deployments/localhost/
+
+deployed_contracts.json

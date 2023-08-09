@@ -1,0 +1,10 @@
+{
+  "localhost": {
+    "LinkCollection": "0xFDa3d1ff3C570c2f76c2157Ef7A8640A75794eD9",
+    "Token": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
+    "ValidatorCollection": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
+    "TokenPrice": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
+    "FranchiseeCollection": "0xD9d2A3fA6A93EC688831969C286B91524735aa35",
+    "Ledger": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F"
+  }
+}
