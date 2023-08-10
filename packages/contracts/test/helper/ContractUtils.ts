@@ -9,8 +9,9 @@
  */
 
 import crypto from "crypto";
-import { BigNumberish, Wallet } from "ethers";
+import { BigNumberish, Signer } from "ethers";
 import * as hre from "hardhat";
+import { arrayify } from "ethers/lib/utils";
 
 export class ContractUtils {
     /**
@@ -42,16 +43,17 @@ export class ContractUtils {
         return "0x" + data.toString("hex");
     }
 
-    public static sign(signer: Wallet, hash: string, nonce: BigNumberish): Promise<string> {
+    public static async sign(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256"],
-            [hash, signer.address, nonce]
+            [hash, await signer.getAddress(), nonce]
         );
-        const sig = signer._signingKey().signDigest(hre.ethers.utils.keccak256(encodedResult));
-        return Promise.resolve(hre.ethers.utils.joinSignature(sig));
+        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return signer.signMessage(message);
     }
-    public static signPayment(
-        signer: Wallet,
+
+    public static async signPayment(
+        signer: Signer,
         purchaseId: string,
         amount: BigNumberish,
         userEmail: string,
@@ -60,23 +62,23 @@ export class ContractUtils {
     ): Promise<string> {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["string", "uint256", "bytes32", "string", "address", "uint256"],
-            [purchaseId, amount, userEmail, franchiseeId, signer.address, nonce]
+            [purchaseId, amount, userEmail, franchiseeId, await signer.getAddress(), nonce]
         );
-        const sig = signer._signingKey().signDigest(hre.ethers.utils.keccak256(encodedResult));
-        return Promise.resolve(hre.ethers.utils.joinSignature(sig));
+        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return signer.signMessage(message);
     }
 
-    public static signExchange(
-        signer: Wallet,
+    public static async signExchange(
+        signer: Signer,
         userEmail: string,
         amount: BigNumberish,
         nonce: BigNumberish
     ): Promise<string> {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "uint256", "address", "uint256"],
-            [userEmail, amount, signer.address, nonce]
+            [userEmail, amount, await signer.getAddress(), nonce]
         );
-        const sig = signer._signingKey().signDigest(hre.ethers.utils.keccak256(encodedResult));
-        return Promise.resolve(hre.ethers.utils.joinSignature(sig));
+        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return signer.signMessage(message);
     }
 }
