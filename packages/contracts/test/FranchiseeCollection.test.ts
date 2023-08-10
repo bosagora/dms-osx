@@ -64,34 +64,34 @@ describe("Test for FranchiseeCollection", () => {
     context("Add", () => {
         interface IFranchiseeData {
             franchiseeId: string;
-            timestamp: number;
+            payoutWaitTime: number;
             email: string;
         }
 
         const franchiseeData: IFranchiseeData[] = [
             {
                 franchiseeId: "F000100",
-                timestamp: 0,
+                payoutWaitTime: 0,
                 email: "f1@example.com",
             },
             {
                 franchiseeId: "F000200",
-                timestamp: 0,
+                payoutWaitTime: 0,
                 email: "f2@example.com",
             },
             {
                 franchiseeId: "F000300",
-                timestamp: 0,
+                payoutWaitTime: 0,
                 email: "f3@example.com",
             },
             {
                 franchiseeId: "F000400",
-                timestamp: 0,
+                payoutWaitTime: 0,
                 email: "f4@example.com",
             },
             {
                 franchiseeId: "F000500",
-                timestamp: 0,
+                payoutWaitTime: 0,
                 email: "f5@example.com",
             },
         ];
@@ -104,9 +104,11 @@ describe("Test for FranchiseeCollection", () => {
         it("Success", async () => {
             for (const elem of franchiseeData) {
                 const email = ContractUtils.sha256String(elem.email);
-                await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
+                await expect(
+                    franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.payoutWaitTime, email)
+                )
                     .to.emit(franchiseeCollection, "Added")
-                    .withArgs(elem.franchiseeId, elem.timestamp, email);
+                    .withArgs(elem.franchiseeId, elem.payoutWaitTime, email);
             }
             expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
         });

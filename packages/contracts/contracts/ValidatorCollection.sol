@@ -25,10 +25,10 @@ contract ValidatorCollection {
         Status status; // 검증자의 상태
     }
 
-    /// @notice 검증자 데이타가 저장되는 배열
+    /// @notice 검증자 데이터가 저장되는 배열
     address[] public items;
 
-    /// @notice 유효한 검증자 데이타가 저장되는 배열
+    /// @notice 유효한 검증자 데이터가 저장되는 배열
     address[] public activeItems;
 
     mapping(address => ValidatorData) public validators;
@@ -37,7 +37,7 @@ contract ValidatorCollection {
     event Added(address validator, uint256 start, uint256 balance, Status status);
     /// @notice 자금이 입급될 때 발생되는 이벤트
     event Deposited(address validator, uint256 amount, uint256 balance);
-    /// @notice 검증자의 등록요청이 되었을 때 발생되는 이벤트
+    /// @notice 검증자의 등록이 요청 되었을 때 발생되는 이벤트
     event RequestedRegistration(address requester);
     /// @notice 검증자의 강제 탈퇴가 요청 되었을 때 발생되는 이벤트
     event RequestedExit(address requester, address validator);
@@ -45,7 +45,7 @@ contract ValidatorCollection {
     event Exited(address validator);
 
     /// @notice 생성자
-    /// @param _validators 초기에 설정될 검증자이다. 예치금이 예치된 후 그 즉시 활성화 된다.
+    /// @param _validators 초기에 설정될 검증자, 예치금이 예치된 후 그 즉시 활성화 된다.
     constructor(address _tokenAddress, address[] memory _validators) {
         tokenAddress = _tokenAddress;
 
@@ -63,8 +63,8 @@ contract ValidatorCollection {
         }
     }
 
-    /// @notice 예치금이 추가로 입급합니다.
-    /// @param _amount 추가로 입금할 예치금
+    /// @notice 예치금을 추가로 입급합니다.
+    /// @param _amount 추가로 입금할 예치 금액
     function deposit(uint256 _amount) public {
         ValidatorData memory item = validators[msg.sender];
         require(item.validator == msg.sender, "Not validator");
@@ -82,7 +82,7 @@ contract ValidatorCollection {
         emit Deposited(msg.sender, _amount, validators[msg.sender].balance);
     }
 
-    /// @notice 신규검증자의 등록을 신청합니다.
+    /// @notice 신규 검증자 등록을 신청합니다.
     function requestRegistration() public {
         require(validators[msg.sender].status == Status.INVALID, "Already validator");
 
@@ -129,6 +129,7 @@ contract ValidatorCollection {
         _makeActiveItems();
     }
 
+    /// @notice 유효한 검증자의 수를 리턴합니다.
     function getActiveItemsLength() public view returns (uint256 length) {
         return activeItems.length;
     }

@@ -15,7 +15,7 @@ contract FranchiseeCollection {
     /// @notice 가맹점의 데이터
     struct FranchiseeData {
         string franchiseeId; // 가맹점 아이디
-        uint256 timestamp; // 제품구매 후 마일리지 지급시간
+        uint256 payoutWaitTime; // 제품구매 후 마일리지 지급시간
         bytes32 email; // 가맹점주 이메일 해시
         uint256 providedMileage; // 제공된 마일리지 총량
         uint256 usedMileage; // 사용된 마일리지 총량
@@ -23,7 +23,7 @@ contract FranchiseeCollection {
         FranchiseeStatus status;
     }
 
-    /// @notice 가맹점 아이디에 해당하는 가맹점데이터가 저장되는 맵
+    /// @notice 가맹점 아이디에 해당하는 가맹점 데이터가 저장되는 맵
     mapping(string => FranchiseeData) public franchisees;
 
     /// @notice 가맹점 아이디가 저장된 배열
@@ -32,11 +32,11 @@ contract FranchiseeCollection {
     address public validatorAddress;
     ValidatorCollection private validatorCollection;
 
-    /// @notice 데아타가 추가될 때 발생되는 이벤트
+    /// @notice 가맹점이 추가될 때 발생되는 이벤트
     event Added(string franchiseeId, uint256 timestamp, bytes32 email);
-    /// @notice 데아타가 추가될 때 발생되는 이벤트
+    /// @notice 가맹점의 마일리지가 증가할 때 발생되는 이벤트
     event IncreasedProvidedMileage(string franchiseeId, uint256 increase, uint256 total);
-    /// @notice 데아타가 추가될 때 발생되는 이벤트
+    /// @notice 사용자의 마일리지가 증가할 때 발생되는 이벤트
     event IncreasedUsedMileage(string franchiseeId, uint256 increase, uint256 total);
     /// @notice 정산된 마일리가 증가할 때 발생되는 이벤트
     event IncreasedClearedMileage(string franchiseeId, uint256 increase, uint256 total);
@@ -82,12 +82,16 @@ contract FranchiseeCollection {
 
     /// @notice 가맹점을 추가한다
     /// @param _franchiseeId 가맹점 아이디
-    /// @param _timestamp 제품구매 후 마일리지 지급시간
+    /// @param _payoutWaitTime 제품구매 후 마일리지가 지급될 시간
     /// @param _email 가맹점주 이메일 해시
-    function add(string memory _franchiseeId, uint256 _timestamp, bytes32 _email) public onlyValidator(msg.sender) {
+    function add(
+        string memory _franchiseeId,
+        uint256 _payoutWaitTime,
+        bytes32 _email
+    ) public onlyValidator(msg.sender) {
         FranchiseeData memory data = FranchiseeData({
             franchiseeId: _franchiseeId,
-            timestamp: _timestamp,
+            payoutWaitTime: _payoutWaitTime,
             email: _email,
             providedMileage: 0,
             usedMileage: 0,
@@ -97,7 +101,7 @@ contract FranchiseeCollection {
         items.push(_franchiseeId);
         franchisees[_franchiseeId] = data;
 
-        emit Added(_franchiseeId, _timestamp, _email);
+        emit Added(_franchiseeId, _payoutWaitTime, _email);
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
@@ -138,7 +142,7 @@ contract FranchiseeCollection {
         }
     }
 
-    /// @notice 가맹점데아터를 리턴한다
+    /// @notice 가맹점 데아터를 리턴한다
     function getItem(string memory _franchiseeId) public view returns (FranchiseeData memory) {
         return franchisees[_franchiseeId];
     }

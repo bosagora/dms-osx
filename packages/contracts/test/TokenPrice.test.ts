@@ -45,7 +45,7 @@ describe("Test for TokenPrice", () => {
             await expect(validatorContract.connect(elem).deposit(amount.value))
                 .to.emit(validatorContract, "Deposited")
                 .withArgs(elem.address, amount.value, amount.value);
-            let item = await validatorContract.validators(elem.address);
+            const item = await validatorContract.validators(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
@@ -71,7 +71,7 @@ describe("Test for TokenPrice", () => {
             const price = 123000000000;
             await expect(tokenPriceContract.connect(validators[0]).set(currency, price))
                 .to.emit(tokenPriceContract, "SetPrice")
-                .withNamedArgs({ currency: currency, price: price });
+                .withNamedArgs({ currency, price });
         });
     });
 
