@@ -33,7 +33,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
         const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
         const nonce = await linkCollectionContract.nonce(owner);
-        const signature = await ContractUtils.sign(new Wallet(process.env.OWNER || ""), foundationAccount, nonce);
+        const signature = await ContractUtils.sign(await ethers.getSigner(owner), foundationAccount, nonce);
 
         const tx = await linkCollectionContract
             .connect(await ethers.getSigner(validators[0]))
