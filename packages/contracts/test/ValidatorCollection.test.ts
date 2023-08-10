@@ -70,7 +70,7 @@ describe("Test for ValidatorCollection", () => {
             await expect(contract.connect(elem).deposit(halfAmount.value))
                 .to.emit(contract, "Deposited")
                 .withArgs(elem.address, halfAmount.value, halfAmount.value);
-            let item = await contract.validators(elem.address);
+            const item = await contract.validators(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 2);
             assert.deepStrictEqual(item.balance, halfAmount.value);
@@ -83,7 +83,7 @@ describe("Test for ValidatorCollection", () => {
             await expect(contract.connect(elem).deposit(halfAmount.value))
                 .to.emit(contract, "Deposited")
                 .withArgs(elem.address, halfAmount.value, amount.value);
-            let item = await contract.validators(elem.address);
+            const item = await contract.validators(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
@@ -112,7 +112,7 @@ describe("Test for ValidatorCollection", () => {
         await expect(contract.connect(user1).requestRegistration())
             .to.emit(contract, "RequestedRegistration")
             .withArgs(user1.address);
-        let item = await contract.validators(user1.address);
+        const item = await contract.validators(user1.address);
         assert.deepStrictEqual(item.validator, user1.address);
         assert.deepStrictEqual(item.status, 1);
         assert.deepStrictEqual(item.balance, amount.value);
@@ -126,7 +126,7 @@ describe("Test for ValidatorCollection", () => {
         await expect(contract.connect(validator1).requestExit(validator3.address))
             .to.emit(contract, "RequestedExit")
             .withArgs(validator1.address, validator3.address);
-        let item = await contract.validators(validator3.address);
+        const item = await contract.validators(validator3.address);
         assert.deepStrictEqual(item.validator, validator3.address);
         assert.deepStrictEqual(item.status, 3);
         assert.deepStrictEqual(item.balance.toString(), "0");
@@ -140,7 +140,7 @@ describe("Test for ValidatorCollection", () => {
     it("Voluntary Exit 1", async () => {
         const balanceBefore = await tokenContract.balanceOf(contract.address);
         await expect(contract.connect(validator1).exit()).to.emit(contract, "Exited").withArgs(validator1.address);
-        let item = await contract.validators(validator1.address);
+        const item = await contract.validators(validator1.address);
         assert.deepStrictEqual(item.validator, validator1.address);
         assert.deepStrictEqual(item.status, 3);
         assert.deepStrictEqual(item.balance.toString(), "0");

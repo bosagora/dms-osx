@@ -46,7 +46,7 @@ contract Ledger {
     event SavedPurchase(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
     /// @notice 마일리지가 지급될 때 발생되는 이벤트
     event ProvidedMileage(bytes32 email, uint256 amount);
-    /// @notice 마일리지가 지급될 때 발생되는 이벤트
+    /// @notice 마일리지가 정산될 때 발생되는 이벤트
     event ProvidedMileageToFranchisee(bytes32 email, uint256 amount);
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(bytes32 email, uint256 amount, uint256 amountToken);
@@ -72,8 +72,8 @@ contract Ledger {
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
-    /// @param _tokenAddress 토큰컨트랙트의 주소
-    /// @param _validatorAddress 검증자컬랙션 컨트랙트의 주소
+    /// @param _tokenAddress 토큰 컨트랙트의 주소
+    /// @param _validatorAddress 검증자 컬랙션 컨트랙트의 주소
     /// @param _linkCollectionAddress 이메일-지갑주소 링크 컨트랙트의 주소
     /// @param _tokenPriceAddress 토큰가격을 제공하는 컨트랙트의 주소
     /// @param _franchiseeCollectionAddress 가맹점 컬랙션 컨트랙트의 주소
@@ -147,7 +147,7 @@ contract Ledger {
     }
 
     /// @notice 마일리지를 지급합니다.
-    /// @dev 구매데아타를 확인한 후 호출됩니다.
+    /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _email 이메일 해시
     /// @param _amount 지급할 마일리지
     function provideMileage(bytes32 _email, uint256 _amount) internal {
@@ -157,7 +157,7 @@ contract Ledger {
     }
 
     /// @notice 토큰을 지급합니다.
-    /// @dev 구매데아타를 확인한 후 호출됩니다.
+    /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _email 이메일 해시
     /// @param _amount 지급할 토큰
     function provideToken(bytes32 _email, uint256 _amount) internal {
