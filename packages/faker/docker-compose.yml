@@ -1,0 +1,10 @@
+version: "3.3"
+services:
+    dms-osx-faker:
+        image: bosagora/dms-osx-faker:latest
+        container_name: dms-osx-faker
+        restart: always
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        environment:
+            RPC_URL: http://host.docker.internal:8545
