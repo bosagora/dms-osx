@@ -1,0 +1,239 @@
+{
+    "address": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "address",
+                    "name": "_validatorAddress",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        },
+        {
+            "anonymous": false,
+            "inputs": [
+                {
+                    "indexed": false,
+                    "internalType": "string",
+                    "name": "currency",
+                    "type": "string"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "price",
+                    "type": "uint256"
+                }
+            ],
+            "name": "SetPrice",
+            "type": "event"
+        },
+        {
+            "inputs": [],
+            "name": "MULTIPLE",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "_currency",
+                    "type": "string"
+                }
+            ],
+            "name": "get",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "",
+                    "type": "string"
+                }
+            ],
+            "name": "prices",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "string",
+                    "name": "_currency",
+                    "type": "string"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "_price",
+                    "type": "uint256"
+                }
+            ],
+            "name": "set",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [],
+            "name": "validatorAddress",
+            "outputs": [
+                {
+                    "internalType": "address",
+                    "name": "",
+                    "type": "address"
+                }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ],
+    "transactionHash": "0xe7170071b743badee4e7a1c36a71b2ed10831ebef8255714e4f9bdbe1bcf253d",
+    "receipt": {
+        "to": null,
+        "from": "0xDc245797409fb79446523Fa1A4ca97294eef22EE",
+        "contractAddress": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
+        "transactionIndex": 0,
+        "gasUsed": "457770",
+        "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "blockHash": "0xc45bab3f1f75cdd2f51d501596a99a0a40c452b35a9436866bd97bb7dfa8aa71",
+        "transactionHash": "0xe7170071b743badee4e7a1c36a71b2ed10831ebef8255714e4f9bdbe1bcf253d",
+        "logs": [],
+        "blockNumber": 81,
+        "cumulativeGasUsed": "457770",
+        "status": 1,
+        "byzantium": true
+    },
+    "args": ["0x979a62090BDCff36F2e140F6915fbAdA7510cb6a"],
+    "numDeployments": 1,
+    "solcInputHash": "a7b1b71c1f5d4e04a8f1a0f0fa51eebb",
+    "metadata": "{\"compiler\":{\"version\":\"0.8.0+commit.c7dfd78e\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_validatorAddress\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"currency\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"price\",\"type\":\"uint256\"}],\"name\":\"SetPrice\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"MULTIPLE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_currency\",\"type\":\"string\"}],\"name\":\"get\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"name\":\"prices\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_currency\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_price\",\"type\":\"uint256\"}],\"name\":\"set\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"validatorAddress\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"constructor\":{\"params\":{\"_validatorAddress\":\"\\uac80\\uc99d\\uc790\\uceec\\ub799\\uc158\\uc758 \\uc8fc\\uc18c\"}},\"get(string)\":{\"params\":{\"_currency\":\"\\ud1b5\\ud654\\uba85\"}},\"set(string,uint256)\":{\"params\":{\"_currency\":\"\\ud1b5\\ud654\\uba85\",\"_price\":\"\\ud1a0\\ud070\\uc758 \\uac00\\uaca9\"}}},\"version\":1},\"userdoc\":{\"events\":{\"SetPrice(string,uint256)\":{\"notice\":\"\\uac00\\uaca9\\uc774 \\uc800\\uc7a5\\ub420 \\ub54c \\ubc1c\\uc0dd\\ub418\\ub294 \\uc774\\ubca4\\ud2b8\"}},\"kind\":\"user\",\"methods\":{\"constructor\":{\"notice\":\"\\uc0dd\\uc131\\uc790\"},\"get(string)\":{\"notice\":\"\\ud1b5\\ud654\\uc5d0 \\ub300\\ud55c \\uac00\\uaca9\\uc744 \\uc81c\\uacf5\\ud55c\\ub2e4.\"},\"set(string,uint256)\":{\"notice\":\"\\ud1b5\\ud654\\uc5d0 \\ub300\\ud55c \\uac00\\uaca9\\uc744 \\uc800\\uc7a5\\ud55c\\ub2e4.\"}},\"notice\":\"\\ud1a0\\ud070 \\uac00\\uaca9\\uc744 \\uc81c\\uacf5\\ud558\\ub294 \\uc2a4\\ub9c8\\ud2b8\\ucee8\\ud2b8\\ub799\\ud2b8\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/TokenPrice.sol\":\"TokenPrice\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":2000},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v4.9.0) (token/ERC20/IERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `to`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address to, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `from` to `to` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(address from, address to, uint256 amount) external returns (bool);\\n}\\n\",\"keccak256\":\"0x287b55befed2961a7eabd7d7b1b2839cbca8a5b80ef8dcbb25ed3d4c2002c305\",\"license\":\"MIT\"},\"contracts/TokenPrice.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"./ValidatorCollection.sol\\\";\\n\\n/// @notice \\ud1a0\\ud070 \\uac00\\uaca9\\uc744 \\uc81c\\uacf5\\ud558\\ub294 \\uc2a4\\ub9c8\\ud2b8\\ucee8\\ud2b8\\ub799\\ud2b8\\ncontract TokenPrice {\\n    uint256 public constant MULTIPLE = 1000000000;\\n    mapping(string => uint256) public prices;\\n\\n    address public validatorAddress;\\n    ValidatorCollection private validatorCollection;\\n\\n    /// @notice \\uac00\\uaca9\\uc774 \\uc800\\uc7a5\\ub420 \\ub54c \\ubc1c\\uc0dd\\ub418\\ub294 \\uc774\\ubca4\\ud2b8\\n    event SetPrice(string currency, uint256 price);\\n\\n    /// @notice \\uc0dd\\uc131\\uc790\\n    /// @param _validatorAddress \\uac80\\uc99d\\uc790\\uceec\\ub799\\uc158\\uc758 \\uc8fc\\uc18c\\n    constructor(address _validatorAddress) {\\n        validatorAddress = _validatorAddress;\\n\\n        validatorCollection = ValidatorCollection(_validatorAddress);\\n    }\\n\\n    modifier onlyValidator(address _account) {\\n        bool isValidator = false;\\n        for (uint256 i = 0; i < validatorCollection.getActiveItemsLength(); ++i) {\\n            if (_account == validatorCollection.activeItems(i)) {\\n                isValidator = true;\\n                break;\\n            }\\n        }\\n        require(isValidator, \\\"Not validator\\\");\\n        _;\\n    }\\n\\n    /// @notice \\ud1b5\\ud654\\uc5d0 \\ub300\\ud55c \\uac00\\uaca9\\uc744 \\uc800\\uc7a5\\ud55c\\ub2e4.\\n    /// @param _currency \\ud1b5\\ud654\\uba85\\n    /// @param _price \\ud1a0\\ud070\\uc758 \\uac00\\uaca9\\n    function set(string memory _currency, uint256 _price) public onlyValidator(msg.sender) {\\n        prices[_currency] = _price;\\n\\n        emit SetPrice(_currency, _price);\\n    }\\n\\n    /// @notice \\ud1b5\\ud654\\uc5d0 \\ub300\\ud55c \\uac00\\uaca9\\uc744 \\uc81c\\uacf5\\ud55c\\ub2e4.\\n    /// @param _currency \\ud1b5\\ud654\\uba85\\n    function get(string memory _currency) public view returns (uint256) {\\n        return prices[_currency];\\n    }\\n}\\n\",\"keccak256\":\"0x275730eb5386eaf632954813fd6997a0c5500c8176c6afce11ed3827482981cf\",\"license\":\"MIT\"},\"contracts/ValidatorCollection.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\n\\n/// @notice \\uac80\\uc99d\\uc790\\ub4e4\\uc744 \\uc800\\uc7a5\\ud558\\ub294 \\ucee8\\ud2b8\\ub799\\ud2b8\\ncontract ValidatorCollection {\\n    uint256 public constant MINIMUM_DEPOSIT_AMOUNT = 50000000000000000000000;\\n\\n    address private tokenAddress;\\n\\n    /// @notice \\uac80\\uc99d\\uc790\\uc758 \\uc0c1\\ud0dc\\ucf54\\ub4dc\\n    enum Status {\\n        INVALID, //  \\ucd08\\uae30\\uac12\\n        ACTIVE, //  \\uac80\\uc99d\\uc790\\uc758 \\uae30\\ub2a5\\uc774 \\ud65c\\uc131\\ud654\\ub428\\n        STOP, //  \\uc608\\uce58\\uae08 \\ubd80\\uc871\\uc73c\\ub85c \\uc815\\uc9c0\\ub41c \\uc0c1\\ud0dc\\n        EXIT //  \\ud0c8\\ud1f4\\ud55c \\uc0c1\\ud0dc\\n    }\\n\\n    struct ValidatorData {\\n        address validator; // \\uac80\\uc99d\\uc790\\uc758 \\uc9c0\\uac11\\uc8fc\\uc18c\\n        uint256 start; // \\uac80\\uc99d\\uc790\\ub85c\\uc11c \\uc5ed\\ud560\\uc744 \\uc218\\ud589\\ud560 \\uc218 \\uc788\\ub294 \\uc2dc\\uc791 \\uc2dc\\uac04\\n        uint256 balance; // \\uac80\\uc99d\\uc790\\uc758 \\uc608\\uce58\\uae08\\n        Status status; // \\uac80\\uc99d\\uc790\\uc758 \\uc0c1\\ud0dc\\n    }\\n\\n    /// @notice \\uac80\\uc99d\\uc790 \\ub370\\uc774\\ud130\\uac00 \\uc800\\uc7a5\\ub418\\ub294 \\ubc30\\uc5f4\\n    address[] public items;\\n\\n    /// @notice \\uc720\\ud6a8\\ud55c \\uac80\\uc99d\\uc790 \\ub370\\uc774\\ud130\\uac00 \\uc800\\uc7a5\\ub418\\ub294 \\ubc30\\uc5f4\\n    address[] public activeItems;\\n\\n    mapping(address => ValidatorData) public validators;\\n\\n    /// @notice \\uac80\\uc99d\\uc790\\uac00 \\ucd94\\uac00\\ub420 \\ub54c \\ubc1c\\uc0dd\\ub418\\ub294 \\uc774\\ubca4\\ud2b8\\n    event Added(address validator, uint256 start, uint256 balance, Status status);\\n    /// @notice \\uc790\\uae08\\uc774 \\uc785\\uae09\\ub420 \\ub54c \\ubc1c\\uc0dd\\ub418\\ub294 \\uc774\\ubca4\\ud2b8\\n    event Deposited(address validator, uint256 amount, uint256 balance);\\n    /// @notice \\uac80\\uc99d\\uc790\\uc758 \\ub4f1\\ub85d\\uc774 \\uc694\\uccad \\ub418\\uc5c8\\uc744 \\ub54c \\ubc1c\\uc0dd\\ub418\\ub294 \\uc774\\ubca4\\ud2b8\\n    event RequestedRegistration(address requester);\\n    /// @notice \\uac80\\uc99d\\uc790\\uc758 \\uac15\\uc81c \\ud0c8\\ud1f4\\uac00 \\uc694\\uccad \\ub418\\uc5c8\\uc744 \\ub54c \\ubc1c\\uc0dd\\ub418\\ub294 \\uc774\\ubca4\\ud2b8\\n    event RequestedExit(address requester, address validator);\\n    /// @notice \\uac80\\uc99d\\uc790\\uc758 \\uc790\\ubc1c\\uc801 \\ud0c8\\ud1f4\\uac00 \\uc644\\ub8cc\\ub418\\uc5c8\\uc744 \\ub54c \\ubc1c\\uc0dd\\ub418\\ub294 \\uc774\\ubca4\\ud2b8\\n    event Exited(address validator);\\n\\n    /// @notice \\uc0dd\\uc131\\uc790\\n    /// @param _validators \\ucd08\\uae30\\uc5d0 \\uc124\\uc815\\ub420 \\uac80\\uc99d\\uc790, \\uc608\\uce58\\uae08\\uc774 \\uc608\\uce58\\ub41c \\ud6c4 \\uadf8 \\uc989\\uc2dc \\ud65c\\uc131\\ud654 \\ub41c\\ub2e4.\\n    constructor(address _tokenAddress, address[] memory _validators) {\\n        tokenAddress = _tokenAddress;\\n\\n        for (uint256 i = 0; i < _validators.length; ++i) {\\n            ValidatorData memory item = ValidatorData({\\n                validator: _validators[i],\\n                start: block.timestamp,\\n                balance: 0,\\n                status: Status.STOP\\n            });\\n            items.push(_validators[i]);\\n            validators[_validators[i]] = item;\\n\\n            emit Added(item.validator, item.start, item.balance, item.status);\\n        }\\n    }\\n\\n    /// @notice \\uc608\\uce58\\uae08\\uc744 \\ucd94\\uac00\\ub85c \\uc785\\uae09\\ud569\\ub2c8\\ub2e4.\\n    /// @param _amount \\ucd94\\uac00\\ub85c \\uc785\\uae08\\ud560 \\uc608\\uce58 \\uae08\\uc561\\n    function deposit(uint256 _amount) public {\\n        ValidatorData memory item = validators[msg.sender];\\n        require(item.validator == msg.sender, \\\"Not validator\\\");\\n        require(item.status != Status.INVALID, \\\"Not validator\\\");\\n        require(item.status != Status.EXIT, \\\"Already exited\\\");\\n\\n        IERC20 token = IERC20(tokenAddress);\\n        require(_amount <= token.allowance(msg.sender, address(this)), \\\"Not allowed deposit\\\");\\n        token.transferFrom(msg.sender, address(this), _amount);\\n\\n        validators[msg.sender].balance += _amount;\\n\\n        if (validators[msg.sender].balance >= MINIMUM_DEPOSIT_AMOUNT) validators[msg.sender].status = Status.ACTIVE;\\n\\n        emit Deposited(msg.sender, _amount, validators[msg.sender].balance);\\n    }\\n\\n    /// @notice \\uc2e0\\uaddc \\uac80\\uc99d\\uc790 \\ub4f1\\ub85d\\uc744 \\uc2e0\\uccad\\ud569\\ub2c8\\ub2e4.\\n    function requestRegistration() public {\\n        require(validators[msg.sender].status == Status.INVALID, \\\"Already validator\\\");\\n\\n        IERC20 token = IERC20(tokenAddress);\\n        require(MINIMUM_DEPOSIT_AMOUNT <= token.allowance(msg.sender, address(this)), \\\"Not allowed deposit\\\");\\n        token.transferFrom(msg.sender, address(this), MINIMUM_DEPOSIT_AMOUNT);\\n\\n        ValidatorData memory item = ValidatorData({\\n            validator: msg.sender,\\n            start: block.timestamp + 86500 * 7,\\n            balance: MINIMUM_DEPOSIT_AMOUNT,\\n            status: Status.ACTIVE\\n        });\\n\\n        items.push(msg.sender);\\n        validators[msg.sender] = item;\\n\\n        emit RequestedRegistration(msg.sender);\\n    }\\n\\n    /// @notice \\uac80\\uc99d\\uc790\\uc758 \\uac15\\uc81c\\ud0c8\\ud1f4\\ub97c \\uc2e0\\uccad\\ud569\\ub2c8\\ub2e4.\\n    function requestExit(address validator) public {\\n        ValidatorData memory item = validators[msg.sender];\\n        require(item.validator == msg.sender, \\\"Not validator\\\");\\n        require(item.status == Status.ACTIVE && item.start <= block.timestamp, \\\"Invalid validator\\\");\\n\\n        require(validators[validator].status != Status.INVALID, \\\"Not validator\\\");\\n        validators[validator].status = Status.EXIT;\\n\\n        if (validators[validator].balance > 0) {\\n            IERC20 token = IERC20(tokenAddress);\\n            token.transfer(validator, validators[validator].balance);\\n            validators[validator].balance = 0;\\n        }\\n\\n        emit RequestedExit(msg.sender, validator);\\n    }\\n\\n    function makeActiveItems() public {\\n        ValidatorData memory item = validators[msg.sender];\\n        require(item.validator == msg.sender, \\\"Not validator\\\");\\n        require(item.status == Status.ACTIVE && item.start <= block.timestamp, \\\"Invalid validator\\\");\\n\\n        _makeActiveItems();\\n    }\\n\\n    /// @notice \\uc720\\ud6a8\\ud55c \\uac80\\uc99d\\uc790\\uc758 \\uc218\\ub97c \\ub9ac\\ud134\\ud569\\ub2c8\\ub2e4.\\n    function getActiveItemsLength() public view returns (uint256 length) {\\n        return activeItems.length;\\n    }\\n\\n    function _makeActiveItems() internal {\\n        while (activeItems.length > 0) activeItems.pop();\\n        for (uint256 i = 0; i < items.length; ++i) {\\n            ValidatorData memory item = validators[items[i]];\\n\\n            if (item.status == Status.ACTIVE && item.start <= block.timestamp) {\\n                activeItems.push(items[i]);\\n            }\\n        }\\n    }\\n\\n    /// @notice \\uc790\\ubc1c\\uc801\\uc73c\\ub85c \\ud0c8\\ud1f4\\ud558\\uae30 \\uc704\\ud574 \\uc0ac\\uc6a9\\ub418\\ub294 \\ud568\\uc218\\uc785\\ub2c8\\ub2e4.\\n    function exit() public {\\n        ValidatorData memory item = validators[msg.sender];\\n        require(item.validator == msg.sender, \\\"Not validator\\\");\\n        require(item.status == Status.ACTIVE && item.start <= block.timestamp, \\\"Invalid validator\\\");\\n\\n        makeActiveItems();\\n        require(activeItems.length > 1, \\\"Last validator\\\");\\n\\n        validators[msg.sender].status = Status.EXIT;\\n\\n        if (validators[msg.sender].balance > 0) {\\n            IERC20 token = IERC20(tokenAddress);\\n            token.transfer(msg.sender, validators[msg.sender].balance);\\n            validators[msg.sender].balance = 0;\\n        }\\n\\n        emit Exited(msg.sender);\\n    }\\n}\\n\",\"keccak256\":\"0x366f6846bbae2e598e1cf7359d55a54df42c5fe61b7b4245233cf21c5486612e\",\"license\":\"MIT\"}},\"version\":1}",
+    "bytecode": "0x608060405234801561001057600080fd5b5060405161071b38038061071b83398101604081905261002f9161005e565b600180546001600160a01b039092166001600160a01b031992831681179091556002805490921617905561008c565b60006020828403121561006f578081fd5b81516001600160a01b0381168114610085578182fd5b9392505050565b6106808061009b6000396000f3fe608060405234801561001057600080fd5b50600436106100675760003560e01c80637516a79e116100505780637516a79e146100aa5780638a42ebe9146100b2578063c3825f4b146100c757610067565b80633fe4676e1461006c578063693ec85e1461008a575b600080fd5b6100746100da565b60405161008191906104f1565b60405180910390f35b61009d61009836600461043f565b6100f6565b6040516100819190610584565b61009d61011d565b6100c56100c036600461047a565b610125565b005b61009d6100d536600461043f565b610366565b60015473ffffffffffffffffffffffffffffffffffffffff1681565b6000808260405161010791906104d5565b9081526020016040518091039020549050919050565b633b9aca0081565b336000805b600260009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1663de4847c46040518163ffffffff1660e01b815260040160206040518083038186803b15801561019257600080fd5b505afa1580156101a6573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101ca91906104bd565b8110156102c3576002546040517f9c318c7b00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff90911690639c318c7b90610227908490600401610584565b60206040518083038186803b15801561023f57600080fd5b505afa158015610253573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102779190610404565b73ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff1614156102b357600191506102c3565b6102bc816105bd565b905061012a565b5080610304576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016102fb9061054d565b60405180910390fd5b8260008560405161031591906104d5565b9081526020016040518091039020819055507f14735e2c0cd7e16a25f316cdd058b58299fc5f725b090e11835ca139a28034058484604051610358929190610512565b60405180910390a150505050565b805160208183018101805160008252928201919093012091525481565b600082601f830112610393578081fd5b813567ffffffffffffffff808211156103ae576103ae61061b565b6040516020601f19601f85011682010181811083821117156103d2576103d261061b565b6040528281528483016020018610156103e9578384fd5b82602086016020830137918201602001929092529392505050565b600060208284031215610415578081fd5b815173ffffffffffffffffffffffffffffffffffffffff81168114610438578182fd5b9392505050565b600060208284031215610450578081fd5b813567ffffffffffffffff811115610466578182fd5b61047284828501610383565b949350505050565b6000806040838503121561048c578081fd5b823567ffffffffffffffff8111156104a2578182fd5b6104ae85828601610383565b95602094909401359450505050565b6000602082840312156104ce578081fd5b5051919050565b600082516104e781846020870161058d565b9190910192915050565b73ffffffffffffffffffffffffffffffffffffffff91909116815260200190565b600060408252835180604084015261053181606085016020880161058d565b602083019390935250601f91909101601f191601606001919050565b6020808252600d908201527f4e6f742076616c696461746f7200000000000000000000000000000000000000604082015260600190565b90815260200190565b60005b838110156105a8578181015183820152602001610590565b838111156105b7576000848401525b50505050565b60007fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff821415610614577f4e487b710000000000000000000000000000000000000000000000000000000081526011600452602481fd5b5060010190565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fdfea264697066735822122048341e521855914fb8774fa8294848129650a4ae265510b6d018db295f581b1664736f6c63430008000033",
+    "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100675760003560e01c80637516a79e116100505780637516a79e146100aa5780638a42ebe9146100b2578063c3825f4b146100c757610067565b80633fe4676e1461006c578063693ec85e1461008a575b600080fd5b6100746100da565b60405161008191906104f1565b60405180910390f35b61009d61009836600461043f565b6100f6565b6040516100819190610584565b61009d61011d565b6100c56100c036600461047a565b610125565b005b61009d6100d536600461043f565b610366565b60015473ffffffffffffffffffffffffffffffffffffffff1681565b6000808260405161010791906104d5565b9081526020016040518091039020549050919050565b633b9aca0081565b336000805b600260009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1663de4847c46040518163ffffffff1660e01b815260040160206040518083038186803b15801561019257600080fd5b505afa1580156101a6573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101ca91906104bd565b8110156102c3576002546040517f9c318c7b00000000000000000000000000000000000000000000000000000000815273ffffffffffffffffffffffffffffffffffffffff90911690639c318c7b90610227908490600401610584565b60206040518083038186803b15801561023f57600080fd5b505afa158015610253573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906102779190610404565b73ffffffffffffffffffffffffffffffffffffffff168373ffffffffffffffffffffffffffffffffffffffff1614156102b357600191506102c3565b6102bc816105bd565b905061012a565b5080610304576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016102fb9061054d565b60405180910390fd5b8260008560405161031591906104d5565b9081526020016040518091039020819055507f14735e2c0cd7e16a25f316cdd058b58299fc5f725b090e11835ca139a28034058484604051610358929190610512565b60405180910390a150505050565b805160208183018101805160008252928201919093012091525481565b600082601f830112610393578081fd5b813567ffffffffffffffff808211156103ae576103ae61061b565b6040516020601f19601f85011682010181811083821117156103d2576103d261061b565b6040528281528483016020018610156103e9578384fd5b82602086016020830137918201602001929092529392505050565b600060208284031215610415578081fd5b815173ffffffffffffffffffffffffffffffffffffffff81168114610438578182fd5b9392505050565b600060208284031215610450578081fd5b813567ffffffffffffffff811115610466578182fd5b61047284828501610383565b949350505050565b6000806040838503121561048c578081fd5b823567ffffffffffffffff8111156104a2578182fd5b6104ae85828601610383565b95602094909401359450505050565b6000602082840312156104ce578081fd5b5051919050565b600082516104e781846020870161058d565b9190910192915050565b73ffffffffffffffffffffffffffffffffffffffff91909116815260200190565b600060408252835180604084015261053181606085016020880161058d565b602083019390935250601f91909101601f191601606001919050565b6020808252600d908201527f4e6f742076616c696461746f7200000000000000000000000000000000000000604082015260600190565b90815260200190565b60005b838110156105a8578181015183820152602001610590565b838111156105b7576000848401525b50505050565b60007fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff821415610614577f4e487b710000000000000000000000000000000000000000000000000000000081526011600452602481fd5b5060010190565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fdfea264697066735822122048341e521855914fb8774fa8294848129650a4ae265510b6d018db295f581b1664736f6c63430008000033",
+    "devdoc": {
+        "kind": "dev",
+        "methods": {
+            "constructor": {
+                "params": {
+                    "_validatorAddress": "검증자컬랙션의 주소"
+                }
+            },
+            "get(string)": {
+                "params": {
+                    "_currency": "통화명"
+                }
+            },
+            "set(string,uint256)": {
+                "params": {
+                    "_currency": "통화명",
+                    "_price": "토큰의 가격"
+                }
+            }
+        },
+        "version": 1
+    },
+    "userdoc": {
+        "events": {
+            "SetPrice(string,uint256)": {
+                "notice": "가격이 저장될 때 발생되는 이벤트"
+            }
+        },
+        "kind": "user",
+        "methods": {
+            "constructor": {
+                "notice": "생성자"
+            },
+            "get(string)": {
+                "notice": "통화에 대한 가격을 제공한다."
+            },
+            "set(string,uint256)": {
+                "notice": "통화에 대한 가격을 저장한다."
+            }
+        },
+        "notice": "토큰 가격을 제공하는 스마트컨트랙트",
+        "version": 1
+    },
+    "storageLayout": {
+        "storage": [
+            {
+                "astId": 3662,
+                "contract": "contracts/TokenPrice.sol:TokenPrice",
+                "label": "prices",
+                "offset": 0,
+                "slot": "0",
+                "type": "t_mapping(t_string_memory_ptr,t_uint256)"
+            },
+            {
+                "astId": 3664,
+                "contract": "contracts/TokenPrice.sol:TokenPrice",
+                "label": "validatorAddress",
+                "offset": 0,
+                "slot": "1",
+                "type": "t_address"
+            },
+            {
+                "astId": 3667,
+                "contract": "contracts/TokenPrice.sol:TokenPrice",
+                "label": "validatorCollection",
+                "offset": 0,
+                "slot": "2",
+                "type": "t_contract(ValidatorCollection)4414"
+            }
+        ],
+        "types": {
+            "t_address": {
+                "encoding": "inplace",
+                "label": "address",
+                "numberOfBytes": "20"
+            },
+            "t_contract(ValidatorCollection)4414": {
+                "encoding": "inplace",
+                "label": "contract ValidatorCollection",
+                "numberOfBytes": "20"
+            },
+            "t_mapping(t_string_memory_ptr,t_uint256)": {
+                "encoding": "mapping",
+                "key": "t_string_memory_ptr",
+                "label": "mapping(string => uint256)",
+                "numberOfBytes": "32",
+                "value": "t_uint256"
+            },
+            "t_string_memory_ptr": {
+                "encoding": "bytes",
+                "label": "string",
+                "numberOfBytes": "32"
+            },
+            "t_uint256": {
+                "encoding": "inplace",
+                "label": "uint256",
+                "numberOfBytes": "32"
+            }
+        }
+    }
+}
