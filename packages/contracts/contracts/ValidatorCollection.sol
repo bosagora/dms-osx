@@ -8,7 +8,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract ValidatorCollection {
     uint256 public constant MINIMUM_DEPOSIT_AMOUNT = 50000000000000000000000;
 
-    address private tokenAddress;
+    address public tokenAddress;
+
+    IERC20 private token;
 
     /// @notice 검증자의 상태코드
     enum Status {
@@ -48,6 +50,7 @@ contract ValidatorCollection {
     /// @param _validators 초기에 설정될 검증자, 예치금이 예치된 후 그 즉시 활성화 된다.
     constructor(address _tokenAddress, address[] memory _validators) {
         tokenAddress = _tokenAddress;
+        token = IERC20(_tokenAddress);
 
         for (uint256 i = 0; i < _validators.length; ++i) {
             ValidatorData memory item = ValidatorData({
@@ -71,7 +74,6 @@ contract ValidatorCollection {
         require(item.status != Status.INVALID, "Not validator");
         require(item.status != Status.EXIT, "Already exited");
 
-        IERC20 token = IERC20(tokenAddress);
         require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
         token.transferFrom(msg.sender, address(this), _amount);
 
@@ -86,7 +88,6 @@ contract ValidatorCollection {
     function requestRegistration() public {
         require(validators[msg.sender].status == Status.INVALID, "Already validator");
 
-        IERC20 token = IERC20(tokenAddress);
         require(MINIMUM_DEPOSIT_AMOUNT <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
         token.transferFrom(msg.sender, address(this), MINIMUM_DEPOSIT_AMOUNT);
 
@@ -113,7 +114,6 @@ contract ValidatorCollection {
         validators[validator].status = Status.EXIT;
 
         if (validators[validator].balance > 0) {
-            IERC20 token = IERC20(tokenAddress);
             token.transfer(validator, validators[validator].balance);
             validators[validator].balance = 0;
         }
@@ -157,7 +157,6 @@ contract ValidatorCollection {
         validators[msg.sender].status = Status.EXIT;
 
         if (validators[msg.sender].balance > 0) {
-            IERC20 token = IERC20(tokenAddress);
             token.transfer(msg.sender, validators[msg.sender].balance);
             validators[msg.sender].balance = 0;
         }
