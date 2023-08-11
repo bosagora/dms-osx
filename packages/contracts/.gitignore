@@ -140,6 +140,5 @@ artifacts
 /typechain-types/
 
 *.iml
-/deployments/localhost/
 
 deployed_contracts.json
