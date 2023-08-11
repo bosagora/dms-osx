@@ -1,0 +1,34 @@
+################################################################################
+##                               Logging options                              ##
+################################################################################
+logging:
+    # The name of the folder where the logs are stored.
+    folder: logs
+    # Values: error, warn, info, http, verbose, debug, silly
+    level: info
+    # Default to false
+    console: true
+
+################################################################################
+##                             Scheduler options                              ##
+################################################################################
+scheduler:
+    enable: true
+    items:
+        - name: purchase
+          enable: true
+          expression: "*/1 * * * * *"
+
+################################################################################
+##                               Setting options                              ##
+################################################################################
+setting:
+    validator_key: ${VALIDATOR1}
+
+################################################################################
+##                               Contracts options                              ##
+################################################################################
+contracts:
+    tokenAddress: ${TOKEN_CONTRACT_ADDRESS}
+    ledgerAddress: ${LEDGER_CONTRACT_ADDRESS}
+    emailLinkerAddress: ${EMAIL_LINKER_CONTRACT_ADDRESS}
