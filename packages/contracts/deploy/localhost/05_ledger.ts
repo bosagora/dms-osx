@@ -4,17 +4,17 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { Amount } from "../../test/helper/Amount";
+import { ContractUtils } from "../../test/helper/ContractUtils";
 import { FranchiseeCollection, Ledger, Token } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
-import { ContractUtils } from "../../test/helper/ContractUtils";
-import { Amount } from "../../test/helper/Amount";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying Ledger.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, owner } = await getNamedAccounts();
+    const { deployer, foundation } = await getNamedAccounts();
 
     const linkCollectionContractAddress = await getContractAddress("LinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
@@ -44,21 +44,24 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             "FranchiseeCollection",
             franchiseeContractAddress
         )) as FranchiseeCollection;
-        await franchiseeCollection.connect(await ethers.getSigner(deployer)).setLedgerAddress(ledgerContractAddress);
-
-        const assetAmount = Amount.make(10_000_000, 18);
-        const tokenContractAddress = await getContractAddress("Token", hre);
-        const tokenContract = (await ethers.getContractAt("Token", tokenContractAddress)) as Token;
-
-        const tx1 = await tokenContract
-            .connect(await ethers.getSigner(owner))
-            .approve(ledgerContract.address, assetAmount.value);
-        console.log(`Approve foundation's amount (tx: ${tx1.hash})...`);
+        const tx1 = await franchiseeCollection
+            .connect(await ethers.getSigner(deployer))
+            .setLedgerAddress(ledgerContractAddress);
+        console.log(`Set ledger address for franchisee collection (tx: ${tx1.hash})...`);
         await tx1.wait();
 
-        const tx2 = await ledgerContract.connect(await ethers.getSigner(owner)).deposit(assetAmount.value);
-        console.log(`Deposit foundation's amount (tx: ${tx2.hash})...`);
+        const assetAmount = Amount.make(10_000_000, 18);
+        const tokenContract = (await ethers.getContractAt("Token", tokenContractAddress)) as Token;
+
+        const tx2 = await tokenContract
+            .connect(await ethers.getSigner(foundation))
+            .approve(ledgerContract.address, assetAmount.value);
+        console.log(`Approve foundation's amount (tx: ${tx2.hash})...`);
         await tx2.wait();
+
+        const tx3 = await ledgerContract.connect(await ethers.getSigner(foundation)).deposit(assetAmount.value);
+        console.log(`Deposit foundation's amount (tx: ${tx3.hash})...`);
+        await tx3.wait();
     }
 };
 export default func;

@@ -33,8 +33,15 @@ function getAccounts() {
         reg_bytes64.test(process.env.DEPLOYER)
     ) {
         accounts.push(process.env.DEPLOYER);
+    } else {
+        process.env.DEPLOYER = Wallet.createRandom().privateKey;
+        accounts.push(process.env.DEPLOYER);
     }
+
     if (process.env.OWNER !== undefined && process.env.OWNER.trim() !== "" && reg_bytes64.test(process.env.OWNER)) {
+        accounts.push(process.env.OWNER);
+    } else {
+        process.env.OWNER = Wallet.createRandom().privateKey;
         accounts.push(process.env.OWNER);
     }
 
@@ -44,6 +51,9 @@ function getAccounts() {
         reg_bytes64.test(process.env.VALIDATOR1)
     ) {
         accounts.push(process.env.VALIDATOR1);
+    } else {
+        process.env.VALIDATOR1 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.VALIDATOR1);
     }
 
     if (
@@ -51,6 +61,9 @@ function getAccounts() {
         process.env.VALIDATOR2.trim() !== "" &&
         reg_bytes64.test(process.env.VALIDATOR2)
     ) {
+        accounts.push(process.env.VALIDATOR2);
+    } else {
+        process.env.VALIDATOR2 = Wallet.createRandom().privateKey;
         accounts.push(process.env.VALIDATOR2);
     }
 
@@ -60,6 +73,9 @@ function getAccounts() {
         reg_bytes64.test(process.env.VALIDATOR3)
     ) {
         accounts.push(process.env.VALIDATOR3);
+    } else {
+        process.env.VALIDATOR3 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.VALIDATOR3);
     }
 
     if (
@@ -68,6 +84,9 @@ function getAccounts() {
         reg_bytes64.test(process.env.VALIDATOR4)
     ) {
         accounts.push(process.env.VALIDATOR4);
+    } else {
+        process.env.VALIDATOR4 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.VALIDATOR4);
     }
 
     if (
@@ -75,6 +94,9 @@ function getAccounts() {
         process.env.VALIDATOR5.trim() !== "" &&
         reg_bytes64.test(process.env.VALIDATOR5)
     ) {
+        accounts.push(process.env.VALIDATOR5);
+    } else {
+        process.env.VALIDATOR5 = Wallet.createRandom().privateKey;
         accounts.push(process.env.VALIDATOR5);
     }
     return accounts;
@@ -147,7 +169,7 @@ const config = {
         deployer: {
             default: 0,
         },
-        owner: {
+        foundation: {
             default: 1,
         },
         validator1: {
