@@ -43,3 +43,14 @@ jobs:
         env:
           REPORT_GAS: true
         run: cd packages/relay && yarn run test
+
+      - name: Copy env of Faker
+        run: cp packages/faker/env/.env.sample packages/faker/env/.env
+      - name: Check formatting of Faker
+        run: cd packages/faker && yarn run formatting:check
+      - name: Compile of Faker
+        run: cd packages/faker && yarn run build
+      - name: Run Hardhat Tests of Faker
+        env:
+          REPORT_GAS: true
+        run: cd packages/faker && yarn run test
