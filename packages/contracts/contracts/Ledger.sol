@@ -13,12 +13,9 @@ import "./FranchiseeCollection.sol";
 contract Ledger {
     /// @notice Hash value of a blank string
     bytes32 public constant NULL = 0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855;
-    /// @notice 마일리지의 원장
-    mapping(bytes32 => uint256) public mileageLedger;
-    /// @notice 토큰의 원장
-    mapping(bytes32 => uint256) public tokenLedger;
-    /// @notice 서명검증에 사용될 Nonce
-    mapping(address => uint256) public nonce;
+    mapping(bytes32 => uint256) private mileageLedger;
+    mapping(bytes32 => uint256) private tokenLedger;
+    mapping(address => uint256) private nonce;
 
     struct PurchaseData {
         string purchaseId;
@@ -28,8 +25,8 @@ contract Ledger {
         string franchiseeId;
     }
 
-    mapping(string => PurchaseData) public purchaseMap;
-    string[] public purchaseIdList;
+    mapping(string => PurchaseData) private purchases;
+    string[] private purchaseIds;
 
     bytes32 public foundationAccount;
     address public tokenAddress;
@@ -103,8 +100,8 @@ contract Ledger {
 
     modifier onlyValidator(address _account) {
         bool isValidator = false;
-        for (uint256 i = 0; i < validatorCollection.getActiveItemsLength(); ++i) {
-            if (_account == validatorCollection.activeItems(i)) {
+        for (uint256 i = 0; i < validatorCollection.activeItemsLength(); ++i) {
+            if (_account == validatorCollection.activeItemOf(i)) {
                 isValidator = true;
                 break;
             }
@@ -134,8 +131,8 @@ contract Ledger {
             userEmail: _userEmail,
             franchiseeId: _franchiseeId
         });
-        purchaseIdList.push(_purchaseId);
-        purchaseMap[_purchaseId] = data;
+        purchaseIds.push(_purchaseId);
+        purchases[_purchaseId] = data;
 
         if (_userEmail != NULL) {
             uint256 mileage = _amount / 100;
@@ -204,7 +201,7 @@ contract Ledger {
         uint256 clearAmount = franchiseeCollection.getClearMileage(_franchiseeId);
         if (clearAmount > 0) {
             franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
-            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.getItem(_franchiseeId);
+            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(_franchiseeId);
             if (franchisee.email != NULL) {
                 mileageLedger[franchisee.email] += clearAmount;
                 emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
@@ -250,7 +247,7 @@ contract Ledger {
         uint256 clearAmount = franchiseeCollection.getClearMileage(_franchiseeId);
         if (clearAmount > 0) {
             franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
-            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.getItem(_franchiseeId);
+            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(_franchiseeId);
             if (franchisee.email != NULL) {
                 mileageLedger[franchisee.email] += clearAmount;
                 emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
@@ -362,5 +359,40 @@ contract Ledger {
         nonce[_signer]++;
 
         emit ExchangedTokenToMileage(_userEmail, _amountToken, amountMileage);
+    }
+
+    /// @notice 마일리지의 잔고를 리턴한다
+    /// @param _hash 이메일의 해시
+    function mileageBalanceOf(bytes32 _hash) public view returns (uint256) {
+        return mileageLedger[_hash];
+    }
+
+    /// @notice 토큰의 잔고를 리턴한다
+    /// @param _hash 이메일의 해시
+    function tokenBalanceOf(bytes32 _hash) public view returns (uint256) {
+        return tokenLedger[_hash];
+    }
+
+    /// @notice nonce를  리턴한다
+    /// @param _account 지갑주소
+    function nonceOf(address _account) public view returns (uint256) {
+        return nonce[_account];
+    }
+
+    /// @notice 구매 데이터를 리턴한다
+    /// @param _purchaseId 구매 아이디
+    function purchaseOf(string memory _purchaseId) public view returns (PurchaseData memory) {
+        return purchases[_purchaseId];
+    }
+
+    /// @notice 구매 데이터의 아이디를 리턴한다
+    /// @param _idx 배열의 순번
+    function purchaseIdOf(uint256 _idx) public view returns (string memory) {
+        return purchaseIds[_idx];
+    }
+
+    /// @notice 구매 데이터의 갯수를 리턴한다
+    function purchasesLength() public view returns (uint256) {
+        return purchaseIds.length;
     }
 }

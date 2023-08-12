@@ -46,7 +46,7 @@ describe("Test for FranchiseeCollection", () => {
             await expect(validatorContract.connect(elem).deposit(amount.value))
                 .to.emit(validatorContract, "Deposited")
                 .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validators(elem.address);
+            const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
@@ -110,7 +110,7 @@ describe("Test for FranchiseeCollection", () => {
                     .to.emit(franchiseeCollection, "Added")
                     .withArgs(elem.franchiseeId, elem.payoutWaitTime, email);
             }
-            expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+            expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
         });
     });
 });

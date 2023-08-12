@@ -7,7 +7,7 @@ import "./ValidatorCollection.sol";
 /// @notice 토큰 가격을 제공하는 스마트컨트랙트
 contract TokenPrice {
     uint256 public constant MULTIPLE = 1000000000;
-    mapping(string => uint256) public prices;
+    mapping(string => uint256) private prices;
 
     address public validatorAddress;
     ValidatorCollection private validatorCollection;
@@ -25,8 +25,8 @@ contract TokenPrice {
 
     modifier onlyValidator(address _account) {
         bool isValidator = false;
-        for (uint256 i = 0; i < validatorCollection.getActiveItemsLength(); ++i) {
-            if (_account == validatorCollection.activeItems(i)) {
+        for (uint256 i = 0; i < validatorCollection.activeItemsLength(); ++i) {
+            if (_account == validatorCollection.activeItemOf(i)) {
                 isValidator = true;
                 break;
             }

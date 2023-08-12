@@ -80,7 +80,7 @@ describe("Test of Server", function () {
             await expect(validatorContract.connect(elem).deposit(amount.value))
                 .to.emit(validatorContract, "Deposited")
                 .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validators(elem.address);
+            const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
@@ -222,7 +222,7 @@ describe("Test of Server", function () {
                         .to.emit(franchiseeCollection, "Added")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
             });
         });
 
@@ -251,7 +251,7 @@ describe("Test of Server", function () {
             });
 
             it("Success", async () => {
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountToken, nonce);
                 await expect(
                     ledgerContract
