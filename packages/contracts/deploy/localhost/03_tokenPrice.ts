@@ -1,4 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
+import { BigNumber } from "ethers";
 import "hardhat-deploy";
 // tslint:disable-next-line:no-submodule-imports
 import { DeployFunction } from "hardhat-deploy/types";
@@ -6,7 +7,6 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { TokenPrice, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
-import { BigNumber } from "ethers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying TokenPrice.`);

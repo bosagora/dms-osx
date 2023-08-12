@@ -1,5 +1,5 @@
-import "hardhat-deploy";
 import { promises as fs } from "fs";
+import "hardhat-deploy";
 // tslint:disable-next-line:no-submodule-imports
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
