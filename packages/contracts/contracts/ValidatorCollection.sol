@@ -27,13 +27,11 @@ contract ValidatorCollection {
         Status status; // 검증자의 상태
     }
 
-    /// @notice 검증자 데이터가 저장되는 배열
-    address[] public items;
+    address[] private items;
 
-    /// @notice 유효한 검증자 데이터가 저장되는 배열
-    address[] public activeItems;
+    address[] private activeItems;
 
-    mapping(address => ValidatorData) public validators;
+    mapping(address => ValidatorData) private validators;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event Added(address validator, uint256 start, uint256 balance, Status status);
@@ -129,9 +127,32 @@ contract ValidatorCollection {
         _makeActiveItems();
     }
 
+    /// @notice 등록된 검증자를 리턴한다.
+    /// @param _idx 배열의 순번
+    function itemOf(uint256 _idx) public view returns (address) {
+        return items[_idx];
+    }
+
+    /// @notice 등록된 검증자의 수를 리턴합니다.
+    function itemsLength() public view returns (uint256) {
+        return items.length;
+    }
+
+    /// @notice 유효한 검증자를 리턴한다.
+    /// @param _idx 배열의 순번
+    function activeItemOf(uint256 _idx) public view returns (address) {
+        return activeItems[_idx];
+    }
+
     /// @notice 유효한 검증자의 수를 리턴합니다.
-    function getActiveItemsLength() public view returns (uint256 length) {
+    function activeItemsLength() public view returns (uint256) {
         return activeItems.length;
+    }
+
+    /// @notice 검증자의 데이타를 리턴합니다.
+    /// @param _account 지갑주소
+    function validatorOf(address _account) public view returns (ValidatorData memory) {
+        return validators[_account];
     }
 
     function _makeActiveItems() internal {

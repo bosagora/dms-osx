@@ -26,11 +26,9 @@ contract FranchiseeCollection {
         FranchiseeStatus status;
     }
 
-    /// @notice 가맹점 아이디에 해당하는 가맹점 데이터가 저장되는 맵
-    mapping(string => FranchiseeData) public franchisees;
+    mapping(string => FranchiseeData) private franchisees;
 
-    /// @notice 가맹점 아이디가 저장된 배열
-    string[] public items;
+    string[] private items;
 
     address public validatorAddress;
     ValidatorCollection private validatorCollection;
@@ -67,8 +65,8 @@ contract FranchiseeCollection {
     /// @notice 검증자들만 호출할 수 있도록 해준다.
     modifier onlyValidator(address _account) {
         bool isValidator = false;
-        for (uint256 i = 0; i < validatorCollection.getActiveItemsLength(); ++i) {
-            if (_account == validatorCollection.activeItems(i)) {
+        for (uint256 i = 0; i < validatorCollection.activeItemsLength(); ++i) {
+            if (_account == validatorCollection.activeItemOf(i)) {
                 isValidator = true;
                 break;
             }
@@ -153,13 +151,20 @@ contract FranchiseeCollection {
         }
     }
 
-    /// @notice 가맹점 데아터를 리턴한다
-    function getItem(string memory _franchiseeId) public view returns (FranchiseeData memory) {
+    /// @notice 가맹점 데이터를 리턴한다
+    /// @param _franchiseeId 가맹점의 아이디
+    function franchiseeOf(string memory _franchiseeId) public view returns (FranchiseeData memory) {
         return franchisees[_franchiseeId];
     }
 
+    /// @notice 가맹점의 아이디를 리턴한다
+    /// @param _idx 배열의 순번
+    function franchiseeIdOf(uint256 _idx) public view returns (string memory) {
+        return items[_idx];
+    }
+
     /// @notice 가맹점의 갯수를 리턴한다
-    function length() public view returns (uint256) {
+    function franchiseesLength() public view returns (uint256) {
         return items.length;
     }
 }

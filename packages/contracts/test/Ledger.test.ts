@@ -82,7 +82,7 @@ describe("Test for Ledger", () => {
             await expect(validatorContract.connect(elem).deposit(amount.value))
                 .to.emit(validatorContract, "Deposited")
                 .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validators(elem.address);
+            const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
@@ -229,7 +229,7 @@ describe("Test for Ledger", () => {
                         .to.emit(franchiseeCollection, "Added")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
             });
         });
 
@@ -316,7 +316,7 @@ describe("Test for Ledger", () => {
                     else expected.set(key, mileage);
                 }
                 for (const key of expected.keys())
-                    expect(await ledgerContract.mileageLedger(key)).to.deep.equal(expected.get(key));
+                    expect(await ledgerContract.mileageBalanceOf(key)).to.deep.equal(expected.get(key));
             });
 
             it("Link email-address", async () => {
@@ -340,9 +340,9 @@ describe("Test for Ledger", () => {
                 const mileageAmount = purchaseAmount.div(100);
                 const tokenAmount = mileageAmount.mul(multiple).div(price);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
-                const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
-                const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
+                const oldMileageBalance = await ledgerContract.mileageBalanceOf(emailHash);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
                 await expect(
                     ledgerContract
                         .connect(validators[0])
@@ -362,9 +362,9 @@ describe("Test for Ledger", () => {
                         amount: mileageAmount,
                         amountToken: tokenAmount,
                     });
-                expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance);
-                expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance.add(tokenAmount));
-                expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                expect(await ledgerContract.mileageBalanceOf(emailHash)).to.deep.equal(oldMileageBalance);
+                expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance.add(tokenAmount));
+                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.sub(tokenAmount)
                 );
             });
@@ -381,8 +381,8 @@ describe("Test for Ledger", () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const amt = purchaseAmount.div(100);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const oldMileageBalance = await ledgerContract.mileageLedger(emailHash);
-                const oldTokenBalance = await ledgerContract.tokenLedger(emailHash);
+                const oldMileageBalance = await ledgerContract.mileageBalanceOf(emailHash);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
                 await expect(
                     ledgerContract
                         .connect(validators[0])
@@ -398,8 +398,8 @@ describe("Test for Ledger", () => {
                     .withArgs(purchase.purchaseId, purchase.timestamp, purchaseAmount, emailHash, purchase.franchiseeId)
                     .emit(ledgerContract, "ProvidedMileage")
                     .withArgs(emailHash, amt);
-                expect(await ledgerContract.mileageLedger(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
-                expect(await ledgerContract.tokenLedger(emailHash)).to.deep.equal(oldTokenBalance);
+                expect(await ledgerContract.mileageBalanceOf(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
+                expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance);
             });
         });
 
@@ -414,7 +414,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -447,7 +447,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -480,7 +480,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[1].address);
+                const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signPayment(
                     users[1],
                     purchase.purchaseId,
@@ -513,7 +513,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -546,7 +546,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -588,7 +588,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -621,7 +621,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -654,7 +654,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[1].address);
+                const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signPayment(
                     users[1],
                     purchase.purchaseId,
@@ -687,7 +687,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -720,9 +720,9 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
-                const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -750,7 +750,7 @@ describe("Test for Ledger", () => {
                         userEmail: emailHash,
                         franchiseeId: purchase.franchiseeId,
                     });
-                expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
             });
@@ -776,7 +776,7 @@ describe("Test for Ledger", () => {
                         .to.emit(franchiseeCollection, "Added")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
             });
         });
 
@@ -824,7 +824,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
@@ -833,7 +833,7 @@ describe("Test for Ledger", () => {
                         amount: amount.value,
                         balance: oldTokenBalance.add(amount.value),
                     });
-                expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
                     oldTokenBalance.add(amount.value)
                 );
             });
@@ -847,14 +847,14 @@ describe("Test for Ledger", () => {
             });
 
             it("Withdraw token - Insufficient balance", async () => {
-                const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
                 await expect(ledgerContract.connect(users[0]).withdraw(oldTokenBalance.add(1))).to.revertedWith(
                     "Insufficient balance"
                 );
             });
 
             it("Withdraw token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
                 await expect(ledgerContract.connect(users[0]).withdraw(amount.value))
                     .to.emit(ledgerContract, "Withdrawn")
                     .withNamedArgs({
@@ -862,7 +862,7 @@ describe("Test for Ledger", () => {
                         amount: amount.value,
                         balance: oldTokenBalance.sub(amount.value),
                     });
-                expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
                     oldTokenBalance.sub(amount.value)
                 );
             });
@@ -888,7 +888,7 @@ describe("Test for Ledger", () => {
                         .to.emit(franchiseeCollection, "Added")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
             });
         });
 
@@ -916,7 +916,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Invalid signature", async () => {
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountToken, nonce);
                 await expect(
                     ledgerContract
@@ -926,7 +926,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Unregistered email-address", async () => {
-                const nonce = await ledgerContract.nonce(users[1].address);
+                const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signExchange(users[1], emailHashes[1], amountToken, nonce);
                 await expect(
                     ledgerContract
@@ -936,7 +936,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Invalid address", async () => {
-                const nonce = await ledgerContract.nonce(users[1].address);
+                const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amountToken, nonce);
                 await expect(
                     ledgerContract
@@ -946,7 +946,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Insufficient balance", async () => {
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(
                     users[0],
                     emailHashes[0],
@@ -961,8 +961,8 @@ describe("Test for Ledger", () => {
             });
 
             it("Success", async () => {
-                const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountToken, nonce);
                 await expect(
                     ledgerContract
@@ -975,7 +975,7 @@ describe("Test for Ledger", () => {
                         amountToken,
                         amountMileage,
                     });
-                expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.add(amountToken)
                 );
             });
@@ -985,7 +985,7 @@ describe("Test for Ledger", () => {
             const amountToken = BigNumber.from(amount.value);
             const amountMileage = amountToken.mul(price).div(multiple);
             it("Invalid signature", async () => {
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountMileage, nonce);
                 await expect(
                     ledgerContract
@@ -995,7 +995,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Unregistered email-address", async () => {
-                const nonce = await ledgerContract.nonce(users[1].address);
+                const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signExchange(users[1], emailHashes[1], amountMileage, nonce);
                 await expect(
                     ledgerContract
@@ -1005,7 +1005,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Invalid address", async () => {
-                const nonce = await ledgerContract.nonce(users[1].address);
+                const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amountMileage, nonce);
                 await expect(
                     ledgerContract
@@ -1015,7 +1015,7 @@ describe("Test for Ledger", () => {
             });
 
             it("Insufficient balance", async () => {
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(
                     users[0],
                     emailHashes[0],
@@ -1030,8 +1030,8 @@ describe("Test for Ledger", () => {
             });
 
             it("Success", async () => {
-                const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountMileage, nonce);
                 await expect(
                     ledgerContract
@@ -1044,7 +1044,7 @@ describe("Test for Ledger", () => {
                         amountMileage,
                         amountToken,
                     });
-                expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.sub(amountToken)
                 );
             });
@@ -1115,7 +1115,7 @@ describe("Test for Ledger", () => {
                         .to.emit(franchiseeCollection, "Added")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.length()).to.equal(franchiseeData.length);
+                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
             });
         });
 
@@ -1184,17 +1184,17 @@ describe("Test for Ledger", () => {
                     else expected.set(key, mileage);
                 }
                 for (const key of expected.keys())
-                    expect(await ledgerContract.mileageLedger(key)).to.deep.equal(expected.get(key));
+                    expect(await ledgerContract.mileageBalanceOf(key)).to.deep.equal(expected.get(key));
             });
 
             it("Check franchisee data", async () => {
-                const franchisee1 = await franchiseeCollection.getItem("F000100");
+                const franchisee1 = await franchiseeCollection.franchiseeOf("F000100");
                 expect(franchisee1.providedMileage).to.equal(Amount.make(10000 * 3, 18).value.div(100));
-                const franchisee2 = await franchiseeCollection.getItem("F000200");
+                const franchisee2 = await franchiseeCollection.franchiseeOf("F000200");
                 expect(franchisee2.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
-                const franchisee3 = await franchiseeCollection.getItem("F000300");
+                const franchisee3 = await franchiseeCollection.franchiseeOf("F000300");
                 expect(franchisee3.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
-                const franchisee4 = await franchiseeCollection.getItem("F000400");
+                const franchisee4 = await franchiseeCollection.franchiseeOf("F000400");
                 expect(franchisee4.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
             });
         });
@@ -1221,7 +1221,7 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -1250,7 +1250,7 @@ describe("Test for Ledger", () => {
                         userEmail: emailHash,
                         franchiseeId: purchase.franchiseeId,
                     });
-                const franchisee2 = await franchiseeCollection.getItem("F000200");
+                const franchisee2 = await franchiseeCollection.franchiseeOf("F000200");
                 expect(franchisee2.providedMileage).to.equal(Amount.make(100, 18).value);
                 expect(franchisee2.usedMileage).to.equal(Amount.make(300, 18).value);
                 expect(franchisee2.clearedMileage).to.equal(Amount.make(200, 18).value);
@@ -1259,7 +1259,7 @@ describe("Test for Ledger", () => {
 
         context("Deposit token", () => {
             it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenLedger(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
@@ -1268,7 +1268,7 @@ describe("Test for Ledger", () => {
                         amount: amount.value,
                         balance: oldTokenBalance.add(amount.value),
                     });
-                expect(await ledgerContract.tokenLedger(emailHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
                     oldTokenBalance.add(amount.value)
                 );
             });
@@ -1285,9 +1285,9 @@ describe("Test for Ledger", () => {
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
-                const oldFoundationTokenBalance = await ledgerContract.tokenLedger(foundationAccount);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const nonce = await ledgerContract.nonce(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
@@ -1316,10 +1316,10 @@ describe("Test for Ledger", () => {
                         userEmail: emailHash,
                         franchiseeId: purchase.franchiseeId,
                     });
-                expect(await ledgerContract.tokenLedger(foundationAccount)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
-                const franchisee3 = await franchiseeCollection.getItem("F000300");
+                const franchisee3 = await franchiseeCollection.franchiseeOf("F000300");
                 expect(franchisee3.providedMileage).to.equal(Amount.make(100, 18).value);
                 expect(franchisee3.usedMileage).to.equal(Amount.make(500, 18).value);
                 expect(franchisee3.clearedMileage).to.equal(Amount.make(400, 18).value);
