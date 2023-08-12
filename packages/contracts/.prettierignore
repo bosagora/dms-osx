@@ -4,6 +4,4 @@ cache
 coverage*
 gasReporterOutput.json
 typechain-types
-.npm
-logs
-validator_keys1
+deployments

@@ -11,6 +11,8 @@ import "./FranchiseeCollection.sol";
 
 /// @notice 마일리지와 토큰의 원장
 contract Ledger {
+    /// @notice Hash value of a blank string
+    bytes32 public constant NULL = 0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855;
     /// @notice 마일리지의 원장
     mapping(bytes32 => uint256) public mileageLedger;
     /// @notice 토큰의 원장
@@ -135,14 +137,15 @@ contract Ledger {
         purchaseIdList.push(_purchaseId);
         purchaseMap[_purchaseId] = data;
 
-        uint256 mileage = _amount / 100;
-        if (linkCollection.toAddress(_userEmail) == address(0x00)) {
-            provideMileage(_userEmail, mileage);
-        } else {
-            provideToken(_userEmail, mileage);
+        if (_userEmail != NULL) {
+            uint256 mileage = _amount / 100;
+            if (linkCollection.toAddress(_userEmail) == address(0x00)) {
+                provideMileage(_userEmail, mileage);
+            } else {
+                provideToken(_userEmail, mileage);
+            }
+            franchiseeCollection.addProvidedMileage(_franchiseeId, mileage);
         }
-        franchiseeCollection.addProvidedMileage(_franchiseeId, mileage);
-
         emit SavedPurchase(_purchaseId, _timestamp, _amount, _userEmail, _franchiseeId);
     }
 
@@ -202,8 +205,10 @@ contract Ledger {
         if (clearAmount > 0) {
             franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
             FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.getItem(_franchiseeId);
-            mileageLedger[franchisee.email] += clearAmount;
-            emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+            if (franchisee.email != NULL) {
+                mileageLedger[franchisee.email] += clearAmount;
+                emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+            }
         }
 
         nonce[_signer]++;
@@ -246,8 +251,10 @@ contract Ledger {
         if (clearAmount > 0) {
             franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
             FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.getItem(_franchiseeId);
-            mileageLedger[franchisee.email] += clearAmount;
-            emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+            if (franchisee.email != NULL) {
+                mileageLedger[franchisee.email] += clearAmount;
+                emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+            }
         }
 
         nonce[_signer]++;

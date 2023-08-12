@@ -65,7 +65,7 @@
         "hardhat": "^2.12.7",
         "hardhat-gas-reporter": "^1.0.7",
         "ip": "^1.1.5",
-        "link-email-wallet-osx-artifacts": "^1.0.1",
+        "link-email-wallet-osx-artifacts": "^1.0.2",
         "moment": "^2.29.1",
         "prettier": "^2.5.1",
         "prettier-plugin-solidity": "^1.1.1",

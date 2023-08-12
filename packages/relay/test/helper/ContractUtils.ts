@@ -14,7 +14,7 @@ export class ContractUtils {
     }
 
     public static sha256String(data: string): string {
-        return ContractUtils.BufferToString(crypto.createHash("sha256").update(Buffer.from(data)).digest());
+        return ContractUtils.BufferToString(crypto.createHash("sha256").update(Buffer.from(data.trim())).digest());
     }
 
     /**
