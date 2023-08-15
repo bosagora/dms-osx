@@ -34,13 +34,13 @@ contract FranchiseeCollection {
     ValidatorCollection private validatorCollection;
 
     /// @notice 가맹점이 추가될 때 발생되는 이벤트
-    event Added(string franchiseeId, uint256 timestamp, bytes32 email);
+    event AddedFranchisee(string franchiseeId, uint256 timestamp, bytes32 email);
     /// @notice 가맹점의 마일리지가 증가할 때 발생되는 이벤트
-    event IncreasedProvidedMileage(string franchiseeId, uint256 increase, uint256 total);
+    event IncreasedProvidedMileage(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 사용자의 마일리지가 증가할 때 발생되는 이벤트
-    event IncreasedUsedMileage(string franchiseeId, uint256 increase, uint256 total);
+    event IncreasedUsedMileage(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 정산된 마일리가 증가할 때 발생되는 이벤트
-    event IncreasedClearedMileage(string franchiseeId, uint256 increase, uint256 total);
+    event IncreasedClearedMileage(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
 
     address public ledgerAddress;
     address public deployer;
@@ -106,35 +106,43 @@ contract FranchiseeCollection {
         items.push(_franchiseeId);
         franchisees[_franchiseeId] = data;
 
-        emit Added(_franchiseeId, _payoutWaitTime, _email);
+        emit AddedFranchisee(_franchiseeId, _payoutWaitTime, _email);
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
-    function addProvidedMileage(string memory _franchiseeId, uint256 _amount) public onlyLedger {
+    function addProvidedMileage(
+        string memory _franchiseeId,
+        uint256 _amount,
+        string memory _purchaseId
+    ) public onlyLedger {
         if (franchisees[_franchiseeId].status == FranchiseeStatus.INVALID) {
             _add(_franchiseeId, 0, NULL);
         }
 
         franchisees[_franchiseeId].providedMileage += _amount;
-        emit IncreasedProvidedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].providedMileage);
+        emit IncreasedProvidedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].providedMileage, _purchaseId);
     }
 
     /// @notice 사용된 총 마일지리를 누적한다
-    function addUsedMileage(string memory _franchiseeId, uint256 _amount) public onlyLedger {
+    function addUsedMileage(string memory _franchiseeId, uint256 _amount, string memory _purchaseId) public onlyLedger {
         if (franchisees[_franchiseeId].status == FranchiseeStatus.INVALID) {
             _add(_franchiseeId, 0, NULL);
         }
         franchisees[_franchiseeId].usedMileage += _amount;
-        emit IncreasedUsedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].usedMileage);
+        emit IncreasedUsedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].usedMileage, _purchaseId);
     }
 
     /// @notice 정산된 총 마일지리를 누적한다
-    function addClearedMileage(string memory _franchiseeId, uint256 _amount) public onlyLedger {
+    function addClearedMileage(
+        string memory _franchiseeId,
+        uint256 _amount,
+        string memory _purchaseId
+    ) public onlyLedger {
         if (franchisees[_franchiseeId].status == FranchiseeStatus.INVALID) {
             _add(_franchiseeId, 0, NULL);
         }
         franchisees[_franchiseeId].clearedMileage += _amount;
-        emit IncreasedClearedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].clearedMileage);
+        emit IncreasedClearedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].clearedMileage, _purchaseId);
     }
 
     /// @notice 정산되어야 할 마일지리의 량을 리턴합니다.

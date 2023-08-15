@@ -158,7 +158,7 @@ const config = {
             accounts: getAccounts(),
             deploy: ["./deploy"],
         },
-        localhost: {
+        devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
             accounts: getAccounts(),

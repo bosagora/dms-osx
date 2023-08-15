@@ -34,15 +34,15 @@ contract ValidatorCollection {
     mapping(address => ValidatorData) private validators;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
-    event Added(address validator, uint256 start, uint256 balance, Status status);
+    event AddedValidator(address validator, uint256 start, uint256 balance, Status status);
     /// @notice 자금이 입급될 때 발생되는 이벤트
-    event Deposited(address validator, uint256 amount, uint256 balance);
+    event DepositedForValidator(address validator, uint256 amount, uint256 balance);
     /// @notice 검증자의 등록이 요청 되었을 때 발생되는 이벤트
-    event RequestedRegistration(address requester);
+    event RequestedToJoinValidator(address requester);
     /// @notice 검증자의 강제 탈퇴가 요청 되었을 때 발생되는 이벤트
-    event RequestedExit(address requester, address validator);
+    event RequestedToExitValidator(address requester, address validator);
     /// @notice 검증자의 자발적 탈퇴가 완료되었을 때 발생되는 이벤트
-    event Exited(address validator);
+    event ExitedFromValidator(address validator);
 
     /// @notice 생성자
     /// @param _validators 초기에 설정될 검증자, 예치금이 예치된 후 그 즉시 활성화 된다.
@@ -60,7 +60,7 @@ contract ValidatorCollection {
             items.push(_validators[i]);
             validators[_validators[i]] = item;
 
-            emit Added(item.validator, item.start, item.balance, item.status);
+            emit AddedValidator(item.validator, item.start, item.balance, item.status);
         }
     }
 
@@ -79,7 +79,7 @@ contract ValidatorCollection {
 
         if (validators[msg.sender].balance >= MINIMUM_DEPOSIT_AMOUNT) validators[msg.sender].status = Status.ACTIVE;
 
-        emit Deposited(msg.sender, _amount, validators[msg.sender].balance);
+        emit DepositedForValidator(msg.sender, _amount, validators[msg.sender].balance);
     }
 
     /// @notice 신규 검증자 등록을 신청합니다.
@@ -99,7 +99,7 @@ contract ValidatorCollection {
         items.push(msg.sender);
         validators[msg.sender] = item;
 
-        emit RequestedRegistration(msg.sender);
+        emit RequestedToJoinValidator(msg.sender);
     }
 
     /// @notice 검증자의 강제탈퇴를 신청합니다.
@@ -116,7 +116,7 @@ contract ValidatorCollection {
             validators[validator].balance = 0;
         }
 
-        emit RequestedExit(msg.sender, validator);
+        emit RequestedToExitValidator(msg.sender, validator);
     }
 
     function makeActiveItems() public {
@@ -182,6 +182,6 @@ contract ValidatorCollection {
             validators[msg.sender].balance = 0;
         }
 
-        emit Exited(msg.sender);
+        emit ExitedFromValidator(msg.sender);
     }
 }

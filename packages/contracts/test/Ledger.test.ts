@@ -27,6 +27,7 @@ interface PurchaseData {
     amount: number;
     userEmail: string;
     franchiseeId: string;
+    method: number;
 }
 
 describe("Test for Ledger", () => {
@@ -80,7 +81,7 @@ describe("Test for Ledger", () => {
         for (const elem of validators) {
             await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
             await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "Deposited")
+                .to.emit(validatorContract, "DepositedForValidator")
                 .withArgs(elem.address, amount.value, amount.value);
             const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
@@ -186,6 +187,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "a@example.com",
                 franchiseeId: "F000100",
+                method: 0,
             },
             {
                 purchaseId: "P000002",
@@ -193,6 +195,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "b@example.com",
                 franchiseeId: "F000100",
+                method: 0,
             },
             {
                 purchaseId: "P000003",
@@ -200,6 +203,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "c@example.com",
                 franchiseeId: "F000200",
+                method: 0,
             },
             {
                 purchaseId: "P000004",
@@ -207,6 +211,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "d@example.com",
                 franchiseeId: "F000300",
+                method: 0,
             },
             {
                 purchaseId: "P000005",
@@ -214,6 +219,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "a@example.com",
                 franchiseeId: "F000200",
+                method: 0,
             },
         ];
 
@@ -226,7 +232,7 @@ describe("Test for Ledger", () => {
                 for (const elem of franchiseeData) {
                     const email = ContractUtils.sha256String(elem.email);
                     await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "Added")
+                        .to.emit(franchiseeCollection, "AddedFranchisee")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
                 expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
@@ -240,7 +246,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     linkCollectionContract.connect(validators[0]).add(foundationAccount, foundation.address, signature)
                 )
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(foundationAccount, foundation.address);
             });
 
@@ -250,9 +256,10 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        depositor: foundation.address,
-                        amount: assetAmount.value,
-                        balance: assetAmount.value,
+                        email: foundationAccount,
+                        depositAmount: assetAmount.value,
+                        balanceToken: assetAmount.value,
+                        account: foundation.address,
                     });
             });
         });
@@ -270,7 +277,8 @@ describe("Test for Ledger", () => {
                                 purchase.timestamp,
                                 purchaseAmount,
                                 hash,
-                                purchase.franchiseeId
+                                purchase.franchiseeId,
+                                purchase.method
                             )
                     ).to.be.revertedWith("Not validator");
                 }
@@ -289,7 +297,8 @@ describe("Test for Ledger", () => {
                                 purchase.timestamp,
                                 purchaseAmount,
                                 emailHash,
-                                purchase.franchiseeId
+                                purchase.franchiseeId,
+                                purchase.method
                             )
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
@@ -298,10 +307,16 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId
+                            purchase.franchiseeId,
+                            purchase.method
                         )
                         .emit(ledgerContract, "ProvidedMileage")
-                        .withArgs(emailHash, amt);
+                        .withNamedArgs({
+                            email: emailHash,
+                            providedAmountMileage: amt,
+                            value: amt,
+                            purchaseId: purchase.purchaseId,
+                        });
                 }
             });
 
@@ -324,7 +339,7 @@ describe("Test for Ledger", () => {
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 await expect(linkCollectionContract.connect(validators[0]).add(hash, users[0].address, signature))
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(hash, users[0].address);
             });
 
@@ -335,6 +350,7 @@ describe("Test for Ledger", () => {
                     amount: 10000,
                     userEmail: "a@example.com",
                     franchiseeId: "F000600",
+                    method: 0,
                 };
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const mileageAmount = purchaseAmount.div(100);
@@ -351,16 +367,25 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId
+                            purchase.franchiseeId,
+                            purchase.method
                         )
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
-                    .withArgs(purchase.purchaseId, purchase.timestamp, purchaseAmount, emailHash, purchase.franchiseeId)
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        purchase.method
+                    )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
                         email: emailHash,
-                        amount: mileageAmount,
-                        amountToken: tokenAmount,
+                        providedAmountToken: tokenAmount,
+                        value: mileageAmount,
+                        purchaseId: purchase.purchaseId,
                     });
                 expect(await ledgerContract.mileageBalanceOf(emailHash)).to.deep.equal(oldMileageBalance);
                 expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance.add(tokenAmount));
@@ -376,6 +401,7 @@ describe("Test for Ledger", () => {
                     amount: 10000,
                     userEmail: "b@example.com",
                     franchiseeId: "F000600",
+                    method: 0,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -391,13 +417,26 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId
+                            purchase.franchiseeId,
+                            purchase.method
                         )
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
-                    .withArgs(purchase.purchaseId, purchase.timestamp, purchaseAmount, emailHash, purchase.franchiseeId)
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        emailHash,
+                        purchase.franchiseeId,
+                        purchase.method
+                    )
                     .emit(ledgerContract, "ProvidedMileage")
-                    .withArgs(emailHash, amt);
+                    .withNamedArgs({
+                        email: emailHash,
+                        providedAmountMileage: amt,
+                        value: amt,
+                        purchaseId: purchase.purchaseId,
+                    });
                 expect(await ledgerContract.mileageBalanceOf(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
                 expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance);
             });
@@ -569,10 +608,10 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(ledgerContract, "PaidMileage")
                     .withNamedArgs({
+                        email: emailHash,
+                        paidAmountMileage: purchaseAmount,
+                        value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        userEmail: emailHash,
-                        franchiseeId: purchase.franchiseeId,
                     });
             });
         });
@@ -745,10 +784,10 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
+                        email: emailHash,
+                        paidAmountToken: tokenAmount,
+                        value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        userEmail: emailHash,
-                        franchiseeId: purchase.franchiseeId,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
@@ -773,7 +812,7 @@ describe("Test for Ledger", () => {
                 for (const elem of franchiseeData) {
                     const email = ContractUtils.sha256String(elem.email);
                     await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "Added")
+                        .to.emit(franchiseeCollection, "AddedFranchisee")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
                 expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
@@ -786,7 +825,7 @@ describe("Test for Ledger", () => {
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 await expect(linkCollectionContract.connect(validators[0]).add(hash, users[0].address, signature))
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(hash, users[0].address);
             });
         });
@@ -798,7 +837,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     linkCollectionContract.connect(validators[0]).add(foundationAccount, foundation.address, signature)
                 )
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(foundationAccount, foundation.address);
             });
 
@@ -808,9 +847,10 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        depositor: foundation.address,
-                        amount: assetAmount.value,
-                        balance: assetAmount.value,
+                        email: foundationAccount,
+                        depositAmount: assetAmount.value,
+                        balanceToken: assetAmount.value,
+                        account: foundation.address,
                     });
             });
         });
@@ -829,9 +869,10 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        depositor: users[0].address,
-                        amount: amount.value,
-                        balance: oldTokenBalance.add(amount.value),
+                        email: emailHashes[0],
+                        depositAmount: amount.value,
+                        balanceToken: oldTokenBalance.add(amount.value),
+                        account: users[0].address,
                     });
                 expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
                     oldTokenBalance.add(amount.value)
@@ -858,9 +899,10 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(users[0]).withdraw(amount.value))
                     .to.emit(ledgerContract, "Withdrawn")
                     .withNamedArgs({
-                        withdrawer: users[0].address,
-                        amount: amount.value,
-                        balance: oldTokenBalance.sub(amount.value),
+                        email: emailHashes[0],
+                        withdrawAmount: amount.value,
+                        balanceToken: oldTokenBalance.sub(amount.value),
+                        account: users[0].address,
                     });
                 expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
                     oldTokenBalance.sub(amount.value)
@@ -885,7 +927,7 @@ describe("Test for Ledger", () => {
                 for (const elem of franchiseeData) {
                     const email = ContractUtils.sha256String(elem.email);
                     await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "Added")
+                        .to.emit(franchiseeCollection, "AddedFranchisee")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
                 expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
@@ -898,7 +940,7 @@ describe("Test for Ledger", () => {
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 await expect(linkCollectionContract.connect(validators[0]).add(hash, users[0].address, signature))
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(hash, users[0].address);
             });
         });
@@ -1059,6 +1101,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "a@example.com",
                 franchiseeId: "F000100",
+                method: 0,
             },
             {
                 purchaseId: "P000002",
@@ -1066,6 +1109,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "a@example.com",
                 franchiseeId: "F000100",
+                method: 0,
             },
             {
                 purchaseId: "P000003",
@@ -1073,6 +1117,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "a@example.com",
                 franchiseeId: "F000100",
+                method: 0,
             },
             {
                 purchaseId: "P000004",
@@ -1080,6 +1125,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "b@example.com",
                 franchiseeId: "F000200",
+                method: 0,
             },
             {
                 purchaseId: "P000005",
@@ -1087,6 +1133,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "b@example.com",
                 franchiseeId: "F000300",
+                method: 0,
             },
             {
                 purchaseId: "P000005",
@@ -1094,6 +1141,7 @@ describe("Test for Ledger", () => {
                 amount: 10000,
                 userEmail: "b@example.com",
                 franchiseeId: "F000400",
+                method: 0,
             },
         ];
 
@@ -1112,7 +1160,7 @@ describe("Test for Ledger", () => {
                 for (const elem of franchiseeData) {
                     const email = ContractUtils.sha256String(elem.email);
                     await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "Added")
+                        .to.emit(franchiseeCollection, "AddedFranchisee")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
                 expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
@@ -1126,7 +1174,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     linkCollectionContract.connect(validators[0]).add(foundationAccount, foundation.address, signature)
                 )
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(foundationAccount, foundation.address);
             });
 
@@ -1136,9 +1184,10 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        depositor: foundation.address,
-                        amount: assetAmount.value,
-                        balance: assetAmount.value,
+                        email: foundationAccount,
+                        depositAmount: assetAmount.value,
+                        balanceToken: assetAmount.value,
+                        account: foundation.address,
                     });
             });
         });
@@ -1157,7 +1206,8 @@ describe("Test for Ledger", () => {
                                 purchase.timestamp,
                                 purchaseAmount,
                                 emailHash,
-                                purchase.franchiseeId
+                                purchase.franchiseeId,
+                                purchase.method
                             )
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
@@ -1166,10 +1216,16 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId
+                            purchase.franchiseeId,
+                            purchase.method
                         )
                         .emit(ledgerContract, "ProvidedMileage")
-                        .withArgs(emailHash, amt);
+                        .withNamedArgs({
+                            email: emailHash,
+                            providedAmountMileage: amt,
+                            value: amt,
+                            purchaseId: purchase.purchaseId,
+                        });
                 }
             });
 
@@ -1205,7 +1261,7 @@ describe("Test for Ledger", () => {
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 await expect(linkCollectionContract.connect(validators[0]).add(hash, users[0].address, signature))
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(hash, users[0].address);
             });
         });
@@ -1245,10 +1301,10 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "ProvidedMileageToFranchisee")
                     .to.emit(ledgerContract, "PaidMileage")
                     .withNamedArgs({
+                        email: emailHash,
+                        paidAmountMileage: purchaseAmount,
+                        value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        userEmail: emailHash,
-                        franchiseeId: purchase.franchiseeId,
                     });
                 const franchisee2 = await franchiseeCollection.franchiseeOf("F000200");
                 expect(franchisee2.providedMileage).to.equal(Amount.make(100, 18).value);
@@ -1264,9 +1320,10 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        depositor: users[0].address,
-                        amount: amount.value,
-                        balance: oldTokenBalance.add(amount.value),
+                        email: emailHashes[0],
+                        depositAmount: amount.value,
+                        balanceToken: oldTokenBalance.add(amount.value),
+                        account: users[0].address,
                     });
                 expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
                     oldTokenBalance.add(amount.value)
@@ -1311,10 +1368,10 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "ProvidedMileageToFranchisee")
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
+                        email: emailHash,
+                        paidAmountToken: tokenAmount,
+                        value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        userEmail: emailHash,
-                        franchiseeId: purchase.franchiseeId,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)

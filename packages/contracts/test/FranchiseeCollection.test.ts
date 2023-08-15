@@ -44,7 +44,7 @@ describe("Test for FranchiseeCollection", () => {
         for (const elem of validators) {
             await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
             await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "Deposited")
+                .to.emit(validatorContract, "DepositedForValidator")
                 .withArgs(elem.address, amount.value, amount.value);
             const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
@@ -107,7 +107,7 @@ describe("Test for FranchiseeCollection", () => {
                 await expect(
                     franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.payoutWaitTime, email)
                 )
-                    .to.emit(franchiseeCollection, "Added")
+                    .to.emit(franchiseeCollection, "AddedFranchisee")
                     .withArgs(elem.franchiseeId, elem.payoutWaitTime, email);
             }
             expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
