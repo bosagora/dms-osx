@@ -43,7 +43,7 @@ describe("Test for TokenPrice", () => {
         for (const elem of validators) {
             await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
             await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "Deposited")
+                .to.emit(validatorContract, "DepositedForValidator")
                 .withArgs(elem.address, amount.value, amount.value);
             const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);

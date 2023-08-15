@@ -78,7 +78,7 @@ describe("Test of Server", function () {
         for (const elem of validators) {
             await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
             await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "Deposited")
+                .to.emit(validatorContract, "DepositedForValidator")
                 .withArgs(elem.address, amount.value, amount.value);
             const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
@@ -219,7 +219,7 @@ describe("Test of Server", function () {
                 for (const elem of franchiseeData) {
                     const email = ContractUtils.sha256String(elem.email);
                     await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "Added")
+                        .to.emit(franchiseeCollection, "AddedFranchisee")
                         .withArgs(elem.franchiseeId, elem.timestamp, email);
                 }
                 expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
@@ -232,7 +232,7 @@ describe("Test of Server", function () {
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 await expect(linkCollectionContract.connect(validators[0]).add(hash, users[0].address, signature))
-                    .to.emit(linkCollectionContract, "Added")
+                    .to.emit(linkCollectionContract, "AddedLinkItem")
                     .withArgs(hash, users[0].address);
             });
         });

@@ -21,8 +21,9 @@ contract Ledger {
         string purchaseId;
         uint256 timestamp;
         uint256 amount;
-        bytes32 userEmail;
+        bytes32 email;
         string franchiseeId;
+        uint32 method;
     }
 
     mapping(string => PurchaseData) private purchases;
@@ -42,32 +43,68 @@ contract Ledger {
     FranchiseeCollection private franchiseeCollection;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
-    event SavedPurchase(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
-    /// @notice 마일리지가 지급될 때 발생되는 이벤트
-    event ProvidedMileage(bytes32 email, uint256 amount);
-    /// @notice 마일리지가 정산될 때 발생되는 이벤트
-    event ProvidedMileageToFranchisee(bytes32 email, uint256 amount);
-    /// @notice 토큰이 지급될 때 발생되는 이벤트
-    event ProvidedToken(bytes32 email, uint256 amount, uint256 amountToken);
-    /// @notice 마일리지로 지불을 완료했을 때 발생하는 이벤트
-    event PaidMileage(string purchaseId, uint256 timestamp, uint256 amount, bytes32 userEmail, string franchiseeId);
-    /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
-    event PaidToken(
+    event SavedPurchase(
         string purchaseId,
         uint256 timestamp,
         uint256 amount,
-        uint256 amountToken,
-        bytes32 userEmail,
+        bytes32 email,
+        string franchiseeId,
+        uint32 method
+    );
+    /// @notice 마일리지가 지급될 때 발생되는 이벤트
+    event ProvidedMileage(
+        bytes32 email,
+        uint256 providedAmountMileage,
+        uint256 value,
+        uint256 balanceMileage,
+        string purchaseId
+    );
+    /// @notice 마일리지가 정산될 때 발생되는 이벤트
+    event ProvidedMileageToFranchisee(
+        bytes32 email,
+        uint256 providedAmountMileage,
+        uint256 value,
+        uint256 balanceMileage,
         string franchiseeId
     );
+    /// @notice 토큰이 지급될 때 발생되는 이벤트
+    event ProvidedToken(
+        bytes32 email,
+        uint256 providedAmountToken,
+        uint256 value,
+        uint256 balanceToken,
+        string purchaseId
+    );
+    /// @notice 마일리지로 지불을 완료했을 때 발생하는 이벤트
+    event PaidMileage(
+        bytes32 email,
+        uint256 paidAmountMileage,
+        uint256 value,
+        uint256 balanceMileage,
+        string purchaseId
+    );
+    /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
+    event PaidToken(bytes32 email, uint256 paidAmountToken, uint256 value, uint256 balanceToken, string purchaseId);
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
-    event Deposited(address depositor, uint256 amount, uint256 balance);
+    event Deposited(bytes32 email, uint256 depositAmount, uint256 value, uint256 balanceToken, address account);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
-    event Withdrawn(address withdrawer, uint256 amount, uint256 balance);
+    event Withdrawn(bytes32 email, uint256 withdrawAmount, uint256 value, uint256 balanceToken, address account);
     /// @notice 마일리지를 토큰으로 교환했을 때 발생하는 이벤트
-    event ExchangedMileageToToken(bytes32 email, uint256 amountMileage, uint256 amountToken);
+    event ExchangedMileageToToken(
+        bytes32 email,
+        uint256 amountMileage,
+        uint256 amountToken,
+        uint256 balanceMileage,
+        uint256 balanceToken
+    );
     /// @notice 토큰을 마일리지로 교환했을 때 발생하는 이벤트
-    event ExchangedTokenToMileage(bytes32 email, uint256 amountToken, uint256 amountMileage);
+    event ExchangedTokenToMileage(
+        bytes32 email,
+        uint256 amountMileage,
+        uint256 amountToken,
+        uint256 balanceMileage,
+        uint256 balanceToken
+    );
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
@@ -115,148 +152,158 @@ contract Ledger {
     /// @param _purchaseId 구매 아이디
     /// @param _timestamp 구매 시간
     /// @param _amount 구매 금액
-    /// @param _userEmail 구매한 사용자의 이메일 해시
+    /// @param _email 구매한 사용자의 이메일 해시
     /// @param _franchiseeId 구매한 가맹점 아이디
     function savePurchase(
         string memory _purchaseId,
         uint256 _timestamp,
         uint256 _amount,
-        bytes32 _userEmail,
-        string memory _franchiseeId
+        bytes32 _email,
+        string memory _franchiseeId,
+        uint32 _method
     ) public onlyValidator(msg.sender) {
         PurchaseData memory data = PurchaseData({
             purchaseId: _purchaseId,
             timestamp: _timestamp,
             amount: _amount,
-            userEmail: _userEmail,
-            franchiseeId: _franchiseeId
+            email: _email,
+            franchiseeId: _franchiseeId,
+            method: _method
         });
         purchaseIds.push(_purchaseId);
         purchases[_purchaseId] = data;
 
-        if (_userEmail != NULL) {
+        if ((_method == 0) && (_email != NULL)) {
             uint256 mileage = _amount / 100;
-            if (linkCollection.toAddress(_userEmail) == address(0x00)) {
-                provideMileage(_userEmail, mileage);
+            address account = linkCollection.toAddress(_email);
+            if (account == address(0x00)) {
+                provideMileage(_email, mileage, _purchaseId);
             } else {
-                provideToken(_userEmail, mileage);
+                provideToken(_email, mileage, _purchaseId);
             }
-            franchiseeCollection.addProvidedMileage(_franchiseeId, mileage);
+            franchiseeCollection.addProvidedMileage(_franchiseeId, mileage, _purchaseId);
         }
-        emit SavedPurchase(_purchaseId, _timestamp, _amount, _userEmail, _franchiseeId);
+        emit SavedPurchase(_purchaseId, _timestamp, _amount, _email, _franchiseeId, _method);
     }
 
     /// @notice 마일리지를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _email 이메일 해시
     /// @param _amount 지급할 마일리지
-    function provideMileage(bytes32 _email, uint256 _amount) internal {
+    function provideMileage(bytes32 _email, uint256 _amount, string memory _purchaseId) internal {
         mileageLedger[_email] += _amount;
-
-        emit ProvidedMileage(_email, _amount);
+        emit ProvidedMileage(_email, _amount, _amount, mileageLedger[_email], _purchaseId);
     }
 
     /// @notice 토큰을 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _email 이메일 해시
     /// @param _amount 지급할 토큰
-    function provideToken(bytes32 _email, uint256 _amount) internal {
+    function provideToken(bytes32 _email, uint256 _amount, string memory _purchaseId) internal {
         uint256 amountToken = convertMileageToToken(_amount);
 
         require(tokenLedger[foundationAccount] >= amountToken, "Insufficient foundation balance");
         tokenLedger[_email] += amountToken;
         tokenLedger[foundationAccount] -= amountToken;
 
-        emit ProvidedToken(_email, _amount, amountToken);
+        emit ProvidedToken(_email, amountToken, _amount, tokenLedger[_email], _purchaseId);
     }
 
     /// @notice 마일리지를 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
-    /// @param _userEmail 구매한 사용자의 이메일 해시
+    /// @param _email 구매한 사용자의 이메일 해시
     /// @param _franchiseeId 구매한 가맹점 아이디
     /// @param _signer 구매자의 주소
     /// @param _signature 서명
     function payMileage(
         string memory _purchaseId,
         uint256 _amount,
-        bytes32 _userEmail,
+        bytes32 _email,
         string memory _franchiseeId,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(
-            abi.encode(_purchaseId, _amount, _userEmail, _franchiseeId, _signer, nonce[_signer])
-        );
+        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _email, _franchiseeId, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
-        address userAddress = linkCollection.toAddress(_userEmail);
+        address userAddress = linkCollection.toAddress(_email);
         require(userAddress != address(0x00), "Unregistered email-address");
         require(userAddress == _signer, "Invalid address");
-        require(mileageLedger[_userEmail] >= _amount, "Insufficient balance");
+        require(mileageLedger[_email] >= _amount, "Insufficient balance");
 
-        mileageLedger[_userEmail] -= _amount;
-        franchiseeCollection.addUsedMileage(_franchiseeId, _amount);
+        mileageLedger[_email] -= _amount;
+        franchiseeCollection.addUsedMileage(_franchiseeId, _amount, _purchaseId);
 
         uint256 clearAmount = franchiseeCollection.getClearMileage(_franchiseeId);
         if (clearAmount > 0) {
-            franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
+            franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount, _purchaseId);
             FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(_franchiseeId);
             if (franchisee.email != NULL) {
                 mileageLedger[franchisee.email] += clearAmount;
-                emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+                emit ProvidedMileageToFranchisee(
+                    franchisee.email,
+                    clearAmount,
+                    clearAmount,
+                    mileageLedger[franchisee.email],
+                    _franchiseeId
+                );
             }
         }
 
         nonce[_signer]++;
 
-        emit PaidMileage(_purchaseId, block.timestamp, _amount, _userEmail, _franchiseeId);
+        emit PaidMileage(_email, _amount, _amount, mileageLedger[_email], _purchaseId);
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
-    /// @param _userEmail 구매한 사용자의 이메일 해시
+    /// @param _email 구매한 사용자의 이메일 해시
     /// @param _franchiseeId 구매한 가맹점 아이디
     /// @param _signer 구매자의 주소
     /// @param _signature 서명
     function payToken(
         string memory _purchaseId,
         uint256 _amount,
-        bytes32 _userEmail,
+        bytes32 _email,
         string memory _franchiseeId,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(
-            abi.encode(_purchaseId, _amount, _userEmail, _franchiseeId, _signer, nonce[_signer])
-        );
+        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _email, _franchiseeId, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
-        address userAddress = linkCollection.toAddress(_userEmail);
+        address userAddress = linkCollection.toAddress(_email);
         require(userAddress != address(0x00), "Unregistered email-address");
         require(userAddress == _signer, "Invalid address");
 
         uint256 amountToken = convertMileageToToken(_amount);
-        require(tokenLedger[_userEmail] >= amountToken, "Insufficient balance");
+        require(tokenLedger[_email] >= amountToken, "Insufficient balance");
 
-        tokenLedger[_userEmail] -= amountToken;
+        tokenLedger[_email] -= amountToken;
         tokenLedger[foundationAccount] += amountToken;
-        franchiseeCollection.addUsedMileage(_franchiseeId, _amount);
+        franchiseeCollection.addUsedMileage(_franchiseeId, _amount, _purchaseId);
 
         uint256 clearAmount = franchiseeCollection.getClearMileage(_franchiseeId);
         if (clearAmount > 0) {
-            franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount);
+            franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount, _purchaseId);
             FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(_franchiseeId);
             if (franchisee.email != NULL) {
                 mileageLedger[franchisee.email] += clearAmount;
-                emit ProvidedMileageToFranchisee(franchisee.email, clearAmount);
+                emit ProvidedMileageToFranchisee(
+                    franchisee.email,
+                    clearAmount,
+                    clearAmount,
+                    mileageLedger[franchisee.email],
+                    _franchiseeId
+                );
             }
         }
 
         nonce[_signer]++;
 
-        emit PaidToken(_purchaseId, block.timestamp, _amount, amountToken, _userEmail, _franchiseeId);
+        emit PaidToken(_email, amountToken, _amount, tokenLedger[_email], _purchaseId);
     }
 
     function convertMileageToToken(uint256 amount) internal view returns (uint256) {
@@ -272,93 +319,95 @@ contract Ledger {
     /// @notice 토큰을 예치합니다.
     /// @param _amount 금액
     function deposit(uint256 _amount) public {
-        bytes32 userEmail = linkCollection.toHash(msg.sender);
-        require(userEmail != bytes32(0x00), "Unregistered email-address");
+        bytes32 email = linkCollection.toHash(msg.sender);
+        require(email != bytes32(0x00), "Unregistered email-address");
 
         require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
         token.transferFrom(msg.sender, address(this), _amount);
 
-        tokenLedger[userEmail] += _amount;
+        tokenLedger[email] += _amount;
 
-        emit Deposited(msg.sender, _amount, tokenLedger[userEmail]);
+        uint256 amountMileage = convertTokenToMileage(_amount);
+        emit Deposited(email, _amount, amountMileage, tokenLedger[email], msg.sender);
     }
 
     /// @notice 토큰을 인출합니다.
     /// @param _amount 금액
     function withdraw(uint256 _amount) public {
-        bytes32 userEmail = linkCollection.toHash(msg.sender);
-        require(userEmail != bytes32(0x00), "Unregistered email-address");
+        bytes32 email = linkCollection.toHash(msg.sender);
+        require(email != bytes32(0x00), "Unregistered email-address");
 
-        require(_amount <= tokenLedger[userEmail], "Insufficient balance");
+        require(_amount <= tokenLedger[email], "Insufficient balance");
         token.transfer(msg.sender, _amount);
 
-        tokenLedger[userEmail] -= _amount;
+        tokenLedger[email] -= _amount;
 
-        emit Withdrawn(msg.sender, _amount, tokenLedger[userEmail]);
+        uint256 amountMileage = convertTokenToMileage(_amount);
+        emit Withdrawn(email, _amount, amountMileage, tokenLedger[email], msg.sender);
     }
 
     /// @notice 마일리지를 토큰으로 교환합니다
     /// @dev 중계서버를 통해서 호출됩니다.
-    /// @param _userEmail 사용자의 이메일 해시
+    /// @param _email 사용자의 이메일 해시
     /// @param _amountMileage 교환할 마일리지의 량
     /// @param _signer 사용자의 주소
     /// @param _signature 서명
     function exchangeMileageToToken(
-        bytes32 _userEmail,
+        bytes32 _email,
         uint256 _amountMileage,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(abi.encode(_userEmail, _amountMileage, _signer, nonce[_signer]));
+        bytes32 dataHash = keccak256(abi.encode(_email, _amountMileage, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
-        address userAddress = linkCollection.toAddress(_userEmail);
+        address userAddress = linkCollection.toAddress(_email);
         require(userAddress != address(0x00), "Unregistered email-address");
         require(userAddress == _signer, "Invalid address");
 
-        require(mileageLedger[_userEmail] >= _amountMileage, "Insufficient balance");
+        require(mileageLedger[_email] >= _amountMileage, "Insufficient balance");
 
         uint256 amountToken = convertMileageToToken(_amountMileage);
         require(tokenLedger[foundationAccount] >= amountToken, "Insufficient foundation balance");
 
-        mileageLedger[_userEmail] -= _amountMileage;
+        mileageLedger[_email] -= _amountMileage;
 
-        tokenLedger[_userEmail] += amountToken;
+        tokenLedger[_email] += amountToken;
         tokenLedger[foundationAccount] -= amountToken;
 
         nonce[_signer]++;
 
-        emit ExchangedMileageToToken(_userEmail, _amountMileage, amountToken);
+        emit ExchangedMileageToToken(_email, _amountMileage, amountToken, mileageLedger[_email], tokenLedger[_email]);
     }
 
     /// @notice 토큰을 마일리지로 교환합니다
     /// @dev 중계서버를 통해서 호출됩니다.
-    /// @param _userEmail 사용자의 이메일 해시
+    /// @param _email 사용자의 이메일 해시
     /// @param _amountToken 교환할 토큰의 량
     /// @param _signer 사용자의 주소
     /// @param _signature 서명
     function exchangeTokenToMileage(
-        bytes32 _userEmail,
+        bytes32 _email,
         uint256 _amountToken,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(abi.encode(_userEmail, _amountToken, _signer, nonce[_signer]));
+        bytes32 dataHash = keccak256(abi.encode(_email, _amountToken, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
-        address userAddress = linkCollection.toAddress(_userEmail);
+        address userAddress = linkCollection.toAddress(_email);
         require(userAddress != address(0x00), "Unregistered email-address");
         require(userAddress == _signer, "Invalid address");
 
-        require(tokenLedger[_userEmail] >= _amountToken, "Insufficient balance");
+        require(tokenLedger[_email] >= _amountToken, "Insufficient balance");
 
-        tokenLedger[_userEmail] -= _amountToken;
+        tokenLedger[_email] -= _amountToken;
         tokenLedger[foundationAccount] += _amountToken;
 
         uint256 amountMileage = convertTokenToMileage(_amountToken);
-        mileageLedger[_userEmail] += amountMileage;
+        mileageLedger[_email] += amountMileage;
 
         nonce[_signer]++;
 
-        emit ExchangedTokenToMileage(_userEmail, _amountToken, amountMileage);
+        emit ExchangedTokenToMileage(_email, amountMileage, _amountToken, mileageLedger[_email], tokenLedger[_email]);
     }
 
     /// @notice 마일리지의 잔고를 리턴한다

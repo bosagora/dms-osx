@@ -154,7 +154,7 @@ export class DefaultScheduler extends Scheduler {
                 const emailHash = ContractUtils.sha256String(data.userEmail);
                 const tx = await (await this.getLedgerContract())
                     .connect(await this.getSigner())
-                    .savePurchase(data.purchaseId, data.timestamp, data.amount, emailHash, data.franchiseeId);
+                    .savePurchase(data.purchaseId, data.timestamp, data.amount, emailHash, data.franchiseeId, 0);
 
                 console.log(
                     `Send purchase data (purchaseId: ${
