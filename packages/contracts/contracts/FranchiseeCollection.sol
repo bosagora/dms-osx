@@ -18,7 +18,7 @@ contract FranchiseeCollection {
     /// @notice 가맹점의 데이터
     struct FranchiseeData {
         string franchiseeId; // 가맹점 아이디
-        uint256 payoutWaitTime; // 제품구매 후 마일리지 지급시간
+        uint256 provideWaitTime; // 제품구매 후 마일리지 지급시간
         bytes32 email; // 가맹점주 이메일 해시
         uint256 providedMileage; // 제공된 마일리지 총량
         uint256 usedMileage; // 사용된 마일리지 총량
@@ -34,7 +34,7 @@ contract FranchiseeCollection {
     ValidatorCollection private validatorCollection;
 
     /// @notice 가맹점이 추가될 때 발생되는 이벤트
-    event AddedFranchisee(string franchiseeId, uint256 timestamp, bytes32 email);
+    event AddedFranchisee(string franchiseeId, uint256 provideWaitTime, bytes32 email);
     /// @notice 가맹점의 마일리지가 증가할 때 발생되는 이벤트
     event IncreasedProvidedMileage(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 사용자의 마일리지가 증가할 때 발생되는 이벤트
@@ -96,7 +96,7 @@ contract FranchiseeCollection {
     function _add(string memory _franchiseeId, uint256 _payoutWaitTime, bytes32 _email) internal {
         FranchiseeData memory data = FranchiseeData({
             franchiseeId: _franchiseeId,
-            payoutWaitTime: _payoutWaitTime,
+            provideWaitTime: _payoutWaitTime,
             email: _email,
             providedMileage: 0,
             usedMileage: 0,

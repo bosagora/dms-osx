@@ -1,0 +1,86 @@
+type SavedPurchase @entity(immutable: true) {
+  id: Bytes!
+  purchaseId: String! # string
+  timestamp: BigInt! # uint256
+  amount: BigInt! # uint256
+  email: Bytes! # bytes32
+  franchiseeId: String! # string
+  method: BigInt! # uint32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+enum UserAction {
+  ProvidedMileage,
+  ProvidedToken,
+  PaidMileage,
+  PaidToken,
+  DepositedToken,
+  WithdrawnToken,
+  ExchangedMileageToToken,
+  ExchangedTokenToMileage,
+  ClearedMileage
+}
+
+type UserTradeHistory @entity(immutable: true) {
+  id: Bytes!
+  email: Bytes!
+  action: UserAction!
+  amountMileage: BigInt!
+  amountToken: BigInt!
+  value: BigInt!
+  balanceMileage: BigInt!
+  balanceToken: BigInt!
+  purchaseId: String
+  franchiseeId : String
+  account: Bytes!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type UserBalance @entity {
+  id: Bytes!
+  mileage: BigInt!
+  token: BigInt!
+}
+
+enum FranchiseeAction {
+  ProvidedMileage,
+  UsedMileage,
+  ClearedMileage
+}
+
+type FranchiseeTradeHistory @entity(immutable: true) {
+  id: Bytes!
+  franchiseeId: String! # string
+  purchaseId: String
+
+  action: FranchiseeAction!
+
+  increase: BigInt! # uint256
+
+  providedMileage: BigInt!
+  usedMileage: BigInt!
+  clearedMileage: BigInt!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Franchisee @entity {
+  id: String! # franchiseeId
+
+  provideWaitTime: BigInt! # uint256
+  email: Bytes! # bytes32
+
+  providedMileage: BigInt!
+  usedMileage: BigInt!
+  clearedMileage: BigInt!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

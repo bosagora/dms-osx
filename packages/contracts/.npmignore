@@ -18,3 +18,4 @@ hardhat.config.ts
 package-lock.json
 tsconfig.json
 tslint.json
+deployments

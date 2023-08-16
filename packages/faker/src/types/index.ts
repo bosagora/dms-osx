@@ -10,7 +10,7 @@ export interface IPurchaseData {
 
 export interface IFranchiseeData {
     franchiseeId: string;
-    payoutWaitTime: number;
+    provideWaitTime: number;
     email: string;
 }
 

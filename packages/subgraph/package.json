@@ -1,0 +1,28 @@
+{
+    "name": "dms-osx-subgraph",
+    "version": "1.0.0",
+    "description": "The DMS OSx Subgraph",
+    "homepage": "https://github.com/bosagora/dms-osx",
+    "license": "MIT",
+    "scripts": {
+        "build:contracts": "cd ../contracts && yarn build",
+        "manifest": "scripts/build-manifest.sh",
+        "build": "scripts/build-subgraph.sh",
+        "deploy": "scripts/deploy-subgraph.sh",
+        "create:devnet": "graph create bosagora/osx-devnet --node http://localhost:8020",
+        "remove:devnet": "graph remove bosagora/osx-devnet --node http://localhost:8020",
+        "deploy:devnet": "LOCAL=true scripts/deploy-subgraph.sh",
+        "formatting:check": "prettier '**/*.{json,ts,js}' -c",
+        "formatting:write": "prettier '**/*.{json,ts,js}' --write"
+    },
+    "devDependencies": {
+        "@graphprotocol/graph-cli": "^0.55.0",
+        "@graphprotocol/graph-ts": "^0.31.0",
+        "matchstick-as": "^0.5.1",
+        "mustache": "^4.2.0",
+        "prettier": "^2.5.1",
+        "prettier-plugin-solidity": "^1.1.1",
+        "tslint": "^6.1.3",
+        "tslint-config-prettier": "^1.18.0"
+    }
+}

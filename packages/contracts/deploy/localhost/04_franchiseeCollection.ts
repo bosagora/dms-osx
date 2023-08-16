@@ -28,7 +28,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     if (deployResult.newlyDeployed) {
         interface IFranchiseeData {
             franchiseeId: string;
-            payoutWaitTime: number;
+            provideWaitTime: number;
             email: string;
         }
         const franchiseeData: IFranchiseeData[] = JSON.parse(fs.readFileSync("./deploy/data/franchisees.json"));
@@ -39,7 +39,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             const email = ContractUtils.sha256String(elem.email);
             const tx = await contract
                 .connect(await ethers.getSigner(validators[0]))
-                .add(elem.franchiseeId, elem.payoutWaitTime, email);
+                .add(elem.franchiseeId, elem.provideWaitTime, email);
             console.log(`Add franchisee data (tx: ${tx.hash})...`);
             await tx.wait();
         }
