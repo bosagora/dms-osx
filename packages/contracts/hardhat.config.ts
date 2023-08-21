@@ -146,23 +146,23 @@ const config = {
             blockGasLimit: 8000000,
             deploy: ["./deploy"],
         },
-        mainnet: {
+        bosagora_mainnet: {
             url: process.env.MAIN_NET_URL || "",
             chainId: 2151,
             accounts: getAccounts(),
-            deploy: ["./deploy/mainnet"],
+            deploy: ["./deploy/bosagora_mainnet"],
         },
-        testnet: {
+        bosagora_testnet: {
             url: process.env.TEST_NET_URL || "",
             chainId: 2019,
             accounts: getAccounts(),
             deploy: ["./deploy"],
         },
-        devnet: {
+        bosagora_devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
             accounts: getAccounts(),
-            deploy: ["./deploy/localhost"],
+            deploy: ["./deploy/bosagora_devnet"],
         },
     },
     namedAccounts: {
