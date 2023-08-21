@@ -148,7 +148,24 @@ export class DefaultRouter {
             this.payMileage.bind(this)
         );
 
-        // TODO 토큰을 이용하여 구매할 때
+        // 토큰을 이용하여 구매할 때
+        this.app.post(
+            "/payToken",
+            [
+                body("purchaseId").exists(),
+                body("amount").custom(Validation.isAmount),
+                body("email")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("franchiseeId").exists(),
+                body("signer").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.payToken.bind(this)
+        );
+
         // TODO 마일리지를 토큰으로 교환할 때
         // TODO 토큰을 마일리지로 교환할 때
     }
@@ -205,6 +222,63 @@ export class DefaultRouter {
         } catch (error: any) {
             const message = error.message !== undefined ? error.message : "Failed pay mileage";
             logger.error(`POST /payMileage :`, message);
+            return res.json(
+                this.makeResponseData(500, undefined, {
+                    code: 500,
+                    message,
+                })
+            );
+        }
+    }
+
+    /**
+     * 사용자 토큰 지불
+     * POST /payToken
+     * @private
+     */
+    private async payToken(req: express.Request, res: express.Response) {
+        logger.http(`POST /payToken`);
+
+        // TODO 필요시 access secret 검사
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.json(
+                this.makeResponseData(400, undefined, {
+                    code: 501,
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const purchaseId: string = String(req.body.purchaseId); // 구매 아이디
+            const amount: string = String(req.body.amount); // 구매 금액
+            const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
+            const franchiseeId: string = String(req.body.franchiseeId); // 구매한 가맹점 아이디
+            const signer: string = String(req.body.signer); // 구매자의 주소
+            const signature: string = String(req.body.signature); // 서명
+
+            // TODO amount > 0 조건 검사
+            // TODO 서명검증
+
+            // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
+            const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
+            if (emailToAddress !== signer) {
+                this.makeResponseData(500, undefined, {
+                    code: 502,
+                    message: "Email is not valid.",
+                });
+            }
+            const tx = await (await this.getLedgerContract())
+                .connect(await this.getRelaySigner())
+                .payToken(purchaseId, amount, email, franchiseeId, signer, signature);
+
+            logger.http(`TxHash(payToken): `, tx.hash);
+            return res.json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            const message = error.message !== undefined ? error.message : "Failed pay token";
+            logger.error(`POST /payToken :`, message);
             return res.json(
                 this.makeResponseData(500, undefined, {
                     code: 500,
