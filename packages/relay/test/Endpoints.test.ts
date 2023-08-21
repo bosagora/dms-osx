@@ -419,6 +419,150 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
             });
+
+            it("Failure test of the path /payToken 'Insufficient balance'", async () => {
+                const over_purchaseAmount = Amount.make(90_000_000, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signPayment(
+                    users[0],
+                    purchaseData.purchaseId,
+                    over_purchaseAmount,
+                    emailHashes[0],
+                    franchiseeData[0].franchiseeId,
+                    nonce
+                );
+                const uri = URI(serverURL).directory("payToken");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    purchaseId: purchaseData.purchaseId,
+                    amount: over_purchaseAmount.toString(),
+                    email: emailHashes[0],
+                    franchiseeId: purchaseData.franchiseeId,
+                    signer: users[0].address,
+                    signature,
+                });
+
+                assert.deepStrictEqual(response.data.code, 500);
+                assert.ok(response.data.error.code === 500);
+                assert.ok(
+                    response.data.error.message ===
+                        "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
+                );
+            });
+
+            it("Failure test of the path /payToken 'Email is not valid.'", async () => {
+                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signPayment(
+                    users[0],
+                    purchaseData.purchaseId,
+                    purchaseAmount,
+                    emailHashes[0],
+                    franchiseeData[0].franchiseeId,
+                    nonce
+                );
+                const uri = URI(serverURL).directory("payToken");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    purchaseId: purchaseData.purchaseId,
+                    amount: purchaseAmount.toString(),
+                    email: emailHashes[0],
+                    franchiseeId: purchaseData.franchiseeId,
+                    signer: "",
+                    signature,
+                });
+
+                assert.deepStrictEqual(response.data.code, 400);
+                assert.ok(response.data.error.code === 501);
+                assert.ok(response.data.error.message === "Failed to check the validity of parameters.");
+            });
+
+            it("Failure test of the path /payToken 'Invalid signature'", async () => {
+                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signPayment(
+                    users[1],
+                    purchaseData.purchaseId,
+                    purchaseAmount,
+                    emailHashes[0],
+                    franchiseeData[0].franchiseeId,
+                    nonce
+                );
+                const uri = URI(serverURL).directory("payToken");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    purchaseId: purchaseData.purchaseId,
+                    amount: purchaseAmount.toString(),
+                    email: emailHashes[0],
+                    franchiseeId: purchaseData.franchiseeId,
+                    signer: users[0].address,
+                    signature,
+                });
+
+                assert.deepStrictEqual(response.data.code, 500);
+                assert.ok(response.data.error.code === 500);
+                assert.ok(
+                    response.data.error.message ===
+                        "VM Exception while processing transaction: reverted with reason string 'Invalid signature'"
+                );
+            });
+
+            it("Failure test of the path /payToken 'Email is not valid.'", async () => {
+                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signPayment(
+                    users[0],
+                    purchaseData.purchaseId,
+                    purchaseAmount,
+                    emailHashes[1],
+                    franchiseeData[0].franchiseeId,
+                    nonce
+                );
+                const uri = URI(serverURL).directory("payToken");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    purchaseId: purchaseData.purchaseId,
+                    amount: purchaseAmount.toString(),
+                    email: emailHashes[1],
+                    franchiseeId: purchaseData.franchiseeId,
+                    signer: users[0].address,
+                    signature,
+                });
+
+                assert.deepStrictEqual(response.data.code, 500);
+                assert.ok(response.data.error.code === 500);
+                assert.ok(
+                    response.data.error.message ===
+                        "VM Exception while processing transaction: reverted with reason string 'Unregistered email-address'"
+                );
+            });
+
+            it("Success Test of the path /payToken", async () => {
+                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signPayment(
+                    users[0],
+                    purchaseData.purchaseId,
+                    purchaseAmount,
+                    emailHashes[0],
+                    franchiseeData[0].franchiseeId,
+                    nonce
+                );
+                const uri = URI(serverURL).directory("payToken");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    purchaseId: purchaseData.purchaseId,
+                    amount: purchaseAmount.toString(),
+                    email: emailHashes[0],
+                    franchiseeId: purchaseData.franchiseeId,
+                    signer: users[0].address,
+                    signature,
+                });
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.txHash !== undefined);
+            });
         });
     });
 });
