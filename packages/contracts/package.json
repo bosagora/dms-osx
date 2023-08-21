@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-artifacts",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "description": "Smart contracts that decentralized mileage systems",
     "files": [
         "**/*.sol"
@@ -11,9 +11,9 @@
         "build": "hardhat compile",
         "build:npm": "rollup --config rollup.config.ts",
         "deploy:hardhat": "hardhat deploy",
-        "deploy:mainnet": "hardhat deploy --network mainnet",
-        "deploy:testnet": "hardhat deploy --network testnet",
-        "deploy:devnet": "hardhat deploy --network devnet",
+        "deploy:mainnet": "hardhat deploy --network bosagora_mainnet",
+        "deploy:testnet": "hardhat deploy --network bosagora_testnet",
+        "deploy:devnet": "hardhat deploy --network bosagora_devnet",
         "lint": "tslint --config tslint.json \\\"{src,test}/**/*.ts\\\"",
         "lint-fix": "tslint --fix --config tslint.json \\\"{src,test}/**/*.ts\\\"",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
