@@ -247,7 +247,7 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Exchange token to mileage", () => {
+        context("Exchange token & mileage", () => {
             const amountDepositToken = BigNumber.from(amount.value.mul(2));
             const amountToken = BigNumber.from(amount.value);
             const amountMileage = amountToken.mul(price).div(multiple);
@@ -297,6 +297,51 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     email: emailHashes[0],
                     amountToken: amountToken.toString(),
+                    signer: users[0].address,
+                    signature,
+                });
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.txHash !== undefined);
+            });
+
+            it("Failure Exchange mileage to token", async () => {
+                const over_amount = Amount.make(90_000_000, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signExchange(users[0], emailHashes[0], over_amount, nonce);
+
+                const uri = URI(serverURL).directory("exchangeMileageToToken");
+                const url = uri.toString();
+
+                const response = await client.post(url, {
+                    email: emailHashes[0],
+                    amountMileage: over_amount.toString(),
+                    signer: users[0].address,
+                    signature,
+                });
+                assert.deepStrictEqual(response.data.code, 500);
+                assert.ok(response.data.error.code === 500);
+                assert.ok(
+                    response.data.error.message ===
+                        "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
+                );
+            });
+
+            it("Success Exchange mileage to token", async () => {
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signExchange(
+                    users[0],
+                    emailHashes[0],
+                    purchaseData.amount,
+                    nonce
+                );
+
+                const uri = URI(serverURL).directory("exchangeMileageToToken");
+                const url = uri.toString();
+
+                const response = await client.post(url, {
+                    email: emailHashes[0],
+                    amountMileage: purchaseData.amount.toString(),
                     signer: users[0].address,
                     signature,
                 });
