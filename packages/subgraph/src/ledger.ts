@@ -66,36 +66,66 @@ export function handleWithdrawn(event: WithdrawnEvent): void {
     handleWithdrawnForHistory(event);
 }
 
-export function handleChangedBalanceMileage(email: Bytes, balance: BigInt): UserBalance {
-    let entity = UserBalance.load(email);
+export function handleChangedBalanceMileage(
+    email: Bytes,
+    balance: BigInt,
+    blockNumber: BigInt,
+    blockTimestamp: BigInt,
+    transactionHash: Bytes
+): UserBalance {
+    let entity = UserBalance.load(email.toHex());
     if (entity !== null) {
         entity.mileage = balance.div(AmountUnit);
+        entity.blockNumber = blockNumber;
+        entity.blockTimestamp = blockTimestamp;
+        entity.transactionHash = transactionHash;
         entity.save();
     } else {
-        entity = new UserBalance(email);
+        entity = new UserBalance(email.toHex());
         entity.mileage = balance.div(AmountUnit);
         entity.token = BigInt.fromI32(0);
+        entity.blockNumber = blockNumber;
+        entity.blockTimestamp = blockTimestamp;
+        entity.transactionHash = transactionHash;
         entity.save();
     }
     return entity;
 }
 
-export function handleChangedBalanceToken(email: Bytes, balance: BigInt): UserBalance {
-    let entity = UserBalance.load(email);
+export function handleChangedBalanceToken(
+    email: Bytes,
+    balance: BigInt,
+    blockNumber: BigInt,
+    blockTimestamp: BigInt,
+    transactionHash: Bytes
+): UserBalance {
+    let entity = UserBalance.load(email.toHex());
     if (entity !== null) {
         entity.token = balance.div(AmountUnit);
+        entity.blockNumber = blockNumber;
+        entity.blockTimestamp = blockTimestamp;
+        entity.transactionHash = transactionHash;
         entity.save();
     } else {
-        entity = new UserBalance(email);
+        entity = new UserBalance(email.toHex());
         entity.token = balance.div(AmountUnit);
         entity.mileage = BigInt.fromI32(0);
+        entity.blockNumber = blockNumber;
+        entity.blockTimestamp = blockTimestamp;
+        entity.transactionHash = transactionHash;
         entity.save();
     }
     return entity;
 }
 
 export function handleProvidedMileageForHistory(event: ProvidedMileageEvent): void {
-    const balanceEntity = handleChangedBalanceMileage(event.params.email, event.params.balanceMileage);
+    const balanceEntity = handleChangedBalanceMileage(
+        event.params.email,
+        event.params.balanceMileage,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ProvidedMileage";
@@ -115,7 +145,13 @@ export function handleProvidedMileageForHistory(event: ProvidedMileageEvent): vo
 }
 
 export function handleProvidedMileageToFranchiseeForHistory(event: ProvidedMileageToFranchiseeEvent): void {
-    const balanceEntity = handleChangedBalanceMileage(event.params.email, event.params.balanceMileage);
+    const balanceEntity = handleChangedBalanceMileage(
+        event.params.email,
+        event.params.balanceMileage,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ClearedMileage";
@@ -134,7 +170,13 @@ export function handleProvidedMileageToFranchiseeForHistory(event: ProvidedMilea
 }
 
 export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
-    const balanceEntity = handleChangedBalanceToken(event.params.email, event.params.balanceToken);
+    const balanceEntity = handleChangedBalanceToken(
+        event.params.email,
+        event.params.balanceToken,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ProvidedToken";
@@ -154,7 +196,13 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
 }
 
 export function handlePaidMileageForHistory(event: PaidMileageEvent): void {
-    const balanceEntity = handleChangedBalanceToken(event.params.email, event.params.balanceMileage);
+    const balanceEntity = handleChangedBalanceToken(
+        event.params.email,
+        event.params.balanceMileage,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "PaidMileage";
@@ -174,7 +222,13 @@ export function handlePaidMileageForHistory(event: PaidMileageEvent): void {
 }
 
 export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
-    const balanceEntity = handleChangedBalanceToken(event.params.email, event.params.balanceToken);
+    const balanceEntity = handleChangedBalanceToken(
+        event.params.email,
+        event.params.balanceToken,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "PaidToken";
@@ -194,7 +248,13 @@ export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
 }
 
 export function handleDepositedForHistory(event: DepositedEvent): void {
-    const balanceEntity = handleChangedBalanceToken(event.params.email, event.params.balanceToken);
+    const balanceEntity = handleChangedBalanceToken(
+        event.params.email,
+        event.params.balanceToken,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "DepositedToken";
@@ -214,7 +274,13 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
 }
 
 export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
-    const balanceEntity = handleChangedBalanceToken(event.params.email, event.params.balanceToken);
+    const balanceEntity = handleChangedBalanceToken(
+        event.params.email,
+        event.params.balanceToken,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "WithdrawnToken";
@@ -252,8 +318,20 @@ export function handleExchangedMileageToTokenForHistory(event: ExchangedMileageT
 
     entity.save();
 
-    handleChangedBalanceMileage(event.params.email, event.params.balanceMileage);
-    handleChangedBalanceToken(event.params.email, event.params.balanceToken);
+    handleChangedBalanceMileage(
+        event.params.email,
+        event.params.balanceMileage,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
+    handleChangedBalanceToken(
+        event.params.email,
+        event.params.balanceToken,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
 }
 
 export function handleExchangedTokenToMileageForHistory(event: ExchangedTokenToMileageEvent): void {
@@ -275,6 +353,18 @@ export function handleExchangedTokenToMileageForHistory(event: ExchangedTokenToM
 
     entity.save();
 
-    handleChangedBalanceMileage(event.params.email, event.params.balanceMileage);
-    handleChangedBalanceToken(event.params.email, event.params.balanceToken);
+    handleChangedBalanceMileage(
+        event.params.email,
+        event.params.balanceMileage,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
+    handleChangedBalanceToken(
+        event.params.email,
+        event.params.balanceToken,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
 }

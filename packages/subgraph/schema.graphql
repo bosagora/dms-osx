@@ -41,9 +41,14 @@ type UserTradeHistory @entity(immutable: true) {
 }
 
 type UserBalance @entity {
-  id: Bytes!
+  id: ID! # email
+
   mileage: BigInt!
   token: BigInt!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
 }
 
 enum FranchiseeAction {
@@ -71,7 +76,7 @@ type FranchiseeTradeHistory @entity(immutable: true) {
 }
 
 type Franchisee @entity {
-  id: String! # franchiseeId
+  id: ID! # franchiseeId
 
   provideWaitTime: BigInt! # uint256
   email: Bytes! # bytes32
