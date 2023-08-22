@@ -99,6 +99,51 @@ function getAccounts() {
         process.env.VALIDATOR5 = Wallet.createRandom().privateKey;
         accounts.push(process.env.VALIDATOR5);
     }
+
+    if (
+        process.env.FOUNDATION !== undefined &&
+        process.env.FOUNDATION.trim() !== "" &&
+        reg_bytes64.test(process.env.FOUNDATION)
+    ) {
+        accounts.push(process.env.FOUNDATION);
+    } else {
+        process.env.FOUNDATION = Wallet.createRandom().privateKey;
+        accounts.push(process.env.FOUNDATION);
+    }
+
+    if (
+        process.env.LINK_VALIDATOR1 !== undefined &&
+        process.env.LINK_VALIDATOR1.trim() !== "" &&
+        reg_bytes64.test(process.env.LINK_VALIDATOR1)
+    ) {
+        accounts.push(process.env.LINK_VALIDATOR1);
+    } else {
+        process.env.LINK_VALIDATOR1 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.LINK_VALIDATOR1);
+    }
+
+    if (
+        process.env.LINK_VALIDATOR2 !== undefined &&
+        process.env.LINK_VALIDATOR2.trim() !== "" &&
+        reg_bytes64.test(process.env.LINK_VALIDATOR2)
+    ) {
+        accounts.push(process.env.LINK_VALIDATOR2);
+    } else {
+        process.env.LINK_VALIDATOR2 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.LINK_VALIDATOR2);
+    }
+
+    if (
+        process.env.LINK_VALIDATOR3 !== undefined &&
+        process.env.LINK_VALIDATOR3.trim() !== "" &&
+        reg_bytes64.test(process.env.LINK_VALIDATOR3)
+    ) {
+        accounts.push(process.env.LINK_VALIDATOR3);
+    } else {
+        process.env.LINK_VALIDATOR3 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.LINK_VALIDATOR3);
+    }
+
     return accounts;
 }
 
@@ -169,7 +214,7 @@ const config = {
         deployer: {
             default: 0,
         },
-        foundation: {
+        owner: {
             default: 1,
         },
         validator1: {
@@ -186,6 +231,18 @@ const config = {
         },
         validator5: {
             default: 6,
+        },
+        foundation: {
+            default: 7,
+        },
+        linkValidator1: {
+            default: 8,
+        },
+        linkValidator2: {
+            default: 9,
+        },
+        linkValidator3: {
+            default: 10,
         },
     },
     gasReporter: {
