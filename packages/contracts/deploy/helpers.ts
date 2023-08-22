@@ -4,6 +4,12 @@ import "hardhat-deploy";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
+export const LINK_COLLECTION_ADDRESSES: { [key: string]: string } = {
+    bosagora_mainnet: "0xf1CEFe1b28ee6768597f177eca6616aD44C96418",
+    bosagora_testnet: "0xf1CEFe1b28ee6768597f177eca6616aD44C96418",
+    bosagora_devnet: "0xf1CEFe1b28ee6768597f177eca6616aD44C96418",
+};
+
 export async function getContractAddress(contractName: string, hre: HardhatRuntimeEnvironment): Promise<string> {
     const { deployments } = hre;
     try {
@@ -22,6 +28,19 @@ export async function getContractAddress(contractName: string, hre: HardhatRunti
         console.error(e);
         return "";
     }
+}
+
+export async function getLinkCollectionContractAddress(
+    contractName: string,
+    hre: HardhatRuntimeEnvironment
+): Promise<string> {
+    try {
+        return LINK_COLLECTION_ADDRESSES[hre.network.name];
+    } catch (e) {
+        //
+    }
+
+    return getContractAddress(contractName, hre);
 }
 
 export async function getActiveContractsJSON(): Promise<{

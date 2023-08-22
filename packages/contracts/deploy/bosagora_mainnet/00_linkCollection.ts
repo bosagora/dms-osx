@@ -4,42 +4,31 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { LinkCollection } from "../../typechain-types";
-import { getContractAddress } from "../helpers";
 import { ContractUtils } from "../../test/helper/ContractUtils";
+import { LinkCollection } from "../../typechain-types";
+import { getContractAddress, LINK_COLLECTION_ADDRESSES } from "../helpers";
 
-import { Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
+import fs from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying LinkCollection.`);
 
-    const { deployments, getNamedAccounts, ethers } = hre;
-    const { deploy } = deployments;
-    const { deployer, owner, validator1, validator2, validator3, validator4, validator5 } = await getNamedAccounts();
-    const validators = [validator1, validator2, validator3, validator4, validator5];
+    const { network } = hre;
 
-    const deployResult = await deploy("LinkCollection", {
-        from: deployer,
-        args: [validators],
-        log: true,
-    });
+    const officialLinkCollectionAddress = LINK_COLLECTION_ADDRESSES[network.name];
 
-    if (deployResult.newlyDeployed) {
-        const linkCollectionContractAddress = await getContractAddress("LinkCollection", hre);
-        const linkCollectionContract = (await ethers.getContractAt(
-            "LinkCollection",
-            linkCollectionContractAddress
-        )) as LinkCollection;
+    if (!officialLinkCollectionAddress) {
+        const { deployments, getNamedAccounts, ethers } = hre;
+        const { deploy } = deployments;
+        const { deployer, linkValidator1, linkValidator2, linkValidator3 } = await getNamedAccounts();
+        const validators = [linkValidator1, linkValidator2, linkValidator3];
 
-        const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
-        const nonce = await linkCollectionContract.nonce(owner);
-        const signature = await ContractUtils.sign(new Wallet(process.env.OWNER || ""), foundationAccount, nonce);
-
-        const tx = await linkCollectionContract
-            .connect(await ethers.getSigner(validators[0]))
-            .add(foundationAccount, owner, signature);
-        console.log(`Add email-address of foundation (tx: ${tx.hash})...`);
-        await tx.wait();
+        await deploy("LinkCollection", {
+            from: deployer,
+            args: [validators],
+            log: true,
+        });
     }
 };
 export default func;
