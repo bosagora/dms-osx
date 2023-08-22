@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "link-email-wallet-osx-artifacts/contracts/LinkCollection.sol";
+import "del-osx-artifacts/contracts/LinkCollection.sol";
 import "./ValidatorCollection.sol";
 import "./TokenPrice.sol";
 import "./FranchiseeCollection.sol";
@@ -319,7 +319,7 @@ contract Ledger {
     /// @notice 토큰을 예치합니다.
     /// @param _amount 금액
     function deposit(uint256 _amount) public {
-        bytes32 email = linkCollection.toHash(msg.sender);
+        bytes32 email = linkCollection.toEmail(msg.sender);
         require(email != bytes32(0x00), "Unregistered email-address");
 
         require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
@@ -334,7 +334,7 @@ contract Ledger {
     /// @notice 토큰을 인출합니다.
     /// @param _amount 금액
     function withdraw(uint256 _amount) public {
-        bytes32 email = linkCollection.toHash(msg.sender);
+        bytes32 email = linkCollection.toEmail(msg.sender);
         require(email != bytes32(0x00), "Unregistered email-address");
 
         require(_amount <= tokenLedger[email], "Insufficient balance");
