@@ -260,20 +260,49 @@ describe("Test of Server", function () {
                 );
             });
 
-            it("Success", async () => {
+            it("Failure Exchange token to mileage", async () => {
+                const over_purchaseAmount = Amount.make(90_000_000, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signExchange(
+                    users[0],
+                    emailHashes[0],
+                    over_purchaseAmount,
+                    nonce
+                );
+
+                const uri = URI(serverURL).directory("exchangeTokenToMileage");
+                const url = uri.toString();
+
+                const response = await client.post(url, {
+                    email: emailHashes[0],
+                    amountToken: over_purchaseAmount.toString(),
+                    signer: users[0].address,
+                    signature,
+                });
+                assert.deepStrictEqual(response.data.code, 500);
+                assert.ok(response.data.error.code === 500);
+                assert.ok(
+                    response.data.error.message ===
+                        "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
+                );
+            });
+
+            it("Success Exchange token to mileage", async () => {
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountToken, nonce);
-                await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .exchangeTokenToMileage(emailHashes[0], amountToken, users[0].address, signature)
-                )
-                    .to.emit(ledgerContract, "ExchangedTokenToMileage")
-                    .withNamedArgs({
-                        email: emailHashes[0],
-                        amountToken,
-                        amountMileage,
-                    });
+
+                const uri = URI(serverURL).directory("exchangeTokenToMileage");
+                const url = uri.toString();
+
+                const response = await client.post(url, {
+                    email: emailHashes[0],
+                    amountToken: amountToken.toString(),
+                    signer: users[0].address,
+                    signature,
+                });
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.txHash !== undefined);
             });
 
             it("Failure test of the path /payMileage 'Insufficient balance'", async () => {
