@@ -7,7 +7,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Amount } from "../../test/helper/Amount";
 import { ContractUtils } from "../../test/helper/ContractUtils";
 import { FranchiseeCollection, Ledger, Token } from "../../typechain-types";
-import { getContractAddress } from "../helpers";
+import { getContractAddress, getLinkCollectionContractAddress } from "../helpers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying Ledger.`);
@@ -16,7 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deploy } = deployments;
     const { deployer, foundation } = await getNamedAccounts();
 
-    const linkCollectionContractAddress = await getContractAddress("LinkCollection", hre);
+    const linkCollectionContractAddress = await getLinkCollectionContractAddress("LinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
     const tokenPriceContractAddress = await getContractAddress("TokenPrice", hre);
