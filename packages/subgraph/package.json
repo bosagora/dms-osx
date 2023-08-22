@@ -9,8 +9,8 @@
         "manifest": "scripts/build-manifest.sh",
         "build": "scripts/build-subgraph.sh",
         "deploy": "scripts/deploy-subgraph.sh",
-        "create:devnet": "graph create bosagora/osx-devnet --node http://localhost:8020",
-        "remove:devnet": "graph remove bosagora/osx-devnet --node http://localhost:8020",
+        "create:devnet": "graph create bosagora/dms-osx-devnet --node http://localhost:8020",
+        "remove:devnet": "graph remove bosagora/dms-osx-devnet --node http://localhost:8020",
         "deploy:devnet": "LOCAL=true scripts/deploy-subgraph.sh",
         "formatting:check": "prettier '**/*.{json,ts,js}' -c",
         "formatting:write": "prettier '**/*.{json,ts,js}' --write"
