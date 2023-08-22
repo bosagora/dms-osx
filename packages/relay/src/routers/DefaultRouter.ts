@@ -166,8 +166,22 @@ export class DefaultRouter {
             this.payToken.bind(this)
         );
 
+        // 토큰을 마일리지로 교환할 때
+        this.app.post(
+            "/exchangeTokenToMileage",
+            [
+                body("email")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("amountToken").custom(Validation.isAmount),
+                body("signer").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.exchangeTokenToMileage.bind(this)
+        );
         // TODO 마일리지를 토큰으로 교환할 때
-        // TODO 토큰을 마일리지로 교환할 때
     }
 
     private async getHealthStatus(req: express.Request, res: express.Response) {
@@ -279,6 +293,61 @@ export class DefaultRouter {
         } catch (error: any) {
             const message = error.message !== undefined ? error.message : "Failed pay token";
             logger.error(`POST /payToken :`, message);
+            return res.json(
+                this.makeResponseData(500, undefined, {
+                    code: 500,
+                    message,
+                })
+            );
+        }
+    }
+
+    /**
+     * 토큰을 마일리지로 교환합니다
+     * POST /exchangeTokenToMileage
+     * @private
+     */
+    private async exchangeTokenToMileage(req: express.Request, res: express.Response) {
+        logger.http(`POST /exchangeTokenToMileage`);
+
+        // TODO 필요시 access secret 검사
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.json(
+                this.makeResponseData(400, undefined, {
+                    code: 501,
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
+            const amountToken: string = String(req.body.amountToken); // 교환할 마일리지의 량
+            const signer: string = String(req.body.signer); // 구매자의 주소
+            const signature: string = String(req.body.signature); // 서명
+
+            // TODO amountToken > 0 조건 검사
+            // TODO 서명검증
+
+            // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
+            const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
+            if (emailToAddress !== signer) {
+                this.makeResponseData(500, undefined, {
+                    code: 502,
+                    message: "Email is not valid.",
+                });
+            }
+            const tx = await (await this.getLedgerContract())
+                .connect(await this.getRelaySigner())
+                .exchangeTokenToMileage(email, amountToken, signer, signature);
+
+            logger.http(`TxHash(exchangeTokenToMileage): `, tx.hash);
+            return res.json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            const message = error.message !== undefined ? error.message : "Failed exchange Token To Mileage";
+            logger.error(`POST /exchangeTokenToMileage :`, message);
             return res.json(
                 this.makeResponseData(500, undefined, {
                     code: 500,
