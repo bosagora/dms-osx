@@ -38,6 +38,10 @@ export function handleIncreasedClearedMileage(event: IncreasedClearedMileageEven
         entity.providedMileage = franchiseeEntity.providedMileage;
         entity.usedMileage = franchiseeEntity.usedMileage;
         franchiseeEntity.clearedMileage = entity.clearedMileage;
+        franchiseeEntity.blockNumber = event.block.number;
+        franchiseeEntity.blockTimestamp = event.block.timestamp;
+        franchiseeEntity.transactionHash = event.transaction.hash;
+        franchiseeEntity.save();
     } else {
         entity.providedMileage = BigInt.fromI32(0);
         entity.usedMileage = BigInt.fromI32(0);
@@ -63,6 +67,10 @@ export function handleIncreasedProvidedMileage(event: IncreasedProvidedMileageEv
         entity.usedMileage = franchiseeEntity.usedMileage;
         entity.clearedMileage = franchiseeEntity.clearedMileage;
         franchiseeEntity.providedMileage = entity.providedMileage;
+        franchiseeEntity.blockNumber = event.block.number;
+        franchiseeEntity.blockTimestamp = event.block.timestamp;
+        franchiseeEntity.transactionHash = event.transaction.hash;
+        franchiseeEntity.save();
     } else {
         entity.usedMileage = BigInt.fromI32(0);
         entity.clearedMileage = BigInt.fromI32(0);
@@ -88,6 +96,10 @@ export function handleIncreasedUsedMileage(event: IncreasedUsedMileageEvent): vo
         entity.providedMileage = franchiseeEntity.providedMileage;
         entity.clearedMileage = franchiseeEntity.clearedMileage;
         franchiseeEntity.usedMileage = entity.usedMileage;
+        franchiseeEntity.blockNumber = event.block.number;
+        franchiseeEntity.blockTimestamp = event.block.timestamp;
+        franchiseeEntity.transactionHash = event.transaction.hash;
+        franchiseeEntity.save();
     } else {
         entity.providedMileage = BigInt.fromI32(0);
         entity.clearedMileage = BigInt.fromI32(0);
