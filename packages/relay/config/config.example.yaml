@@ -19,7 +19,7 @@ logging:
   console: true
 
 relay:
-  manager_key: ${MANAGER}
+  manager_key: ${MANAGER_KEY}
 
 contracts:
   tokenAddress : ${TOKEN_CONTRACT_ADDRESS}

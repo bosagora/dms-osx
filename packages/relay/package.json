@@ -14,6 +14,7 @@
         "start:mainnet": "NODE_ENV=production hardhat run src/main.ts --network mainnet",
         "start:testnet": "NODE_ENV=production hardhat run src/main.ts --network testnet",
         "start:localhost": "NODE_ENV=production hardhat run src/main.ts --network localhost",
+        "start": "NODE_ENV=production hardhat run src/main.ts --network devnet",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write",
         "debug:Endpoints": "NODE_ENV=test hardhat test test/Endpoints.test.ts",
