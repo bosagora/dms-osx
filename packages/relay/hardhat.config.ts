@@ -79,14 +79,14 @@ function getAccounts() {
     }
 
     if (
-        process.env.MANAGER !== undefined &&
-        process.env.MANAGER.trim() !== "" &&
-        reg_bytes64.test(process.env.MANAGER)
+        process.env.MANAGER_KEY !== undefined &&
+        process.env.MANAGER_KEY.trim() !== "" &&
+        reg_bytes64.test(process.env.MANAGER_KEY)
     ) {
-        accounts.push(process.env.MANAGER);
+        accounts.push(process.env.MANAGER_KEY);
     } else {
-        process.env.MANAGER = Wallet.createRandom().privateKey;
-        accounts.push(process.env.MANAGER);
+        process.env.MANAGER_KEY = Wallet.createRandom().privateKey;
+        accounts.push(process.env.MANAGER_KEY || "");
     }
 
     return accounts;
@@ -147,6 +147,11 @@ const config = {
         },
         localhost: {
             url: "http://localhost:8545",
+            chainId: 24680,
+            accounts: getAccounts(),
+        },
+        devnet: {
+            url: process.env.RPC_URL || "",
             chainId: 24680,
             accounts: getAccounts(),
         },
