@@ -16,13 +16,13 @@ async function main() {
 
         case "development":
             // Only use the console log
-            logger.add(Logger.defaultConsoleTransport());
+            if (config.logging.console) logger.add(Logger.defaultConsoleTransport());
             break;
 
         case "production":
         default:
             // Read the config file and potentially use both
-            logger.add(Logger.defaultFileTransport(config.logging.folder));
+            // logger.add(Logger.defaultFileTransport(config.logging.folder));
             if (config.logging.console) logger.add(Logger.defaultConsoleTransport());
     }
     logger.transports.forEach((tp) => {
