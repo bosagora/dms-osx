@@ -23,13 +23,13 @@ export class Logger {
     public static defaultFileTransport(folderPath: string) {
         // write log file options
         const options = {
-            filename: path.resolve(folderPath, "RemoteWallet.log"),
+            filename: path.resolve(folderPath, "relay.log"),
             handleExceptions: true,
             json: false,
             maxsize: 10485760, // 10MB
             maxFiles: 10,
             colorize: false,
-            format: combine(label({ label: "RemoteWallet" }), timestamp(), logFormat),
+            format: combine(label({ label: "Relay" }), timestamp(), logFormat),
         };
 
         return new winston.transports.File(options);
@@ -49,7 +49,7 @@ export class Logger {
             handleExceptions: true,
             json: false,
             colorize: false,
-            format: combine(label({ label: "RemoteWallet" }), timestamp(), logFormat),
+            format: combine(label({ label: "Relay" }), timestamp(), logFormat),
         };
 
         return new winston.transports.Console(options);
