@@ -292,6 +292,23 @@ describe("Test of Server", function () {
                 );
             });
 
+            it("Failure Exchange token to mileage", async () => {
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amountToken, nonce);
+
+                const uri = URI(serverURL).directory("exchangeTokenToMileage");
+                const url = uri.toString();
+
+                const response = await client.post(url, {
+                    email: emailHashes[0],
+                    amountToken: amountToken.toString(),
+                    signer: users[0].address,
+                    signature,
+                });
+                assert.deepStrictEqual(response.data.code, 500);
+                assert.ok(response.data.error.message === "Signature is not valid.");
+            });
+
             it("Success Exchange token to mileage", async () => {
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountToken, nonce);
@@ -330,6 +347,28 @@ describe("Test of Server", function () {
                     response.data.error.message ===
                         "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
                 );
+            });
+
+            it("Failure Exchange mileage to token", async () => {
+                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const signature = await ContractUtils.signExchange(
+                    users[1],
+                    emailHashes[0],
+                    purchaseData.amount,
+                    nonce
+                );
+
+                const uri = URI(serverURL).directory("exchangeMileageToToken");
+                const url = uri.toString();
+
+                const response = await client.post(url, {
+                    email: emailHashes[0],
+                    amountMileage: purchaseData.amount.toString(),
+                    signer: users[0].address,
+                    signature,
+                });
+                assert.deepStrictEqual(response.data.code, 500);
+                assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
             it("Success Exchange mileage to token", async () => {
@@ -435,11 +474,7 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Invalid signature'"
-                );
+                assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
             it("Failure test of the path /payMileage 'Email is not valid.'", async () => {
@@ -579,11 +614,7 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Invalid signature'"
-                );
+                assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
             it("Failure test of the path /payToken 'Email is not valid.'", async () => {
