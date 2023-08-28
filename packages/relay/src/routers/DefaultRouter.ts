@@ -1,6 +1,6 @@
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
-import { body, param, query, validationResult } from "express-validator";
+import { body, validationResult } from "express-validator";
 import * as hre from "hardhat";
 import { Ledger, LinkCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
@@ -9,8 +9,8 @@ import { GasPriceManager } from "../contract/GasPriceManager";
 import { WebService } from "../service/WebService";
 
 import express from "express";
-import { ContractUtils } from "../../test/helper/ContractUtils";
 import { Validation } from "../validation";
+import { ContractUtils } from "../utils/ContractUtils";
 
 export class DefaultRouter {
     /**
@@ -232,7 +232,15 @@ export class DefaultRouter {
             const signature: string = String(req.body.signature); // 서명
 
             // TODO amount > 0 조건 검사
-            // TODO 서명검증
+
+            // 서명검증
+            const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
+            if (!ContractUtils.verifyPayment(purchaseId, amount, email, franchiseeId, signer, userNonce, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
 
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
@@ -289,7 +297,14 @@ export class DefaultRouter {
             const signature: string = String(req.body.signature); // 서명
 
             // TODO amount > 0 조건 검사
-            // TODO 서명검증
+            // 서명검증
+            const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
+            if (!ContractUtils.verifyPayment(purchaseId, amount, email, franchiseeId, signer, userNonce, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
 
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
@@ -344,7 +359,14 @@ export class DefaultRouter {
             const signature: string = String(req.body.signature); // 서명
 
             // TODO amountToken > 0 조건 검사
-            // TODO 서명검증
+            // 서명검증
+            const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
+            if (!ContractUtils.verifyExchange(signer, email, amountToken, userNonce, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
 
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
@@ -399,7 +421,14 @@ export class DefaultRouter {
             const signature: string = String(req.body.signature); // 서명
 
             // TODO amountMileage > 0 조건 검사
-            // TODO 서명검증
+            // 서명검증
+            const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
+            if (!ContractUtils.verifyExchange(signer, email, amountMileage, userNonce, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
 
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
