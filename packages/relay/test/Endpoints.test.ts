@@ -285,7 +285,6 @@ describe("Test of Server", function () {
                     signature,
                 });
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
                 assert.ok(
                     response.data.error.message ===
                         "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
@@ -342,7 +341,6 @@ describe("Test of Server", function () {
                     signature,
                 });
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
                 assert.ok(
                     response.data.error.message ===
                         "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
@@ -417,7 +415,6 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
                 assert.ok(
                     response.data.error.message ===
                         "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
@@ -446,8 +443,7 @@ describe("Test of Server", function () {
                     signature,
                 });
 
-                assert.deepStrictEqual(response.data.code, 400);
-                assert.ok(response.data.error.code === 501);
+                assert.deepStrictEqual(response.data.code, 501);
                 assert.ok(response.data.error.message === "Failed to check the validity of parameters.");
             });
 
@@ -500,7 +496,6 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
                 assert.ok(
                     response.data.error.message ===
                         "VM Exception while processing transaction: reverted with reason string 'Unregistered email-address'"
@@ -557,7 +552,6 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
                 assert.ok(
                     response.data.error.message ===
                         "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
@@ -586,8 +580,7 @@ describe("Test of Server", function () {
                     signature,
                 });
 
-                assert.deepStrictEqual(response.data.code, 400);
-                assert.ok(response.data.error.code === 501);
+                assert.deepStrictEqual(response.data.code, 501);
                 assert.ok(response.data.error.message === "Failed to check the validity of parameters.");
             });
 
@@ -640,7 +633,6 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.code === 500);
                 assert.ok(
                     response.data.error.message ===
                         "VM Exception while processing transaction: reverted with reason string 'Unregistered email-address'"
