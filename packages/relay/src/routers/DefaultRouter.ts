@@ -215,8 +215,7 @@ export class DefaultRouter {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.json(
-                this.makeResponseData(400, undefined, {
-                    code: 501,
+                this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
                 })
@@ -245,8 +244,7 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(500, undefined, {
-                    code: 502,
+                this.makeResponseData(502, undefined, {
                     message: "Email is not valid.",
                 });
             }
@@ -261,7 +259,6 @@ export class DefaultRouter {
             logger.error(`POST /payMileage :`, message);
             return res.json(
                 this.makeResponseData(500, undefined, {
-                    code: 500,
                     message,
                 })
             );
@@ -280,8 +277,7 @@ export class DefaultRouter {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.json(
-                this.makeResponseData(400, undefined, {
-                    code: 501,
+                this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
                 })
@@ -309,8 +305,7 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(500, undefined, {
-                    code: 502,
+                this.makeResponseData(502, undefined, {
                     message: "Email is not valid.",
                 });
             }
@@ -325,7 +320,6 @@ export class DefaultRouter {
             logger.error(`POST /payToken :`, message);
             return res.json(
                 this.makeResponseData(500, undefined, {
-                    code: 500,
                     message,
                 })
             );
@@ -344,8 +338,7 @@ export class DefaultRouter {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.json(
-                this.makeResponseData(400, undefined, {
-                    code: 501,
+                this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
                 })
@@ -371,8 +364,7 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(500, undefined, {
-                    code: 502,
+                this.makeResponseData(502, undefined, {
                     message: "Email is not valid.",
                 });
             }
@@ -387,7 +379,6 @@ export class DefaultRouter {
             logger.error(`POST /exchangeTokenToMileage :`, message);
             return res.json(
                 this.makeResponseData(500, undefined, {
-                    code: 500,
                     message,
                 })
             );
@@ -406,8 +397,7 @@ export class DefaultRouter {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.json(
-                this.makeResponseData(400, undefined, {
-                    code: 501,
+                this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
                 })
@@ -433,8 +423,7 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(500, undefined, {
-                    code: 502,
+                this.makeResponseData(502, undefined, {
                     message: "Email is not valid.",
                 });
             }
@@ -449,7 +438,6 @@ export class DefaultRouter {
             logger.error(`POST /exchangeMileageToToken :`, message);
             return res.json(
                 this.makeResponseData(500, undefined, {
-                    code: 500,
                     message,
                 })
             );
