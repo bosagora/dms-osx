@@ -6,8 +6,8 @@ import {
     TokenPrice,
     ValidatorCollection,
 } from "../typechain-types";
-import { Amount } from "./helper/Amount";
-import { ContractUtils } from "./helper/ContractUtils";
+import { Amount } from "../src/utils/Amount";
+import { ContractUtils } from "../src/utils/ContractUtils";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -180,7 +180,7 @@ describe("Test for Ledger", () => {
         },
     ];
 
-    let reqId = 0;
+    let requestId: string;
     context("Save Purchase Data & Pay (mileage, token)", () => {
         const purchaseData: PurchaseData[] = [
             {
@@ -227,7 +227,6 @@ describe("Test for Ledger", () => {
 
         before("Deploy", async () => {
             await deployAllContract();
-            reqId = 0;
         });
 
         context("Prepare franchisee data", () => {
@@ -246,13 +245,15 @@ describe("Test for Ledger", () => {
             it("Register foundation's account", async () => {
                 const nonce = await linkCollectionContract.nonceOf(foundation.address);
                 const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
+                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
                 await expect(
-                    linkCollectionContract.connect(relay).addRequest(foundationAccount, foundation.address, signature)
+                    linkCollectionContract
+                        .connect(relay)
+                        .addRequest(requestId, foundationAccount, foundation.address, signature)
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
+                    .withArgs(requestId, foundationAccount, foundation.address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
             });
 
             it("Deposit foundation's token", async () => {
@@ -343,11 +344,13 @@ describe("Test for Ledger", () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
-                await expect(linkCollectionContract.connect(relay).addRequest(hash, users[0].address, signature))
+                requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
+                await expect(
+                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[0].address, signature)
+                )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
+                    .withArgs(requestId, hash, users[0].address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
             });
 
             it("Save Purchase Data - email and address are registered", async () => {
@@ -806,7 +809,6 @@ describe("Test for Ledger", () => {
     context("Deposit & Withdraw", () => {
         before("Deploy", async () => {
             await deployAllContract();
-            reqId = 0;
         });
 
         before("Prepare Token", async () => {
@@ -832,11 +834,13 @@ describe("Test for Ledger", () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
-                await expect(linkCollectionContract.connect(relay).addRequest(hash, users[0].address, signature))
+                requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
+                await expect(
+                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[0].address, signature)
+                )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
+                    .withArgs(requestId, hash, users[0].address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
             });
         });
 
@@ -844,13 +848,15 @@ describe("Test for Ledger", () => {
             it("Register foundation's account", async () => {
                 const nonce = await linkCollectionContract.nonceOf(foundation.address);
                 const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
+                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
                 await expect(
-                    linkCollectionContract.connect(relay).addRequest(foundationAccount, foundation.address, signature)
+                    linkCollectionContract
+                        .connect(relay)
+                        .addRequest(requestId, foundationAccount, foundation.address, signature)
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
+                    .withArgs(requestId, foundationAccount, foundation.address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
             });
 
             it("Deposit foundation's token", async () => {
@@ -926,7 +932,6 @@ describe("Test for Ledger", () => {
     context("Exchange token & mileage", () => {
         before("Deploy", async () => {
             await deployAllContract();
-            reqId = 0;
         });
 
         before("Prepare Token", async () => {
@@ -952,11 +957,13 @@ describe("Test for Ledger", () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
-                await expect(linkCollectionContract.connect(relay).addRequest(hash, users[0].address, signature))
+                requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
+                await expect(
+                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[0].address, signature)
+                )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
+                    .withArgs(requestId, hash, users[0].address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
             });
         });
 
@@ -1162,7 +1169,6 @@ describe("Test for Ledger", () => {
 
         before("Deploy", async () => {
             await deployAllContract();
-            reqId = 0;
         });
 
         before("Prepare Token", async () => {
@@ -1187,13 +1193,15 @@ describe("Test for Ledger", () => {
             it("Register foundation's account", async () => {
                 const nonce = await linkCollectionContract.nonceOf(foundation.address);
                 const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
+                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
                 await expect(
-                    linkCollectionContract.connect(relay).addRequest(foundationAccount, foundation.address, signature)
+                    linkCollectionContract
+                        .connect(relay)
+                        .addRequest(requestId, foundationAccount, foundation.address, signature)
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
+                    .withArgs(requestId, foundationAccount, foundation.address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
             });
 
             it("Deposit foundation's token", async () => {
@@ -1278,11 +1286,13 @@ describe("Test for Ledger", () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
-                await expect(linkCollectionContract.connect(relay).addRequest(hash, users[0].address, signature))
+                requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
+                await expect(
+                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[0].address, signature)
+                )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
+                    .withArgs(requestId, hash, users[0].address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
             });
         });
 

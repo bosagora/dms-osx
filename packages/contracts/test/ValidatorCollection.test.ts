@@ -1,5 +1,5 @@
 import { Token, ValidatorCollection } from "../typechain-types";
-import { Amount } from "./helper/Amount";
+import { Amount } from "../src/utils/Amount";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";

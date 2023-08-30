@@ -8,7 +8,7 @@ import {
     TokenPrice,
     ValidatorCollection,
 } from "../typechain-types";
-import { ContractUtils } from "./helper/ContractUtils";
+import { ContractUtils } from "../src/utils/ContractUtils";
 import { TestClient, TestServer } from "./helper/Utility";
 
 import chai, { expect } from "chai";
@@ -193,11 +193,10 @@ describe("Test of Server", function () {
         method: 0,
     };
 
-    let reqId = 0;
+    let reqId: string;
     context("Test token & mileage relay endpoints", () => {
         before("Deploy", async () => {
             await deployAllContract();
-            reqId = 0;
         });
 
         before("Prepare Token", async () => {
@@ -244,11 +243,11 @@ describe("Test of Server", function () {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
-                await expect(linkCollectionContract.connect(relay).addRequest(hash, users[0].address, signature))
+                reqId = ContractUtils.getRequestId(hash, users[0].address, nonce);
+                await expect(linkCollectionContract.connect(relay).addRequest(reqId, hash, users[0].address, signature))
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(reqId, hash, users[0].address);
                 await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
-                reqId++;
             });
         });
 

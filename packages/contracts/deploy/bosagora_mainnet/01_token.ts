@@ -6,7 +6,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Token } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
-import { Amount } from "../../test/helper/Amount";
+import { Amount } from "../../src/utils/Amount";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying Token.`);

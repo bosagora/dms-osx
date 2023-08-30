@@ -6,7 +6,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { FranchiseeCollection, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
-import { ContractUtils } from "../../test/helper/ContractUtils";
+import { ContractUtils } from "../../src/utils/ContractUtils";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying FranchiseeCollection.`);
