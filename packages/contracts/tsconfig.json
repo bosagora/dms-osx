@@ -9,5 +9,5 @@
         "moduleResolution": "node",
         "resolveJsonModule": true
     },
-    "include": ["./hardhat.config.ts", "./test", "./typechain-types", "./deploy"]
+    "include": ["./hardhat.config.ts", "./test", "./src", ",./typechain-types", "./deploy"]
 }

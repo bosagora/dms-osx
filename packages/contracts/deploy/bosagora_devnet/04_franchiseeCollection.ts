@@ -5,7 +5,7 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ContractUtils } from "../../test/helper/ContractUtils";
+import { ContractUtils } from "../../src/utils/ContractUtils";
 import { FranchiseeCollection, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 

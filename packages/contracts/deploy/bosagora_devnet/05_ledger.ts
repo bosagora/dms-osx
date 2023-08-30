@@ -4,8 +4,8 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { Amount } from "../../test/helper/Amount";
-import { ContractUtils } from "../../test/helper/ContractUtils";
+import { Amount } from "../../src/utils/Amount";
+import { ContractUtils } from "../../src/utils/ContractUtils";
 import { FranchiseeCollection, Ledger, Token } from "../../typechain-types";
 import { getContractAddress, getLinkCollectionContractAddress } from "../helpers";
 

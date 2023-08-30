@@ -1,5 +1,5 @@
 import { FranchiseeCollection, Token, ValidatorCollection } from "../typechain-types";
-import { Amount } from "./helper/Amount";
+import { Amount } from "../src/utils/Amount";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -9,7 +9,7 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
 import * as hre from "hardhat";
-import { ContractUtils } from "./helper/ContractUtils";
+import { ContractUtils } from "../src/utils/ContractUtils";
 
 chai.use(solidity);
 

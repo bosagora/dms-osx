@@ -4,7 +4,7 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ContractUtils } from "../../test/helper/ContractUtils";
+import { ContractUtils } from "../../src/utils/ContractUtils";
 import { LinkCollection } from "../../typechain-types";
 import { getLinkCollectionContractAddress, LINK_COLLECTION_ADDRESSES } from "../helpers";
 
@@ -17,8 +17,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { network } = hre;
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, foundation, linkValidator1 } = await getNamedAccounts();
-    const validators = [linkValidator1];
+    const { deployer, foundation, linkValidator1, linkValidator2, linkValidator3 } = await getNamedAccounts();
+    const validators = [linkValidator1, linkValidator2, linkValidator3];
 
     const officialLinkCollectionAddress = LINK_COLLECTION_ADDRESSES[network.name];
 
@@ -41,21 +41,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         const nonce = await linkCollectionContract.nonceOf(foundation);
         const signature = await ContractUtils.sign(await ethers.getSigner(foundation), foundationAccount, nonce);
 
+        const reqId1 = ContractUtils.getRequestId(foundationAccount, foundation, nonce);
         const tx1 = await linkCollectionContract
             .connect(await ethers.getSigner(linkValidator1))
-            .addRequest(foundationAccount, foundation, signature);
+            .addRequest(reqId1, foundationAccount, foundation, signature);
         console.log(`Add email-address of foundation (tx: ${tx1.hash})...`);
-        const receipt = await tx1.wait();
-        const events = receipt.events?.filter((x) => x.event === "AddedRequestItem");
-        const reqId =
-            events !== undefined && events.length > 0 && events[0].args !== undefined
-                ? BigNumber.from(events[0].args[0])
-                : BigNumber.from(0);
-        console.log(`Req ID:  ${reqId.toString()}`);
+        await tx1.wait();
 
-        const tx2 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).voteRequest(reqId, 1);
+        const tx2 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).voteRequest(reqId1, 1);
         console.log(`Vote of validator1 (tx: ${tx2.hash})...`);
         await tx2.wait();
+
+        const tx3 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).voteRequest(reqId1, 1);
+        console.log(`Vote of validator2 (tx: ${tx3.hash})...`);
+        await tx3.wait();
 
         if ((await linkCollectionContract.toAddress(foundationAccount)) === foundation) {
             console.log(`Success ${foundation}`);
@@ -72,23 +71,24 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         if ((await linkCollectionContract.toAddress(userAccount)) !== user.address) {
             const userNonce = await linkCollectionContract.nonceOf(user.address);
             const userSignature = await ContractUtils.sign(new Wallet(user.privateKey), userAccount, userNonce);
+            const reqId2 = ContractUtils.getRequestId(userAccount, user.address, userNonce);
             const tx5 = await linkCollectionContract
                 .connect(await ethers.getSigner(linkValidator1))
-                .addRequest(userAccount, user.address, userSignature);
+                .addRequest(reqId2, userAccount, user.address, userSignature);
             console.log(`Add email-address of user (tx: ${tx5.hash})...`);
-            const receipt2 = await tx5.wait();
-            const events2 = receipt2.events?.filter((x) => x.event === "AddedRequestItem");
-            const reqId2 =
-                events2 !== undefined && events2.length > 0 && events2[0].args !== undefined
-                    ? BigNumber.from(events2[0].args[0])
-                    : BigNumber.from(0);
-            console.log(`Req ID:  ${reqId2.toString()}`);
+            await tx5.wait();
 
             const tx6 = await linkCollectionContract
                 .connect(await ethers.getSigner(linkValidator1))
                 .voteRequest(reqId2, 1);
             console.log(`Vote of validator1 (tx: ${tx6.hash})...`);
             await tx6.wait();
+
+            const tx7 = await linkCollectionContract
+                .connect(await ethers.getSigner(linkValidator2))
+                .voteRequest(reqId2, 1);
+            console.log(`Vote of validator2 (tx: ${tx7.hash})...`);
+            await tx7.wait();
 
             if ((await linkCollectionContract.toAddress(userAccount)) === user.address) {
                 console.log(`Success ${user.address}`);
