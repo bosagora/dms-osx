@@ -1,5 +1,4 @@
 logging:
-    folder: logs
     level: debug
 
 scheduler:

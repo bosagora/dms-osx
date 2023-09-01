@@ -12,7 +12,7 @@ let server: ScheduleServer;
 async function main() {
     // Create with the arguments and read from file
     const config = Config.createWithArgument();
-    logger.add(Logger.defaultConsoleTransport());
+
     logger.transports.forEach((tp) => {
         tp.level = config.logging.level;
     });

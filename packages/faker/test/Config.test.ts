@@ -8,7 +8,6 @@ describe("Test of Config", () => {
         const config: Config = new Config();
         config.readFromFile(path.resolve("test", "config.test.yaml"));
 
-        assert.strictEqual(config.logging.folder, path.resolve("logs"));
         assert.strictEqual(config.logging.level, "debug");
 
         assert.strictEqual(config.scheduler.enable, true);
