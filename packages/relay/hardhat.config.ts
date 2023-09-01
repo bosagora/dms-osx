@@ -144,14 +144,14 @@ const config = {
             chainId: 2019,
             accounts: getAccounts(),
         },
-        localhost: {
+        devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
             accounts: getAccounts(),
         },
-        devnet: {
-            url: process.env.RPC_URL || "",
-            chainId: 24680,
+        production_net: {
+            url: process.env.PRODUCTION_NET_URL || "",
+            chainId: Number(process.env.PRODUCTION_CHAIN_ID || "2151"),
             accounts: getAccounts(),
         },
     },
