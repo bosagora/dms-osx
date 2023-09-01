@@ -494,11 +494,8 @@ describe("Test of Server", function () {
                     signature,
                 });
 
-                assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Unregistered email-address'"
-                );
+                assert.deepStrictEqual(response.data.code, 502);
+                assert.ok(response.data.error.message === "Email is not valid.");
             });
 
             it("Success Test of the path /payMileage", async () => {
@@ -631,11 +628,8 @@ describe("Test of Server", function () {
                     signature,
                 });
 
-                assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Unregistered email-address'"
-                );
+                assert.deepStrictEqual(response.data.code, 502);
+                assert.ok(response.data.error.message === "Email is not valid.");
             });
 
             it("Success Test of the path /payToken", async () => {

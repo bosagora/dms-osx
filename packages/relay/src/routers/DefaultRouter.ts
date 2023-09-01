@@ -244,9 +244,11 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(502, undefined, {
-                    message: "Email is not valid.",
-                });
+                return res.status(200).json(
+                    this.makeResponseData(502, undefined, {
+                        message: "Email is not valid.",
+                    })
+                );
             }
             const tx = await (await this.getLedgerContract())
                 .connect(await this.getRelaySigner())
@@ -305,9 +307,11 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(502, undefined, {
-                    message: "Email is not valid.",
-                });
+                return res.status(200).json(
+                    this.makeResponseData(502, undefined, {
+                        message: "Email is not valid.",
+                    })
+                );
             }
             const tx = await (await this.getLedgerContract())
                 .connect(await this.getRelaySigner())
@@ -364,9 +368,11 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(502, undefined, {
-                    message: "Email is not valid.",
-                });
+                return res.status(200).json(
+                    this.makeResponseData(502, undefined, {
+                        message: "Email is not valid.",
+                    })
+                );
             }
             const tx = await (await this.getLedgerContract())
                 .connect(await this.getRelaySigner())
@@ -423,9 +429,11 @@ export class DefaultRouter {
             // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
-                this.makeResponseData(502, undefined, {
-                    message: "Email is not valid.",
-                });
+                return res.status(200).json(
+                    this.makeResponseData(502, undefined, {
+                        message: "Email is not valid.",
+                    })
+                );
             }
             const tx = await (await this.getLedgerContract())
                 .connect(await this.getRelaySigner())
