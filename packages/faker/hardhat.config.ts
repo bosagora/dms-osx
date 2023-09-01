@@ -147,8 +147,13 @@ const config = {
             blockGasLimit: 8000000,
         },
         devnet: {
-            url: process.env.RPC_URL || "",
+            url: "http://localhost:8545",
             chainId: 24680,
+            accounts: getAccounts(),
+        },
+        production_net: {
+            url: process.env.PRODUCTION_NET_URL || "",
+            chainId: Number(process.env.PRODUCTION_CHAIN_ID || "2151"),
             accounts: getAccounts(),
         },
     },

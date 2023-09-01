@@ -10,7 +10,7 @@
         "test": "hardhat test",
         "clean": "hardhat clean",
         "build": "hardhat compile",
-        "start": "hardhat run src/scheduler.ts --network devnet",
+        "start": "hardhat run src/scheduler.ts --network production_net",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md,yaml,yml}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,md,yaml,yml}' --write"
     },
