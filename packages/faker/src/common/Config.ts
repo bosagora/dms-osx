@@ -212,28 +212,16 @@ export class SchedulerConfig implements ISchedulerConfig {
  */
 export class LoggingConfig implements ILoggingConfig {
     /**
-     * The path of logging files
-     */
-    public folder: string;
-
-    /**
      * The level of logging
      */
     public level: string;
-
-    /**
-     * Whether the console is enabled as well
-     */
-    public console: boolean;
 
     /**
      * Constructor
      */
     constructor() {
         const defaults = LoggingConfig.defaultValue();
-        this.folder = path.resolve(Utils.getInitCWD(), defaults.folder);
         this.level = defaults.level;
-        this.console = defaults.console;
     }
 
     /**
@@ -241,9 +229,7 @@ export class LoggingConfig implements ILoggingConfig {
      */
     public static defaultValue(): ILoggingConfig {
         return {
-            folder: path.resolve(Utils.getInitCWD(), "logs"),
             level: "info",
-            console: false,
         };
     }
 
@@ -252,9 +238,7 @@ export class LoggingConfig implements ILoggingConfig {
      * @param config The object of ILoggingConfig
      */
     public readFromObject(config: ILoggingConfig) {
-        if (config.folder) this.folder = path.resolve(Utils.getInitCWD(), config.folder);
         if (config.level) this.level = config.level;
-        if (config.console !== undefined) this.console = config.console;
     }
 }
 
@@ -341,19 +325,9 @@ export interface IServerConfig {
  */
 export interface ILoggingConfig {
     /**
-     * The path of logging files
-     */
-    folder: string;
-
-    /**
      * The level of logging
      */
     level: string;
-
-    /**
-     * Whether the console is enabled as well
-     */
-    console: boolean;
 }
 
 /**

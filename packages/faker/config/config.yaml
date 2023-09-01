@@ -2,12 +2,8 @@
 ##                               Logging options                              ##
 ################################################################################
 logging:
-    # The name of the folder where the logs are stored.
-    folder: logs
     # Values: error, warn, info, http, verbose, debug, silly
-    level: info
-    # Default to false
-    console: true
+    level: verbose
 
 ################################################################################
 ##                             Scheduler options                              ##
