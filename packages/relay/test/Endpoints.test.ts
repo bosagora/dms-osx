@@ -248,6 +248,7 @@ describe("Test of Server", function () {
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(reqId, hash, users[0].address);
                 await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
+                await linkCollectionContract.connect(validator1).countVote(reqId);
             });
         });
 
