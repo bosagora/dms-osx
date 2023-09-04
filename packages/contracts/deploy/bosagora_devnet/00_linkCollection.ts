@@ -52,9 +52,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         console.log(`Vote of validator1 (tx: ${tx2.hash})...`);
         await tx2.wait();
 
-        const tx3 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).voteRequest(reqId1, 1);
+        const tx3 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator2)).voteRequest(reqId1, 1);
         console.log(`Vote of validator2 (tx: ${tx3.hash})...`);
         await tx3.wait();
+
+        const tx4 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).countVote(reqId1);
+        console.log(`Count of vote (tx: ${tx4.hash})...`);
+        await tx4.wait();
 
         if ((await linkCollectionContract.toAddress(foundationAccount)) === foundation) {
             console.log(`Success ${foundation}`);
@@ -89,6 +93,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
                 .voteRequest(reqId2, 1);
             console.log(`Vote of validator2 (tx: ${tx7.hash})...`);
             await tx7.wait();
+
+            const tx8 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).countVote(reqId2);
+            console.log(`Count of vote (tx: ${tx8.hash})...`);
+            await tx8.wait();
 
             if ((await linkCollectionContract.toAddress(userAccount)) === user.address) {
                 console.log(`Success ${user.address}`);
