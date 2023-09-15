@@ -253,7 +253,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(requestId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
 
@@ -351,7 +351,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(requestId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
 
@@ -842,7 +842,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(requestId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
         });
@@ -859,7 +859,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(requestId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
 
@@ -967,7 +967,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(requestId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
         });
@@ -1206,7 +1206,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(requestId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
 
@@ -1298,7 +1298,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(requestId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
         });
