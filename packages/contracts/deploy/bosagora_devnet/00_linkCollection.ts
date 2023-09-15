@@ -48,11 +48,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         console.log(`Add email-address of foundation (tx: ${tx1.hash})...`);
         await tx1.wait();
 
-        const tx2 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).voteRequest(reqId1, 1);
+        const tx2 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator1)).voteRequest(reqId1);
         console.log(`Vote of validator1 (tx: ${tx2.hash})...`);
         await tx2.wait();
 
-        const tx3 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator2)).voteRequest(reqId1, 1);
+        const tx3 = await linkCollectionContract.connect(await ethers.getSigner(linkValidator2)).voteRequest(reqId1);
         console.log(`Vote of validator2 (tx: ${tx3.hash})...`);
         await tx3.wait();
 
@@ -84,13 +84,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
             const tx6 = await linkCollectionContract
                 .connect(await ethers.getSigner(linkValidator1))
-                .voteRequest(reqId2, 1);
+                .voteRequest(reqId2);
             console.log(`Vote of validator1 (tx: ${tx6.hash})...`);
             await tx6.wait();
 
             const tx7 = await linkCollectionContract
                 .connect(await ethers.getSigner(linkValidator2))
-                .voteRequest(reqId2, 1);
+                .voteRequest(reqId2);
             console.log(`Vote of validator2 (tx: ${tx7.hash})...`);
             await tx7.wait();
 

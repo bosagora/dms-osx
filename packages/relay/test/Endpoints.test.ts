@@ -247,7 +247,7 @@ describe("Test of Server", function () {
                 await expect(linkCollectionContract.connect(relay).addRequest(reqId, hash, users[0].address, signature))
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(reqId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId, 1);
+                await linkCollectionContract.connect(validator1).voteRequest(reqId);
                 await linkCollectionContract.connect(validator1).countVote(reqId);
             });
         });
