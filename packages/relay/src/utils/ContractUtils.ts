@@ -34,6 +34,26 @@ export class ContractUtils {
         return "0x" + data.toString("hex");
     }
 
+    private static find_message = "reverted with reason string";
+    private static find_length = ContractUtils.find_message.length;
+    public static cacheEVMError(error: any): string {
+        if (error instanceof Error) {
+            const idx = error.message.indexOf(ContractUtils.find_message);
+            const message =
+                idx >= 0
+                    ? error.message
+                          .substring(idx + ContractUtils.find_length)
+                          .replace(/['|"]/gi, "")
+                          .trim()
+                    : error.message;
+            return message;
+        } else if (error.message) {
+            return error.message;
+        } else {
+            return error.toString();
+        }
+    }
+
     public static getRequestId(emailHash: string, address: string, nonce: BigNumberish): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256", "bytes32"],
