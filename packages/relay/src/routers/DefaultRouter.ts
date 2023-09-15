@@ -200,7 +200,7 @@ export class DefaultRouter {
     }
 
     private async getHealthStatus(req: express.Request, res: express.Response) {
-        return res.json("OK");
+        return res.status(200).json("OK");
     }
 
     /**
@@ -211,10 +211,9 @@ export class DefaultRouter {
     private async payMileage(req: express.Request, res: express.Response) {
         logger.http(`POST /payMileage`);
 
-        // TODO 필요시 access secret 검사
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
@@ -241,7 +240,7 @@ export class DefaultRouter {
                     })
                 );
 
-            // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
+            // 컨트랙트에서 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
                 return res.status(200).json(
@@ -255,11 +254,12 @@ export class DefaultRouter {
                 .payMileage(purchaseId, amount, email, franchiseeId, signer, signature);
 
             logger.http(`TxHash(payMileage): `, tx.hash);
-            return res.json(this.makeResponseData(200, { txHash: tx.hash }));
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
-            const message = error.message !== undefined ? error.message : "Failed pay mileage";
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed pay mileage";
             logger.error(`POST /payMileage :`, message);
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
                 })
@@ -275,10 +275,9 @@ export class DefaultRouter {
     private async payToken(req: express.Request, res: express.Response) {
         logger.http(`POST /payToken`);
 
-        // TODO 필요시 access secret 검사
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
@@ -304,7 +303,7 @@ export class DefaultRouter {
                     })
                 );
 
-            // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
+            // 컨트랙트에서 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
                 return res.status(200).json(
@@ -318,11 +317,12 @@ export class DefaultRouter {
                 .payToken(purchaseId, amount, email, franchiseeId, signer, signature);
 
             logger.http(`TxHash(payToken): `, tx.hash);
-            return res.json(this.makeResponseData(200, { txHash: tx.hash }));
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
-            const message = error.message !== undefined ? error.message : "Failed pay token";
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed pay token";
             logger.error(`POST /payToken :`, message);
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
                 })
@@ -338,10 +338,9 @@ export class DefaultRouter {
     private async exchangeTokenToMileage(req: express.Request, res: express.Response) {
         logger.http(`POST /exchangeTokenToMileage`);
 
-        // TODO 필요시 access secret 검사
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
@@ -365,7 +364,7 @@ export class DefaultRouter {
                     })
                 );
 
-            // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
+            // 컨트랙트에서 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
                 return res.status(200).json(
@@ -379,11 +378,12 @@ export class DefaultRouter {
                 .exchangeTokenToMileage(email, amountToken, signer, signature);
 
             logger.http(`TxHash(exchangeTokenToMileage): `, tx.hash);
-            return res.json(this.makeResponseData(200, { txHash: tx.hash }));
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
-            const message = error.message !== undefined ? error.message : "Failed exchange Token To Mileage";
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed exchange Token To Mileage";
             logger.error(`POST /exchangeTokenToMileage :`, message);
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
                 })
@@ -399,10 +399,9 @@ export class DefaultRouter {
     private async exchangeMileageToToken(req: express.Request, res: express.Response) {
         logger.http(`POST /exchangeMileageToToken`);
 
-        // TODO 필요시 access secret 검사
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(501, undefined, {
                     message: "Failed to check the validity of parameters.",
                     validation: errors.array(),
@@ -426,7 +425,7 @@ export class DefaultRouter {
                     })
                 );
 
-            // 이메일 EmailLinkerContract에 이메일 등록여부 체크 및 구매자 주소와 동일여부
+            // 컨트랙트에서 이메일 등록여부 체크 및 구매자 주소와 동일여부
             const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
             if (emailToAddress !== signer) {
                 return res.status(200).json(
@@ -440,11 +439,12 @@ export class DefaultRouter {
                 .exchangeMileageToToken(email, amountMileage, signer, signature);
 
             logger.http(`TxHash(exchangeMileageToToken): `, tx.hash);
-            return res.json(this.makeResponseData(200, { txHash: tx.hash }));
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
-            const message = error.message !== undefined ? error.message : "Failed exchange Mileage To Token";
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed exchange Mileage To Token";
             logger.error(`POST /exchangeMileageToToken :`, message);
-            return res.json(
+            return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
                 })

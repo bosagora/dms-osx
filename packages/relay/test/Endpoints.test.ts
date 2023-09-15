@@ -285,10 +285,7 @@ describe("Test of Server", function () {
                     signature,
                 });
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
-                );
+                assert.ok(response.data.error.message === "Insufficient balance");
             });
 
             it("Failure Exchange token to mileage", async () => {
@@ -341,10 +338,7 @@ describe("Test of Server", function () {
                     signature,
                 });
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
-                );
+                assert.ok(response.data.error.message === "Insufficient balance");
             });
 
             it("Failure Exchange mileage to token", async () => {
@@ -415,10 +409,7 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
-                );
+                assert.ok(response.data.error.message === "Insufficient balance");
             });
 
             it("Failure test of the path /payMileage 'Email is not valid.'", async () => {
@@ -549,10 +540,7 @@ describe("Test of Server", function () {
                 });
 
                 assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(
-                    response.data.error.message ===
-                        "VM Exception while processing transaction: reverted with reason string 'Insufficient balance'"
-                );
+                assert.ok(response.data.error.message === "Insufficient balance");
             });
 
             it("Failure test of the path /payToken 'Email is not valid.'", async () => {
