@@ -135,7 +135,7 @@ export function handleProvidedMileageForHistory(event: ProvidedMileageEvent): vo
     entity.balanceMileage = event.params.balanceMileage;
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = "";
+    entity.franchiseeId = event.params.franchiseeId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -186,7 +186,7 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     entity.balanceToken = event.params.balanceToken;
     entity.balanceMileage = balanceEntity.mileage;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = "";
+    entity.franchiseeId = event.params.franchiseeId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -212,7 +212,7 @@ export function handlePaidMileageForHistory(event: PaidMileageEvent): void {
     entity.balanceMileage = event.params.balanceMileage.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = "";
+    entity.franchiseeId = event.params.franchiseeId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -238,7 +238,7 @@ export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balanceMileage = balanceEntity.mileage;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = "";
+    entity.franchiseeId = event.params.franchiseeId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;

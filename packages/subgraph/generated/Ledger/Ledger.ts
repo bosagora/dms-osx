@@ -144,6 +144,10 @@ export class PaidMileage__Params {
   get purchaseId(): string {
     return this._event.parameters[4].value.toString();
   }
+
+  get franchiseeId(): string {
+    return this._event.parameters[5].value.toString();
+  }
 }
 
 export class PaidToken extends ethereum.Event {
@@ -177,6 +181,10 @@ export class PaidToken__Params {
 
   get purchaseId(): string {
     return this._event.parameters[4].value.toString();
+  }
+
+  get franchiseeId(): string {
+    return this._event.parameters[5].value.toString();
   }
 }
 
@@ -212,6 +220,10 @@ export class ProvidedMileage__Params {
   get purchaseId(): string {
     return this._event.parameters[4].value.toString();
   }
+
+  get franchiseeId(): string {
+    return this._event.parameters[5].value.toString();
+  }
 }
 
 export class ProvidedMileageToFranchisee extends ethereum.Event {
@@ -243,8 +255,12 @@ export class ProvidedMileageToFranchisee__Params {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get franchiseeId(): string {
+  get purchaseId(): string {
     return this._event.parameters[4].value.toString();
+  }
+
+  get franchiseeId(): string {
+    return this._event.parameters[5].value.toString();
   }
 }
 
@@ -279,6 +295,10 @@ export class ProvidedToken__Params {
 
   get purchaseId(): string {
     return this._event.parameters[4].value.toString();
+  }
+
+  get franchiseeId(): string {
+    return this._event.parameters[5].value.toString();
   }
 }
 
