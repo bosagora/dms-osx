@@ -9,6 +9,11 @@ import { ContractUtils } from "../../src/utils/ContractUtils";
 import { FranchiseeCollection, Ledger, Token } from "../../typechain-types";
 import { getContractAddress, getLinkCollectionContractAddress } from "../helpers";
 
+import { Wallet } from "ethers";
+
+import fs from "fs";
+
+// tslint:disable-next-line:only-arrow-functions
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying Ledger.`);
 
@@ -62,7 +67,35 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         const tx3 = await ledgerContract.connect(await ethers.getSigner(foundation)).deposit(assetAmount.value);
         console.log(`Deposit foundation's amount (tx: ${tx3.hash})...`);
         await tx3.wait();
+
+        const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
+        for (const user of users) {
+            if (!user.register) continue;
+
+            const balance = await tokenContract.balanceOf(user.address);
+
+            const depositAmount = balance.div(2);
+            const signer = new Wallet(user.privateKey).connect(ethers.provider);
+            const tx7 = await tokenContract.connect(signer).approve(ledgerContract.address, depositAmount);
+            console.log(`Approve user's amount (tx: ${tx7.hash})...`);
+            await tx7.wait();
+
+            const tx8 = await ledgerContract.connect(signer).deposit(depositAmount);
+            console.log(`Deposit user's amount (tx: ${tx8.hash})...`);
+            await tx8.wait();
+
+            const exchangeAmount = balance.div(4);
+            const userAccount = ContractUtils.sha256String(user.email);
+            const nonce = await ledgerContract.nonceOf(user.address);
+            const signature = await ContractUtils.signExchange(signer, userAccount, exchangeAmount, nonce);
+            const tx9 = await ledgerContract
+                .connect(await ethers.getSigner(deployer))
+                .exchangeTokenToMileage(userAccount, exchangeAmount, user.address, signature);
+            console.log(`Exchange token to mileage (tx: ${tx9.hash})...`);
+            await tx9.wait();
+        }
     }
 };
+
 export default func;
 func.tags = ["Ledger"];

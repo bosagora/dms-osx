@@ -14,4 +14,12 @@ contract Token is ERC20 {
     function decimals() public view virtual override returns (uint8) {
         return 18;
     }
+
+    function multiTransfer(address[] calldata to, uint256 amount) public returns (bool) {
+        address owner = _msgSender();
+        for (uint256 idx = 0; idx < to.length; idx++) {
+            _transfer(owner, to[idx], amount);
+        }
+        return true;
+    }
 }
