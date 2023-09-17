@@ -39,7 +39,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             console.log(`Transfer token to user ${user.address} (tx: ${tx2.hash})...`);
             await tx2.wait();
         }
+        //
+        // const users = JSON.parse(fs.readFileSync("./deploy/data/users.json"));
+        // const addresses = users.map((m: { address: string }) => m.address);
+        // const userAmount = Amount.make(100_000, 18);
+        // const tx2 = await contract.connect(await ethers.getSigner(deployer)).multiTransfer(addresses, userAmount.value);
+        // console.log(`Transfer token to users (tx: ${tx2.hash})...`);
+        // await tx2.wait();
     }
 };
+
 export default func;
 func.tags = ["Token"];
