@@ -57,7 +57,8 @@ contract Ledger {
         uint256 providedAmountMileage,
         uint256 value,
         uint256 balanceMileage,
-        string purchaseId
+        string purchaseId,
+        string franchiseeId
     );
     /// @notice 마일리지가 정산될 때 발생되는 이벤트
     event ProvidedMileageToFranchisee(
@@ -65,6 +66,7 @@ contract Ledger {
         uint256 providedAmountMileage,
         uint256 value,
         uint256 balanceMileage,
+        string purchaseId,
         string franchiseeId
     );
     /// @notice 토큰이 지급될 때 발생되는 이벤트
@@ -73,7 +75,8 @@ contract Ledger {
         uint256 providedAmountToken,
         uint256 value,
         uint256 balanceToken,
-        string purchaseId
+        string purchaseId,
+        string franchiseeId
     );
     /// @notice 마일리지로 지불을 완료했을 때 발생하는 이벤트
     event PaidMileage(
@@ -81,10 +84,18 @@ contract Ledger {
         uint256 paidAmountMileage,
         uint256 value,
         uint256 balanceMileage,
-        string purchaseId
+        string purchaseId,
+        string franchiseeId
     );
     /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
-    event PaidToken(bytes32 email, uint256 paidAmountToken, uint256 value, uint256 balanceToken, string purchaseId);
+    event PaidToken(
+        bytes32 email,
+        uint256 paidAmountToken,
+        uint256 value,
+        uint256 balanceToken,
+        string purchaseId,
+        string franchiseeId
+    );
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(bytes32 email, uint256 depositAmount, uint256 value, uint256 balanceToken, address account);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
@@ -154,6 +165,7 @@ contract Ledger {
     /// @param _amount 구매 금액
     /// @param _email 구매한 사용자의 이메일 해시
     /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _method 0: 현금또는 카드, 1 : 마일리지, 2: 토큰
     function savePurchase(
         string memory _purchaseId,
         uint256 _timestamp,
@@ -177,9 +189,9 @@ contract Ledger {
             uint256 mileage = _amount / 100;
             address account = linkCollection.toAddress(_email);
             if (account == address(0x00)) {
-                provideMileage(_email, mileage, _purchaseId);
+                provideMileage(_email, mileage, _purchaseId, _franchiseeId);
             } else {
-                provideToken(_email, mileage, _purchaseId);
+                provideToken(_email, mileage, _purchaseId, _franchiseeId);
             }
             franchiseeCollection.addProvidedMileage(_franchiseeId, mileage, _purchaseId);
         }
@@ -190,23 +202,37 @@ contract Ledger {
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _email 이메일 해시
     /// @param _amount 지급할 마일리지
-    function provideMileage(bytes32 _email, uint256 _amount, string memory _purchaseId) internal {
+    /// @param _purchaseId 구매 아이디
+    /// @param _franchiseeId 구매한 가맹점 아이디
+    function provideMileage(
+        bytes32 _email,
+        uint256 _amount,
+        string memory _purchaseId,
+        string memory _franchiseeId
+    ) internal {
         mileageLedger[_email] += _amount;
-        emit ProvidedMileage(_email, _amount, _amount, mileageLedger[_email], _purchaseId);
+        emit ProvidedMileage(_email, _amount, _amount, mileageLedger[_email], _purchaseId, _franchiseeId);
     }
 
     /// @notice 토큰을 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _email 이메일 해시
     /// @param _amount 지급할 토큰
-    function provideToken(bytes32 _email, uint256 _amount, string memory _purchaseId) internal {
+    /// @param _purchaseId 구매 아이디
+    /// @param _franchiseeId 구매한 가맹점 아이디
+    function provideToken(
+        bytes32 _email,
+        uint256 _amount,
+        string memory _purchaseId,
+        string memory _franchiseeId
+    ) internal {
         uint256 amountToken = convertMileageToToken(_amount);
 
         require(tokenLedger[foundationAccount] >= amountToken, "Insufficient foundation balance");
         tokenLedger[_email] += amountToken;
         tokenLedger[foundationAccount] -= amountToken;
 
-        emit ProvidedToken(_email, amountToken, _amount, tokenLedger[_email], _purchaseId);
+        emit ProvidedToken(_email, amountToken, _amount, tokenLedger[_email], _purchaseId, _franchiseeId);
     }
 
     /// @notice 마일리지를 구매에 사용하는 함수
@@ -246,6 +272,7 @@ contract Ledger {
                     clearAmount,
                     clearAmount,
                     mileageLedger[franchisee.email],
+                    _purchaseId,
                     _franchiseeId
                 );
             }
@@ -253,7 +280,7 @@ contract Ledger {
 
         nonce[_signer]++;
 
-        emit PaidMileage(_email, _amount, _amount, mileageLedger[_email], _purchaseId);
+        emit PaidMileage(_email, _amount, _amount, mileageLedger[_email], _purchaseId, _franchiseeId);
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
@@ -281,14 +308,18 @@ contract Ledger {
         uint256 amountToken = convertMileageToToken(_amount);
         require(tokenLedger[_email] >= amountToken, "Insufficient balance");
 
-        tokenLedger[_email] -= amountToken;
+        uint256 lAmount = _amount;
+        bytes32 lEmail = _email;
+        string memory lPurchaseId = _purchaseId;
+        string memory lFranchiseeId = _franchiseeId;
+        tokenLedger[lEmail] -= amountToken;
         tokenLedger[foundationAccount] += amountToken;
-        franchiseeCollection.addUsedMileage(_franchiseeId, _amount, _purchaseId);
+        franchiseeCollection.addUsedMileage(lFranchiseeId, lAmount, lPurchaseId);
 
-        uint256 clearAmount = franchiseeCollection.getClearMileage(_franchiseeId);
+        uint256 clearAmount = franchiseeCollection.getClearMileage(lFranchiseeId);
         if (clearAmount > 0) {
-            franchiseeCollection.addClearedMileage(_franchiseeId, clearAmount, _purchaseId);
-            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(_franchiseeId);
+            franchiseeCollection.addClearedMileage(lFranchiseeId, clearAmount, lPurchaseId);
+            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(lFranchiseeId);
             if (franchisee.email != NULL) {
                 mileageLedger[franchisee.email] += clearAmount;
                 emit ProvidedMileageToFranchisee(
@@ -296,14 +327,15 @@ contract Ledger {
                     clearAmount,
                     clearAmount,
                     mileageLedger[franchisee.email],
-                    _franchiseeId
+                    lPurchaseId,
+                    lFranchiseeId
                 );
             }
         }
 
         nonce[_signer]++;
 
-        emit PaidToken(_email, amountToken, _amount, tokenLedger[_email], _purchaseId);
+        emit PaidToken(lEmail, amountToken, lAmount, tokenLedger[lEmail], lPurchaseId, lFranchiseeId);
     }
 
     function convertMileageToToken(uint256 amount) internal view returns (uint256) {

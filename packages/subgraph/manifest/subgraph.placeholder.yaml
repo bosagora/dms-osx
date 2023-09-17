@@ -36,15 +36,15 @@ dataSources:
           handler: handleExchangedMileageToToken
         - event: ExchangedTokenToMileage(bytes32,uint256,uint256,uint256,uint256)
           handler: handleExchangedTokenToMileage
-        - event: PaidMileage(bytes32,uint256,uint256,uint256,string)
+        - event: PaidMileage(bytes32,uint256,uint256,uint256,string,string)
           handler: handlePaidMileage
-        - event: PaidToken(bytes32,uint256,uint256,uint256,string)
+        - event: PaidToken(bytes32,uint256,uint256,uint256,string,string)
           handler: handlePaidToken
-        - event: ProvidedMileage(bytes32,uint256,uint256,uint256,string)
+        - event: ProvidedMileage(bytes32,uint256,uint256,uint256,string,string)
           handler: handleProvidedMileage
-        - event: ProvidedMileageToFranchisee(bytes32,uint256,uint256,uint256,string)
+        - event: ProvidedMileageToFranchisee(bytes32,uint256,uint256,uint256,string,string)
           handler: handleProvidedMileageToFranchisee
-        - event: ProvidedToken(bytes32,uint256,uint256,uint256,string)
+        - event: ProvidedToken(bytes32,uint256,uint256,uint256,string,string)
           handler: handleProvidedToken
         - event: SavedPurchase(string,uint256,uint256,bytes32,string,uint32)
           handler: handleSavedPurchase
