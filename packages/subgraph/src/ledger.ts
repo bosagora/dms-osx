@@ -10,39 +10,161 @@ import {
     SavedPurchase as SavedPurchaseEvent,
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
-import { SavedPurchase, UserBalance, UserTradeHistory } from "../generated/schema";
+import {
+    Deposited,
+    ExchangedMileageToToken,
+    ExchangedTokenToMileage,
+    PaidMileage,
+    PaidToken,
+    ProvidedMileage,
+    ProvidedMileageToFranchisee,
+    ProvidedToken,
+    SavedPurchase,
+    Withdrawn,
+    UserBalance,
+    UserTradeHistory,
+} from "../generated/schema";
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { AmountUnit, NullAccount } from "./utils";
 
 export function handleDeposited(event: DepositedEvent): void {
+    let entity = new Deposited(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.depositAmount = event.params.depositAmount;
+    entity.value = event.params.value;
+    entity.balanceToken = event.params.balanceToken;
+    entity.account = event.params.account;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleDepositedForHistory(event);
 }
 
 export function handleExchangedMileageToToken(event: ExchangedMileageToTokenEvent): void {
+    let entity = new ExchangedMileageToToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.amountMileage = event.params.amountMileage;
+    entity.amountToken = event.params.amountToken;
+    entity.balanceMileage = event.params.balanceMileage;
+    entity.balanceToken = event.params.balanceToken;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleExchangedMileageToTokenForHistory(event);
 }
 
 export function handleExchangedTokenToMileage(event: ExchangedTokenToMileageEvent): void {
+    let entity = new ExchangedTokenToMileage(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.amountMileage = event.params.amountMileage;
+    entity.amountToken = event.params.amountToken;
+    entity.balanceMileage = event.params.balanceMileage;
+    entity.balanceToken = event.params.balanceToken;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleExchangedTokenToMileageForHistory(event);
 }
 
 export function handlePaidMileage(event: PaidMileageEvent): void {
+    let entity = new PaidMileage(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.paidAmountMileage = event.params.paidAmountMileage;
+    entity.value = event.params.value;
+    entity.balanceMileage = event.params.balanceMileage;
+    entity.purchaseId = event.params.purchaseId;
+    entity.franchiseeId = event.params.franchiseeId;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handlePaidMileageForHistory(event);
 }
 
 export function handlePaidToken(event: PaidTokenEvent): void {
+    let entity = new PaidToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.paidAmountToken = event.params.paidAmountToken;
+    entity.value = event.params.value;
+    entity.balanceToken = event.params.balanceToken;
+    entity.purchaseId = event.params.purchaseId;
+    entity.franchiseeId = event.params.franchiseeId;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handlePaidTokenForHistory(event);
 }
 
 export function handleProvidedMileage(event: ProvidedMileageEvent): void {
+    let entity = new ProvidedMileage(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.providedAmountMileage = event.params.providedAmountMileage;
+    entity.value = event.params.value;
+    entity.balanceMileage = event.params.balanceMileage;
+    entity.purchaseId = event.params.purchaseId;
+    entity.franchiseeId = event.params.franchiseeId;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleProvidedMileageForHistory(event);
 }
 
 export function handleProvidedMileageToFranchisee(event: ProvidedMileageToFranchiseeEvent): void {
+    let entity = new ProvidedMileageToFranchisee(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.providedAmountMileage = event.params.providedAmountMileage;
+    entity.value = event.params.value;
+    entity.balanceMileage = event.params.balanceMileage;
+    entity.purchaseId = event.params.purchaseId;
+    entity.franchiseeId = event.params.franchiseeId;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleProvidedMileageToFranchiseeForHistory(event);
 }
 
 export function handleProvidedToken(event: ProvidedTokenEvent): void {
+    let entity = new ProvidedToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.providedAmountToken = event.params.providedAmountToken;
+    entity.value = event.params.value;
+    entity.balanceToken = event.params.balanceToken;
+    entity.purchaseId = event.params.purchaseId;
+    entity.franchiseeId = event.params.franchiseeId;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleProvidedTokenForHistory(event);
 }
 
@@ -63,6 +185,19 @@ export function handleSavedPurchase(event: SavedPurchaseEvent): void {
 }
 
 export function handleWithdrawn(event: WithdrawnEvent): void {
+    let entity = new Withdrawn(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.email = event.params.email;
+    entity.withdrawAmount = event.params.withdrawAmount;
+    entity.value = event.params.value;
+    entity.balanceToken = event.params.balanceToken;
+    entity.account = event.params.account;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleWithdrawnForHistory(event);
 }
 
