@@ -29,8 +29,21 @@ chai.use(solidity);
 describe("Test of Server", function () {
     this.timeout(1000 * 60 * 5);
     const provider = hre.waffle.provider;
-    const [deployer, foundation, validator1, validator2, validator3, relay, user1, user2, user3] =
-        provider.getWallets();
+    const [
+        deployer,
+        foundation,
+        validator1,
+        validator2,
+        validator3,
+        user1,
+        user2,
+        user3,
+        relay1,
+        relay2,
+        relay3,
+        relay4,
+        relay5,
+    ] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     const linkValidators = [validator1];
@@ -211,6 +224,14 @@ describe("Test of Server", function () {
             config.contracts.tokenAddress = tokenContract.address;
             config.contracts.emailLinkerAddress = linkCollectionContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
+
+            config.relay.managerKeys = [
+                relay1.privateKey,
+                relay2.privateKey,
+                relay3.privateKey,
+                relay4.privateKey,
+                relay5.privateKey,
+            ];
         });
 
         before("Create TestServer", async () => {
@@ -244,7 +265,9 @@ describe("Test of Server", function () {
                 const hash = emailHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 reqId = ContractUtils.getRequestId(hash, users[0].address, nonce);
-                await expect(linkCollectionContract.connect(relay).addRequest(reqId, hash, users[0].address, signature))
+                await expect(
+                    linkCollectionContract.connect(relay1).addRequest(reqId, hash, users[0].address, signature)
+                )
                     .to.emit(linkCollectionContract, "AddedRequestItem")
                     .withArgs(reqId, hash, users[0].address);
                 await linkCollectionContract.connect(validator1).voteRequest(reqId);

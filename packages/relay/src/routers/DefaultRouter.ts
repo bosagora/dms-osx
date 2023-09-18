@@ -1,16 +1,17 @@
-import { NonceManager } from "@ethersproject/experimental";
-import { Signer, Wallet } from "ethers";
-import { body, validationResult } from "express-validator";
-import * as hre from "hardhat";
 import { Ledger, LinkCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
 import { WebService } from "../service/WebService";
+import { ContractUtils } from "../utils/ContractUtils";
+import { Validation } from "../validation";
+
+import { NonceManager } from "@ethersproject/experimental";
+import { Signer, Wallet } from "ethers";
+import { body, validationResult } from "express-validator";
+import * as hre from "hardhat";
 
 import express from "express";
-import { Validation } from "../validation";
-import { ContractUtils } from "../utils/ContractUtils";
 
 export class DefaultRouter {
     /**
@@ -29,7 +30,7 @@ export class DefaultRouter {
      * 트팬잭션을 중계할 때 사용될 지갑
      * @private
      */
-    private relayWallet: Wallet;
+    private relayWallets: Wallet[];
 
     /**
      * ERC20 토큰 컨트랙트
@@ -57,7 +58,7 @@ export class DefaultRouter {
     constructor(service: WebService, config: Config) {
         this._web_service = service;
         this._config = config;
-        this.relayWallet = new Wallet(this._config.relay.manager_key);
+        this.relayWallets = this._config.relay.managerKeys.map((m) => new Wallet(m));
     }
 
     private get app(): express.Application {
@@ -69,7 +70,7 @@ export class DefaultRouter {
      * @private
      */
     private getRelaySigner(): Signer {
-        return new NonceManager(new GasPriceManager(hre.ethers.provider.getSigner(this.relayWallet.address)));
+        return new NonceManager(new GasPriceManager(this.relayWallets[0].connect(hre.ethers.provider)));
     }
 
     /**
@@ -250,7 +251,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(await this.getRelaySigner())
+                .connect(this.getRelaySigner())
                 .payMileage(purchaseId, amount, email, franchiseeId, signer, signature);
 
             logger.http(`TxHash(payMileage): `, tx.hash);
@@ -313,7 +314,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(await this.getRelaySigner())
+                .connect(this.getRelaySigner())
                 .payToken(purchaseId, amount, email, franchiseeId, signer, signature);
 
             logger.http(`TxHash(payToken): `, tx.hash);
@@ -374,7 +375,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(await this.getRelaySigner())
+                .connect(this.getRelaySigner())
                 .exchangeTokenToMileage(email, amountToken, signer, signature);
 
             logger.http(`TxHash(exchangeTokenToMileage): `, tx.hash);
@@ -435,7 +436,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(await this.getRelaySigner())
+                .connect(this.getRelaySigner())
                 .exchangeMileageToToken(email, amountMileage, signer, signature);
 
             logger.http(`TxHash(exchangeMileageToToken): `, tx.hash);

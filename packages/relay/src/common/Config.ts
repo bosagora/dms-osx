@@ -157,7 +157,7 @@ export class RelayConfig implements IRelayConfig {
     /**
      * 계정의 비밀키 또는 키파일
      */
-    public manager_key: string;
+    public managerKeys: string[];
 
     /**
      * Constructor
@@ -165,7 +165,7 @@ export class RelayConfig implements IRelayConfig {
     constructor() {
         const defaults = RelayConfig.defaultValue();
 
-        this.manager_key = defaults.manager_key;
+        this.managerKeys = defaults.managerKeys;
     }
 
     /**
@@ -173,7 +173,13 @@ export class RelayConfig implements IRelayConfig {
      */
     public static defaultValue(): IRelayConfig {
         return {
-            manager_key: process.env.MANAGER_KEY || "",
+            managerKeys: [
+                process.env.MANAGER_KEY1 || "",
+                process.env.MANAGER_KEY2 || "",
+                process.env.MANAGER_KEY3 || "",
+                process.env.MANAGER_KEY4 || "",
+                process.env.MANAGER_KEY5 || "",
+            ],
         };
     }
 
@@ -182,7 +188,7 @@ export class RelayConfig implements IRelayConfig {
      * @param config The object of ILoggingConfig
      */
     public readFromObject(config: IRelayConfig) {
-        if (config.manager_key !== undefined) this.manager_key = config.manager_key;
+        if (config.managerKeys !== undefined) this.managerKeys = config.managerKeys;
     }
 }
 
@@ -314,7 +320,7 @@ export interface ILoggingConfig {
 }
 
 export interface IRelayConfig {
-    manager_key: string;
+    managerKeys: string[];
 }
 
 export interface IContractsConfig {
