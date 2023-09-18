@@ -77,17 +77,6 @@ function getAccounts() {
         accounts.push(process.env.VALIDATOR5);
     }
 
-    if (
-        process.env.MANAGER_KEY !== undefined &&
-        process.env.MANAGER_KEY.trim() !== "" &&
-        reg_bytes64.test(process.env.MANAGER_KEY)
-    ) {
-        accounts.push(process.env.MANAGER_KEY);
-    } else {
-        process.env.MANAGER_KEY = Wallet.createRandom().privateKey;
-        accounts.push(process.env.MANAGER_KEY || "");
-    }
-
     return accounts;
 }
 
