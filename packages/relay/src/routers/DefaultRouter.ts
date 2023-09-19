@@ -13,6 +13,12 @@ import * as hre from "hardhat";
 
 import express from "express";
 
+interface ISignerItem {
+    index: number;
+    signer: Signer;
+    using: boolean;
+}
+
 export class DefaultRouter {
     /**
      *
@@ -26,11 +32,7 @@ export class DefaultRouter {
      */
     private readonly _config: Config;
 
-    /***
-     * 트팬잭션을 중계할 때 사용될 지갑
-     * @private
-     */
-    private relayWallets: Wallet[];
+    private readonly _signers: ISignerItem[];
 
     /**
      * ERC20 토큰 컨트랙트
@@ -58,7 +60,15 @@ export class DefaultRouter {
     constructor(service: WebService, config: Config) {
         this._web_service = service;
         this._config = config;
-        this.relayWallets = this._config.relay.managerKeys.map((m) => new Wallet(m));
+
+        let idx = 0;
+        this._signers = this._config.relay.managerKeys.map((m) => {
+            return {
+                index: idx++,
+                signer: new Wallet(m, hre.ethers.provider) as Signer,
+                using: false,
+            };
+        });
     }
 
     private get app(): express.Application {
@@ -69,8 +79,45 @@ export class DefaultRouter {
      * 트팬잭션을 중계할 때 사용될 서명자
      * @private
      */
-    private getRelaySigner(): Signer {
-        return new NonceManager(new GasPriceManager(this.relayWallets[0].connect(hre.ethers.provider)));
+    private async getRelaySigner(): Promise<ISignerItem> {
+        let signerItem: ISignerItem | undefined;
+        let done = false;
+
+        const startTime = ContractUtils.getTimeStamp();
+        while (done) {
+            for (signerItem of this._signers) {
+                if (!signerItem.using) {
+                    signerItem.using = true;
+                    done = true;
+                    break;
+                }
+            }
+            if (ContractUtils.getTimeStamp() - startTime > 10) break;
+            await ContractUtils.delay(1000);
+        }
+
+        if (signerItem !== undefined) {
+            signerItem.using = true;
+            signerItem.signer = new NonceManager(
+                new GasPriceManager(new Wallet(this._config.relay.managerKeys[signerItem.index], hre.ethers.provider))
+            );
+        } else {
+            signerItem = this._signers[0];
+            signerItem.using = true;
+            signerItem.signer = new NonceManager(
+                new GasPriceManager(new Wallet(this._config.relay.managerKeys[signerItem.index], hre.ethers.provider))
+            );
+        }
+
+        return signerItem;
+    }
+
+    /***
+     * 트팬잭션을 중계할 때 사용될 서명자
+     * @private
+     */
+    private releaseRelaySigner(signer: ISignerItem) {
+        signer.using = false;
     }
 
     /**
@@ -222,6 +269,7 @@ export class DefaultRouter {
             );
         }
 
+        const signerItem = await this.getRelaySigner();
         try {
             const purchaseId: string = String(req.body.purchaseId); // 구매 아이디
             const amount: string = String(req.body.amount); // 구매 금액
@@ -251,7 +299,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(this.getRelaySigner())
+                .connect(signerItem.signer)
                 .payMileage(purchaseId, amount, email, franchiseeId, signer, signature);
 
             logger.http(`TxHash(payMileage): `, tx.hash);
@@ -265,6 +313,8 @@ export class DefaultRouter {
                     message,
                 })
             );
+        } finally {
+            this.releaseRelaySigner(signerItem);
         }
     }
 
@@ -286,6 +336,7 @@ export class DefaultRouter {
             );
         }
 
+        const signerItem = await this.getRelaySigner();
         try {
             const purchaseId: string = String(req.body.purchaseId); // 구매 아이디
             const amount: string = String(req.body.amount); // 구매 금액
@@ -314,7 +365,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(this.getRelaySigner())
+                .connect(signerItem.signer)
                 .payToken(purchaseId, amount, email, franchiseeId, signer, signature);
 
             logger.http(`TxHash(payToken): `, tx.hash);
@@ -328,6 +379,8 @@ export class DefaultRouter {
                     message,
                 })
             );
+        } finally {
+            this.releaseRelaySigner(signerItem);
         }
     }
 
@@ -349,6 +402,7 @@ export class DefaultRouter {
             );
         }
 
+        const signerItem = await this.getRelaySigner();
         try {
             const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
             const amountToken: string = String(req.body.amountToken); // 교환할 마일리지의 량
@@ -375,7 +429,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(this.getRelaySigner())
+                .connect(signerItem.signer)
                 .exchangeTokenToMileage(email, amountToken, signer, signature);
 
             logger.http(`TxHash(exchangeTokenToMileage): `, tx.hash);
@@ -389,6 +443,8 @@ export class DefaultRouter {
                     message,
                 })
             );
+        } finally {
+            this.releaseRelaySigner(signerItem);
         }
     }
 
@@ -410,6 +466,7 @@ export class DefaultRouter {
             );
         }
 
+        const signerItem = await this.getRelaySigner();
         try {
             const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
             const amountMileage: string = String(req.body.amountMileage); // 교환할 마일리지의 량
@@ -436,7 +493,7 @@ export class DefaultRouter {
                 );
             }
             const tx = await (await this.getLedgerContract())
-                .connect(this.getRelaySigner())
+                .connect(signerItem.signer)
                 .exchangeMileageToToken(email, amountMileage, signer, signature);
 
             logger.http(`TxHash(exchangeMileageToToken): `, tx.hash);
@@ -450,6 +507,8 @@ export class DefaultRouter {
                     message,
                 })
             );
+        } finally {
+            this.releaseRelaySigner(signerItem);
         }
     }
 }

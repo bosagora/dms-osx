@@ -144,4 +144,14 @@ export class ContractUtils {
         }
         return res.toLowerCase() === signerAddress.toLowerCase();
     }
+
+    public static getTimeStamp(): number {
+        return Math.floor(new Date().getTime() / 1000);
+    }
+
+    public static delay(interval: number): Promise<void> {
+        return new Promise<void>((resolve, _) => {
+            setTimeout(resolve, interval);
+        });
+    }
 }
