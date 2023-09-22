@@ -1651,6 +1651,19 @@ export class UserTradeHistory extends Entity {
     this.set("action", Value.fromString(value));
   }
 
+  get assetFlow(): string {
+    let value = this.get("assetFlow");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set assetFlow(value: string) {
+    this.set("assetFlow", Value.fromString(value));
+  }
+
   get amountMileage(): BigInt {
     let value = this.get("amountMileage");
     if (!value || value.kind == ValueKind.NULL) {

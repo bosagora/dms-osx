@@ -136,10 +136,19 @@ enum UserAction {
   ClearedMileage
 }
 
+enum AssetFlow {
+  MileageInput,
+  MileageOutput,
+  TokenInput,
+  TokenOutput,
+  None
+}
+
 type UserTradeHistory @entity(immutable: true) {
   id: Bytes!
   email: Bytes!
   action: UserAction!
+  assetFlow: AssetFlow!
   amountMileage: BigInt!
   amountToken: BigInt!
   value: BigInt!
