@@ -264,6 +264,7 @@ export function handleProvidedMileageForHistory(event: ProvidedMileageEvent): vo
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ProvidedMileage";
+    entity.assetFlow = "MileageInput";
     entity.amountMileage = event.params.providedAmountMileage;
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.value.div(AmountUnit);
@@ -290,6 +291,7 @@ export function handleProvidedMileageToFranchiseeForHistory(event: ProvidedMilea
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ClearedMileage";
+    entity.assetFlow = "MileageInput";
     entity.amountMileage = event.params.providedAmountMileage.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.value.div(AmountUnit);
@@ -315,6 +317,7 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ProvidedToken";
+    entity.assetFlow = "TokenInput";
     entity.amountMileage = BigInt.fromI32(0);
     entity.amountToken = event.params.providedAmountToken.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
@@ -341,6 +344,7 @@ export function handlePaidMileageForHistory(event: PaidMileageEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "PaidMileage";
+    entity.assetFlow = "MileageOutput";
     entity.amountMileage = event.params.paidAmountMileage.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.value.div(AmountUnit);
@@ -367,6 +371,7 @@ export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "PaidToken";
+    entity.assetFlow = "TokenOutput";
     entity.amountMileage = BigInt.fromI32(0);
     entity.amountToken = event.params.paidAmountToken.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
@@ -393,6 +398,7 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "DepositedToken";
+    entity.assetFlow = "TokenInput";
     entity.amountMileage = BigInt.fromI32(0);
     entity.amountToken = event.params.depositAmount.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
@@ -419,6 +425,7 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "WithdrawnToken";
+    entity.assetFlow = "TokenOutput";
     entity.amountMileage = BigInt.fromI32(0);
     entity.amountToken = event.params.withdrawAmount.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
@@ -438,6 +445,7 @@ export function handleExchangedMileageToTokenForHistory(event: ExchangedMileageT
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ExchangedMileageToToken";
+    entity.assetFlow = "None";
     entity.amountMileage = event.params.amountMileage.div(AmountUnit);
     entity.amountToken = event.params.amountToken.div(AmountUnit);
     entity.value = event.params.amountMileage.div(AmountUnit);
@@ -473,6 +481,7 @@ export function handleExchangedTokenToMileageForHistory(event: ExchangedTokenToM
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.action = "ExchangedTokenToMileage";
+    entity.assetFlow = "None";
     entity.amountMileage = event.params.amountMileage.div(AmountUnit);
     entity.amountToken = event.params.amountToken.div(AmountUnit);
     entity.value = event.params.amountMileage.div(AmountUnit);
