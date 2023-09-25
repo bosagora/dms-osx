@@ -65,12 +65,12 @@ export class ContractUtils {
         purchaseId: string,
         amount: BigNumberish,
         userEmail: string,
-        franchiseeId: string,
+        shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["string", "uint256", "bytes32", "string", "address", "uint256"],
-            [purchaseId, amount, userEmail, franchiseeId, await signer.getAddress(), nonce]
+            [purchaseId, amount, userEmail, shopId, await signer.getAddress(), nonce]
         );
         const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
         return signer.signMessage(message);

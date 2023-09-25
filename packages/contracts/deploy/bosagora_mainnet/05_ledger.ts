@@ -4,7 +4,7 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { FranchiseeCollection, Ledger, Token } from "../../typechain-types";
+import { ShopCollection, Ledger, Token } from "../../typechain-types";
 import { getContractAddress, getLinkCollectionContractAddress } from "../helpers";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 
@@ -19,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
     const tokenPriceContractAddress = await getContractAddress("TokenPrice", hre);
-    const franchiseeContractAddress = await getContractAddress("FranchiseeCollection", hre);
+    const shopContractAddress = await getContractAddress("ShopCollection", hre);
 
     const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
     await deploy("Ledger", {
@@ -30,7 +30,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             validatorContractAddress,
             linkCollectionContractAddress,
             tokenPriceContractAddress,
-            franchiseeContractAddress,
+            shopContractAddress,
         ],
         log: true,
     });

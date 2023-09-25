@@ -1,13 +1,6 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
-import {
-    FranchiseeCollection,
-    Ledger,
-    LinkCollection,
-    Token,
-    TokenPrice,
-    ValidatorCollection,
-} from "../typechain-types";
+import { ShopCollection, Ledger, LinkCollection, Token, TokenPrice, ValidatorCollection } from "../typechain-types";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import { TestClient, TestServer } from "./helper/Utility";
 
@@ -59,7 +52,7 @@ describe("Test of Server", function () {
     let ledgerContract: Ledger;
     let linkCollectionContract: LinkCollection;
     let tokenPriceContract: TokenPrice;
-    let franchiseeCollection: FranchiseeCollection;
+    let shopCollection: ShopCollection;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -122,13 +115,13 @@ describe("Test of Server", function () {
         await tokenPriceContract.connect(validators[0]).set("KRW", price);
     };
 
-    const deployFranchiseeCollection = async () => {
-        const franchiseeCollectionFactory = await hre.ethers.getContractFactory("FranchiseeCollection");
-        franchiseeCollection = (await franchiseeCollectionFactory
+    const deployShopCollection = async () => {
+        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+        shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as FranchiseeCollection;
-        await franchiseeCollection.deployed();
-        await franchiseeCollection.deployTransaction.wait();
+            .deploy(validatorContract.address)) as ShopCollection;
+        await shopCollection.deployed();
+        await shopCollection.deployTransaction.wait();
     };
 
     const deployLedger = async () => {
@@ -141,12 +134,12 @@ describe("Test of Server", function () {
                 validatorContract.address,
                 linkCollectionContract.address,
                 tokenPriceContract.address,
-                franchiseeCollection.address
+                shopCollection.address
             )) as Ledger;
         await ledgerContract.deployed();
         await ledgerContract.deployTransaction.wait();
 
-        await franchiseeCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
+        await shopCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
     };
 
     const deployAllContract = async () => {
@@ -155,7 +148,7 @@ describe("Test of Server", function () {
         await depositValidators();
         await deployLinkCollection();
         await deployTokenPrice();
-        await deployFranchiseeCollection();
+        await deployShopCollection();
         await deployLedger();
     };
 
@@ -164,34 +157,34 @@ describe("Test of Server", function () {
     let serverURL: URL;
     let config: Config;
 
-    interface IFranchiseeData {
-        franchiseeId: string;
+    interface IShopData {
+        shopId: string;
         timestamp: number;
         email: string;
     }
-    const franchiseeData: IFranchiseeData[] = [
+    const shopData: IShopData[] = [
         {
-            franchiseeId: "F000100",
+            shopId: "F000100",
             timestamp: 0,
             email: "f1@example.com",
         },
         {
-            franchiseeId: "F000200",
+            shopId: "F000200",
             timestamp: 0,
             email: "f2@example.com",
         },
         {
-            franchiseeId: "F000300",
+            shopId: "F000300",
             timestamp: 0,
             email: "f3@example.com",
         },
         {
-            franchiseeId: "F000400",
+            shopId: "F000400",
             timestamp: 0,
             email: "f4@example.com",
         },
         {
-            franchiseeId: "F000500",
+            shopId: "F000500",
             timestamp: 0,
             email: "f5@example.com",
         },
@@ -202,7 +195,7 @@ describe("Test of Server", function () {
         timestamp: 1672844400,
         amount: 100,
         userEmail: "a@example.com",
-        franchiseeId: "F000100",
+        shopId: "F000100",
         method: 0,
     };
 
@@ -247,15 +240,15 @@ describe("Test of Server", function () {
             await server.stop();
         });
 
-        context("Prepare franchisee data", () => {
-            it("Add Franchisee Data", async () => {
-                for (const elem of franchiseeData) {
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "AddedFranchisee")
-                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                        .to.emit(shopCollection, "AddedShop")
+                        .withArgs(elem.shopId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
@@ -417,7 +410,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     over_purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
@@ -426,7 +419,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: over_purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
@@ -443,7 +436,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
@@ -452,7 +445,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: "",
                     signature,
                 });
@@ -469,7 +462,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
@@ -478,7 +471,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
@@ -495,7 +488,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[1],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
@@ -504,7 +497,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[1],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
@@ -521,7 +514,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
@@ -530,7 +523,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
@@ -548,7 +541,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     over_purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
@@ -557,7 +550,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: over_purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
@@ -574,7 +567,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
@@ -583,7 +576,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: "",
                     signature,
                 });
@@ -600,7 +593,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
@@ -609,7 +602,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
@@ -626,7 +619,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[1],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
@@ -635,7 +628,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[1],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
@@ -652,7 +645,7 @@ describe("Test of Server", function () {
                     purchaseData.purchaseId,
                     purchaseAmount,
                     emailHashes[0],
-                    franchiseeData[0].franchiseeId,
+                    shopData[0].shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
@@ -661,7 +654,7 @@ describe("Test of Server", function () {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
                     email: emailHashes[0],
-                    franchiseeId: purchaseData.franchiseeId,
+                    shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });

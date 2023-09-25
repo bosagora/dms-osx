@@ -3,7 +3,7 @@ import { Amount } from "../common/Amount";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
-import { IFranchiseeData, IPurchaseData, IUserData } from "../types/index";
+import { IShopData, IPurchaseData, IUserData } from "../types/index";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Scheduler } from "./Scheduler";
@@ -46,12 +46,12 @@ export class DefaultScheduler extends Scheduler {
     private _purchaseIdx: number = 0;
 
     private _users: IUserData[];
-    private _franchisees: IFranchiseeData[];
+    private _shops: IShopData[];
 
     constructor(expression: string) {
         super(expression);
         this._users = JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[];
-        this._franchisees = JSON.parse(fs.readFileSync("./src/data/franchisees.json", "utf8")) as IFranchiseeData[];
+        this._shops = JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[];
     }
 
     /**
@@ -149,17 +149,17 @@ export class DefaultScheduler extends Scheduler {
                     amount: amount.value,
                     userEmail:
                         Math.random() < 0.1 ? "" : this._users[Math.floor(Math.random() * this._users.length)].email,
-                    franchiseeId: this._franchisees[Math.floor(Math.random() * this._franchisees.length)].franchiseeId,
+                    shopId: this._shops[Math.floor(Math.random() * this._shops.length)].shopId,
                 };
                 const emailHash = ContractUtils.sha256String(data.userEmail);
                 const tx = await (await this.getLedgerContract())
                     .connect(await this.getSigner())
-                    .savePurchase(data.purchaseId, data.timestamp, data.amount, emailHash, data.franchiseeId, 0);
+                    .savePurchase(data.purchaseId, data.timestamp, data.amount, emailHash, data.shopId, 0);
 
                 console.log(
                     `Send purchase data (purchaseId: ${
                         data.purchaseId
-                    }, amount: ${amount.toIntegralString()}, franchiseeId: ${data.franchiseeId}, tx: ${tx.hash})...`
+                    }, amount: ${amount.toIntegralString()}, shopId: ${data.shopId}, tx: ${tx.hash})...`
                 );
 
                 await tx.wait();

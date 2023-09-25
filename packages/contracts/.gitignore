@@ -141,4 +141,5 @@ artifacts
 
 *.iml
 
+deployments
 deployed_contracts.json

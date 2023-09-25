@@ -5,11 +5,11 @@ export interface IPurchaseData {
     timestamp: number;
     amount: BigNumber;
     userEmail: string;
-    franchiseeId: string;
+    shopId: string;
 }
 
-export interface IFranchiseeData {
-    franchiseeId: string;
+export interface IShopData {
+    shopId: string;
     provideWaitTime: number;
     email: string;
 }

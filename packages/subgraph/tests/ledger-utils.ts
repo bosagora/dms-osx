@@ -7,7 +7,7 @@ import {
     PaidPoint,
     PaidToken,
     ProvidedPoint,
-    ProvidedPointToFranchisee,
+    ProvidedPointToShop,
     ProvidedToken,
     SavedPurchase,
     Withdrawn,
@@ -165,34 +165,30 @@ export function createProvidedPointEvent(
     return providedPointEvent;
 }
 
-export function createProvidedPointToFranchiseeEvent(
+export function createProvidedPointToShopEvent(
     email: Bytes,
     providedAmountPoint: BigInt,
     value: BigInt,
     balancePoint: BigInt,
-    franchiseeId: string
-): ProvidedPointToFranchisee {
-    let providedPointToFranchiseeEvent = changetype<ProvidedPointToFranchisee>(newMockEvent());
+    shopId: string
+): ProvidedPointToShop {
+    let providedPointToShopEvent = changetype<ProvidedPointToShop>(newMockEvent());
 
-    providedPointToFranchiseeEvent.parameters = new Array();
+    providedPointToShopEvent.parameters = new Array();
 
-    providedPointToFranchiseeEvent.parameters.push(
-        new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email))
-    );
-    providedPointToFranchiseeEvent.parameters.push(
+    providedPointToShopEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
+    providedPointToShopEvent.parameters.push(
         new ethereum.EventParam("providedAmountPoint", ethereum.Value.fromUnsignedBigInt(providedAmountPoint))
     );
-    providedPointToFranchiseeEvent.parameters.push(
+    providedPointToShopEvent.parameters.push(
         new ethereum.EventParam("value", ethereum.Value.fromUnsignedBigInt(value))
     );
-    providedPointToFranchiseeEvent.parameters.push(
+    providedPointToShopEvent.parameters.push(
         new ethereum.EventParam("balancePoint", ethereum.Value.fromUnsignedBigInt(balancePoint))
     );
-    providedPointToFranchiseeEvent.parameters.push(
-        new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
-    );
+    providedPointToShopEvent.parameters.push(new ethereum.EventParam("shopId", ethereum.Value.fromString(shopId)));
 
-    return providedPointToFranchiseeEvent;
+    return providedPointToShopEvent;
 }
 
 export function createProvidedTokenEvent(
@@ -224,7 +220,7 @@ export function createSavedPurchaseEvent(
     timestamp: BigInt,
     amount: BigInt,
     email: Bytes,
-    franchiseeId: string,
+    shopId: string,
     method: BigInt
 ): SavedPurchase {
     let savedPurchaseEvent = changetype<SavedPurchase>(newMockEvent());
@@ -237,9 +233,7 @@ export function createSavedPurchaseEvent(
     );
     savedPurchaseEvent.parameters.push(new ethereum.EventParam("amount", ethereum.Value.fromUnsignedBigInt(amount)));
     savedPurchaseEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
-    savedPurchaseEvent.parameters.push(
-        new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
-    );
+    savedPurchaseEvent.parameters.push(new ethereum.EventParam("shopId", ethereum.Value.fromString(shopId)));
     savedPurchaseEvent.parameters.push(new ethereum.EventParam("method", ethereum.Value.fromUnsignedBigInt(method)));
 
     return savedPurchaseEvent;

@@ -24,7 +24,7 @@
       },
       {
         "internalType": "address",
-        "name": "_franchiseeCollectionAddress",
+        "name": "_shopCollectionAddress",
         "type": "address"
       }
     ],
@@ -178,7 +178,7 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "franchiseeId",
+        "name": "shopId",
         "type": "string"
       }
     ],
@@ -221,7 +221,7 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "franchiseeId",
+        "name": "shopId",
         "type": "string"
       }
     ],
@@ -264,7 +264,7 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "franchiseeId",
+        "name": "shopId",
         "type": "string"
       }
     ],
@@ -307,11 +307,11 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "franchiseeId",
+        "name": "shopId",
         "type": "string"
       }
     ],
-    "name": "ProvidedPointToFranchisee",
+    "name": "ProvidedPointToShop",
     "type": "event"
   },
   {
@@ -350,7 +350,7 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "franchiseeId",
+        "name": "shopId",
         "type": "string"
       }
     ],
@@ -387,7 +387,7 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "franchiseeId",
+        "name": "shopId",
         "type": "string"
       },
       {
@@ -490,7 +490,7 @@
   },
   {
     "inputs": [],
-    "name": "franchiseeCollectionAddress",
+    "name": "shopCollectionAddress",
     "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
@@ -525,7 +525,7 @@
       { "internalType": "string", "name": "_purchaseId", "type": "string" },
       { "internalType": "uint256", "name": "_amount", "type": "uint256" },
       { "internalType": "bytes32", "name": "_email", "type": "bytes32" },
-      { "internalType": "string", "name": "_franchiseeId", "type": "string" },
+      { "internalType": "string", "name": "_shopId", "type": "string" },
       { "internalType": "address", "name": "_signer", "type": "address" },
       { "internalType": "bytes", "name": "_signature", "type": "bytes" }
     ],
@@ -539,7 +539,7 @@
       { "internalType": "string", "name": "_purchaseId", "type": "string" },
       { "internalType": "uint256", "name": "_amount", "type": "uint256" },
       { "internalType": "bytes32", "name": "_email", "type": "bytes32" },
-      { "internalType": "string", "name": "_franchiseeId", "type": "string" },
+      { "internalType": "string", "name": "_shopId", "type": "string" },
       { "internalType": "address", "name": "_signer", "type": "address" },
       { "internalType": "bytes", "name": "_signature", "type": "bytes" }
     ],
@@ -571,7 +571,7 @@
           { "internalType": "bytes32", "name": "email", "type": "bytes32" },
           {
             "internalType": "string",
-            "name": "franchiseeId",
+            "name": "shopId",
             "type": "string"
           },
           { "internalType": "uint32", "name": "method", "type": "uint32" }
@@ -597,7 +597,7 @@
       { "internalType": "uint256", "name": "_timestamp", "type": "uint256" },
       { "internalType": "uint256", "name": "_amount", "type": "uint256" },
       { "internalType": "bytes32", "name": "_email", "type": "bytes32" },
-      { "internalType": "string", "name": "_franchiseeId", "type": "string" },
+      { "internalType": "string", "name": "_shopId", "type": "string" },
       { "internalType": "uint32", "name": "_method", "type": "uint32" }
     ],
     "name": "savePurchase",

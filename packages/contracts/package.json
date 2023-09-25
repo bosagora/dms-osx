@@ -22,7 +22,7 @@
         "debug:Ledger": "hardhat test test/Ledger.test.ts",
         "debug:Validator": "hardhat test test/ValidatorCollection.test.ts",
         "debug:TokenPrice": "hardhat test test/TokenPrice.test.ts",
-        "debug:FranchiseeCollection": "hardhat test test/FranchiseeCollection.test.ts"
+        "debug:ShopCollection": "hardhat test test/ShopCollection.test.ts"
     },
     "repository": {
         "type": "git",

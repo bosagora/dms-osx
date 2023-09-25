@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "del-osx-artifacts/contracts/LinkCollection.sol";
 import "./ValidatorCollection.sol";
 import "./TokenPrice.sol";
-import "./FranchiseeCollection.sol";
+import "./ShopCollection.sol";
 
 /// @notice 포인트와 토큰의 원장
 contract Ledger {
@@ -22,7 +22,7 @@ contract Ledger {
         uint256 timestamp;
         uint256 amount;
         bytes32 email;
-        string franchiseeId;
+        string shopId;
         uint32 method;
     }
 
@@ -34,13 +34,13 @@ contract Ledger {
     address public validatorAddress;
     address public linkCollectionAddress;
     address public tokenPriceAddress;
-    address public franchiseeCollectionAddress;
+    address public shopCollectionAddress;
 
     IERC20 private token;
     ValidatorCollection private validatorCollection;
     LinkCollection private linkCollection;
     TokenPrice private tokenPrice;
-    FranchiseeCollection private franchiseeCollection;
+    ShopCollection private shopCollection;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event SavedPurchase(
@@ -48,7 +48,7 @@ contract Ledger {
         uint256 timestamp,
         uint256 amount,
         bytes32 email,
-        string franchiseeId,
+        string shopId,
         uint32 method
     );
     /// @notice 포인트가 지급될 때 발생되는 이벤트
@@ -58,16 +58,16 @@ contract Ledger {
         uint256 value,
         uint256 balancePoint,
         string purchaseId,
-        string franchiseeId
+        string shopId
     );
     /// @notice 포인트가 정산될 때 발생되는 이벤트
-    event ProvidedPointToFranchisee(
+    event ProvidedPointToShop(
         bytes32 email,
         uint256 providedAmountPoint,
         uint256 value,
         uint256 balancePoint,
         string purchaseId,
-        string franchiseeId
+        string shopId
     );
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(
@@ -76,7 +76,7 @@ contract Ledger {
         uint256 value,
         uint256 balanceToken,
         string purchaseId,
-        string franchiseeId
+        string shopId
     );
     /// @notice 포인트로 지불을 완료했을 때 발생하는 이벤트
     event PaidPoint(
@@ -85,7 +85,7 @@ contract Ledger {
         uint256 value,
         uint256 balancePoint,
         string purchaseId,
-        string franchiseeId
+        string shopId
     );
     /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
     event PaidToken(
@@ -94,7 +94,7 @@ contract Ledger {
         uint256 value,
         uint256 balanceToken,
         string purchaseId,
-        string franchiseeId
+        string shopId
     );
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(bytes32 email, uint256 depositAmount, uint256 value, uint256 balanceToken, address account);
@@ -123,27 +123,27 @@ contract Ledger {
     /// @param _validatorAddress 검증자 컬랙션 컨트랙트의 주소
     /// @param _linkCollectionAddress 이메일-지갑주소 링크 컨트랙트의 주소
     /// @param _tokenPriceAddress 토큰가격을 제공하는 컨트랙트의 주소
-    /// @param _franchiseeCollectionAddress 가맹점 컬랙션 컨트랙트의 주소
+    /// @param _shopCollectionAddress 가맹점 컬랙션 컨트랙트의 주소
     constructor(
         bytes32 _foundationAccount,
         address _tokenAddress,
         address _validatorAddress,
         address _linkCollectionAddress,
         address _tokenPriceAddress,
-        address _franchiseeCollectionAddress
+        address _shopCollectionAddress
     ) {
         foundationAccount = _foundationAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;
         tokenPriceAddress = _tokenPriceAddress;
-        franchiseeCollectionAddress = _franchiseeCollectionAddress;
+        shopCollectionAddress = _shopCollectionAddress;
 
         token = IERC20(_tokenAddress);
         validatorCollection = ValidatorCollection(_validatorAddress);
         linkCollection = LinkCollection(_linkCollectionAddress);
         tokenPrice = TokenPrice(_tokenPriceAddress);
-        franchiseeCollection = FranchiseeCollection(_franchiseeCollectionAddress);
+        shopCollection = ShopCollection(_shopCollectionAddress);
     }
 
     modifier onlyValidator(address _account) {
@@ -164,14 +164,14 @@ contract Ledger {
     /// @param _timestamp 구매 시간
     /// @param _amount 구매 금액
     /// @param _email 구매한 사용자의 이메일 해시
-    /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _shopId 구매한 가맹점 아이디
     /// @param _method 0: 현금또는 카드, 1 : 포인트, 2: 토큰
     function savePurchase(
         string memory _purchaseId,
         uint256 _timestamp,
         uint256 _amount,
         bytes32 _email,
-        string memory _franchiseeId,
+        string memory _shopId,
         uint32 _method
     ) public onlyValidator(msg.sender) {
         PurchaseData memory data = PurchaseData({
@@ -179,7 +179,7 @@ contract Ledger {
             timestamp: _timestamp,
             amount: _amount,
             email: _email,
-            franchiseeId: _franchiseeId,
+            shopId: _shopId,
             method: _method
         });
         purchaseIds.push(_purchaseId);
@@ -189,13 +189,13 @@ contract Ledger {
             uint256 point = _amount / 100;
             address account = linkCollection.toAddress(_email);
             if (account == address(0x00)) {
-                providePoint(_email, point, _purchaseId, _franchiseeId);
+                providePoint(_email, point, _purchaseId, _shopId);
             } else {
-                provideToken(_email, point, _purchaseId, _franchiseeId);
+                provideToken(_email, point, _purchaseId, _shopId);
             }
-            franchiseeCollection.addProvidedPoint(_franchiseeId, point, _purchaseId);
+            shopCollection.addProvidedPoint(_shopId, point, _purchaseId);
         }
-        emit SavedPurchase(_purchaseId, _timestamp, _amount, _email, _franchiseeId, _method);
+        emit SavedPurchase(_purchaseId, _timestamp, _amount, _email, _shopId, _method);
     }
 
     /// @notice 포인트를 지급합니다.
@@ -203,15 +203,15 @@ contract Ledger {
     /// @param _email 이메일 해시
     /// @param _amount 지급할 포인트
     /// @param _purchaseId 구매 아이디
-    /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _shopId 구매한 가맹점 아이디
     function providePoint(
         bytes32 _email,
         uint256 _amount,
         string memory _purchaseId,
-        string memory _franchiseeId
+        string memory _shopId
     ) internal {
         pointLedger[_email] += _amount;
-        emit ProvidedPoint(_email, _amount, _amount, pointLedger[_email], _purchaseId, _franchiseeId);
+        emit ProvidedPoint(_email, _amount, _amount, pointLedger[_email], _purchaseId, _shopId);
     }
 
     /// @notice 토큰을 지급합니다.
@@ -219,12 +219,12 @@ contract Ledger {
     /// @param _email 이메일 해시
     /// @param _amount 지급할 토큰
     /// @param _purchaseId 구매 아이디
-    /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _shopId 구매한 가맹점 아이디
     function provideToken(
         bytes32 _email,
         uint256 _amount,
         string memory _purchaseId,
-        string memory _franchiseeId
+        string memory _shopId
     ) internal {
         uint256 amountToken = convertPointToToken(_amount);
 
@@ -232,7 +232,7 @@ contract Ledger {
         tokenLedger[_email] += amountToken;
         tokenLedger[foundationAccount] -= amountToken;
 
-        emit ProvidedToken(_email, amountToken, _amount, tokenLedger[_email], _purchaseId, _franchiseeId);
+        emit ProvidedToken(_email, amountToken, _amount, tokenLedger[_email], _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 구매에 사용하는 함수
@@ -240,18 +240,18 @@ contract Ledger {
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
     /// @param _email 구매한 사용자의 이메일 해시
-    /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _shopId 구매한 가맹점 아이디
     /// @param _signer 구매자의 주소
     /// @param _signature 서명
     function payPoint(
         string memory _purchaseId,
         uint256 _amount,
         bytes32 _email,
-        string memory _franchiseeId,
+        string memory _shopId,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _email, _franchiseeId, _signer, nonce[_signer]));
+        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _email, _shopId, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
         address userAddress = linkCollection.toAddress(_email);
         require(userAddress != address(0x00), "Unregistered email-address");
@@ -259,28 +259,28 @@ contract Ledger {
         require(pointLedger[_email] >= _amount, "Insufficient balance");
 
         pointLedger[_email] -= _amount;
-        franchiseeCollection.addUsedPoint(_franchiseeId, _amount, _purchaseId);
+        shopCollection.addUsedPoint(_shopId, _amount, _purchaseId);
 
-        uint256 clearAmount = franchiseeCollection.getClearPoint(_franchiseeId);
+        uint256 clearAmount = shopCollection.getClearPoint(_shopId);
         if (clearAmount > 0) {
-            franchiseeCollection.addClearedPoint(_franchiseeId, clearAmount, _purchaseId);
-            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(_franchiseeId);
-            if (franchisee.email != NULL) {
-                pointLedger[franchisee.email] += clearAmount;
-                emit ProvidedPointToFranchisee(
-                    franchisee.email,
+            shopCollection.addClearedPoint(_shopId, clearAmount, _purchaseId);
+            ShopCollection.ShopData memory shop = shopCollection.shopOf(_shopId);
+            if (shop.email != NULL) {
+                pointLedger[shop.email] += clearAmount;
+                emit ProvidedPointToShop(
+                    shop.email,
                     clearAmount,
                     clearAmount,
-                    pointLedger[franchisee.email],
+                    pointLedger[shop.email],
                     _purchaseId,
-                    _franchiseeId
+                    _shopId
                 );
             }
         }
 
         nonce[_signer]++;
 
-        emit PaidPoint(_email, _amount, _amount, pointLedger[_email], _purchaseId, _franchiseeId);
+        emit PaidPoint(_email, _amount, _amount, pointLedger[_email], _purchaseId, _shopId);
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
@@ -288,18 +288,18 @@ contract Ledger {
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
     /// @param _email 구매한 사용자의 이메일 해시
-    /// @param _franchiseeId 구매한 가맹점 아이디
+    /// @param _shopId 구매한 가맹점 아이디
     /// @param _signer 구매자의 주소
     /// @param _signature 서명
     function payToken(
         string memory _purchaseId,
         uint256 _amount,
         bytes32 _email,
-        string memory _franchiseeId,
+        string memory _shopId,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _email, _franchiseeId, _signer, nonce[_signer]));
+        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _email, _shopId, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
         address userAddress = linkCollection.toAddress(_email);
         require(userAddress != address(0x00), "Unregistered email-address");
@@ -311,31 +311,31 @@ contract Ledger {
         uint256 lAmount = _amount;
         bytes32 lEmail = _email;
         string memory lPurchaseId = _purchaseId;
-        string memory lFranchiseeId = _franchiseeId;
+        string memory lShopId = _shopId;
         tokenLedger[lEmail] -= amountToken;
         tokenLedger[foundationAccount] += amountToken;
-        franchiseeCollection.addUsedPoint(lFranchiseeId, lAmount, lPurchaseId);
+        shopCollection.addUsedPoint(lShopId, lAmount, lPurchaseId);
 
-        uint256 clearAmount = franchiseeCollection.getClearPoint(lFranchiseeId);
+        uint256 clearAmount = shopCollection.getClearPoint(lShopId);
         if (clearAmount > 0) {
-            franchiseeCollection.addClearedPoint(lFranchiseeId, clearAmount, lPurchaseId);
-            FranchiseeCollection.FranchiseeData memory franchisee = franchiseeCollection.franchiseeOf(lFranchiseeId);
-            if (franchisee.email != NULL) {
-                pointLedger[franchisee.email] += clearAmount;
-                emit ProvidedPointToFranchisee(
-                    franchisee.email,
+            shopCollection.addClearedPoint(lShopId, clearAmount, lPurchaseId);
+            ShopCollection.ShopData memory shop = shopCollection.shopOf(lShopId);
+            if (shop.email != NULL) {
+                pointLedger[shop.email] += clearAmount;
+                emit ProvidedPointToShop(
+                    shop.email,
                     clearAmount,
                     clearAmount,
-                    pointLedger[franchisee.email],
+                    pointLedger[shop.email],
                     lPurchaseId,
-                    lFranchiseeId
+                    lShopId
                 );
             }
         }
 
         nonce[_signer]++;
 
-        emit PaidToken(lEmail, amountToken, lAmount, tokenLedger[lEmail], lPurchaseId, lFranchiseeId);
+        emit PaidToken(lEmail, amountToken, lAmount, tokenLedger[lEmail], lPurchaseId, lShopId);
     }
 
     function convertPointToToken(uint256 amount) internal view returns (uint256) {

@@ -1,51 +1,51 @@
 [
     {
-        "franchiseeId": "F000100",
+        "shopId": "F000100",
         "provideWaitTime": 0,
         "email": "f0@example.com"
     },
     {
-        "franchiseeId": "F000200",
+        "shopId": "F000200",
         "provideWaitTime": 0,
         "email": "f1@example.com"
     },
     {
-        "franchiseeId": "F000300",
+        "shopId": "F000300",
         "provideWaitTime": 0,
         "email": "f2@example.com"
     },
     {
-        "franchiseeId": "F000400",
+        "shopId": "F000400",
         "provideWaitTime": 0,
         "email": "f3@example.com"
     },
     {
-        "franchiseeId": "F000500",
+        "shopId": "F000500",
         "provideWaitTime": 0,
         "email": "f4@example.com"
     },
     {
-        "franchiseeId": "F000600",
+        "shopId": "F000600",
         "provideWaitTime": 0,
         "email": "f5@example.com"
     },
     {
-        "franchiseeId": "F000700",
+        "shopId": "F000700",
         "provideWaitTime": 0,
         "email": "f6@example.com"
     },
     {
-        "franchiseeId": "F000800",
+        "shopId": "F000800",
         "provideWaitTime": 0,
         "email": "f7@example.com"
     },
     {
-        "franchiseeId": "F000900",
+        "shopId": "F000900",
         "provideWaitTime": 0,
         "email": "f8@example.com"
     },
     {
-        "franchiseeId": "F001000",
+        "shopId": "F001000",
         "provideWaitTime": 0,
         "email": "f9@example.com"
     }

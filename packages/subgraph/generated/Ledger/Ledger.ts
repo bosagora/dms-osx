@@ -145,7 +145,7 @@ export class PaidPoint__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[5].value.toString();
   }
 }
@@ -183,7 +183,7 @@ export class PaidToken__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[5].value.toString();
   }
 }
@@ -221,21 +221,21 @@ export class ProvidedPoint__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[5].value.toString();
   }
 }
 
-export class ProvidedPointToFranchisee extends ethereum.Event {
-  get params(): ProvidedPointToFranchisee__Params {
-    return new ProvidedPointToFranchisee__Params(this);
+export class ProvidedPointToShop extends ethereum.Event {
+  get params(): ProvidedPointToShop__Params {
+    return new ProvidedPointToShop__Params(this);
   }
 }
 
-export class ProvidedPointToFranchisee__Params {
-  _event: ProvidedPointToFranchisee;
+export class ProvidedPointToShop__Params {
+  _event: ProvidedPointToShop;
 
-  constructor(event: ProvidedPointToFranchisee) {
+  constructor(event: ProvidedPointToShop) {
     this._event = event;
   }
 
@@ -259,7 +259,7 @@ export class ProvidedPointToFranchisee__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[5].value.toString();
   }
 }
@@ -297,7 +297,7 @@ export class ProvidedToken__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[5].value.toString();
   }
 }
@@ -331,7 +331,7 @@ export class SavedPurchase__Params {
     return this._event.parameters[3].value.toBytes();
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[4].value.toString();
   }
 
@@ -391,7 +391,7 @@ export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
     return this[3].toBytes();
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this[4].toString();
   }
 
@@ -441,29 +441,6 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBytes());
-  }
-
-  franchiseeCollectionAddress(): Address {
-    let result = super.call(
-      "franchiseeCollectionAddress",
-      "franchiseeCollectionAddress():(address)",
-      []
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_franchiseeCollectionAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "franchiseeCollectionAddress",
-      "franchiseeCollectionAddress():(address)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   linkCollectionAddress(): Address {
@@ -604,6 +581,29 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  shopCollectionAddress(): Address {
+    let result = super.call(
+      "shopCollectionAddress",
+      "shopCollectionAddress():(address)",
+      []
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_shopCollectionAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "shopCollectionAddress",
+      "shopCollectionAddress():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   tokenAddress(): Address {
     let result = super.call("tokenAddress", "tokenAddress():(address)", []);
 
@@ -726,7 +726,7 @@ export class ConstructorCall__Inputs {
     return this._call.inputValues[4].value.toAddress();
   }
 
-  get _franchiseeCollectionAddress(): Address {
+  get _shopCollectionAddress(): Address {
     return this._call.inputValues[5].value.toAddress();
   }
 }
@@ -882,7 +882,7 @@ export class PayPointCall__Inputs {
     return this._call.inputValues[2].value.toBytes();
   }
 
-  get _franchiseeId(): string {
+  get _shopId(): string {
     return this._call.inputValues[3].value.toString();
   }
 
@@ -932,7 +932,7 @@ export class PayTokenCall__Inputs {
     return this._call.inputValues[2].value.toBytes();
   }
 
-  get _franchiseeId(): string {
+  get _shopId(): string {
     return this._call.inputValues[3].value.toString();
   }
 
@@ -986,7 +986,7 @@ export class SavePurchaseCall__Inputs {
     return this._call.inputValues[3].value.toBytes();
   }
 
-  get _franchiseeId(): string {
+  get _shopId(): string {
     return this._call.inputValues[4].value.toString();
   }
 
