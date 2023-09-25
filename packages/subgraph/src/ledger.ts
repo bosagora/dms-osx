@@ -1,23 +1,23 @@
 import {
     Deposited as DepositedEvent,
-    ExchangedMileageToToken as ExchangedMileageToTokenEvent,
-    ExchangedTokenToMileage as ExchangedTokenToMileageEvent,
-    PaidMileage as PaidMileageEvent,
+    ExchangedPointToToken as ExchangedPointToTokenEvent,
+    ExchangedTokenToPoint as ExchangedTokenToPointEvent,
+    PaidPoint as PaidPointEvent,
     PaidToken as PaidTokenEvent,
-    ProvidedMileage as ProvidedMileageEvent,
-    ProvidedMileageToFranchisee as ProvidedMileageToFranchiseeEvent,
+    ProvidedPoint as ProvidedPointEvent,
+    ProvidedPointToFranchisee as ProvidedPointToFranchiseeEvent,
     ProvidedToken as ProvidedTokenEvent,
     SavedPurchase as SavedPurchaseEvent,
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
 import {
     Deposited,
-    ExchangedMileageToToken,
-    ExchangedTokenToMileage,
-    PaidMileage,
+    ExchangedPointToToken,
+    ExchangedTokenToPoint,
+    PaidPoint,
     PaidToken,
-    ProvidedMileage,
-    ProvidedMileageToFranchisee,
+    ProvidedPoint,
+    ProvidedPointToFranchisee,
     ProvidedToken,
     SavedPurchase,
     Withdrawn,
@@ -44,12 +44,12 @@ export function handleDeposited(event: DepositedEvent): void {
     handleDepositedForHistory(event);
 }
 
-export function handleExchangedMileageToToken(event: ExchangedMileageToTokenEvent): void {
-    let entity = new ExchangedMileageToToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handleExchangedPointToToken(event: ExchangedPointToTokenEvent): void {
+    let entity = new ExchangedPointToToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.amountMileage = event.params.amountMileage;
+    entity.amountPoint = event.params.amountPoint;
     entity.amountToken = event.params.amountToken;
-    entity.balanceMileage = event.params.balanceMileage;
+    entity.balancePoint = event.params.balancePoint;
     entity.balanceToken = event.params.balanceToken;
 
     entity.blockNumber = event.block.number;
@@ -58,15 +58,15 @@ export function handleExchangedMileageToToken(event: ExchangedMileageToTokenEven
 
     entity.save();
 
-    handleExchangedMileageToTokenForHistory(event);
+    handleExchangedPointToTokenForHistory(event);
 }
 
-export function handleExchangedTokenToMileage(event: ExchangedTokenToMileageEvent): void {
-    let entity = new ExchangedTokenToMileage(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handleExchangedTokenToPoint(event: ExchangedTokenToPointEvent): void {
+    let entity = new ExchangedTokenToPoint(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.amountMileage = event.params.amountMileage;
+    entity.amountPoint = event.params.amountPoint;
     entity.amountToken = event.params.amountToken;
-    entity.balanceMileage = event.params.balanceMileage;
+    entity.balancePoint = event.params.balancePoint;
     entity.balanceToken = event.params.balanceToken;
 
     entity.blockNumber = event.block.number;
@@ -75,15 +75,15 @@ export function handleExchangedTokenToMileage(event: ExchangedTokenToMileageEven
 
     entity.save();
 
-    handleExchangedTokenToMileageForHistory(event);
+    handleExchangedTokenToPointForHistory(event);
 }
 
-export function handlePaidMileage(event: PaidMileageEvent): void {
-    let entity = new PaidMileage(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handlePaidPoint(event: PaidPointEvent): void {
+    let entity = new PaidPoint(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.paidAmountMileage = event.params.paidAmountMileage;
+    entity.paidAmountPoint = event.params.paidAmountPoint;
     entity.value = event.params.value;
-    entity.balanceMileage = event.params.balanceMileage;
+    entity.balancePoint = event.params.balancePoint;
     entity.purchaseId = event.params.purchaseId;
     entity.franchiseeId = event.params.franchiseeId;
 
@@ -93,7 +93,7 @@ export function handlePaidMileage(event: PaidMileageEvent): void {
 
     entity.save();
 
-    handlePaidMileageForHistory(event);
+    handlePaidPointForHistory(event);
 }
 
 export function handlePaidToken(event: PaidTokenEvent): void {
@@ -114,12 +114,12 @@ export function handlePaidToken(event: PaidTokenEvent): void {
     handlePaidTokenForHistory(event);
 }
 
-export function handleProvidedMileage(event: ProvidedMileageEvent): void {
-    let entity = new ProvidedMileage(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handleProvidedPoint(event: ProvidedPointEvent): void {
+    let entity = new ProvidedPoint(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.providedAmountMileage = event.params.providedAmountMileage;
+    entity.providedAmountPoint = event.params.providedAmountPoint;
     entity.value = event.params.value;
-    entity.balanceMileage = event.params.balanceMileage;
+    entity.balancePoint = event.params.balancePoint;
     entity.purchaseId = event.params.purchaseId;
     entity.franchiseeId = event.params.franchiseeId;
 
@@ -129,15 +129,15 @@ export function handleProvidedMileage(event: ProvidedMileageEvent): void {
 
     entity.save();
 
-    handleProvidedMileageForHistory(event);
+    handleProvidedPointForHistory(event);
 }
 
-export function handleProvidedMileageToFranchisee(event: ProvidedMileageToFranchiseeEvent): void {
-    let entity = new ProvidedMileageToFranchisee(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handleProvidedPointToFranchisee(event: ProvidedPointToFranchiseeEvent): void {
+    let entity = new ProvidedPointToFranchisee(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.providedAmountMileage = event.params.providedAmountMileage;
+    entity.providedAmountPoint = event.params.providedAmountPoint;
     entity.value = event.params.value;
-    entity.balanceMileage = event.params.balanceMileage;
+    entity.balancePoint = event.params.balancePoint;
     entity.purchaseId = event.params.purchaseId;
     entity.franchiseeId = event.params.franchiseeId;
 
@@ -147,7 +147,7 @@ export function handleProvidedMileageToFranchisee(event: ProvidedMileageToFranch
 
     entity.save();
 
-    handleProvidedMileageToFranchiseeForHistory(event);
+    handleProvidedPointToFranchiseeForHistory(event);
 }
 
 export function handleProvidedToken(event: ProvidedTokenEvent): void {
@@ -201,7 +201,7 @@ export function handleWithdrawn(event: WithdrawnEvent): void {
     handleWithdrawnForHistory(event);
 }
 
-export function handleChangedBalanceMileage(
+export function handleChangedBalancePoint(
     email: Bytes,
     balance: BigInt,
     blockNumber: BigInt,
@@ -210,14 +210,14 @@ export function handleChangedBalanceMileage(
 ): UserBalance {
     let entity = UserBalance.load(email.toHex());
     if (entity !== null) {
-        entity.mileage = balance.div(AmountUnit);
+        entity.point = balance.div(AmountUnit);
         entity.blockNumber = blockNumber;
         entity.blockTimestamp = blockTimestamp;
         entity.transactionHash = transactionHash;
         entity.save();
     } else {
         entity = new UserBalance(email.toHex());
-        entity.mileage = balance.div(AmountUnit);
+        entity.point = balance.div(AmountUnit);
         entity.token = BigInt.fromI32(0);
         entity.blockNumber = blockNumber;
         entity.blockTimestamp = blockTimestamp;
@@ -244,7 +244,7 @@ export function handleChangedBalanceToken(
     } else {
         entity = new UserBalance(email.toHex());
         entity.token = balance.div(AmountUnit);
-        entity.mileage = BigInt.fromI32(0);
+        entity.point = BigInt.fromI32(0);
         entity.blockNumber = blockNumber;
         entity.blockTimestamp = blockTimestamp;
         entity.transactionHash = transactionHash;
@@ -253,22 +253,22 @@ export function handleChangedBalanceToken(
     return entity;
 }
 
-export function handleProvidedMileageForHistory(event: ProvidedMileageEvent): void {
-    const balanceEntity = handleChangedBalanceMileage(
+export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
+    const balanceEntity = handleChangedBalancePoint(
         event.params.email,
-        event.params.balanceMileage,
+        event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.action = "ProvidedMileage";
-    entity.assetFlow = "MileageInput";
-    entity.amountMileage = event.params.providedAmountMileage;
+    entity.action = "ProvidedPoint";
+    entity.assetFlow = "PointInput";
+    entity.amountPoint = event.params.providedAmountPoint;
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.value.div(AmountUnit);
-    entity.balanceMileage = event.params.balanceMileage;
+    entity.balancePoint = event.params.balancePoint;
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
     entity.franchiseeId = event.params.franchiseeId;
@@ -280,22 +280,22 @@ export function handleProvidedMileageForHistory(event: ProvidedMileageEvent): vo
     entity.save();
 }
 
-export function handleProvidedMileageToFranchiseeForHistory(event: ProvidedMileageToFranchiseeEvent): void {
-    const balanceEntity = handleChangedBalanceMileage(
+export function handleProvidedPointToFranchiseeForHistory(event: ProvidedPointToFranchiseeEvent): void {
+    const balanceEntity = handleChangedBalancePoint(
         event.params.email,
-        event.params.balanceMileage,
+        event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.action = "ClearedMileage";
-    entity.assetFlow = "MileageInput";
-    entity.amountMileage = event.params.providedAmountMileage.div(AmountUnit);
+    entity.action = "ClearedPoint";
+    entity.assetFlow = "PointInput";
+    entity.amountPoint = event.params.providedAmountPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.value.div(AmountUnit);
-    entity.balanceMileage = event.params.balanceMileage.div(AmountUnit);
+    entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.franchiseeId = event.params.franchiseeId;
     entity.account = NullAccount;
@@ -318,11 +318,11 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     entity.email = event.params.email;
     entity.action = "ProvidedToken";
     entity.assetFlow = "TokenInput";
-    entity.amountMileage = BigInt.fromI32(0);
+    entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.providedAmountToken.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken;
-    entity.balanceMileage = balanceEntity.mileage;
+    entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.purchaseId;
     entity.franchiseeId = event.params.franchiseeId;
     entity.account = NullAccount;
@@ -333,22 +333,22 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     entity.save();
 }
 
-export function handlePaidMileageForHistory(event: PaidMileageEvent): void {
+export function handlePaidPointForHistory(event: PaidPointEvent): void {
     const balanceEntity = handleChangedBalanceToken(
         event.params.email,
-        event.params.balanceMileage,
+        event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.action = "PaidMileage";
-    entity.assetFlow = "MileageOutput";
-    entity.amountMileage = event.params.paidAmountMileage.div(AmountUnit);
+    entity.action = "PaidPoint";
+    entity.assetFlow = "PointOutput";
+    entity.amountPoint = event.params.paidAmountPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.value.div(AmountUnit);
-    entity.balanceMileage = event.params.balanceMileage.div(AmountUnit);
+    entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
     entity.franchiseeId = event.params.franchiseeId;
@@ -372,11 +372,11 @@ export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
     entity.email = event.params.email;
     entity.action = "PaidToken";
     entity.assetFlow = "TokenOutput";
-    entity.amountMileage = BigInt.fromI32(0);
+    entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.paidAmountToken.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
-    entity.balanceMileage = balanceEntity.mileage;
+    entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.purchaseId;
     entity.franchiseeId = event.params.franchiseeId;
     entity.account = NullAccount;
@@ -399,11 +399,11 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     entity.email = event.params.email;
     entity.action = "DepositedToken";
     entity.assetFlow = "TokenInput";
-    entity.amountMileage = BigInt.fromI32(0);
+    entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.depositAmount.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
-    entity.balanceMileage = balanceEntity.mileage;
+    entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
     entity.franchiseeId = "";
     entity.account = event.params.account;
@@ -426,11 +426,11 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     entity.email = event.params.email;
     entity.action = "WithdrawnToken";
     entity.assetFlow = "TokenOutput";
-    entity.amountMileage = BigInt.fromI32(0);
+    entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.withdrawAmount.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
-    entity.balanceMileage = balanceEntity.mileage;
+    entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
     entity.franchiseeId = "";
     entity.account = event.params.account;
@@ -441,15 +441,15 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     entity.save();
 }
 
-export function handleExchangedMileageToTokenForHistory(event: ExchangedMileageToTokenEvent): void {
+export function handleExchangedPointToTokenForHistory(event: ExchangedPointToTokenEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.action = "ExchangedMileageToToken";
+    entity.action = "ExchangedPointToToken";
     entity.assetFlow = "None";
-    entity.amountMileage = event.params.amountMileage.div(AmountUnit);
+    entity.amountPoint = event.params.amountPoint.div(AmountUnit);
     entity.amountToken = event.params.amountToken.div(AmountUnit);
-    entity.value = event.params.amountMileage.div(AmountUnit);
-    entity.balanceMileage = event.params.balanceMileage.div(AmountUnit);
+    entity.value = event.params.amountPoint.div(AmountUnit);
+    entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.purchaseId = "";
     entity.franchiseeId = "";
@@ -461,9 +461,9 @@ export function handleExchangedMileageToTokenForHistory(event: ExchangedMileageT
 
     entity.save();
 
-    handleChangedBalanceMileage(
+    handleChangedBalancePoint(
         event.params.email,
-        event.params.balanceMileage,
+        event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
@@ -477,15 +477,15 @@ export function handleExchangedMileageToTokenForHistory(event: ExchangedMileageT
     );
 }
 
-export function handleExchangedTokenToMileageForHistory(event: ExchangedTokenToMileageEvent): void {
+export function handleExchangedTokenToPointForHistory(event: ExchangedTokenToPointEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
-    entity.action = "ExchangedTokenToMileage";
+    entity.action = "ExchangedTokenToPoint";
     entity.assetFlow = "None";
-    entity.amountMileage = event.params.amountMileage.div(AmountUnit);
+    entity.amountPoint = event.params.amountPoint.div(AmountUnit);
     entity.amountToken = event.params.amountToken.div(AmountUnit);
-    entity.value = event.params.amountMileage.div(AmountUnit);
-    entity.balanceMileage = event.params.balanceMileage.div(AmountUnit);
+    entity.value = event.params.amountPoint.div(AmountUnit);
+    entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.purchaseId = "";
     entity.franchiseeId = "";
@@ -497,9 +497,9 @@ export function handleExchangedTokenToMileageForHistory(event: ExchangedTokenToM
 
     entity.save();
 
-    handleChangedBalanceMileage(
+    handleChangedBalancePoint(
         event.params.email,
-        event.params.balanceMileage,
+        event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash

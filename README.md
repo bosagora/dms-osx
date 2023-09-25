@@ -1,3 +1,3 @@
 # Introduction
 
-A smart contract framework that decentralized mileage
+A smart contract framework that decentralized point

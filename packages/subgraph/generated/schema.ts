@@ -320,7 +320,7 @@ export class Deposited extends Entity {
   }
 }
 
-export class ExchangedMileageToToken extends Entity {
+export class ExchangedPointToToken extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -330,26 +330,26 @@ export class ExchangedMileageToToken extends Entity {
     let id = this.get("id");
     assert(
       id != null,
-      "Cannot save ExchangedMileageToToken entity without an ID"
+      "Cannot save ExchangedPointToToken entity without an ID"
     );
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type ExchangedMileageToToken must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ExchangedPointToToken must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("ExchangedMileageToToken", id.toBytes().toHexString(), this);
+      store.set("ExchangedPointToToken", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): ExchangedMileageToToken | null {
-    return changetype<ExchangedMileageToToken | null>(
-      store.get_in_block("ExchangedMileageToToken", id.toHexString())
+  static loadInBlock(id: Bytes): ExchangedPointToToken | null {
+    return changetype<ExchangedPointToToken | null>(
+      store.get_in_block("ExchangedPointToToken", id.toHexString())
     );
   }
 
-  static load(id: Bytes): ExchangedMileageToToken | null {
-    return changetype<ExchangedMileageToToken | null>(
-      store.get("ExchangedMileageToToken", id.toHexString())
+  static load(id: Bytes): ExchangedPointToToken | null {
+    return changetype<ExchangedPointToToken | null>(
+      store.get("ExchangedPointToToken", id.toHexString())
     );
   }
 
@@ -379,8 +379,8 @@ export class ExchangedMileageToToken extends Entity {
     this.set("email", Value.fromBytes(value));
   }
 
-  get amountMileage(): BigInt {
-    let value = this.get("amountMileage");
+  get amountPoint(): BigInt {
+    let value = this.get("amountPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -388,8 +388,8 @@ export class ExchangedMileageToToken extends Entity {
     }
   }
 
-  set amountMileage(value: BigInt) {
-    this.set("amountMileage", Value.fromBigInt(value));
+  set amountPoint(value: BigInt) {
+    this.set("amountPoint", Value.fromBigInt(value));
   }
 
   get amountToken(): BigInt {
@@ -405,8 +405,8 @@ export class ExchangedMileageToToken extends Entity {
     this.set("amountToken", Value.fromBigInt(value));
   }
 
-  get balanceMileage(): BigInt {
-    let value = this.get("balanceMileage");
+  get balancePoint(): BigInt {
+    let value = this.get("balancePoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -414,8 +414,8 @@ export class ExchangedMileageToToken extends Entity {
     }
   }
 
-  set balanceMileage(value: BigInt) {
-    this.set("balanceMileage", Value.fromBigInt(value));
+  set balancePoint(value: BigInt) {
+    this.set("balancePoint", Value.fromBigInt(value));
   }
 
   get balanceToken(): BigInt {
@@ -471,7 +471,7 @@ export class ExchangedMileageToToken extends Entity {
   }
 }
 
-export class ExchangedTokenToMileage extends Entity {
+export class ExchangedTokenToPoint extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -481,26 +481,26 @@ export class ExchangedTokenToMileage extends Entity {
     let id = this.get("id");
     assert(
       id != null,
-      "Cannot save ExchangedTokenToMileage entity without an ID"
+      "Cannot save ExchangedTokenToPoint entity without an ID"
     );
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type ExchangedTokenToMileage must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ExchangedTokenToPoint must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("ExchangedTokenToMileage", id.toBytes().toHexString(), this);
+      store.set("ExchangedTokenToPoint", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): ExchangedTokenToMileage | null {
-    return changetype<ExchangedTokenToMileage | null>(
-      store.get_in_block("ExchangedTokenToMileage", id.toHexString())
+  static loadInBlock(id: Bytes): ExchangedTokenToPoint | null {
+    return changetype<ExchangedTokenToPoint | null>(
+      store.get_in_block("ExchangedTokenToPoint", id.toHexString())
     );
   }
 
-  static load(id: Bytes): ExchangedTokenToMileage | null {
-    return changetype<ExchangedTokenToMileage | null>(
-      store.get("ExchangedTokenToMileage", id.toHexString())
+  static load(id: Bytes): ExchangedTokenToPoint | null {
+    return changetype<ExchangedTokenToPoint | null>(
+      store.get("ExchangedTokenToPoint", id.toHexString())
     );
   }
 
@@ -530,8 +530,8 @@ export class ExchangedTokenToMileage extends Entity {
     this.set("email", Value.fromBytes(value));
   }
 
-  get amountMileage(): BigInt {
-    let value = this.get("amountMileage");
+  get amountPoint(): BigInt {
+    let value = this.get("amountPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -539,8 +539,8 @@ export class ExchangedTokenToMileage extends Entity {
     }
   }
 
-  set amountMileage(value: BigInt) {
-    this.set("amountMileage", Value.fromBigInt(value));
+  set amountPoint(value: BigInt) {
+    this.set("amountPoint", Value.fromBigInt(value));
   }
 
   get amountToken(): BigInt {
@@ -556,8 +556,8 @@ export class ExchangedTokenToMileage extends Entity {
     this.set("amountToken", Value.fromBigInt(value));
   }
 
-  get balanceMileage(): BigInt {
-    let value = this.get("balanceMileage");
+  get balancePoint(): BigInt {
+    let value = this.get("balancePoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -565,8 +565,8 @@ export class ExchangedTokenToMileage extends Entity {
     }
   }
 
-  set balanceMileage(value: BigInt) {
-    this.set("balanceMileage", Value.fromBigInt(value));
+  set balancePoint(value: BigInt) {
+    this.set("balancePoint", Value.fromBigInt(value));
   }
 
   get balanceToken(): BigInt {
@@ -622,7 +622,7 @@ export class ExchangedTokenToMileage extends Entity {
   }
 }
 
-export class PaidMileage extends Entity {
+export class PaidPoint extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -630,25 +630,25 @@ export class PaidMileage extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save PaidMileage entity without an ID");
+    assert(id != null, "Cannot save PaidPoint entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type PaidMileage must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type PaidPoint must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("PaidMileage", id.toBytes().toHexString(), this);
+      store.set("PaidPoint", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): PaidMileage | null {
-    return changetype<PaidMileage | null>(
-      store.get_in_block("PaidMileage", id.toHexString())
+  static loadInBlock(id: Bytes): PaidPoint | null {
+    return changetype<PaidPoint | null>(
+      store.get_in_block("PaidPoint", id.toHexString())
     );
   }
 
-  static load(id: Bytes): PaidMileage | null {
-    return changetype<PaidMileage | null>(
-      store.get("PaidMileage", id.toHexString())
+  static load(id: Bytes): PaidPoint | null {
+    return changetype<PaidPoint | null>(
+      store.get("PaidPoint", id.toHexString())
     );
   }
 
@@ -678,8 +678,8 @@ export class PaidMileage extends Entity {
     this.set("email", Value.fromBytes(value));
   }
 
-  get paidAmountMileage(): BigInt {
-    let value = this.get("paidAmountMileage");
+  get paidAmountPoint(): BigInt {
+    let value = this.get("paidAmountPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -687,8 +687,8 @@ export class PaidMileage extends Entity {
     }
   }
 
-  set paidAmountMileage(value: BigInt) {
-    this.set("paidAmountMileage", Value.fromBigInt(value));
+  set paidAmountPoint(value: BigInt) {
+    this.set("paidAmountPoint", Value.fromBigInt(value));
   }
 
   get value(): BigInt {
@@ -704,8 +704,8 @@ export class PaidMileage extends Entity {
     this.set("value", Value.fromBigInt(value));
   }
 
-  get balanceMileage(): BigInt {
-    let value = this.get("balanceMileage");
+  get balancePoint(): BigInt {
+    let value = this.get("balancePoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -713,8 +713,8 @@ export class PaidMileage extends Entity {
     }
   }
 
-  set balanceMileage(value: BigInt) {
-    this.set("balanceMileage", Value.fromBigInt(value));
+  set balancePoint(value: BigInt) {
+    this.set("balancePoint", Value.fromBigInt(value));
   }
 
   get purchaseId(): string {
@@ -944,7 +944,7 @@ export class PaidToken extends Entity {
   }
 }
 
-export class ProvidedMileage extends Entity {
+export class ProvidedPoint extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -952,25 +952,25 @@ export class ProvidedMileage extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save ProvidedMileage entity without an ID");
+    assert(id != null, "Cannot save ProvidedPoint entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type ProvidedMileage must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ProvidedPoint must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("ProvidedMileage", id.toBytes().toHexString(), this);
+      store.set("ProvidedPoint", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): ProvidedMileage | null {
-    return changetype<ProvidedMileage | null>(
-      store.get_in_block("ProvidedMileage", id.toHexString())
+  static loadInBlock(id: Bytes): ProvidedPoint | null {
+    return changetype<ProvidedPoint | null>(
+      store.get_in_block("ProvidedPoint", id.toHexString())
     );
   }
 
-  static load(id: Bytes): ProvidedMileage | null {
-    return changetype<ProvidedMileage | null>(
-      store.get("ProvidedMileage", id.toHexString())
+  static load(id: Bytes): ProvidedPoint | null {
+    return changetype<ProvidedPoint | null>(
+      store.get("ProvidedPoint", id.toHexString())
     );
   }
 
@@ -1000,8 +1000,8 @@ export class ProvidedMileage extends Entity {
     this.set("email", Value.fromBytes(value));
   }
 
-  get providedAmountMileage(): BigInt {
-    let value = this.get("providedAmountMileage");
+  get providedAmountPoint(): BigInt {
+    let value = this.get("providedAmountPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1009,8 +1009,8 @@ export class ProvidedMileage extends Entity {
     }
   }
 
-  set providedAmountMileage(value: BigInt) {
-    this.set("providedAmountMileage", Value.fromBigInt(value));
+  set providedAmountPoint(value: BigInt) {
+    this.set("providedAmountPoint", Value.fromBigInt(value));
   }
 
   get value(): BigInt {
@@ -1026,8 +1026,8 @@ export class ProvidedMileage extends Entity {
     this.set("value", Value.fromBigInt(value));
   }
 
-  get balanceMileage(): BigInt {
-    let value = this.get("balanceMileage");
+  get balancePoint(): BigInt {
+    let value = this.get("balancePoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1035,8 +1035,8 @@ export class ProvidedMileage extends Entity {
     }
   }
 
-  set balanceMileage(value: BigInt) {
-    this.set("balanceMileage", Value.fromBigInt(value));
+  set balancePoint(value: BigInt) {
+    this.set("balancePoint", Value.fromBigInt(value));
   }
 
   get purchaseId(): string {
@@ -1105,7 +1105,7 @@ export class ProvidedMileage extends Entity {
   }
 }
 
-export class ProvidedMileageToFranchisee extends Entity {
+export class ProvidedPointToFranchisee extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -1115,30 +1115,26 @@ export class ProvidedMileageToFranchisee extends Entity {
     let id = this.get("id");
     assert(
       id != null,
-      "Cannot save ProvidedMileageToFranchisee entity without an ID"
+      "Cannot save ProvidedPointToFranchisee entity without an ID"
     );
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type ProvidedMileageToFranchisee must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ProvidedPointToFranchisee must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set(
-        "ProvidedMileageToFranchisee",
-        id.toBytes().toHexString(),
-        this
-      );
+      store.set("ProvidedPointToFranchisee", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): ProvidedMileageToFranchisee | null {
-    return changetype<ProvidedMileageToFranchisee | null>(
-      store.get_in_block("ProvidedMileageToFranchisee", id.toHexString())
+  static loadInBlock(id: Bytes): ProvidedPointToFranchisee | null {
+    return changetype<ProvidedPointToFranchisee | null>(
+      store.get_in_block("ProvidedPointToFranchisee", id.toHexString())
     );
   }
 
-  static load(id: Bytes): ProvidedMileageToFranchisee | null {
-    return changetype<ProvidedMileageToFranchisee | null>(
-      store.get("ProvidedMileageToFranchisee", id.toHexString())
+  static load(id: Bytes): ProvidedPointToFranchisee | null {
+    return changetype<ProvidedPointToFranchisee | null>(
+      store.get("ProvidedPointToFranchisee", id.toHexString())
     );
   }
 
@@ -1168,8 +1164,8 @@ export class ProvidedMileageToFranchisee extends Entity {
     this.set("email", Value.fromBytes(value));
   }
 
-  get providedAmountMileage(): BigInt {
-    let value = this.get("providedAmountMileage");
+  get providedAmountPoint(): BigInt {
+    let value = this.get("providedAmountPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1177,8 +1173,8 @@ export class ProvidedMileageToFranchisee extends Entity {
     }
   }
 
-  set providedAmountMileage(value: BigInt) {
-    this.set("providedAmountMileage", Value.fromBigInt(value));
+  set providedAmountPoint(value: BigInt) {
+    this.set("providedAmountPoint", Value.fromBigInt(value));
   }
 
   get value(): BigInt {
@@ -1194,8 +1190,8 @@ export class ProvidedMileageToFranchisee extends Entity {
     this.set("value", Value.fromBigInt(value));
   }
 
-  get balanceMileage(): BigInt {
-    let value = this.get("balanceMileage");
+  get balancePoint(): BigInt {
+    let value = this.get("balancePoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1203,8 +1199,8 @@ export class ProvidedMileageToFranchisee extends Entity {
     }
   }
 
-  set balanceMileage(value: BigInt) {
-    this.set("balanceMileage", Value.fromBigInt(value));
+  set balancePoint(value: BigInt) {
+    this.set("balancePoint", Value.fromBigInt(value));
   }
 
   get purchaseId(): string {
@@ -1664,8 +1660,8 @@ export class UserTradeHistory extends Entity {
     this.set("assetFlow", Value.fromString(value));
   }
 
-  get amountMileage(): BigInt {
-    let value = this.get("amountMileage");
+  get amountPoint(): BigInt {
+    let value = this.get("amountPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1673,8 +1669,8 @@ export class UserTradeHistory extends Entity {
     }
   }
 
-  set amountMileage(value: BigInt) {
-    this.set("amountMileage", Value.fromBigInt(value));
+  set amountPoint(value: BigInt) {
+    this.set("amountPoint", Value.fromBigInt(value));
   }
 
   get amountToken(): BigInt {
@@ -1703,8 +1699,8 @@ export class UserTradeHistory extends Entity {
     this.set("value", Value.fromBigInt(value));
   }
 
-  get balanceMileage(): BigInt {
-    let value = this.get("balanceMileage");
+  get balancePoint(): BigInt {
+    let value = this.get("balancePoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1712,8 +1708,8 @@ export class UserTradeHistory extends Entity {
     }
   }
 
-  set balanceMileage(value: BigInt) {
-    this.set("balanceMileage", Value.fromBigInt(value));
+  set balancePoint(value: BigInt) {
+    this.set("balancePoint", Value.fromBigInt(value));
   }
 
   get balanceToken(): BigInt {
@@ -1857,8 +1853,8 @@ export class UserBalance extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get mileage(): BigInt {
-    let value = this.get("mileage");
+  get point(): BigInt {
+    let value = this.get("point");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1866,8 +1862,8 @@ export class UserBalance extends Entity {
     }
   }
 
-  set mileage(value: BigInt) {
-    this.set("mileage", Value.fromBigInt(value));
+  set point(value: BigInt) {
+    this.set("point", Value.fromBigInt(value));
   }
 
   get token(): BigInt {
@@ -2025,8 +2021,8 @@ export class FranchiseeTradeHistory extends Entity {
     this.set("increase", Value.fromBigInt(value));
   }
 
-  get providedMileage(): BigInt {
-    let value = this.get("providedMileage");
+  get providedPoint(): BigInt {
+    let value = this.get("providedPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -2034,12 +2030,12 @@ export class FranchiseeTradeHistory extends Entity {
     }
   }
 
-  set providedMileage(value: BigInt) {
-    this.set("providedMileage", Value.fromBigInt(value));
+  set providedPoint(value: BigInt) {
+    this.set("providedPoint", Value.fromBigInt(value));
   }
 
-  get usedMileage(): BigInt {
-    let value = this.get("usedMileage");
+  get usedPoint(): BigInt {
+    let value = this.get("usedPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -2047,12 +2043,12 @@ export class FranchiseeTradeHistory extends Entity {
     }
   }
 
-  set usedMileage(value: BigInt) {
-    this.set("usedMileage", Value.fromBigInt(value));
+  set usedPoint(value: BigInt) {
+    this.set("usedPoint", Value.fromBigInt(value));
   }
 
-  get clearedMileage(): BigInt {
-    let value = this.get("clearedMileage");
+  get clearedPoint(): BigInt {
+    let value = this.get("clearedPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -2060,8 +2056,8 @@ export class FranchiseeTradeHistory extends Entity {
     }
   }
 
-  set clearedMileage(value: BigInt) {
-    this.set("clearedMileage", Value.fromBigInt(value));
+  set clearedPoint(value: BigInt) {
+    this.set("clearedPoint", Value.fromBigInt(value));
   }
 
   get blockNumber(): BigInt {
@@ -2169,8 +2165,8 @@ export class Franchisee extends Entity {
     this.set("email", Value.fromBytes(value));
   }
 
-  get providedMileage(): BigInt {
-    let value = this.get("providedMileage");
+  get providedPoint(): BigInt {
+    let value = this.get("providedPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -2178,12 +2174,12 @@ export class Franchisee extends Entity {
     }
   }
 
-  set providedMileage(value: BigInt) {
-    this.set("providedMileage", Value.fromBigInt(value));
+  set providedPoint(value: BigInt) {
+    this.set("providedPoint", Value.fromBigInt(value));
   }
 
-  get usedMileage(): BigInt {
-    let value = this.get("usedMileage");
+  get usedPoint(): BigInt {
+    let value = this.get("usedPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -2191,12 +2187,12 @@ export class Franchisee extends Entity {
     }
   }
 
-  set usedMileage(value: BigInt) {
-    this.set("usedMileage", Value.fromBigInt(value));
+  set usedPoint(value: BigInt) {
+    this.set("usedPoint", Value.fromBigInt(value));
   }
 
-  get clearedMileage(): BigInt {
-    let value = this.get("clearedMileage");
+  get clearedPoint(): BigInt {
+    let value = this.get("clearedPoint");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -2204,8 +2200,8 @@ export class Franchisee extends Entity {
     }
   }
 
-  set clearedMileage(value: BigInt) {
-    this.set("clearedMileage", Value.fromBigInt(value));
+  set clearedPoint(value: BigInt) {
+    this.set("clearedPoint", Value.fromBigInt(value));
   }
 
   get blockNumber(): BigInt {

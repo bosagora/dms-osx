@@ -23,36 +23,36 @@ type Deposited @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type ExchangedMileageToToken @entity(immutable: true) {
+type ExchangedPointToToken @entity(immutable: true) {
   id: Bytes!
   email: Bytes! # bytes32
-  amountMileage: BigInt! # uint256
+  amountPoint: BigInt! # uint256
   amountToken: BigInt! # uint256
-  balanceMileage: BigInt! # uint256
+  balancePoint: BigInt! # uint256
   balanceToken: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type ExchangedTokenToMileage @entity(immutable: true) {
+type ExchangedTokenToPoint @entity(immutable: true) {
   id: Bytes!
   email: Bytes! # bytes32
-  amountMileage: BigInt! # uint256
+  amountPoint: BigInt! # uint256
   amountToken: BigInt! # uint256
-  balanceMileage: BigInt! # uint256
+  balancePoint: BigInt! # uint256
   balanceToken: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type PaidMileage @entity(immutable: true) {
+type PaidPoint @entity(immutable: true) {
   id: Bytes!
   email: Bytes! # bytes32
-  paidAmountMileage: BigInt! # uint256
+  paidAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
-  balanceMileage: BigInt! # uint256
+  balancePoint: BigInt! # uint256
   purchaseId: String! # string
   franchiseeId: String! # string
   blockNumber: BigInt!
@@ -73,12 +73,12 @@ type PaidToken @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type ProvidedMileage @entity(immutable: true) {
+type ProvidedPoint @entity(immutable: true) {
   id: Bytes!
   email: Bytes! # bytes32
-  providedAmountMileage: BigInt! # uint256
+  providedAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
-  balanceMileage: BigInt! # uint256
+  balancePoint: BigInt! # uint256
   purchaseId: String! # string
   franchiseeId: String! # string
   blockNumber: BigInt!
@@ -86,12 +86,12 @@ type ProvidedMileage @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type ProvidedMileageToFranchisee @entity(immutable: true) {
+type ProvidedPointToFranchisee @entity(immutable: true) {
   id: Bytes!
   email: Bytes! # bytes32
-  providedAmountMileage: BigInt! # uint256
+  providedAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
-  balanceMileage: BigInt! # uint256
+  balancePoint: BigInt! # uint256
   purchaseId: String! # string
   franchiseeId: String! # string
   blockNumber: BigInt!
@@ -125,20 +125,20 @@ type Withdrawn @entity(immutable: true) {
 }
 
 enum UserAction {
-  ProvidedMileage,
+  ProvidedPoint,
   ProvidedToken,
-  PaidMileage,
+  PaidPoint,
   PaidToken,
   DepositedToken,
   WithdrawnToken,
-  ExchangedMileageToToken,
-  ExchangedTokenToMileage,
-  ClearedMileage
+  ExchangedPointToToken,
+  ExchangedTokenToPoint,
+  ClearedPoint
 }
 
 enum AssetFlow {
-  MileageInput,
-  MileageOutput,
+  PointInput,
+  PointOutput,
   TokenInput,
   TokenOutput,
   None
@@ -149,10 +149,10 @@ type UserTradeHistory @entity(immutable: true) {
   email: Bytes!
   action: UserAction!
   assetFlow: AssetFlow!
-  amountMileage: BigInt!
+  amountPoint: BigInt!
   amountToken: BigInt!
   value: BigInt!
-  balanceMileage: BigInt!
+  balancePoint: BigInt!
   balanceToken: BigInt!
   purchaseId: String
   franchiseeId : String
@@ -165,7 +165,7 @@ type UserTradeHistory @entity(immutable: true) {
 type UserBalance @entity {
   id: ID! # email
 
-  mileage: BigInt!
+  point: BigInt!
   token: BigInt!
 
   blockNumber: BigInt!
@@ -174,9 +174,9 @@ type UserBalance @entity {
 }
 
 enum FranchiseeAction {
-  ProvidedMileage,
-  UsedMileage,
-  ClearedMileage
+  ProvidedPoint,
+  UsedPoint,
+  ClearedPoint
 }
 
 type FranchiseeTradeHistory @entity(immutable: true) {
@@ -188,9 +188,9 @@ type FranchiseeTradeHistory @entity(immutable: true) {
 
   increase: BigInt! # uint256
 
-  providedMileage: BigInt!
-  usedMileage: BigInt!
-  clearedMileage: BigInt!
+  providedPoint: BigInt!
+  usedPoint: BigInt!
+  clearedPoint: BigInt!
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -203,9 +203,9 @@ type Franchisee @entity {
   provideWaitTime: BigInt! # uint256
   email: Bytes! # bytes32
 
-  providedMileage: BigInt!
-  usedMileage: BigInt!
-  clearedMileage: BigInt!
+  providedPoint: BigInt!
+  usedPoint: BigInt!
+  clearedPoint: BigInt!
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!

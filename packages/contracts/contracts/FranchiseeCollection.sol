@@ -18,11 +18,11 @@ contract FranchiseeCollection {
     /// @notice 가맹점의 데이터
     struct FranchiseeData {
         string franchiseeId; // 가맹점 아이디
-        uint256 provideWaitTime; // 제품구매 후 마일리지 지급시간
+        uint256 provideWaitTime; // 제품구매 후 포인트 지급시간
         bytes32 email; // 가맹점주 이메일 해시
-        uint256 providedMileage; // 제공된 마일리지 총량
-        uint256 usedMileage; // 사용된 마일리지 총량
-        uint256 clearedMileage; // 정산된 마일리지 총량
+        uint256 providedPoint; // 제공된 포인트 총량
+        uint256 usedPoint; // 사용된 포인트 총량
+        uint256 clearedPoint; // 정산된 포인트 총량
         FranchiseeStatus status;
     }
 
@@ -35,12 +35,12 @@ contract FranchiseeCollection {
 
     /// @notice 가맹점이 추가될 때 발생되는 이벤트
     event AddedFranchisee(string franchiseeId, uint256 provideWaitTime, bytes32 email);
-    /// @notice 가맹점의 마일리지가 증가할 때 발생되는 이벤트
-    event IncreasedProvidedMileage(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
-    /// @notice 사용자의 마일리지가 증가할 때 발생되는 이벤트
-    event IncreasedUsedMileage(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
+    /// @notice 가맹점의 포인트가 증가할 때 발생되는 이벤트
+    event IncreasedProvidedPoint(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
+    /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
+    event IncreasedUsedPoint(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 정산된 마일리가 증가할 때 발생되는 이벤트
-    event IncreasedClearedMileage(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
+    event IncreasedClearedPoint(string franchiseeId, uint256 increase, uint256 total, string purchaseId);
 
     address public ledgerAddress;
     address public deployer;
@@ -83,7 +83,7 @@ contract FranchiseeCollection {
 
     /// @notice 가맹점을 추가한다
     /// @param _franchiseeId 가맹점 아이디
-    /// @param _payoutWaitTime 제품구매 후 마일리지가 지급될 시간
+    /// @param _payoutWaitTime 제품구매 후 포인트가 지급될 시간
     /// @param _email 가맹점주 이메일 해시
     function add(
         string memory _franchiseeId,
@@ -98,9 +98,9 @@ contract FranchiseeCollection {
             franchiseeId: _franchiseeId,
             provideWaitTime: _payoutWaitTime,
             email: _email,
-            providedMileage: 0,
-            usedMileage: 0,
-            clearedMileage: 0,
+            providedPoint: 0,
+            usedPoint: 0,
+            clearedPoint: 0,
             status: FranchiseeStatus.ACTIVE
         });
         items.push(_franchiseeId);
@@ -110,7 +110,7 @@ contract FranchiseeCollection {
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
-    function addProvidedMileage(
+    function addProvidedPoint(
         string memory _franchiseeId,
         uint256 _amount,
         string memory _purchaseId
@@ -119,21 +119,21 @@ contract FranchiseeCollection {
             _add(_franchiseeId, 0, NULL);
         }
 
-        franchisees[_franchiseeId].providedMileage += _amount;
-        emit IncreasedProvidedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].providedMileage, _purchaseId);
+        franchisees[_franchiseeId].providedPoint += _amount;
+        emit IncreasedProvidedPoint(_franchiseeId, _amount, franchisees[_franchiseeId].providedPoint, _purchaseId);
     }
 
     /// @notice 사용된 총 마일지리를 누적한다
-    function addUsedMileage(string memory _franchiseeId, uint256 _amount, string memory _purchaseId) public onlyLedger {
+    function addUsedPoint(string memory _franchiseeId, uint256 _amount, string memory _purchaseId) public onlyLedger {
         if (franchisees[_franchiseeId].status == FranchiseeStatus.INVALID) {
             _add(_franchiseeId, 0, NULL);
         }
-        franchisees[_franchiseeId].usedMileage += _amount;
-        emit IncreasedUsedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].usedMileage, _purchaseId);
+        franchisees[_franchiseeId].usedPoint += _amount;
+        emit IncreasedUsedPoint(_franchiseeId, _amount, franchisees[_franchiseeId].usedPoint, _purchaseId);
     }
 
     /// @notice 정산된 총 마일지리를 누적한다
-    function addClearedMileage(
+    function addClearedPoint(
         string memory _franchiseeId,
         uint256 _amount,
         string memory _purchaseId
@@ -141,16 +141,16 @@ contract FranchiseeCollection {
         if (franchisees[_franchiseeId].status == FranchiseeStatus.INVALID) {
             _add(_franchiseeId, 0, NULL);
         }
-        franchisees[_franchiseeId].clearedMileage += _amount;
-        emit IncreasedClearedMileage(_franchiseeId, _amount, franchisees[_franchiseeId].clearedMileage, _purchaseId);
+        franchisees[_franchiseeId].clearedPoint += _amount;
+        emit IncreasedClearedPoint(_franchiseeId, _amount, franchisees[_franchiseeId].clearedPoint, _purchaseId);
     }
 
     /// @notice 정산되어야 할 마일지리의 량을 리턴합니다.
-    function getClearMileage(string memory _franchiseeId) public view returns (uint256) {
+    function getClearPoint(string memory _franchiseeId) public view returns (uint256) {
         if (franchisees[_franchiseeId].status == FranchiseeStatus.ACTIVE) {
             FranchiseeData memory data = franchisees[_franchiseeId];
-            if (data.providedMileage + data.clearedMileage < data.usedMileage) {
-                return (data.usedMileage - data.providedMileage - data.clearedMileage);
+            if (data.providedPoint + data.clearedPoint < data.usedPoint) {
+                return (data.usedPoint - data.providedPoint - data.clearedPoint);
             } else {
                 return 0;
             }

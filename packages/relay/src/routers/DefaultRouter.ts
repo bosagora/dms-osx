@@ -178,9 +178,9 @@ export class DefaultRouter {
         // Get Health Status
         this.app.get("/", [], this.getHealthStatus.bind(this));
 
-        // 마일리지를 이용하여 구매
+        // 포인트를 이용하여 구매
         this.app.post(
-            "/payMileage",
+            "/payPoint",
             [
                 body("purchaseId").exists(),
                 body("amount").custom(Validation.isAmount),
@@ -193,7 +193,7 @@ export class DefaultRouter {
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.payMileage.bind(this)
+            this.payPoint.bind(this)
         );
 
         // 토큰을 이용하여 구매할 때
@@ -214,9 +214,9 @@ export class DefaultRouter {
             this.payToken.bind(this)
         );
 
-        // 토큰을 마일리지로 교환할 때
+        // 토큰을 포인트로 교환할 때
         this.app.post(
-            "/exchangeTokenToMileage",
+            "/exchangeTokenToPoint",
             [
                 body("email")
                     .exists()
@@ -227,23 +227,23 @@ export class DefaultRouter {
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.exchangeTokenToMileage.bind(this)
+            this.exchangeTokenToPoint.bind(this)
         );
 
-        // 마일리지를 토큰으로 교환할 때
+        // 포인트를 토큰으로 교환할 때
         this.app.post(
-            "/exchangeMileageToToken",
+            "/exchangePointToToken",
             [
                 body("email")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
-                body("amountMileage").custom(Validation.isAmount),
+                body("amountPoint").custom(Validation.isAmount),
                 body("signer").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.exchangeMileageToToken.bind(this)
+            this.exchangePointToToken.bind(this)
         );
     }
 
@@ -252,12 +252,12 @@ export class DefaultRouter {
     }
 
     /**
-     * 사용자 마일리지 지불
-     * POST /payMileage
+     * 사용자 포인트 지불
+     * POST /payPoint
      * @private
      */
-    private async payMileage(req: express.Request, res: express.Response) {
-        logger.http(`POST /payMileage`);
+    private async payPoint(req: express.Request, res: express.Response) {
+        logger.http(`POST /payPoint`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -300,14 +300,14 @@ export class DefaultRouter {
             }
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .payMileage(purchaseId, amount, email, franchiseeId, signer, signature);
+                .payPoint(purchaseId, amount, email, franchiseeId, signer, signature);
 
-            logger.http(`TxHash(payMileage): `, tx.hash);
+            logger.http(`TxHash(payPoint): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed pay mileage";
-            logger.error(`POST /payMileage :`, message);
+            if (message === "") message = "Failed pay point";
+            logger.error(`POST /payPoint :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -385,12 +385,12 @@ export class DefaultRouter {
     }
 
     /**
-     * 토큰을 마일리지로 교환합니다
-     * POST /exchangeTokenToMileage
+     * 토큰을 포인트로 교환합니다
+     * POST /exchangeTokenToPoint
      * @private
      */
-    private async exchangeTokenToMileage(req: express.Request, res: express.Response) {
-        logger.http(`POST /exchangeTokenToMileage`);
+    private async exchangeTokenToPoint(req: express.Request, res: express.Response) {
+        logger.http(`POST /exchangeTokenToPoint`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -405,7 +405,7 @@ export class DefaultRouter {
         const signerItem = await this.getRelaySigner();
         try {
             const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
-            const amountToken: string = String(req.body.amountToken); // 교환할 마일리지의 량
+            const amountToken: string = String(req.body.amountToken); // 교환할 포인트의 량
             const signer: string = String(req.body.signer); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
 
@@ -430,14 +430,14 @@ export class DefaultRouter {
             }
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .exchangeTokenToMileage(email, amountToken, signer, signature);
+                .exchangeTokenToPoint(email, amountToken, signer, signature);
 
-            logger.http(`TxHash(exchangeTokenToMileage): `, tx.hash);
+            logger.http(`TxHash(exchangeTokenToPoint): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed exchange Token To Mileage";
-            logger.error(`POST /exchangeTokenToMileage :`, message);
+            if (message === "") message = "Failed exchange Token To Point";
+            logger.error(`POST /exchangeTokenToPoint :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -449,12 +449,12 @@ export class DefaultRouter {
     }
 
     /**
-     * 마일리지를 토큰으로 교환합니다
-     * POST /exchangeMileageToToken
+     * 포인트를 토큰으로 교환합니다
+     * POST /exchangePointToToken
      * @private
      */
-    private async exchangeMileageToToken(req: express.Request, res: express.Response) {
-        logger.http(`POST /exchangeMileageToToken`);
+    private async exchangePointToToken(req: express.Request, res: express.Response) {
+        logger.http(`POST /exchangePointToToken`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -469,14 +469,14 @@ export class DefaultRouter {
         const signerItem = await this.getRelaySigner();
         try {
             const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
-            const amountMileage: string = String(req.body.amountMileage); // 교환할 마일리지의 량
+            const amountPoint: string = String(req.body.amountPoint); // 교환할 포인트의 량
             const signer: string = String(req.body.signer); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
 
-            // TODO amountMileage > 0 조건 검사
+            // TODO amountPoint > 0 조건 검사
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
-            if (!ContractUtils.verifyExchange(signer, email, amountMileage, userNonce, signature))
+            if (!ContractUtils.verifyExchange(signer, email, amountPoint, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -494,14 +494,14 @@ export class DefaultRouter {
             }
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .exchangeMileageToToken(email, amountMileage, signer, signature);
+                .exchangePointToToken(email, amountPoint, signer, signature);
 
-            logger.http(`TxHash(exchangeMileageToToken): `, tx.hash);
+            logger.http(`TxHash(exchangePointToToken): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed exchange Mileage To Token";
-            logger.error(`POST /exchangeMileageToToken :`, message);
+            if (message === "") message = "Failed exchange Point To Token";
+            logger.error(`POST /exchangePointToToken :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,

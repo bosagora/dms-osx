@@ -181,7 +181,7 @@ describe("Test for Ledger", () => {
     ];
 
     let requestId: string;
-    context("Save Purchase Data & Pay (mileage, token)", () => {
+    context("Save Purchase Data & Pay (point, token)", () => {
         const purchaseData: PurchaseData[] = [
             {
                 purchaseId: "P000001",
@@ -317,10 +317,10 @@ describe("Test for Ledger", () => {
                             purchase.franchiseeId,
                             purchase.method
                         )
-                        .emit(ledgerContract, "ProvidedMileage")
+                        .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             email: emailHash,
-                            providedAmountMileage: amt,
+                            providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
                         });
@@ -333,12 +333,12 @@ describe("Test for Ledger", () => {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const key = ContractUtils.sha256String(purchase.userEmail);
                     const oldValue = expected.get(key);
-                    const mileage = purchaseAmount.div(100);
-                    if (oldValue !== undefined) expected.set(key, oldValue.add(mileage));
-                    else expected.set(key, mileage);
+                    const point = purchaseAmount.div(100);
+                    if (oldValue !== undefined) expected.set(key, oldValue.add(point));
+                    else expected.set(key, point);
                 }
                 for (const key of expected.keys())
-                    expect(await ledgerContract.mileageBalanceOf(key)).to.deep.equal(expected.get(key));
+                    expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
             });
 
             it("Link email-address", async () => {
@@ -365,10 +365,10 @@ describe("Test for Ledger", () => {
                     method: 0,
                 };
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const mileageAmount = purchaseAmount.div(100);
-                const tokenAmount = mileageAmount.mul(multiple).div(price);
+                const pointAmount = purchaseAmount.div(100);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const oldMileageBalance = await ledgerContract.mileageBalanceOf(emailHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
                 await expect(
@@ -396,10 +396,10 @@ describe("Test for Ledger", () => {
                     .withNamedArgs({
                         email: emailHash,
                         providedAmountToken: tokenAmount,
-                        value: mileageAmount,
+                        value: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
-                expect(await ledgerContract.mileageBalanceOf(emailHash)).to.deep.equal(oldMileageBalance);
+                expect(await ledgerContract.pointBalanceOf(emailHash)).to.deep.equal(oldPointBalance);
                 expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance.add(tokenAmount));
                 expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.sub(tokenAmount)
@@ -419,7 +419,7 @@ describe("Test for Ledger", () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const amt = purchaseAmount.div(100);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
-                const oldMileageBalance = await ledgerContract.mileageBalanceOf(emailHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
                 await expect(
                     ledgerContract
@@ -442,20 +442,20 @@ describe("Test for Ledger", () => {
                         purchase.franchiseeId,
                         purchase.method
                     )
-                    .emit(ledgerContract, "ProvidedMileage")
+                    .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         email: emailHash,
-                        providedAmountMileage: amt,
+                        providedAmountPoint: amt,
                         value: amt,
                         purchaseId: purchase.purchaseId,
                     });
-                expect(await ledgerContract.mileageBalanceOf(emailHash)).to.deep.equal(oldMileageBalance.add(amt));
+                expect(await ledgerContract.pointBalanceOf(emailHash)).to.deep.equal(oldPointBalance.add(amt));
                 expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance);
             });
         });
 
-        context("Pay mileage", () => {
-            it("Pay mileage - Invalid signature", async () => {
+        context("Pay point", () => {
+            it("Pay point - Invalid signature", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
@@ -477,7 +477,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .payMileage(
+                        .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
@@ -488,7 +488,7 @@ describe("Test for Ledger", () => {
                 ).to.be.revertedWith("Invalid signature");
             });
 
-            it("Pay mileage - Unregistered email-address", async () => {
+            it("Pay point - Unregistered email-address", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
@@ -510,7 +510,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .payMileage(
+                        .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
@@ -521,7 +521,7 @@ describe("Test for Ledger", () => {
                 ).to.be.revertedWith("Unregistered email-address");
             });
 
-            it("Pay mileage - Invalid address", async () => {
+            it("Pay point - Invalid address", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
@@ -543,7 +543,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .payMileage(
+                        .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
@@ -554,7 +554,7 @@ describe("Test for Ledger", () => {
                 ).to.be.revertedWith("Invalid address");
             });
 
-            it("Pay mileage - Insufficient balance", async () => {
+            it("Pay point - Insufficient balance", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 10000,
@@ -576,7 +576,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .payMileage(
+                        .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
@@ -587,7 +587,7 @@ describe("Test for Ledger", () => {
                 ).to.be.revertedWith("Insufficient balance");
             });
 
-            it("Pay mileage - Success", async () => {
+            it("Pay point - Success", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
@@ -609,7 +609,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .payMileage(
+                        .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
@@ -618,10 +618,10 @@ describe("Test for Ledger", () => {
                             signature
                         )
                 )
-                    .to.emit(ledgerContract, "PaidMileage")
+                    .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
                         email: emailHash,
-                        paidAmountMileage: purchaseAmount,
+                        paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
                     });
@@ -933,7 +933,7 @@ describe("Test for Ledger", () => {
         });
     });
 
-    context("Exchange token & mileage", () => {
+    context("Exchange token & point", () => {
         before("Deploy", async () => {
             await deployAllContract();
         });
@@ -972,9 +972,9 @@ describe("Test for Ledger", () => {
             });
         });
 
-        context("Exchange token to mileage", () => {
+        context("Exchange token to point", () => {
             const amountToken = BigNumber.from(amount.value);
-            const amountMileage = amountToken.mul(price).div(multiple);
+            const amountPoint = amountToken.mul(price).div(multiple);
 
             before("Deposit token", async () => {
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amountToken);
@@ -990,7 +990,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeTokenToMileage(emailHashes[0], amountToken, users[1].address, signature)
+                        .exchangeTokenToPoint(emailHashes[0], amountToken, users[1].address, signature)
                 ).to.revertedWith("Invalid signature");
             });
 
@@ -1000,7 +1000,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeTokenToMileage(emailHashes[1], amountToken, users[1].address, signature)
+                        .exchangeTokenToPoint(emailHashes[1], amountToken, users[1].address, signature)
                 ).to.revertedWith("Unregistered email-address");
             });
 
@@ -1010,7 +1010,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeTokenToMileage(emailHashes[0], amountToken, users[1].address, signature)
+                        .exchangeTokenToPoint(emailHashes[0], amountToken, users[1].address, signature)
                 ).to.revertedWith("Invalid address");
             });
 
@@ -1025,7 +1025,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeTokenToMileage(emailHashes[0], amountToken.mul(100), users[0].address, signature)
+                        .exchangeTokenToPoint(emailHashes[0], amountToken.mul(100), users[0].address, signature)
                 ).to.revertedWith("Insufficient balance");
             });
 
@@ -1036,13 +1036,13 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeTokenToMileage(emailHashes[0], amountToken, users[0].address, signature)
+                        .exchangeTokenToPoint(emailHashes[0], amountToken, users[0].address, signature)
                 )
-                    .to.emit(ledgerContract, "ExchangedTokenToMileage")
+                    .to.emit(ledgerContract, "ExchangedTokenToPoint")
                     .withNamedArgs({
                         email: emailHashes[0],
                         amountToken,
-                        amountMileage,
+                        amountPoint,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.add(amountToken)
@@ -1050,36 +1050,36 @@ describe("Test for Ledger", () => {
             });
         });
 
-        context("Exchange mileage to token", () => {
+        context("Exchange point to token", () => {
             const amountToken = BigNumber.from(amount.value);
-            const amountMileage = amountToken.mul(price).div(multiple);
+            const amountPoint = amountToken.mul(price).div(multiple);
             it("Invalid signature", async () => {
                 const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountMileage, nonce);
+                const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountPoint, nonce);
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeMileageToToken(emailHashes[0], amountMileage, users[1].address, signature)
+                        .exchangePointToToken(emailHashes[0], amountPoint, users[1].address, signature)
                 ).to.revertedWith("Invalid signature");
             });
 
             it("Unregistered email-address", async () => {
                 const nonce = await ledgerContract.nonceOf(users[1].address);
-                const signature = await ContractUtils.signExchange(users[1], emailHashes[1], amountMileage, nonce);
+                const signature = await ContractUtils.signExchange(users[1], emailHashes[1], amountPoint, nonce);
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeMileageToToken(emailHashes[1], amountMileage, users[1].address, signature)
+                        .exchangePointToToken(emailHashes[1], amountPoint, users[1].address, signature)
                 ).to.revertedWith("Unregistered email-address");
             });
 
             it("Invalid address", async () => {
                 const nonce = await ledgerContract.nonceOf(users[1].address);
-                const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amountMileage, nonce);
+                const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amountPoint, nonce);
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeMileageToToken(emailHashes[0], amountMileage, users[1].address, signature)
+                        .exchangePointToToken(emailHashes[0], amountPoint, users[1].address, signature)
                 ).to.revertedWith("Invalid address");
             });
 
@@ -1088,29 +1088,29 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signExchange(
                     users[0],
                     emailHashes[0],
-                    amountMileage.mul(100),
+                    amountPoint.mul(100),
                     nonce
                 );
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeMileageToToken(emailHashes[0], amountMileage.mul(100), users[0].address, signature)
+                        .exchangePointToToken(emailHashes[0], amountPoint.mul(100), users[0].address, signature)
                 ).to.revertedWith("Insufficient balance");
             });
 
             it("Success", async () => {
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountMileage, nonce);
+                const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountPoint, nonce);
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .exchangeMileageToToken(emailHashes[0], amountMileage, users[0].address, signature)
+                        .exchangePointToToken(emailHashes[0], amountPoint, users[0].address, signature)
                 )
-                    .to.emit(ledgerContract, "ExchangedMileageToToken")
+                    .to.emit(ledgerContract, "ExchangedPointToToken")
                     .withNamedArgs({
                         email: emailHashes[0],
-                        amountMileage,
+                        amountPoint,
                         amountToken,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
@@ -1251,10 +1251,10 @@ describe("Test for Ledger", () => {
                             purchase.franchiseeId,
                             purchase.method
                         )
-                        .emit(ledgerContract, "ProvidedMileage")
+                        .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             email: emailHash,
-                            providedAmountMileage: amt,
+                            providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
                         });
@@ -1267,23 +1267,23 @@ describe("Test for Ledger", () => {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const key = ContractUtils.sha256String(purchase.userEmail);
                     const oldValue = expected.get(key);
-                    const mileage = purchaseAmount.div(100);
-                    if (oldValue !== undefined) expected.set(key, oldValue.add(mileage));
-                    else expected.set(key, mileage);
+                    const point = purchaseAmount.div(100);
+                    if (oldValue !== undefined) expected.set(key, oldValue.add(point));
+                    else expected.set(key, point);
                 }
                 for (const key of expected.keys())
-                    expect(await ledgerContract.mileageBalanceOf(key)).to.deep.equal(expected.get(key));
+                    expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
             });
 
             it("Check franchisee data", async () => {
                 const franchisee1 = await franchiseeCollection.franchiseeOf("F000100");
-                expect(franchisee1.providedMileage).to.equal(Amount.make(10000 * 3, 18).value.div(100));
+                expect(franchisee1.providedPoint).to.equal(Amount.make(10000 * 3, 18).value.div(100));
                 const franchisee2 = await franchiseeCollection.franchiseeOf("F000200");
-                expect(franchisee2.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                expect(franchisee2.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
                 const franchisee3 = await franchiseeCollection.franchiseeOf("F000300");
-                expect(franchisee3.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                expect(franchisee3.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
                 const franchisee4 = await franchiseeCollection.franchiseeOf("F000400");
-                expect(franchisee4.providedMileage).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                expect(franchisee4.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
             });
         });
 
@@ -1303,8 +1303,8 @@ describe("Test for Ledger", () => {
             });
         });
 
-        context("Pay mileage", () => {
-            it("Pay mileage - Success", async () => {
+        context("Pay point", () => {
+            it("Pay point - Success", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 300,
@@ -1326,7 +1326,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     ledgerContract
                         .connect(relay)
-                        .payMileage(
+                        .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
@@ -1335,18 +1335,18 @@ describe("Test for Ledger", () => {
                             signature
                         )
                 )
-                    .to.emit(ledgerContract, "ProvidedMileageToFranchisee")
-                    .to.emit(ledgerContract, "PaidMileage")
+                    .to.emit(ledgerContract, "ProvidedPointToFranchisee")
+                    .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
                         email: emailHash,
-                        paidAmountMileage: purchaseAmount,
+                        paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
                     });
                 const franchisee2 = await franchiseeCollection.franchiseeOf("F000200");
-                expect(franchisee2.providedMileage).to.equal(Amount.make(100, 18).value);
-                expect(franchisee2.usedMileage).to.equal(Amount.make(300, 18).value);
-                expect(franchisee2.clearedMileage).to.equal(Amount.make(200, 18).value);
+                expect(franchisee2.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(franchisee2.usedPoint).to.equal(Amount.make(300, 18).value);
+                expect(franchisee2.clearedPoint).to.equal(Amount.make(200, 18).value);
             });
         });
 
@@ -1402,7 +1402,7 @@ describe("Test for Ledger", () => {
                             signature
                         )
                 )
-                    .to.emit(ledgerContract, "ProvidedMileageToFranchisee")
+                    .to.emit(ledgerContract, "ProvidedPointToFranchisee")
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
                         email: emailHash,
@@ -1414,9 +1414,9 @@ describe("Test for Ledger", () => {
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
                 const franchisee3 = await franchiseeCollection.franchiseeOf("F000300");
-                expect(franchisee3.providedMileage).to.equal(Amount.make(100, 18).value);
-                expect(franchisee3.usedMileage).to.equal(Amount.make(500, 18).value);
-                expect(franchisee3.clearedMileage).to.equal(Amount.make(400, 18).value);
+                expect(franchisee3.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(franchisee3.usedPoint).to.equal(Amount.make(500, 18).value);
+                expect(franchisee3.clearedPoint).to.equal(Amount.make(400, 18).value);
             });
         });
     });
