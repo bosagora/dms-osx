@@ -53,7 +53,7 @@ describe("Test for Ledger", () => {
 
     const deployToken = async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy("Sample", "SAM")) as Token;
+        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
         await tokenContract.deployed();
         await tokenContract.deployTransaction.wait();
         for (const elem of validators) {
