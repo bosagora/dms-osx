@@ -4,12 +4,12 @@
     "dataSources": {
         "Ledger": {
             "name": "Ledger",
-            "address": "0x52bB9258733086243Ad1a4A818945F94BCAd05B9",
+            "address": "0x12c316e0358d914A211A3d477db912A503cFCc21",
             "startBlock": 1
         },
         "ShopCollection": {
             "name": "ShopCollection",
-            "address": "0x3705f330B593b28B3663a3C4BC2c7C5565988d18",
+            "address": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
             "startBlock": 1
         }
     }
