@@ -1,5 +1,5 @@
-import { FranchiseeCollection, Token, ValidatorCollection } from "../typechain-types";
 import { Amount } from "../src/utils/Amount";
+import { ShopCollection, Token, ValidatorCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -13,14 +13,14 @@ import { ContractUtils } from "../src/utils/ContractUtils";
 
 chai.use(solidity);
 
-describe("Test for FranchiseeCollection", () => {
+describe("Test for ShopCollection", () => {
     const provider = hre.waffle.provider;
     const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
-    let franchiseeCollection: FranchiseeCollection;
+    let shopCollection: ShopCollection;
 
     const amount = Amount.make(50_000, 18);
 
@@ -53,44 +53,44 @@ describe("Test for FranchiseeCollection", () => {
         }
         await validatorContract.connect(validators[0]).makeActiveItems();
 
-        const franchiseeCollectionFactory = await hre.ethers.getContractFactory("FranchiseeCollection");
-        franchiseeCollection = (await franchiseeCollectionFactory
+        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+        shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as FranchiseeCollection;
-        await franchiseeCollection.deployed();
-        await franchiseeCollection.deployTransaction.wait();
+            .deploy(validatorContract.address)) as ShopCollection;
+        await shopCollection.deployed();
+        await shopCollection.deployTransaction.wait();
     });
 
     context("Add", () => {
-        interface IFranchiseeData {
-            franchiseeId: string;
+        interface IShopData {
+            shopId: string;
             provideWaitTime: number;
             email: string;
         }
 
-        const franchiseeData: IFranchiseeData[] = [
+        const shopData: IShopData[] = [
             {
-                franchiseeId: "F000100",
+                shopId: "F000100",
                 provideWaitTime: 0,
                 email: "f1@example.com",
             },
             {
-                franchiseeId: "F000200",
+                shopId: "F000200",
                 provideWaitTime: 0,
                 email: "f2@example.com",
             },
             {
-                franchiseeId: "F000300",
+                shopId: "F000300",
                 provideWaitTime: 0,
                 email: "f3@example.com",
             },
             {
-                franchiseeId: "F000400",
+                shopId: "F000400",
                 provideWaitTime: 0,
                 email: "f4@example.com",
             },
             {
-                franchiseeId: "F000500",
+                shopId: "F000500",
                 provideWaitTime: 0,
                 email: "f5@example.com",
             },
@@ -98,19 +98,17 @@ describe("Test for FranchiseeCollection", () => {
 
         it("Not validator", async () => {
             const email = ContractUtils.sha256String("f100@example.com");
-            await expect(franchiseeCollection.connect(user1).add("F000100", 0, email)).to.revertedWith("Not validator");
+            await expect(shopCollection.connect(user1).add("F000100", 0, email)).to.revertedWith("Not validator");
         });
 
         it("Success", async () => {
-            for (const elem of franchiseeData) {
+            for (const elem of shopData) {
                 const email = ContractUtils.sha256String(elem.email);
-                await expect(
-                    franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.provideWaitTime, email)
-                )
-                    .to.emit(franchiseeCollection, "AddedFranchisee")
-                    .withArgs(elem.franchiseeId, elem.provideWaitTime, email);
+                await expect(shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, email))
+                    .to.emit(shopCollection, "AddedShop")
+                    .withArgs(elem.shopId, elem.provideWaitTime, email);
             }
-            expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
+            expect(await shopCollection.shopsLength()).to.equal(shopData.length);
         });
     });
 });

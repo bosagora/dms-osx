@@ -1,13 +1,6 @@
-import {
-    FranchiseeCollection,
-    Ledger,
-    LinkCollection,
-    Token,
-    TokenPrice,
-    ValidatorCollection,
-} from "../typechain-types";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
+import { Ledger, LinkCollection, ShopCollection, Token, TokenPrice, ValidatorCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -26,7 +19,7 @@ interface PurchaseData {
     timestamp: number;
     amount: number;
     userEmail: string;
-    franchiseeId: string;
+    shopId: string;
     method: number;
 }
 
@@ -48,7 +41,7 @@ describe("Test for Ledger", () => {
     let ledgerContract: Ledger;
     let linkCollectionContract: LinkCollection;
     let tokenPriceContract: TokenPrice;
-    let franchiseeCollection: FranchiseeCollection;
+    let shopCollection: ShopCollection;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -111,13 +104,13 @@ describe("Test for Ledger", () => {
         await tokenPriceContract.connect(validators[0]).set("KRW", price);
     };
 
-    const deployFranchiseeCollection = async () => {
-        const franchiseeCollectionFactory = await hre.ethers.getContractFactory("FranchiseeCollection");
-        franchiseeCollection = (await franchiseeCollectionFactory
+    const deployShopCollection = async () => {
+        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+        shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as FranchiseeCollection;
-        await franchiseeCollection.deployed();
-        await franchiseeCollection.deployTransaction.wait();
+            .deploy(validatorContract.address)) as ShopCollection;
+        await shopCollection.deployed();
+        await shopCollection.deployTransaction.wait();
     };
     const deployLedger = async () => {
         const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
@@ -129,12 +122,12 @@ describe("Test for Ledger", () => {
                 validatorContract.address,
                 linkCollectionContract.address,
                 tokenPriceContract.address,
-                franchiseeCollection.address
+                shopCollection.address
             )) as Ledger;
         await ledgerContract.deployed();
         await ledgerContract.deployTransaction.wait();
 
-        await franchiseeCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
+        await shopCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
     };
 
     const deployAllContract = async () => {
@@ -143,38 +136,38 @@ describe("Test for Ledger", () => {
         await depositValidators();
         await deployLinkCollection();
         await deployTokenPrice();
-        await deployFranchiseeCollection();
+        await deployShopCollection();
         await deployLedger();
     };
 
-    interface IFranchiseeData {
-        franchiseeId: string;
+    interface IShopData {
+        shopId: string;
         timestamp: number;
         email: string;
     }
-    const franchiseeData: IFranchiseeData[] = [
+    const shopData: IShopData[] = [
         {
-            franchiseeId: "F000100",
+            shopId: "F000100",
             timestamp: 0,
             email: "f1@example.com",
         },
         {
-            franchiseeId: "F000200",
+            shopId: "F000200",
             timestamp: 0,
             email: "f2@example.com",
         },
         {
-            franchiseeId: "F000300",
+            shopId: "F000300",
             timestamp: 0,
             email: "f3@example.com",
         },
         {
-            franchiseeId: "F000400",
+            shopId: "F000400",
             timestamp: 0,
             email: "f4@example.com",
         },
         {
-            franchiseeId: "F000500",
+            shopId: "F000500",
             timestamp: 0,
             email: "f5@example.com",
         },
@@ -188,7 +181,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1672844400,
                 amount: 10000,
                 userEmail: "a@example.com",
-                franchiseeId: "F000100",
+                shopId: "F000100",
                 method: 0,
             },
             {
@@ -196,7 +189,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1675522800,
                 amount: 10000,
                 userEmail: "b@example.com",
-                franchiseeId: "F000100",
+                shopId: "F000100",
                 method: 0,
             },
             {
@@ -204,7 +197,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1677942000,
                 amount: 10000,
                 userEmail: "c@example.com",
-                franchiseeId: "F000200",
+                shopId: "F000200",
                 method: 0,
             },
             {
@@ -212,7 +205,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1680620400,
                 amount: 10000,
                 userEmail: "d@example.com",
-                franchiseeId: "F000300",
+                shopId: "F000300",
                 method: 0,
             },
             {
@@ -220,7 +213,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1683212400,
                 amount: 10000,
                 userEmail: "a@example.com",
-                franchiseeId: "F000200",
+                shopId: "F000200",
                 method: 0,
             },
         ];
@@ -229,15 +222,15 @@ describe("Test for Ledger", () => {
             await deployAllContract();
         });
 
-        context("Prepare franchisee data", () => {
-            it("Add Franchisee Data", async () => {
-                for (const elem of franchiseeData) {
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "AddedFranchisee")
-                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                        .to.emit(shopCollection, "AddedShop")
+                        .withArgs(elem.shopId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
@@ -284,7 +277,7 @@ describe("Test for Ledger", () => {
                                 purchase.timestamp,
                                 purchaseAmount,
                                 hash,
-                                purchase.franchiseeId,
+                                purchase.shopId,
                                 purchase.method
                             )
                     ).to.be.revertedWith("Not validator");
@@ -304,7 +297,7 @@ describe("Test for Ledger", () => {
                                 purchase.timestamp,
                                 purchaseAmount,
                                 emailHash,
-                                purchase.franchiseeId,
+                                purchase.shopId,
                                 purchase.method
                             )
                     )
@@ -314,7 +307,7 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             purchase.method
                         )
                         .emit(ledgerContract, "ProvidedPoint")
@@ -361,7 +354,7 @@ describe("Test for Ledger", () => {
                     timestamp: 1672844400,
                     amount: 10000,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                     method: 0,
                 };
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -379,7 +372,7 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             purchase.method
                         )
                 )
@@ -389,7 +382,7 @@ describe("Test for Ledger", () => {
                         purchase.timestamp,
                         purchaseAmount,
                         emailHash,
-                        purchase.franchiseeId,
+                        purchase.shopId,
                         purchase.method
                     )
                     .emit(ledgerContract, "ProvidedToken")
@@ -412,7 +405,7 @@ describe("Test for Ledger", () => {
                     timestamp: 1672844400,
                     amount: 10000,
                     userEmail: "b@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                     method: 0,
                 };
 
@@ -429,7 +422,7 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             purchase.method
                         )
                 )
@@ -439,7 +432,7 @@ describe("Test for Ledger", () => {
                         purchase.timestamp,
                         purchaseAmount,
                         emailHash,
-                        purchase.franchiseeId,
+                        purchase.shopId,
                         purchase.method
                     )
                     .emit(ledgerContract, "ProvidedPoint")
@@ -460,7 +453,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 100,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -471,7 +464,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -481,7 +474,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[1].address,
                             signature
                         )
@@ -493,7 +486,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 100,
                     userEmail: "b@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -504,7 +497,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -514,7 +507,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
@@ -526,7 +519,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 100,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -537,7 +530,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -547,7 +540,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[1].address,
                             signature
                         )
@@ -559,7 +552,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 10000,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -570,7 +563,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -580,7 +573,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
@@ -592,7 +585,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 100,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -603,7 +596,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -613,7 +606,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
@@ -634,7 +627,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 100,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -645,7 +638,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -655,7 +648,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[1].address,
                             signature
                         )
@@ -667,7 +660,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 100,
                     userEmail: "b@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -678,7 +671,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -688,7 +681,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
@@ -700,7 +693,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 100,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -711,7 +704,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -721,7 +714,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[1].address,
                             signature
                         )
@@ -733,7 +726,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 10000,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -744,7 +737,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -754,7 +747,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
@@ -766,7 +759,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 1,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000600",
+                    shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -779,7 +772,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -789,7 +782,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
@@ -819,15 +812,15 @@ describe("Test for Ledger", () => {
             }
         });
 
-        context("Prepare franchisee data", () => {
-            it("Add Franchisee Data", async () => {
-                for (const elem of franchiseeData) {
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "AddedFranchisee")
-                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                        .to.emit(shopCollection, "AddedShop")
+                        .withArgs(elem.shopId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
@@ -944,15 +937,15 @@ describe("Test for Ledger", () => {
             }
         });
 
-        context("Prepare franchisee data", () => {
-            it("Add Franchisee Data", async () => {
-                for (const elem of franchiseeData) {
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "AddedFranchisee")
-                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                        .to.emit(shopCollection, "AddedShop")
+                        .withArgs(elem.shopId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
@@ -1120,14 +1113,14 @@ describe("Test for Ledger", () => {
         });
     });
 
-    context("Clearing for franchisees", () => {
+    context("Clearing for shops", () => {
         const purchaseData: PurchaseData[] = [
             {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
                 userEmail: "a@example.com",
-                franchiseeId: "F000100",
+                shopId: "F000100",
                 method: 0,
             },
             {
@@ -1135,7 +1128,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1675522800,
                 amount: 10000,
                 userEmail: "a@example.com",
-                franchiseeId: "F000100",
+                shopId: "F000100",
                 method: 0,
             },
             {
@@ -1143,7 +1136,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1677942000,
                 amount: 10000,
                 userEmail: "a@example.com",
-                franchiseeId: "F000100",
+                shopId: "F000100",
                 method: 0,
             },
             {
@@ -1151,7 +1144,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1680620400,
                 amount: 10000,
                 userEmail: "b@example.com",
-                franchiseeId: "F000200",
+                shopId: "F000200",
                 method: 0,
             },
             {
@@ -1159,7 +1152,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1683212400,
                 amount: 10000,
                 userEmail: "b@example.com",
-                franchiseeId: "F000300",
+                shopId: "F000300",
                 method: 0,
             },
             {
@@ -1167,7 +1160,7 @@ describe("Test for Ledger", () => {
                 timestamp: 1683212400,
                 amount: 10000,
                 userEmail: "b@example.com",
-                franchiseeId: "F000400",
+                shopId: "F000400",
                 method: 0,
             },
         ];
@@ -1182,15 +1175,15 @@ describe("Test for Ledger", () => {
             }
         });
 
-        context("Prepare franchisee data", () => {
-            it("Add Franchisee Data", async () => {
-                for (const elem of franchiseeData) {
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(franchiseeCollection.connect(validator1).add(elem.franchiseeId, elem.timestamp, email))
-                        .to.emit(franchiseeCollection, "AddedFranchisee")
-                        .withArgs(elem.franchiseeId, elem.timestamp, email);
+                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                        .to.emit(shopCollection, "AddedShop")
+                        .withArgs(elem.shopId, elem.timestamp, email);
                 }
-                expect(await franchiseeCollection.franchiseesLength()).to.equal(franchiseeData.length);
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
@@ -1238,7 +1231,7 @@ describe("Test for Ledger", () => {
                                 purchase.timestamp,
                                 purchaseAmount,
                                 emailHash,
-                                purchase.franchiseeId,
+                                purchase.shopId,
                                 purchase.method
                             )
                     )
@@ -1248,7 +1241,7 @@ describe("Test for Ledger", () => {
                             purchase.timestamp,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             purchase.method
                         )
                         .emit(ledgerContract, "ProvidedPoint")
@@ -1275,15 +1268,15 @@ describe("Test for Ledger", () => {
                     expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
             });
 
-            it("Check franchisee data", async () => {
-                const franchisee1 = await franchiseeCollection.franchiseeOf("F000100");
-                expect(franchisee1.providedPoint).to.equal(Amount.make(10000 * 3, 18).value.div(100));
-                const franchisee2 = await franchiseeCollection.franchiseeOf("F000200");
-                expect(franchisee2.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
-                const franchisee3 = await franchiseeCollection.franchiseeOf("F000300");
-                expect(franchisee3.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
-                const franchisee4 = await franchiseeCollection.franchiseeOf("F000400");
-                expect(franchisee4.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+            it("Check shop data", async () => {
+                const shop1 = await shopCollection.shopOf("F000100");
+                expect(shop1.providedPoint).to.equal(Amount.make(10000 * 3, 18).value.div(100));
+                const shop2 = await shopCollection.shopOf("F000200");
+                expect(shop2.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                const shop3 = await shopCollection.shopOf("F000300");
+                expect(shop3.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                const shop4 = await shopCollection.shopOf("F000400");
+                expect(shop4.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
             });
         });
 
@@ -1309,7 +1302,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 300,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000200",
+                    shopId: "F000200",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -1320,7 +1313,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -1330,12 +1323,12 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
                 )
-                    .to.emit(ledgerContract, "ProvidedPointToFranchisee")
+                    .to.emit(ledgerContract, "ProvidedPointToShop")
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
                         email: emailHash,
@@ -1343,10 +1336,10 @@ describe("Test for Ledger", () => {
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
                     });
-                const franchisee2 = await franchiseeCollection.franchiseeOf("F000200");
-                expect(franchisee2.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(franchisee2.usedPoint).to.equal(Amount.make(300, 18).value);
-                expect(franchisee2.clearedPoint).to.equal(Amount.make(200, 18).value);
+                const shop2 = await shopCollection.shopOf("F000200");
+                expect(shop2.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(shop2.usedPoint).to.equal(Amount.make(300, 18).value);
+                expect(shop2.clearedPoint).to.equal(Amount.make(200, 18).value);
             });
         });
 
@@ -1374,7 +1367,7 @@ describe("Test for Ledger", () => {
                     purchaseId: "P000008",
                     amount: 500,
                     userEmail: "a@example.com",
-                    franchiseeId: "F000300",
+                    shopId: "F000300",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -1387,7 +1380,7 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     purchaseAmount,
                     emailHash,
-                    purchase.franchiseeId,
+                    purchase.shopId,
                     nonce
                 );
                 await expect(
@@ -1397,12 +1390,12 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchaseAmount,
                             emailHash,
-                            purchase.franchiseeId,
+                            purchase.shopId,
                             users[0].address,
                             signature
                         )
                 )
-                    .to.emit(ledgerContract, "ProvidedPointToFranchisee")
+                    .to.emit(ledgerContract, "ProvidedPointToShop")
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
                         email: emailHash,
@@ -1413,10 +1406,10 @@ describe("Test for Ledger", () => {
                 expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
-                const franchisee3 = await franchiseeCollection.franchiseeOf("F000300");
-                expect(franchisee3.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(franchisee3.usedPoint).to.equal(Amount.make(500, 18).value);
-                expect(franchisee3.clearedPoint).to.equal(Amount.make(400, 18).value);
+                const shop3 = await shopCollection.shopOf("F000300");
+                expect(shop3.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(shop3.usedPoint).to.equal(Amount.make(500, 18).value);
+                expect(shop3.clearedPoint).to.equal(Amount.make(400, 18).value);
             });
         });
     });

@@ -10,20 +10,20 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
-export class AddedFranchisee extends ethereum.Event {
-  get params(): AddedFranchisee__Params {
-    return new AddedFranchisee__Params(this);
+export class AddedShop extends ethereum.Event {
+  get params(): AddedShop__Params {
+    return new AddedShop__Params(this);
   }
 }
 
-export class AddedFranchisee__Params {
-  _event: AddedFranchisee;
+export class AddedShop__Params {
+  _event: AddedShop;
 
-  constructor(event: AddedFranchisee) {
+  constructor(event: AddedShop) {
     this._event = event;
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[0].value.toString();
   }
 
@@ -49,7 +49,7 @@ export class IncreasedClearedPoint__Params {
     this._event = event;
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[0].value.toString();
   }
 
@@ -79,7 +79,7 @@ export class IncreasedProvidedPoint__Params {
     this._event = event;
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[0].value.toString();
   }
 
@@ -109,7 +109,7 @@ export class IncreasedUsedPoint__Params {
     this._event = event;
   }
 
-  get franchiseeId(): string {
+  get shopId(): string {
     return this._event.parameters[0].value.toString();
   }
 
@@ -126,8 +126,8 @@ export class IncreasedUsedPoint__Params {
   }
 }
 
-export class FranchiseeCollection__franchiseeOfResultValue0Struct extends ethereum.Tuple {
-  get franchiseeId(): string {
+export class ShopCollection__shopOfResultValue0Struct extends ethereum.Tuple {
+  get shopId(): string {
     return this[0].toString();
   }
 
@@ -156,9 +156,9 @@ export class FranchiseeCollection__franchiseeOfResultValue0Struct extends ethere
   }
 }
 
-export class FranchiseeCollection extends ethereum.SmartContract {
-  static bind(address: Address): FranchiseeCollection {
-    return new FranchiseeCollection("FranchiseeCollection", address);
+export class ShopCollection extends ethereum.SmartContract {
+  static bind(address: Address): ShopCollection {
+    return new ShopCollection("ShopCollection", address);
   }
 
   NULL(): Bytes {
@@ -191,100 +191,21 @@ export class FranchiseeCollection extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
-  franchiseeIdOf(_idx: BigInt): string {
+  getClearPoint(_shopId: string): BigInt {
     let result = super.call(
-      "franchiseeIdOf",
-      "franchiseeIdOf(uint256):(string)",
-      [ethereum.Value.fromUnsignedBigInt(_idx)]
-    );
-
-    return result[0].toString();
-  }
-
-  try_franchiseeIdOf(_idx: BigInt): ethereum.CallResult<string> {
-    let result = super.tryCall(
-      "franchiseeIdOf",
-      "franchiseeIdOf(uint256):(string)",
-      [ethereum.Value.fromUnsignedBigInt(_idx)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toString());
-  }
-
-  franchiseeOf(
-    _franchiseeId: string
-  ): FranchiseeCollection__franchiseeOfResultValue0Struct {
-    let result = super.call(
-      "franchiseeOf",
-      "franchiseeOf(string):((string,uint256,bytes32,uint256,uint256,uint256,uint8))",
-      [ethereum.Value.fromString(_franchiseeId)]
-    );
-
-    return changetype<FranchiseeCollection__franchiseeOfResultValue0Struct>(
-      result[0].toTuple()
-    );
-  }
-
-  try_franchiseeOf(
-    _franchiseeId: string
-  ): ethereum.CallResult<FranchiseeCollection__franchiseeOfResultValue0Struct> {
-    let result = super.tryCall(
-      "franchiseeOf",
-      "franchiseeOf(string):((string,uint256,bytes32,uint256,uint256,uint256,uint8))",
-      [ethereum.Value.fromString(_franchiseeId)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(
-      changetype<FranchiseeCollection__franchiseeOfResultValue0Struct>(
-        value[0].toTuple()
-      )
-    );
-  }
-
-  franchiseesLength(): BigInt {
-    let result = super.call(
-      "franchiseesLength",
-      "franchiseesLength():(uint256)",
-      []
+      "getClearPoint",
+      "getClearPoint(string):(uint256)",
+      [ethereum.Value.fromString(_shopId)]
     );
 
     return result[0].toBigInt();
   }
 
-  try_franchiseesLength(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "franchiseesLength",
-      "franchiseesLength():(uint256)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  getClearPoint(_franchiseeId: string): BigInt {
-    let result = super.call(
-      "getClearPoint",
-      "getClearPoint(string):(uint256)",
-      [ethereum.Value.fromString(_franchiseeId)]
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_getClearPoint(_franchiseeId: string): ethereum.CallResult<BigInt> {
+  try_getClearPoint(_shopId: string): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
       "getClearPoint",
       "getClearPoint(string):(uint256)",
-      [ethereum.Value.fromString(_franchiseeId)]
+      [ethereum.Value.fromString(_shopId)]
     );
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -310,6 +231,69 @@ export class FranchiseeCollection extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  shopIdOf(_idx: BigInt): string {
+    let result = super.call("shopIdOf", "shopIdOf(uint256):(string)", [
+      ethereum.Value.fromUnsignedBigInt(_idx)
+    ]);
+
+    return result[0].toString();
+  }
+
+  try_shopIdOf(_idx: BigInt): ethereum.CallResult<string> {
+    let result = super.tryCall("shopIdOf", "shopIdOf(uint256):(string)", [
+      ethereum.Value.fromUnsignedBigInt(_idx)
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toString());
+  }
+
+  shopOf(_shopId: string): ShopCollection__shopOfResultValue0Struct {
+    let result = super.call(
+      "shopOf",
+      "shopOf(string):((string,uint256,bytes32,uint256,uint256,uint256,uint8))",
+      [ethereum.Value.fromString(_shopId)]
+    );
+
+    return changetype<ShopCollection__shopOfResultValue0Struct>(
+      result[0].toTuple()
+    );
+  }
+
+  try_shopOf(
+    _shopId: string
+  ): ethereum.CallResult<ShopCollection__shopOfResultValue0Struct> {
+    let result = super.tryCall(
+      "shopOf",
+      "shopOf(string):((string,uint256,bytes32,uint256,uint256,uint256,uint8))",
+      [ethereum.Value.fromString(_shopId)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      changetype<ShopCollection__shopOfResultValue0Struct>(value[0].toTuple())
+    );
+  }
+
+  shopsLength(): BigInt {
+    let result = super.call("shopsLength", "shopsLength():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_shopsLength(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("shopsLength", "shopsLength():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   validatorAddress(): Address {
@@ -383,7 +367,7 @@ export class AddCall__Inputs {
     this._call = call;
   }
 
-  get _franchiseeId(): string {
+  get _shopId(): string {
     return this._call.inputValues[0].value.toString();
   }
 
@@ -421,7 +405,7 @@ export class AddClearedPointCall__Inputs {
     this._call = call;
   }
 
-  get _franchiseeId(): string {
+  get _shopId(): string {
     return this._call.inputValues[0].value.toString();
   }
 
@@ -459,7 +443,7 @@ export class AddProvidedPointCall__Inputs {
     this._call = call;
   }
 
-  get _franchiseeId(): string {
+  get _shopId(): string {
     return this._call.inputValues[0].value.toString();
   }
 
@@ -497,7 +481,7 @@ export class AddUsedPointCall__Inputs {
     this._call = call;
   }
 
-  get _franchiseeId(): string {
+  get _shopId(): string {
     return this._call.inputValues[0].value.toString();
   }
 

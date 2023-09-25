@@ -4,7 +4,7 @@ type SavedPurchase @entity(immutable: true) {
   timestamp: BigInt! # uint256
   amount: BigInt! # uint256
   email: Bytes! # bytes32
-  franchiseeId: String! # string
+  shopId: String! # string
   method: BigInt! # uint32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -54,7 +54,7 @@ type PaidPoint @entity(immutable: true) {
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
-  franchiseeId: String! # string
+  shopId: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -67,7 +67,7 @@ type PaidToken @entity(immutable: true) {
   value: BigInt! # uint256
   balanceToken: BigInt! # uint256
   purchaseId: String! # string
-  franchiseeId: String! # string
+  shopId: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -80,20 +80,20 @@ type ProvidedPoint @entity(immutable: true) {
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
-  franchiseeId: String! # string
+  shopId: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
 
-type ProvidedPointToFranchisee @entity(immutable: true) {
+type ProvidedPointToShop @entity(immutable: true) {
   id: Bytes!
   email: Bytes! # bytes32
   providedAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
-  franchiseeId: String! # string
+  shopId: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -106,7 +106,7 @@ type ProvidedToken @entity(immutable: true) {
   value: BigInt! # uint256
   balanceToken: BigInt! # uint256
   purchaseId: String! # string
-  franchiseeId: String! # string
+  shopId: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -155,7 +155,7 @@ type UserTradeHistory @entity(immutable: true) {
   balancePoint: BigInt!
   balanceToken: BigInt!
   purchaseId: String
-  franchiseeId : String
+  shopId : String
   account: Bytes!
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -173,18 +173,18 @@ type UserBalance @entity {
   transactionHash: Bytes!
 }
 
-enum FranchiseeAction {
+enum ShopAction {
   ProvidedPoint,
   UsedPoint,
   ClearedPoint
 }
 
-type FranchiseeTradeHistory @entity(immutable: true) {
+type ShopTradeHistory @entity(immutable: true) {
   id: Bytes!
-  franchiseeId: String! # string
+  shopId: String! # string
   purchaseId: String
 
-  action: FranchiseeAction!
+  action: ShopAction!
 
   increase: BigInt! # uint256
 
@@ -197,8 +197,8 @@ type FranchiseeTradeHistory @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type Franchisee @entity {
-  id: ID! # franchiseeId
+type Shop @entity {
+  id: ID! # shopId
 
   provideWaitTime: BigInt! # uint256
   email: Bytes! # bytes32

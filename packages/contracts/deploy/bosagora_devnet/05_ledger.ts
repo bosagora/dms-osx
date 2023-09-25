@@ -6,7 +6,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Amount } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import { FranchiseeCollection, Ledger, Token } from "../../typechain-types";
+import { ShopCollection, Ledger, Token } from "../../typechain-types";
 import { getContractAddress, getLinkCollectionContractAddress } from "../helpers";
 
 import { Wallet } from "ethers";
@@ -25,7 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
     const tokenPriceContractAddress = await getContractAddress("TokenPrice", hre);
-    const franchiseeContractAddress = await getContractAddress("FranchiseeCollection", hre);
+    const shopContractAddress = await getContractAddress("ShopCollection", hre);
 
     const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
     const deployResult = await deploy("Ledger", {
@@ -36,7 +36,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             validatorContractAddress,
             linkCollectionContractAddress,
             tokenPriceContractAddress,
-            franchiseeContractAddress,
+            shopContractAddress,
         ],
         log: true,
     });
@@ -45,14 +45,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         const ledgerContractAddress = await getContractAddress("Ledger", hre);
         const ledgerContract = (await ethers.getContractAt("Ledger", ledgerContractAddress)) as Ledger;
 
-        const franchiseeCollection = (await ethers.getContractAt(
-            "FranchiseeCollection",
-            franchiseeContractAddress
-        )) as FranchiseeCollection;
-        const tx1 = await franchiseeCollection
+        const shopCollection = (await ethers.getContractAt("ShopCollection", shopContractAddress)) as ShopCollection;
+        const tx1 = await shopCollection
             .connect(await ethers.getSigner(deployer))
             .setLedgerAddress(ledgerContractAddress);
-        console.log(`Set ledger address for franchisee collection (tx: ${tx1.hash})...`);
+        console.log(`Set ledger address for shop collection (tx: ${tx1.hash})...`);
         await tx1.wait();
 
         const assetAmount = Amount.make(10_000_000, 18);

@@ -106,8 +106,8 @@ export class SavedPurchase extends Entity {
     this.set("email", Value.fromBytes(value));
   }
 
-  get franchiseeId(): string {
-    let value = this.get("franchiseeId");
+  get shopId(): string {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -115,8 +115,8 @@ export class SavedPurchase extends Entity {
     }
   }
 
-  set franchiseeId(value: string) {
-    this.set("franchiseeId", Value.fromString(value));
+  set shopId(value: string) {
+    this.set("shopId", Value.fromString(value));
   }
 
   get method(): BigInt {
@@ -730,8 +730,8 @@ export class PaidPoint extends Entity {
     this.set("purchaseId", Value.fromString(value));
   }
 
-  get franchiseeId(): string {
-    let value = this.get("franchiseeId");
+  get shopId(): string {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -739,8 +739,8 @@ export class PaidPoint extends Entity {
     }
   }
 
-  set franchiseeId(value: string) {
-    this.set("franchiseeId", Value.fromString(value));
+  set shopId(value: string) {
+    this.set("shopId", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -891,8 +891,8 @@ export class PaidToken extends Entity {
     this.set("purchaseId", Value.fromString(value));
   }
 
-  get franchiseeId(): string {
-    let value = this.get("franchiseeId");
+  get shopId(): string {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -900,8 +900,8 @@ export class PaidToken extends Entity {
     }
   }
 
-  set franchiseeId(value: string) {
-    this.set("franchiseeId", Value.fromString(value));
+  set shopId(value: string) {
+    this.set("shopId", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -1052,8 +1052,8 @@ export class ProvidedPoint extends Entity {
     this.set("purchaseId", Value.fromString(value));
   }
 
-  get franchiseeId(): string {
-    let value = this.get("franchiseeId");
+  get shopId(): string {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1061,8 +1061,8 @@ export class ProvidedPoint extends Entity {
     }
   }
 
-  set franchiseeId(value: string) {
-    this.set("franchiseeId", Value.fromString(value));
+  set shopId(value: string) {
+    this.set("shopId", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -1105,7 +1105,7 @@ export class ProvidedPoint extends Entity {
   }
 }
 
-export class ProvidedPointToFranchisee extends Entity {
+export class ProvidedPointToShop extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -1113,28 +1113,25 @@ export class ProvidedPointToFranchisee extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(
-      id != null,
-      "Cannot save ProvidedPointToFranchisee entity without an ID"
-    );
+    assert(id != null, "Cannot save ProvidedPointToShop entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type ProvidedPointToFranchisee must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ProvidedPointToShop must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("ProvidedPointToFranchisee", id.toBytes().toHexString(), this);
+      store.set("ProvidedPointToShop", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): ProvidedPointToFranchisee | null {
-    return changetype<ProvidedPointToFranchisee | null>(
-      store.get_in_block("ProvidedPointToFranchisee", id.toHexString())
+  static loadInBlock(id: Bytes): ProvidedPointToShop | null {
+    return changetype<ProvidedPointToShop | null>(
+      store.get_in_block("ProvidedPointToShop", id.toHexString())
     );
   }
 
-  static load(id: Bytes): ProvidedPointToFranchisee | null {
-    return changetype<ProvidedPointToFranchisee | null>(
-      store.get("ProvidedPointToFranchisee", id.toHexString())
+  static load(id: Bytes): ProvidedPointToShop | null {
+    return changetype<ProvidedPointToShop | null>(
+      store.get("ProvidedPointToShop", id.toHexString())
     );
   }
 
@@ -1216,8 +1213,8 @@ export class ProvidedPointToFranchisee extends Entity {
     this.set("purchaseId", Value.fromString(value));
   }
 
-  get franchiseeId(): string {
-    let value = this.get("franchiseeId");
+  get shopId(): string {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1225,8 +1222,8 @@ export class ProvidedPointToFranchisee extends Entity {
     }
   }
 
-  set franchiseeId(value: string) {
-    this.set("franchiseeId", Value.fromString(value));
+  set shopId(value: string) {
+    this.set("shopId", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -1377,8 +1374,8 @@ export class ProvidedToken extends Entity {
     this.set("purchaseId", Value.fromString(value));
   }
 
-  get franchiseeId(): string {
-    let value = this.get("franchiseeId");
+  get shopId(): string {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1386,8 +1383,8 @@ export class ProvidedToken extends Entity {
     }
   }
 
-  set franchiseeId(value: string) {
-    this.set("franchiseeId", Value.fromString(value));
+  set shopId(value: string) {
+    this.set("shopId", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -1742,8 +1739,8 @@ export class UserTradeHistory extends Entity {
     }
   }
 
-  get franchiseeId(): string | null {
-    let value = this.get("franchiseeId");
+  get shopId(): string | null {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       return null;
     } else {
@@ -1751,11 +1748,11 @@ export class UserTradeHistory extends Entity {
     }
   }
 
-  set franchiseeId(value: string | null) {
+  set shopId(value: string | null) {
     if (!value) {
-      this.unset("franchiseeId");
+      this.unset("shopId");
     } else {
-      this.set("franchiseeId", Value.fromString(<string>value));
+      this.set("shopId", Value.fromString(<string>value));
     }
   }
 
@@ -1919,7 +1916,7 @@ export class UserBalance extends Entity {
   }
 }
 
-export class FranchiseeTradeHistory extends Entity {
+export class ShopTradeHistory extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -1927,28 +1924,25 @@ export class FranchiseeTradeHistory extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(
-      id != null,
-      "Cannot save FranchiseeTradeHistory entity without an ID"
-    );
+    assert(id != null, "Cannot save ShopTradeHistory entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type FranchiseeTradeHistory must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ShopTradeHistory must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("FranchiseeTradeHistory", id.toBytes().toHexString(), this);
+      store.set("ShopTradeHistory", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): FranchiseeTradeHistory | null {
-    return changetype<FranchiseeTradeHistory | null>(
-      store.get_in_block("FranchiseeTradeHistory", id.toHexString())
+  static loadInBlock(id: Bytes): ShopTradeHistory | null {
+    return changetype<ShopTradeHistory | null>(
+      store.get_in_block("ShopTradeHistory", id.toHexString())
     );
   }
 
-  static load(id: Bytes): FranchiseeTradeHistory | null {
-    return changetype<FranchiseeTradeHistory | null>(
-      store.get("FranchiseeTradeHistory", id.toHexString())
+  static load(id: Bytes): ShopTradeHistory | null {
+    return changetype<ShopTradeHistory | null>(
+      store.get("ShopTradeHistory", id.toHexString())
     );
   }
 
@@ -1965,8 +1959,8 @@ export class FranchiseeTradeHistory extends Entity {
     this.set("id", Value.fromBytes(value));
   }
 
-  get franchiseeId(): string {
-    let value = this.get("franchiseeId");
+  get shopId(): string {
+    let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1974,8 +1968,8 @@ export class FranchiseeTradeHistory extends Entity {
     }
   }
 
-  set franchiseeId(value: string) {
-    this.set("franchiseeId", Value.fromString(value));
+  set shopId(value: string) {
+    this.set("shopId", Value.fromString(value));
   }
 
   get purchaseId(): string | null {
@@ -2100,7 +2094,7 @@ export class FranchiseeTradeHistory extends Entity {
   }
 }
 
-export class Franchisee extends Entity {
+export class Shop extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -2108,22 +2102,22 @@ export class Franchisee extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save Franchisee entity without an ID");
+    assert(id != null, "Cannot save Shop entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type Franchisee must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type Shop must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("Franchisee", id.toString(), this);
+      store.set("Shop", id.toString(), this);
     }
   }
 
-  static loadInBlock(id: string): Franchisee | null {
-    return changetype<Franchisee | null>(store.get_in_block("Franchisee", id));
+  static loadInBlock(id: string): Shop | null {
+    return changetype<Shop | null>(store.get_in_block("Shop", id));
   }
 
-  static load(id: string): Franchisee | null {
-    return changetype<Franchisee | null>(store.get("Franchisee", id));
+  static load(id: string): Shop | null {
+    return changetype<Shop | null>(store.get("Shop", id));
   }
 
   get id(): string {

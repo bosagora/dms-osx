@@ -16,7 +16,7 @@
             {
                 "indexed": false,
                 "internalType": "string",
-                "name": "franchiseeId",
+                "name": "shopId",
                 "type": "string"
             },
             {
@@ -32,7 +32,7 @@
                 "type": "bytes32"
             }
         ],
-        "name": "AddedFranchisee",
+        "name": "AddedShop",
         "type": "event"
     },
     {
@@ -41,7 +41,7 @@
             {
                 "indexed": false,
                 "internalType": "string",
-                "name": "franchiseeId",
+                "name": "shopId",
                 "type": "string"
             },
             {
@@ -72,7 +72,7 @@
             {
                 "indexed": false,
                 "internalType": "string",
-                "name": "franchiseeId",
+                "name": "shopId",
                 "type": "string"
             },
             {
@@ -103,7 +103,7 @@
             {
                 "indexed": false,
                 "internalType": "string",
-                "name": "franchiseeId",
+                "name": "shopId",
                 "type": "string"
             },
             {
@@ -145,7 +145,7 @@
         "inputs": [
             {
                 "internalType": "string",
-                "name": "_franchiseeId",
+                "name": "_shopId",
                 "type": "string"
             },
             {
@@ -168,7 +168,7 @@
         "inputs": [
             {
                 "internalType": "string",
-                "name": "_franchiseeId",
+                "name": "_shopId",
                 "type": "string"
             },
             {
@@ -191,7 +191,7 @@
         "inputs": [
             {
                 "internalType": "string",
-                "name": "_franchiseeId",
+                "name": "_shopId",
                 "type": "string"
             },
             {
@@ -214,7 +214,7 @@
         "inputs": [
             {
                 "internalType": "string",
-                "name": "_franchiseeId",
+                "name": "_shopId",
                 "type": "string"
             },
             {
@@ -254,7 +254,7 @@
                 "type": "uint256"
             }
         ],
-        "name": "franchiseeIdOf",
+        "name": "shopIdOf",
         "outputs": [
             {
                 "internalType": "string",
@@ -269,17 +269,17 @@
         "inputs": [
             {
                 "internalType": "string",
-                "name": "_franchiseeId",
+                "name": "_shopId",
                 "type": "string"
             }
         ],
-        "name": "franchiseeOf",
+        "name": "shopOf",
         "outputs": [
             {
                 "components": [
                     {
                         "internalType": "string",
-                        "name": "franchiseeId",
+                        "name": "shopId",
                         "type": "string"
                     },
                     {
@@ -308,12 +308,12 @@
                         "type": "uint256"
                     },
                     {
-                        "internalType": "enum FranchiseeCollection.FranchiseeStatus",
+                        "internalType": "enum ShopCollection.ShopStatus",
                         "name": "status",
                         "type": "uint8"
                     }
                 ],
-                "internalType": "struct FranchiseeCollection.FranchiseeData",
+                "internalType": "struct ShopCollection.ShopData",
                 "name": "",
                 "type": "tuple"
             }
@@ -323,7 +323,7 @@
     },
     {
         "inputs": [],
-        "name": "franchiseesLength",
+        "name": "shopsLength",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -338,7 +338,7 @@
         "inputs": [
             {
                 "internalType": "string",
-                "name": "_franchiseeId",
+                "name": "_shopId",
                 "type": "string"
             }
         ],

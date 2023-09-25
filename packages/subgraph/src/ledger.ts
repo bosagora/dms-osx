@@ -5,7 +5,7 @@ import {
     PaidPoint as PaidPointEvent,
     PaidToken as PaidTokenEvent,
     ProvidedPoint as ProvidedPointEvent,
-    ProvidedPointToFranchisee as ProvidedPointToFranchiseeEvent,
+    ProvidedPointToShop as ProvidedPointToShopEvent,
     ProvidedToken as ProvidedTokenEvent,
     SavedPurchase as SavedPurchaseEvent,
     Withdrawn as WithdrawnEvent,
@@ -17,7 +17,7 @@ import {
     PaidPoint,
     PaidToken,
     ProvidedPoint,
-    ProvidedPointToFranchisee,
+    ProvidedPointToShop,
     ProvidedToken,
     SavedPurchase,
     Withdrawn,
@@ -85,7 +85,7 @@ export function handlePaidPoint(event: PaidPointEvent): void {
     entity.value = event.params.value;
     entity.balancePoint = event.params.balancePoint;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -103,7 +103,7 @@ export function handlePaidToken(event: PaidTokenEvent): void {
     entity.value = event.params.value;
     entity.balanceToken = event.params.balanceToken;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -121,7 +121,7 @@ export function handleProvidedPoint(event: ProvidedPointEvent): void {
     entity.value = event.params.value;
     entity.balancePoint = event.params.balancePoint;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -132,14 +132,14 @@ export function handleProvidedPoint(event: ProvidedPointEvent): void {
     handleProvidedPointForHistory(event);
 }
 
-export function handleProvidedPointToFranchisee(event: ProvidedPointToFranchiseeEvent): void {
-    let entity = new ProvidedPointToFranchisee(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handleProvidedPointToShop(event: ProvidedPointToShopEvent): void {
+    let entity = new ProvidedPointToShop(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.email = event.params.email;
     entity.providedAmountPoint = event.params.providedAmountPoint;
     entity.value = event.params.value;
     entity.balancePoint = event.params.balancePoint;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -147,7 +147,7 @@ export function handleProvidedPointToFranchisee(event: ProvidedPointToFranchisee
 
     entity.save();
 
-    handleProvidedPointToFranchiseeForHistory(event);
+    handleProvidedPointToShopForHistory(event);
 }
 
 export function handleProvidedToken(event: ProvidedTokenEvent): void {
@@ -157,7 +157,7 @@ export function handleProvidedToken(event: ProvidedTokenEvent): void {
     entity.value = event.params.value;
     entity.balanceToken = event.params.balanceToken;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -174,7 +174,7 @@ export function handleSavedPurchase(event: SavedPurchaseEvent): void {
     entity.timestamp = event.params.timestamp;
     entity.amount = event.params.amount;
     entity.email = event.params.email;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.method = event.params.method;
 
     entity.blockNumber = event.block.number;
@@ -271,7 +271,7 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     entity.balancePoint = event.params.balancePoint;
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -280,7 +280,7 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     entity.save();
 }
 
-export function handleProvidedPointToFranchiseeForHistory(event: ProvidedPointToFranchiseeEvent): void {
+export function handleProvidedPointToShopForHistory(event: ProvidedPointToShopEvent): void {
     const balanceEntity = handleChangedBalancePoint(
         event.params.email,
         event.params.balancePoint,
@@ -297,7 +297,7 @@ export function handleProvidedPointToFranchiseeForHistory(event: ProvidedPointTo
     entity.value = event.params.value.div(AmountUnit);
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -324,7 +324,7 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     entity.balanceToken = event.params.balanceToken;
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -351,7 +351,7 @@ export function handlePaidPointForHistory(event: PaidPointEvent): void {
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -378,7 +378,7 @@ export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.purchaseId;
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -405,7 +405,7 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
-    entity.franchiseeId = "";
+    entity.shopId = "";
     entity.account = event.params.account;
 
     entity.blockNumber = event.block.number;
@@ -432,7 +432,7 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
-    entity.franchiseeId = "";
+    entity.shopId = "";
     entity.account = event.params.account;
 
     entity.blockNumber = event.block.number;
@@ -452,7 +452,7 @@ export function handleExchangedPointToTokenForHistory(event: ExchangedPointToTok
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.purchaseId = "";
-    entity.franchiseeId = "";
+    entity.shopId = "";
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;
@@ -488,7 +488,7 @@ export function handleExchangedTokenToPointForHistory(event: ExchangedTokenToPoi
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.purchaseId = "";
-    entity.franchiseeId = "";
+    entity.shopId = "";
     entity.account = NullAccount;
 
     entity.blockNumber = event.block.number;

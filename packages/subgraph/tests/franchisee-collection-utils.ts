@@ -1,18 +1,18 @@
 import { newMockEvent } from "matchstick-as";
 import { ethereum, BigInt, Bytes } from "@graphprotocol/graph-ts";
 import {
-    AddedFranchisee,
+    AddedShop,
     IncreasedClearedPoint,
     IncreasedProvidedPoint,
     IncreasedUsedPoint,
-} from "../generated/FranchiseeCollection/FranchiseeCollection";
+} from "../generated/ShopCollection/ShopCollection";
 
-export function createAddedEvent(franchiseeId: string, timestamp: BigInt, email: Bytes): AddedFranchisee {
-    let addedEvent = changetype<AddedFranchisee>(newMockEvent());
+export function createAddedEvent(shopId: string, timestamp: BigInt, email: Bytes): AddedShop {
+    let addedEvent = changetype<AddedShop>(newMockEvent());
 
     addedEvent.parameters = new Array();
 
-    addedEvent.parameters.push(new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId)));
+    addedEvent.parameters.push(new ethereum.EventParam("shopId", ethereum.Value.fromString(shopId)));
     addedEvent.parameters.push(new ethereum.EventParam("timestamp", ethereum.Value.fromUnsignedBigInt(timestamp)));
     addedEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
 
@@ -20,7 +20,7 @@ export function createAddedEvent(franchiseeId: string, timestamp: BigInt, email:
 }
 
 export function createIncreasedClearedPointEvent(
-    franchiseeId: string,
+    shopId: string,
     increase: BigInt,
     total: BigInt
 ): IncreasedClearedPoint {
@@ -28,9 +28,7 @@ export function createIncreasedClearedPointEvent(
 
     increasedClearedPointEvent.parameters = new Array();
 
-    increasedClearedPointEvent.parameters.push(
-        new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
-    );
+    increasedClearedPointEvent.parameters.push(new ethereum.EventParam("shopId", ethereum.Value.fromString(shopId)));
     increasedClearedPointEvent.parameters.push(
         new ethereum.EventParam("increase", ethereum.Value.fromUnsignedBigInt(increase))
     );
@@ -42,7 +40,7 @@ export function createIncreasedClearedPointEvent(
 }
 
 export function createIncreasedProvidedPointEvent(
-    franchiseeId: string,
+    shopId: string,
     increase: BigInt,
     total: BigInt
 ): IncreasedProvidedPoint {
@@ -50,9 +48,7 @@ export function createIncreasedProvidedPointEvent(
 
     increasedProvidedPointEvent.parameters = new Array();
 
-    increasedProvidedPointEvent.parameters.push(
-        new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
-    );
+    increasedProvidedPointEvent.parameters.push(new ethereum.EventParam("shopId", ethereum.Value.fromString(shopId)));
     increasedProvidedPointEvent.parameters.push(
         new ethereum.EventParam("increase", ethereum.Value.fromUnsignedBigInt(increase))
     );
@@ -63,18 +59,12 @@ export function createIncreasedProvidedPointEvent(
     return increasedProvidedPointEvent;
 }
 
-export function createIncreasedUsedPointEvent(
-    franchiseeId: string,
-    increase: BigInt,
-    total: BigInt
-): IncreasedUsedPoint {
+export function createIncreasedUsedPointEvent(shopId: string, increase: BigInt, total: BigInt): IncreasedUsedPoint {
     let increasedUsedPointEvent = changetype<IncreasedUsedPoint>(newMockEvent());
 
     increasedUsedPointEvent.parameters = new Array();
 
-    increasedUsedPointEvent.parameters.push(
-        new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
-    );
+    increasedUsedPointEvent.parameters.push(new ethereum.EventParam("shopId", ethereum.Value.fromString(shopId)));
     increasedUsedPointEvent.parameters.push(
         new ethereum.EventParam("increase", ethereum.Value.fromUnsignedBigInt(increase))
     );

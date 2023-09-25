@@ -22,7 +22,7 @@ dataSources:
         - PaidPoint
         - PaidToken
         - ProvidedPoint
-        - ProvidedPointToFranchisee
+        - ProvidedPointToShop
         - ProvidedToken
         - SavedPurchase
         - Withdrawn
@@ -42,8 +42,8 @@ dataSources:
           handler: handlePaidToken
         - event: ProvidedPoint(bytes32,uint256,uint256,uint256,string,string)
           handler: handleProvidedPoint
-        - event: ProvidedPointToFranchisee(bytes32,uint256,uint256,uint256,string,string)
-          handler: handleProvidedPointToFranchisee
+        - event: ProvidedPointToShop(bytes32,uint256,uint256,uint256,string,string)
+          handler: handleProvidedPointToShop
         - event: ProvidedToken(bytes32,uint256,uint256,uint256,string,string)
           handler: handleProvidedToken
         - event: SavedPurchase(string,uint256,uint256,bytes32,string,uint32)
@@ -53,31 +53,31 @@ dataSources:
       file: ./src/ledger.ts
 
   - kind: ethereum
-    name: {{dataSources.FranchiseeCollection.name}}
+    name: {{dataSources.ShopCollection.name}}
     network: {{network}}
     source:
-      address: '{{dataSources.FranchiseeCollection.address}}'
-      abi: FranchiseeCollection
-      startBlock: {{dataSources.FranchiseeCollection.startBlock}}
+      address: '{{dataSources.ShopCollection.address}}'
+      abi: ShopCollection
+      startBlock: {{dataSources.ShopCollection.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - AddedFranchisee
+        - AddedShop
         - IncreasedClearedPoint
         - IncreasedProvidedPoint
         - IncreasedUsedPoint
       abis:
-        - name: FranchiseeCollection
-          file: $DMS_OSX_MODULE/artifacts/contracts/FranchiseeCollection.sol/FranchiseeCollection.json
+        - name: ShopCollection
+          file: $DMS_OSX_MODULE/artifacts/contracts/ShopCollection.sol/ShopCollection.json
       eventHandlers:
-        - event: AddedFranchisee(string,uint256,bytes32)
-          handler: handleAddedFranchisee
+        - event: AddedShop(string,uint256,bytes32)
+          handler: handleAddedShop
         - event: IncreasedClearedPoint(string,uint256,uint256,string)
           handler: handleIncreasedClearedPoint
         - event: IncreasedProvidedPoint(string,uint256,uint256,string)
           handler: handleIncreasedProvidedPoint
         - event: IncreasedUsedPoint(string,uint256,uint256,string)
           handler: handleIncreasedUsedPoint
-      file: ./src/franchisee-collection.ts
+      file: ./src/shop-collection.ts

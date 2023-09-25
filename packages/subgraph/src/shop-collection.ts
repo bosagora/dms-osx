@@ -1,15 +1,15 @@
 import {
-    AddedFranchisee as AddedFranchiseeEvent,
+    AddedShop as AddedShopEvent,
     IncreasedClearedPoint as IncreasedClearedPointEvent,
     IncreasedProvidedPoint as IncreasedProvidedPointEvent,
     IncreasedUsedPoint as IncreasedUsedPointEvent,
-} from "../generated/FranchiseeCollection/FranchiseeCollection";
-import { Franchisee, FranchiseeTradeHistory } from "../generated/schema";
+} from "../generated/ShopCollection/ShopCollection";
+import { Shop, ShopTradeHistory } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { AmountUnit } from "./utils";
 
-export function handleAddedFranchisee(event: AddedFranchiseeEvent): void {
-    let entity = new Franchisee(event.params.franchiseeId);
+export function handleAddedShop(event: AddedShopEvent): void {
+    let entity = new Shop(event.params.shopId);
 
     entity.provideWaitTime = event.params.provideWaitTime;
     entity.email = event.params.email;
@@ -26,22 +26,22 @@ export function handleAddedFranchisee(event: AddedFranchiseeEvent): void {
 }
 
 export function handleIncreasedClearedPoint(event: IncreasedClearedPointEvent): void {
-    let entity = new FranchiseeTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.action = "ClearedPoint";
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.purchaseId = event.params.purchaseId;
     entity.increase = event.params.increase.div(AmountUnit);
     entity.clearedPoint = event.params.total.div(AmountUnit);
 
-    let franchiseeEntity = Franchisee.load(event.params.franchiseeId);
-    if (franchiseeEntity !== null) {
-        entity.providedPoint = franchiseeEntity.providedPoint;
-        entity.usedPoint = franchiseeEntity.usedPoint;
-        franchiseeEntity.clearedPoint = entity.clearedPoint;
-        franchiseeEntity.blockNumber = event.block.number;
-        franchiseeEntity.blockTimestamp = event.block.timestamp;
-        franchiseeEntity.transactionHash = event.transaction.hash;
-        franchiseeEntity.save();
+    let shopEntity = Shop.load(event.params.shopId);
+    if (shopEntity !== null) {
+        entity.providedPoint = shopEntity.providedPoint;
+        entity.usedPoint = shopEntity.usedPoint;
+        shopEntity.clearedPoint = entity.clearedPoint;
+        shopEntity.blockNumber = event.block.number;
+        shopEntity.blockTimestamp = event.block.timestamp;
+        shopEntity.transactionHash = event.transaction.hash;
+        shopEntity.save();
     } else {
         entity.providedPoint = BigInt.fromI32(0);
         entity.usedPoint = BigInt.fromI32(0);
@@ -55,22 +55,22 @@ export function handleIncreasedClearedPoint(event: IncreasedClearedPointEvent): 
 }
 
 export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent): void {
-    let entity = new FranchiseeTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.action = "ProvidedPoint";
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.purchaseId = event.params.purchaseId;
     entity.increase = event.params.increase.div(AmountUnit);
     entity.providedPoint = event.params.total.div(AmountUnit);
 
-    let franchiseeEntity = Franchisee.load(event.params.franchiseeId);
-    if (franchiseeEntity !== null) {
-        entity.usedPoint = franchiseeEntity.usedPoint;
-        entity.clearedPoint = franchiseeEntity.clearedPoint;
-        franchiseeEntity.providedPoint = entity.providedPoint;
-        franchiseeEntity.blockNumber = event.block.number;
-        franchiseeEntity.blockTimestamp = event.block.timestamp;
-        franchiseeEntity.transactionHash = event.transaction.hash;
-        franchiseeEntity.save();
+    let shopEntity = Shop.load(event.params.shopId);
+    if (shopEntity !== null) {
+        entity.usedPoint = shopEntity.usedPoint;
+        entity.clearedPoint = shopEntity.clearedPoint;
+        shopEntity.providedPoint = entity.providedPoint;
+        shopEntity.blockNumber = event.block.number;
+        shopEntity.blockTimestamp = event.block.timestamp;
+        shopEntity.transactionHash = event.transaction.hash;
+        shopEntity.save();
     } else {
         entity.usedPoint = BigInt.fromI32(0);
         entity.clearedPoint = BigInt.fromI32(0);
@@ -84,22 +84,22 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
 }
 
 export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
-    let entity = new FranchiseeTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.action = "UsedPoint";
-    entity.franchiseeId = event.params.franchiseeId;
+    entity.shopId = event.params.shopId;
     entity.purchaseId = event.params.purchaseId;
     entity.increase = event.params.increase.div(AmountUnit);
     entity.usedPoint = event.params.total.div(AmountUnit);
 
-    let franchiseeEntity = Franchisee.load(event.params.franchiseeId);
-    if (franchiseeEntity !== null) {
-        entity.providedPoint = franchiseeEntity.providedPoint;
-        entity.clearedPoint = franchiseeEntity.clearedPoint;
-        franchiseeEntity.usedPoint = entity.usedPoint;
-        franchiseeEntity.blockNumber = event.block.number;
-        franchiseeEntity.blockTimestamp = event.block.timestamp;
-        franchiseeEntity.transactionHash = event.transaction.hash;
-        franchiseeEntity.save();
+    let shopEntity = Shop.load(event.params.shopId);
+    if (shopEntity !== null) {
+        entity.providedPoint = shopEntity.providedPoint;
+        entity.clearedPoint = shopEntity.clearedPoint;
+        shopEntity.usedPoint = entity.usedPoint;
+        shopEntity.blockNumber = event.block.number;
+        shopEntity.blockTimestamp = event.block.timestamp;
+        shopEntity.transactionHash = event.transaction.hash;
+        shopEntity.save();
     } else {
         entity.providedPoint = BigInt.fromI32(0);
         entity.clearedPoint = BigInt.fromI32(0);
