@@ -44,16 +44,16 @@ export class Deposited__Params {
   }
 }
 
-export class ExchangedMileageToToken extends ethereum.Event {
-  get params(): ExchangedMileageToToken__Params {
-    return new ExchangedMileageToToken__Params(this);
+export class ExchangedPointToToken extends ethereum.Event {
+  get params(): ExchangedPointToToken__Params {
+    return new ExchangedPointToToken__Params(this);
   }
 }
 
-export class ExchangedMileageToToken__Params {
-  _event: ExchangedMileageToToken;
+export class ExchangedPointToToken__Params {
+  _event: ExchangedPointToToken;
 
-  constructor(event: ExchangedMileageToToken) {
+  constructor(event: ExchangedPointToToken) {
     this._event = event;
   }
 
@@ -61,7 +61,7 @@ export class ExchangedMileageToToken__Params {
     return this._event.parameters[0].value.toBytes();
   }
 
-  get amountMileage(): BigInt {
+  get amountPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
@@ -69,7 +69,7 @@ export class ExchangedMileageToToken__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get balanceMileage(): BigInt {
+  get balancePoint(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -78,16 +78,16 @@ export class ExchangedMileageToToken__Params {
   }
 }
 
-export class ExchangedTokenToMileage extends ethereum.Event {
-  get params(): ExchangedTokenToMileage__Params {
-    return new ExchangedTokenToMileage__Params(this);
+export class ExchangedTokenToPoint extends ethereum.Event {
+  get params(): ExchangedTokenToPoint__Params {
+    return new ExchangedTokenToPoint__Params(this);
   }
 }
 
-export class ExchangedTokenToMileage__Params {
-  _event: ExchangedTokenToMileage;
+export class ExchangedTokenToPoint__Params {
+  _event: ExchangedTokenToPoint;
 
-  constructor(event: ExchangedTokenToMileage) {
+  constructor(event: ExchangedTokenToPoint) {
     this._event = event;
   }
 
@@ -95,7 +95,7 @@ export class ExchangedTokenToMileage__Params {
     return this._event.parameters[0].value.toBytes();
   }
 
-  get amountMileage(): BigInt {
+  get amountPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
@@ -103,7 +103,7 @@ export class ExchangedTokenToMileage__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get balanceMileage(): BigInt {
+  get balancePoint(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -112,16 +112,16 @@ export class ExchangedTokenToMileage__Params {
   }
 }
 
-export class PaidMileage extends ethereum.Event {
-  get params(): PaidMileage__Params {
-    return new PaidMileage__Params(this);
+export class PaidPoint extends ethereum.Event {
+  get params(): PaidPoint__Params {
+    return new PaidPoint__Params(this);
   }
 }
 
-export class PaidMileage__Params {
-  _event: PaidMileage;
+export class PaidPoint__Params {
+  _event: PaidPoint;
 
-  constructor(event: PaidMileage) {
+  constructor(event: PaidPoint) {
     this._event = event;
   }
 
@@ -129,7 +129,7 @@ export class PaidMileage__Params {
     return this._event.parameters[0].value.toBytes();
   }
 
-  get paidAmountMileage(): BigInt {
+  get paidAmountPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
@@ -137,7 +137,7 @@ export class PaidMileage__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get balanceMileage(): BigInt {
+  get balancePoint(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -188,16 +188,16 @@ export class PaidToken__Params {
   }
 }
 
-export class ProvidedMileage extends ethereum.Event {
-  get params(): ProvidedMileage__Params {
-    return new ProvidedMileage__Params(this);
+export class ProvidedPoint extends ethereum.Event {
+  get params(): ProvidedPoint__Params {
+    return new ProvidedPoint__Params(this);
   }
 }
 
-export class ProvidedMileage__Params {
-  _event: ProvidedMileage;
+export class ProvidedPoint__Params {
+  _event: ProvidedPoint;
 
-  constructor(event: ProvidedMileage) {
+  constructor(event: ProvidedPoint) {
     this._event = event;
   }
 
@@ -205,7 +205,7 @@ export class ProvidedMileage__Params {
     return this._event.parameters[0].value.toBytes();
   }
 
-  get providedAmountMileage(): BigInt {
+  get providedAmountPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
@@ -213,7 +213,7 @@ export class ProvidedMileage__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get balanceMileage(): BigInt {
+  get balancePoint(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -226,16 +226,16 @@ export class ProvidedMileage__Params {
   }
 }
 
-export class ProvidedMileageToFranchisee extends ethereum.Event {
-  get params(): ProvidedMileageToFranchisee__Params {
-    return new ProvidedMileageToFranchisee__Params(this);
+export class ProvidedPointToFranchisee extends ethereum.Event {
+  get params(): ProvidedPointToFranchisee__Params {
+    return new ProvidedPointToFranchisee__Params(this);
   }
 }
 
-export class ProvidedMileageToFranchisee__Params {
-  _event: ProvidedMileageToFranchisee;
+export class ProvidedPointToFranchisee__Params {
+  _event: ProvidedPointToFranchisee;
 
-  constructor(event: ProvidedMileageToFranchisee) {
+  constructor(event: ProvidedPointToFranchisee) {
     this._event = event;
   }
 
@@ -243,7 +243,7 @@ export class ProvidedMileageToFranchisee__Params {
     return this._event.parameters[0].value.toBytes();
   }
 
-  get providedAmountMileage(): BigInt {
+  get providedAmountPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
@@ -251,7 +251,7 @@ export class ProvidedMileageToFranchisee__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get balanceMileage(): BigInt {
+  get balancePoint(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -489,29 +489,6 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
-  mileageBalanceOf(_hash: Bytes): BigInt {
-    let result = super.call(
-      "mileageBalanceOf",
-      "mileageBalanceOf(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(_hash)]
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_mileageBalanceOf(_hash: Bytes): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "mileageBalanceOf",
-      "mileageBalanceOf(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(_hash)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   nonceOf(_account: Address): BigInt {
     let result = super.call("nonceOf", "nonceOf(address):(uint256)", [
       ethereum.Value.fromAddress(_account)
@@ -524,6 +501,29 @@ export class Ledger extends ethereum.SmartContract {
     let result = super.tryCall("nonceOf", "nonceOf(address):(uint256)", [
       ethereum.Value.fromAddress(_account)
     ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  pointBalanceOf(_hash: Bytes): BigInt {
+    let result = super.call(
+      "pointBalanceOf",
+      "pointBalanceOf(bytes32):(uint256)",
+      [ethereum.Value.fromFixedBytes(_hash)]
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_pointBalanceOf(_hash: Bytes): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "pointBalanceOf",
+      "pointBalanceOf(bytes32):(uint256)",
+      [ethereum.Value.fromFixedBytes(_hash)]
+    );
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -769,20 +769,20 @@ export class DepositCall__Outputs {
   }
 }
 
-export class ExchangeMileageToTokenCall extends ethereum.Call {
-  get inputs(): ExchangeMileageToTokenCall__Inputs {
-    return new ExchangeMileageToTokenCall__Inputs(this);
+export class ExchangePointToTokenCall extends ethereum.Call {
+  get inputs(): ExchangePointToTokenCall__Inputs {
+    return new ExchangePointToTokenCall__Inputs(this);
   }
 
-  get outputs(): ExchangeMileageToTokenCall__Outputs {
-    return new ExchangeMileageToTokenCall__Outputs(this);
+  get outputs(): ExchangePointToTokenCall__Outputs {
+    return new ExchangePointToTokenCall__Outputs(this);
   }
 }
 
-export class ExchangeMileageToTokenCall__Inputs {
-  _call: ExchangeMileageToTokenCall;
+export class ExchangePointToTokenCall__Inputs {
+  _call: ExchangePointToTokenCall;
 
-  constructor(call: ExchangeMileageToTokenCall) {
+  constructor(call: ExchangePointToTokenCall) {
     this._call = call;
   }
 
@@ -790,7 +790,7 @@ export class ExchangeMileageToTokenCall__Inputs {
     return this._call.inputValues[0].value.toBytes();
   }
 
-  get _amountMileage(): BigInt {
+  get _amountPoint(): BigInt {
     return this._call.inputValues[1].value.toBigInt();
   }
 
@@ -803,28 +803,28 @@ export class ExchangeMileageToTokenCall__Inputs {
   }
 }
 
-export class ExchangeMileageToTokenCall__Outputs {
-  _call: ExchangeMileageToTokenCall;
+export class ExchangePointToTokenCall__Outputs {
+  _call: ExchangePointToTokenCall;
 
-  constructor(call: ExchangeMileageToTokenCall) {
+  constructor(call: ExchangePointToTokenCall) {
     this._call = call;
   }
 }
 
-export class ExchangeTokenToMileageCall extends ethereum.Call {
-  get inputs(): ExchangeTokenToMileageCall__Inputs {
-    return new ExchangeTokenToMileageCall__Inputs(this);
+export class ExchangeTokenToPointCall extends ethereum.Call {
+  get inputs(): ExchangeTokenToPointCall__Inputs {
+    return new ExchangeTokenToPointCall__Inputs(this);
   }
 
-  get outputs(): ExchangeTokenToMileageCall__Outputs {
-    return new ExchangeTokenToMileageCall__Outputs(this);
+  get outputs(): ExchangeTokenToPointCall__Outputs {
+    return new ExchangeTokenToPointCall__Outputs(this);
   }
 }
 
-export class ExchangeTokenToMileageCall__Inputs {
-  _call: ExchangeTokenToMileageCall;
+export class ExchangeTokenToPointCall__Inputs {
+  _call: ExchangeTokenToPointCall;
 
-  constructor(call: ExchangeTokenToMileageCall) {
+  constructor(call: ExchangeTokenToPointCall) {
     this._call = call;
   }
 
@@ -845,28 +845,28 @@ export class ExchangeTokenToMileageCall__Inputs {
   }
 }
 
-export class ExchangeTokenToMileageCall__Outputs {
-  _call: ExchangeTokenToMileageCall;
+export class ExchangeTokenToPointCall__Outputs {
+  _call: ExchangeTokenToPointCall;
 
-  constructor(call: ExchangeTokenToMileageCall) {
+  constructor(call: ExchangeTokenToPointCall) {
     this._call = call;
   }
 }
 
-export class PayMileageCall extends ethereum.Call {
-  get inputs(): PayMileageCall__Inputs {
-    return new PayMileageCall__Inputs(this);
+export class PayPointCall extends ethereum.Call {
+  get inputs(): PayPointCall__Inputs {
+    return new PayPointCall__Inputs(this);
   }
 
-  get outputs(): PayMileageCall__Outputs {
-    return new PayMileageCall__Outputs(this);
+  get outputs(): PayPointCall__Outputs {
+    return new PayPointCall__Outputs(this);
   }
 }
 
-export class PayMileageCall__Inputs {
-  _call: PayMileageCall;
+export class PayPointCall__Inputs {
+  _call: PayPointCall;
 
-  constructor(call: PayMileageCall) {
+  constructor(call: PayPointCall) {
     this._call = call;
   }
 
@@ -895,10 +895,10 @@ export class PayMileageCall__Inputs {
   }
 }
 
-export class PayMileageCall__Outputs {
-  _call: PayMileageCall;
+export class PayPointCall__Outputs {
+  _call: PayPointCall;
 
-  constructor(call: PayMileageCall) {
+  constructor(call: PayPointCall) {
     this._call = call;
   }
 }

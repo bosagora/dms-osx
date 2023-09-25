@@ -207,7 +207,7 @@ describe("Test of Server", function () {
     };
 
     let reqId: string;
-    context("Test token & mileage relay endpoints", () => {
+    context("Test token & point relay endpoints", () => {
         before("Deploy", async () => {
             await deployAllContract();
         });
@@ -275,10 +275,10 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Exchange token & mileage", () => {
+        context("Exchange token & point", () => {
             const amountDepositToken = BigNumber.from(amount.value.mul(2));
             const amountToken = BigNumber.from(amount.value);
-            const amountMileage = amountToken.mul(price).div(multiple);
+            const amountPoint = amountToken.mul(price).div(multiple);
 
             before("Deposit token", async () => {
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amountDepositToken);
@@ -288,7 +288,7 @@ describe("Test of Server", function () {
                 );
             });
 
-            it("Failure Exchange token to mileage", async () => {
+            it("Failure Exchange token to point", async () => {
                 const over_purchaseAmount = Amount.make(90_000_000, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(
@@ -298,7 +298,7 @@ describe("Test of Server", function () {
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("exchangeTokenToMileage");
+                const uri = URI(serverURL).directory("exchangeTokenToPoint");
                 const url = uri.toString();
 
                 const response = await client.post(url, {
@@ -311,11 +311,11 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure Exchange token to mileage", async () => {
+            it("Failure Exchange token to point", async () => {
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amountToken, nonce);
 
-                const uri = URI(serverURL).directory("exchangeTokenToMileage");
+                const uri = URI(serverURL).directory("exchangeTokenToPoint");
                 const url = uri.toString();
 
                 const response = await client.post(url, {
@@ -328,11 +328,11 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Success Exchange token to mileage", async () => {
+            it("Success Exchange token to point", async () => {
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountToken, nonce);
 
-                const uri = URI(serverURL).directory("exchangeTokenToMileage");
+                const uri = URI(serverURL).directory("exchangeTokenToPoint");
                 const url = uri.toString();
 
                 const response = await client.post(url, {
@@ -346,17 +346,17 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data.txHash !== undefined);
             });
 
-            it("Failure Exchange mileage to token", async () => {
+            it("Failure Exchange point to token", async () => {
                 const over_amount = Amount.make(90_000_000, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(users[0], emailHashes[0], over_amount, nonce);
 
-                const uri = URI(serverURL).directory("exchangeMileageToToken");
+                const uri = URI(serverURL).directory("exchangePointToToken");
                 const url = uri.toString();
 
                 const response = await client.post(url, {
                     email: emailHashes[0],
-                    amountMileage: over_amount.toString(),
+                    amountPoint: over_amount.toString(),
                     signer: users[0].address,
                     signature,
                 });
@@ -364,7 +364,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure Exchange mileage to token", async () => {
+            it("Failure Exchange point to token", async () => {
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(
                     users[1],
@@ -373,12 +373,12 @@ describe("Test of Server", function () {
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("exchangeMileageToToken");
+                const uri = URI(serverURL).directory("exchangePointToToken");
                 const url = uri.toString();
 
                 const response = await client.post(url, {
                     email: emailHashes[0],
-                    amountMileage: purchaseData.amount.toString(),
+                    amountPoint: purchaseData.amount.toString(),
                     signer: users[0].address,
                     signature,
                 });
@@ -386,7 +386,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Success Exchange mileage to token", async () => {
+            it("Success Exchange point to token", async () => {
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signExchange(
                     users[0],
@@ -395,12 +395,12 @@ describe("Test of Server", function () {
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("exchangeMileageToToken");
+                const uri = URI(serverURL).directory("exchangePointToToken");
                 const url = uri.toString();
 
                 const response = await client.post(url, {
                     email: emailHashes[0],
-                    amountMileage: purchaseData.amount.toString(),
+                    amountPoint: purchaseData.amount.toString(),
                     signer: users[0].address,
                     signature,
                 });
@@ -409,7 +409,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data.txHash !== undefined);
             });
 
-            it("Failure test of the path /payMileage 'Insufficient balance'", async () => {
+            it("Failure test of the path /payPoint 'Insufficient balance'", async () => {
                 const over_purchaseAmount = Amount.make(90_000_000, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -420,7 +420,7 @@ describe("Test of Server", function () {
                     franchiseeData[0].franchiseeId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payMileage");
+                const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
@@ -435,7 +435,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure test of the path /payMileage 'Email is not valid.'", async () => {
+            it("Failure test of the path /payPoint 'Email is not valid.'", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -446,7 +446,7 @@ describe("Test of Server", function () {
                     franchiseeData[0].franchiseeId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payMileage");
+                const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
@@ -461,7 +461,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Failed to check the validity of parameters.");
             });
 
-            it("Failure test of the path /payMileage 'Invalid signature'", async () => {
+            it("Failure test of the path /payPoint 'Invalid signature'", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -472,7 +472,7 @@ describe("Test of Server", function () {
                     franchiseeData[0].franchiseeId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payMileage");
+                const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
@@ -487,7 +487,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Failure test of the path /payMileage 'Email is not valid.'", async () => {
+            it("Failure test of the path /payPoint 'Email is not valid.'", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -498,7 +498,7 @@ describe("Test of Server", function () {
                     franchiseeData[0].franchiseeId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payMileage");
+                const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
@@ -513,7 +513,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Email is not valid.");
             });
 
-            it("Success Test of the path /payMileage", async () => {
+            it("Success Test of the path /payPoint", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -524,7 +524,7 @@ describe("Test of Server", function () {
                     franchiseeData[0].franchiseeId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payMileage");
+                const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,

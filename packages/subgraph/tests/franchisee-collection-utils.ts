@@ -2,9 +2,9 @@ import { newMockEvent } from "matchstick-as";
 import { ethereum, BigInt, Bytes } from "@graphprotocol/graph-ts";
 import {
     AddedFranchisee,
-    IncreasedClearedMileage,
-    IncreasedProvidedMileage,
-    IncreasedUsedMileage,
+    IncreasedClearedPoint,
+    IncreasedProvidedPoint,
+    IncreasedUsedPoint,
 } from "../generated/FranchiseeCollection/FranchiseeCollection";
 
 export function createAddedEvent(franchiseeId: string, timestamp: BigInt, email: Bytes): AddedFranchisee {
@@ -19,68 +19,66 @@ export function createAddedEvent(franchiseeId: string, timestamp: BigInt, email:
     return addedEvent;
 }
 
-export function createIncreasedClearedMileageEvent(
+export function createIncreasedClearedPointEvent(
     franchiseeId: string,
     increase: BigInt,
     total: BigInt
-): IncreasedClearedMileage {
-    let increasedClearedMileageEvent = changetype<IncreasedClearedMileage>(newMockEvent());
+): IncreasedClearedPoint {
+    let increasedClearedPointEvent = changetype<IncreasedClearedPoint>(newMockEvent());
 
-    increasedClearedMileageEvent.parameters = new Array();
+    increasedClearedPointEvent.parameters = new Array();
 
-    increasedClearedMileageEvent.parameters.push(
+    increasedClearedPointEvent.parameters.push(
         new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
     );
-    increasedClearedMileageEvent.parameters.push(
+    increasedClearedPointEvent.parameters.push(
         new ethereum.EventParam("increase", ethereum.Value.fromUnsignedBigInt(increase))
     );
-    increasedClearedMileageEvent.parameters.push(
+    increasedClearedPointEvent.parameters.push(
         new ethereum.EventParam("total", ethereum.Value.fromUnsignedBigInt(total))
     );
 
-    return increasedClearedMileageEvent;
+    return increasedClearedPointEvent;
 }
 
-export function createIncreasedProvidedMileageEvent(
+export function createIncreasedProvidedPointEvent(
     franchiseeId: string,
     increase: BigInt,
     total: BigInt
-): IncreasedProvidedMileage {
-    let increasedProvidedMileageEvent = changetype<IncreasedProvidedMileage>(newMockEvent());
+): IncreasedProvidedPoint {
+    let increasedProvidedPointEvent = changetype<IncreasedProvidedPoint>(newMockEvent());
 
-    increasedProvidedMileageEvent.parameters = new Array();
+    increasedProvidedPointEvent.parameters = new Array();
 
-    increasedProvidedMileageEvent.parameters.push(
+    increasedProvidedPointEvent.parameters.push(
         new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
     );
-    increasedProvidedMileageEvent.parameters.push(
+    increasedProvidedPointEvent.parameters.push(
         new ethereum.EventParam("increase", ethereum.Value.fromUnsignedBigInt(increase))
     );
-    increasedProvidedMileageEvent.parameters.push(
+    increasedProvidedPointEvent.parameters.push(
         new ethereum.EventParam("total", ethereum.Value.fromUnsignedBigInt(total))
     );
 
-    return increasedProvidedMileageEvent;
+    return increasedProvidedPointEvent;
 }
 
-export function createIncreasedUsedMileageEvent(
+export function createIncreasedUsedPointEvent(
     franchiseeId: string,
     increase: BigInt,
     total: BigInt
-): IncreasedUsedMileage {
-    let increasedUsedMileageEvent = changetype<IncreasedUsedMileage>(newMockEvent());
+): IncreasedUsedPoint {
+    let increasedUsedPointEvent = changetype<IncreasedUsedPoint>(newMockEvent());
 
-    increasedUsedMileageEvent.parameters = new Array();
+    increasedUsedPointEvent.parameters = new Array();
 
-    increasedUsedMileageEvent.parameters.push(
+    increasedUsedPointEvent.parameters.push(
         new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
     );
-    increasedUsedMileageEvent.parameters.push(
+    increasedUsedPointEvent.parameters.push(
         new ethereum.EventParam("increase", ethereum.Value.fromUnsignedBigInt(increase))
     );
-    increasedUsedMileageEvent.parameters.push(
-        new ethereum.EventParam("total", ethereum.Value.fromUnsignedBigInt(total))
-    );
+    increasedUsedPointEvent.parameters.push(new ethereum.EventParam("total", ethereum.Value.fromUnsignedBigInt(total)));
 
-    return increasedUsedMileageEvent;
+    return increasedUsedPointEvent;
 }

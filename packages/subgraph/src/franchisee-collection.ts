@@ -1,8 +1,8 @@
 import {
     AddedFranchisee as AddedFranchiseeEvent,
-    IncreasedClearedMileage as IncreasedClearedMileageEvent,
-    IncreasedProvidedMileage as IncreasedProvidedMileageEvent,
-    IncreasedUsedMileage as IncreasedUsedMileageEvent,
+    IncreasedClearedPoint as IncreasedClearedPointEvent,
+    IncreasedProvidedPoint as IncreasedProvidedPointEvent,
+    IncreasedUsedPoint as IncreasedUsedPointEvent,
 } from "../generated/FranchiseeCollection/FranchiseeCollection";
 import { Franchisee, FranchiseeTradeHistory } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
@@ -14,9 +14,9 @@ export function handleAddedFranchisee(event: AddedFranchiseeEvent): void {
     entity.provideWaitTime = event.params.provideWaitTime;
     entity.email = event.params.email;
 
-    entity.providedMileage = BigInt.fromI32(0);
-    entity.usedMileage = BigInt.fromI32(0);
-    entity.clearedMileage = BigInt.fromI32(0);
+    entity.providedPoint = BigInt.fromI32(0);
+    entity.usedPoint = BigInt.fromI32(0);
+    entity.clearedPoint = BigInt.fromI32(0);
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -25,26 +25,26 @@ export function handleAddedFranchisee(event: AddedFranchiseeEvent): void {
     entity.save();
 }
 
-export function handleIncreasedClearedMileage(event: IncreasedClearedMileageEvent): void {
+export function handleIncreasedClearedPoint(event: IncreasedClearedPointEvent): void {
     let entity = new FranchiseeTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.action = "ClearedMileage";
+    entity.action = "ClearedPoint";
     entity.franchiseeId = event.params.franchiseeId;
     entity.purchaseId = event.params.purchaseId;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.clearedMileage = event.params.total.div(AmountUnit);
+    entity.clearedPoint = event.params.total.div(AmountUnit);
 
     let franchiseeEntity = Franchisee.load(event.params.franchiseeId);
     if (franchiseeEntity !== null) {
-        entity.providedMileage = franchiseeEntity.providedMileage;
-        entity.usedMileage = franchiseeEntity.usedMileage;
-        franchiseeEntity.clearedMileage = entity.clearedMileage;
+        entity.providedPoint = franchiseeEntity.providedPoint;
+        entity.usedPoint = franchiseeEntity.usedPoint;
+        franchiseeEntity.clearedPoint = entity.clearedPoint;
         franchiseeEntity.blockNumber = event.block.number;
         franchiseeEntity.blockTimestamp = event.block.timestamp;
         franchiseeEntity.transactionHash = event.transaction.hash;
         franchiseeEntity.save();
     } else {
-        entity.providedMileage = BigInt.fromI32(0);
-        entity.usedMileage = BigInt.fromI32(0);
+        entity.providedPoint = BigInt.fromI32(0);
+        entity.usedPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -54,26 +54,26 @@ export function handleIncreasedClearedMileage(event: IncreasedClearedMileageEven
     entity.save();
 }
 
-export function handleIncreasedProvidedMileage(event: IncreasedProvidedMileageEvent): void {
+export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent): void {
     let entity = new FranchiseeTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.action = "ProvidedMileage";
+    entity.action = "ProvidedPoint";
     entity.franchiseeId = event.params.franchiseeId;
     entity.purchaseId = event.params.purchaseId;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.providedMileage = event.params.total.div(AmountUnit);
+    entity.providedPoint = event.params.total.div(AmountUnit);
 
     let franchiseeEntity = Franchisee.load(event.params.franchiseeId);
     if (franchiseeEntity !== null) {
-        entity.usedMileage = franchiseeEntity.usedMileage;
-        entity.clearedMileage = franchiseeEntity.clearedMileage;
-        franchiseeEntity.providedMileage = entity.providedMileage;
+        entity.usedPoint = franchiseeEntity.usedPoint;
+        entity.clearedPoint = franchiseeEntity.clearedPoint;
+        franchiseeEntity.providedPoint = entity.providedPoint;
         franchiseeEntity.blockNumber = event.block.number;
         franchiseeEntity.blockTimestamp = event.block.timestamp;
         franchiseeEntity.transactionHash = event.transaction.hash;
         franchiseeEntity.save();
     } else {
-        entity.usedMileage = BigInt.fromI32(0);
-        entity.clearedMileage = BigInt.fromI32(0);
+        entity.usedPoint = BigInt.fromI32(0);
+        entity.clearedPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -83,26 +83,26 @@ export function handleIncreasedProvidedMileage(event: IncreasedProvidedMileageEv
     entity.save();
 }
 
-export function handleIncreasedUsedMileage(event: IncreasedUsedMileageEvent): void {
+export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
     let entity = new FranchiseeTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.action = "UsedMileage";
+    entity.action = "UsedPoint";
     entity.franchiseeId = event.params.franchiseeId;
     entity.purchaseId = event.params.purchaseId;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.usedMileage = event.params.total.div(AmountUnit);
+    entity.usedPoint = event.params.total.div(AmountUnit);
 
     let franchiseeEntity = Franchisee.load(event.params.franchiseeId);
     if (franchiseeEntity !== null) {
-        entity.providedMileage = franchiseeEntity.providedMileage;
-        entity.clearedMileage = franchiseeEntity.clearedMileage;
-        franchiseeEntity.usedMileage = entity.usedMileage;
+        entity.providedPoint = franchiseeEntity.providedPoint;
+        entity.clearedPoint = franchiseeEntity.clearedPoint;
+        franchiseeEntity.usedPoint = entity.usedPoint;
         franchiseeEntity.blockNumber = event.block.number;
         franchiseeEntity.blockTimestamp = event.block.timestamp;
         franchiseeEntity.transactionHash = event.transaction.hash;
         franchiseeEntity.save();
     } else {
-        entity.providedMileage = BigInt.fromI32(0);
-        entity.clearedMileage = BigInt.fromI32(0);
+        entity.providedPoint = BigInt.fromI32(0);
+        entity.clearedPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;

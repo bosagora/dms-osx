@@ -17,12 +17,12 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - Deposited
-        - ExchangedMileageToToken
-        - ExchangedTokenToMileage
-        - PaidMileage
+        - ExchangedPointToToken
+        - ExchangedTokenToPoint
+        - PaidPoint
         - PaidToken
-        - ProvidedMileage
-        - ProvidedMileageToFranchisee
+        - ProvidedPoint
+        - ProvidedPointToFranchisee
         - ProvidedToken
         - SavedPurchase
         - Withdrawn
@@ -32,18 +32,18 @@ dataSources:
       eventHandlers:
         - event: Deposited(bytes32,uint256,uint256,uint256,address)
           handler: handleDeposited
-        - event: ExchangedMileageToToken(bytes32,uint256,uint256,uint256,uint256)
-          handler: handleExchangedMileageToToken
-        - event: ExchangedTokenToMileage(bytes32,uint256,uint256,uint256,uint256)
-          handler: handleExchangedTokenToMileage
-        - event: PaidMileage(bytes32,uint256,uint256,uint256,string,string)
-          handler: handlePaidMileage
+        - event: ExchangedPointToToken(bytes32,uint256,uint256,uint256,uint256)
+          handler: handleExchangedPointToToken
+        - event: ExchangedTokenToPoint(bytes32,uint256,uint256,uint256,uint256)
+          handler: handleExchangedTokenToPoint
+        - event: PaidPoint(bytes32,uint256,uint256,uint256,string,string)
+          handler: handlePaidPoint
         - event: PaidToken(bytes32,uint256,uint256,uint256,string,string)
           handler: handlePaidToken
-        - event: ProvidedMileage(bytes32,uint256,uint256,uint256,string,string)
-          handler: handleProvidedMileage
-        - event: ProvidedMileageToFranchisee(bytes32,uint256,uint256,uint256,string,string)
-          handler: handleProvidedMileageToFranchisee
+        - event: ProvidedPoint(bytes32,uint256,uint256,uint256,string,string)
+          handler: handleProvidedPoint
+        - event: ProvidedPointToFranchisee(bytes32,uint256,uint256,uint256,string,string)
+          handler: handleProvidedPointToFranchisee
         - event: ProvidedToken(bytes32,uint256,uint256,uint256,string,string)
           handler: handleProvidedToken
         - event: SavedPurchase(string,uint256,uint256,bytes32,string,uint32)
@@ -65,19 +65,19 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - AddedFranchisee
-        - IncreasedClearedMileage
-        - IncreasedProvidedMileage
-        - IncreasedUsedMileage
+        - IncreasedClearedPoint
+        - IncreasedProvidedPoint
+        - IncreasedUsedPoint
       abis:
         - name: FranchiseeCollection
           file: $DMS_OSX_MODULE/artifacts/contracts/FranchiseeCollection.sol/FranchiseeCollection.json
       eventHandlers:
         - event: AddedFranchisee(string,uint256,bytes32)
           handler: handleAddedFranchisee
-        - event: IncreasedClearedMileage(string,uint256,uint256,string)
-          handler: handleIncreasedClearedMileage
-        - event: IncreasedProvidedMileage(string,uint256,uint256,string)
-          handler: handleIncreasedProvidedMileage
-        - event: IncreasedUsedMileage(string,uint256,uint256,string)
-          handler: handleIncreasedUsedMileage
+        - event: IncreasedClearedPoint(string,uint256,uint256,string)
+          handler: handleIncreasedClearedPoint
+        - event: IncreasedProvidedPoint(string,uint256,uint256,string)
+          handler: handleIncreasedProvidedPoint
+        - event: IncreasedUsedPoint(string,uint256,uint256,string)
+          handler: handleIncreasedUsedPoint
       file: ./src/franchisee-collection.ts

@@ -63,7 +63,7 @@
                 "type": "string"
             }
         ],
-        "name": "IncreasedClearedMileage",
+        "name": "IncreasedClearedPoint",
         "type": "event"
     },
     {
@@ -94,7 +94,7 @@
                 "type": "string"
             }
         ],
-        "name": "IncreasedProvidedMileage",
+        "name": "IncreasedProvidedPoint",
         "type": "event"
     },
     {
@@ -125,7 +125,7 @@
                 "type": "string"
             }
         ],
-        "name": "IncreasedUsedMileage",
+        "name": "IncreasedUsedPoint",
         "type": "event"
     },
     {
@@ -182,7 +182,7 @@
                 "type": "string"
             }
         ],
-        "name": "addClearedMileage",
+        "name": "addClearedPoint",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -205,7 +205,7 @@
                 "type": "string"
             }
         ],
-        "name": "addProvidedMileage",
+        "name": "addProvidedPoint",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -228,7 +228,7 @@
                 "type": "string"
             }
         ],
-        "name": "addUsedMileage",
+        "name": "addUsedPoint",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -294,17 +294,17 @@
                     },
                     {
                         "internalType": "uint256",
-                        "name": "providedMileage",
+                        "name": "providedPoint",
                         "type": "uint256"
                     },
                     {
                         "internalType": "uint256",
-                        "name": "usedMileage",
+                        "name": "usedPoint",
                         "type": "uint256"
                     },
                     {
                         "internalType": "uint256",
-                        "name": "clearedMileage",
+                        "name": "clearedPoint",
                         "type": "uint256"
                     },
                     {
@@ -342,7 +342,7 @@
                 "type": "string"
             }
         ],
-        "name": "getClearMileage",
+        "name": "getClearPoint",
         "outputs": [
             {
                 "internalType": "uint256",

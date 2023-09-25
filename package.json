@@ -1,7 +1,7 @@
 {
   "name": "dms-osx",
   "version": "1.0.0",
-  "description": "A smart contract framework that decentralized mileage systems",
+  "description": "A smart contract framework that decentralized point systems",
   "repository": "https://github.com/bosagora/dms-osx",
   "author": "BOSagora Foundation",
   "private": true,

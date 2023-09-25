@@ -36,16 +36,16 @@ export class AddedFranchisee__Params {
   }
 }
 
-export class IncreasedClearedMileage extends ethereum.Event {
-  get params(): IncreasedClearedMileage__Params {
-    return new IncreasedClearedMileage__Params(this);
+export class IncreasedClearedPoint extends ethereum.Event {
+  get params(): IncreasedClearedPoint__Params {
+    return new IncreasedClearedPoint__Params(this);
   }
 }
 
-export class IncreasedClearedMileage__Params {
-  _event: IncreasedClearedMileage;
+export class IncreasedClearedPoint__Params {
+  _event: IncreasedClearedPoint;
 
-  constructor(event: IncreasedClearedMileage) {
+  constructor(event: IncreasedClearedPoint) {
     this._event = event;
   }
 
@@ -66,16 +66,16 @@ export class IncreasedClearedMileage__Params {
   }
 }
 
-export class IncreasedProvidedMileage extends ethereum.Event {
-  get params(): IncreasedProvidedMileage__Params {
-    return new IncreasedProvidedMileage__Params(this);
+export class IncreasedProvidedPoint extends ethereum.Event {
+  get params(): IncreasedProvidedPoint__Params {
+    return new IncreasedProvidedPoint__Params(this);
   }
 }
 
-export class IncreasedProvidedMileage__Params {
-  _event: IncreasedProvidedMileage;
+export class IncreasedProvidedPoint__Params {
+  _event: IncreasedProvidedPoint;
 
-  constructor(event: IncreasedProvidedMileage) {
+  constructor(event: IncreasedProvidedPoint) {
     this._event = event;
   }
 
@@ -96,16 +96,16 @@ export class IncreasedProvidedMileage__Params {
   }
 }
 
-export class IncreasedUsedMileage extends ethereum.Event {
-  get params(): IncreasedUsedMileage__Params {
-    return new IncreasedUsedMileage__Params(this);
+export class IncreasedUsedPoint extends ethereum.Event {
+  get params(): IncreasedUsedPoint__Params {
+    return new IncreasedUsedPoint__Params(this);
   }
 }
 
-export class IncreasedUsedMileage__Params {
-  _event: IncreasedUsedMileage;
+export class IncreasedUsedPoint__Params {
+  _event: IncreasedUsedPoint;
 
-  constructor(event: IncreasedUsedMileage) {
+  constructor(event: IncreasedUsedPoint) {
     this._event = event;
   }
 
@@ -139,15 +139,15 @@ export class FranchiseeCollection__franchiseeOfResultValue0Struct extends ethere
     return this[2].toBytes();
   }
 
-  get providedMileage(): BigInt {
+  get providedPoint(): BigInt {
     return this[3].toBigInt();
   }
 
-  get usedMileage(): BigInt {
+  get usedPoint(): BigInt {
     return this[4].toBigInt();
   }
 
-  get clearedMileage(): BigInt {
+  get clearedPoint(): BigInt {
     return this[5].toBigInt();
   }
 
@@ -270,20 +270,20 @@ export class FranchiseeCollection extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  getClearMileage(_franchiseeId: string): BigInt {
+  getClearPoint(_franchiseeId: string): BigInt {
     let result = super.call(
-      "getClearMileage",
-      "getClearMileage(string):(uint256)",
+      "getClearPoint",
+      "getClearPoint(string):(uint256)",
       [ethereum.Value.fromString(_franchiseeId)]
     );
 
     return result[0].toBigInt();
   }
 
-  try_getClearMileage(_franchiseeId: string): ethereum.CallResult<BigInt> {
+  try_getClearPoint(_franchiseeId: string): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
-      "getClearMileage",
-      "getClearMileage(string):(uint256)",
+      "getClearPoint",
+      "getClearPoint(string):(uint256)",
       [ethereum.Value.fromString(_franchiseeId)]
     );
     if (result.reverted) {
@@ -404,20 +404,20 @@ export class AddCall__Outputs {
   }
 }
 
-export class AddClearedMileageCall extends ethereum.Call {
-  get inputs(): AddClearedMileageCall__Inputs {
-    return new AddClearedMileageCall__Inputs(this);
+export class AddClearedPointCall extends ethereum.Call {
+  get inputs(): AddClearedPointCall__Inputs {
+    return new AddClearedPointCall__Inputs(this);
   }
 
-  get outputs(): AddClearedMileageCall__Outputs {
-    return new AddClearedMileageCall__Outputs(this);
+  get outputs(): AddClearedPointCall__Outputs {
+    return new AddClearedPointCall__Outputs(this);
   }
 }
 
-export class AddClearedMileageCall__Inputs {
-  _call: AddClearedMileageCall;
+export class AddClearedPointCall__Inputs {
+  _call: AddClearedPointCall;
 
-  constructor(call: AddClearedMileageCall) {
+  constructor(call: AddClearedPointCall) {
     this._call = call;
   }
 
@@ -434,66 +434,28 @@ export class AddClearedMileageCall__Inputs {
   }
 }
 
-export class AddClearedMileageCall__Outputs {
-  _call: AddClearedMileageCall;
+export class AddClearedPointCall__Outputs {
+  _call: AddClearedPointCall;
 
-  constructor(call: AddClearedMileageCall) {
+  constructor(call: AddClearedPointCall) {
     this._call = call;
   }
 }
 
-export class AddProvidedMileageCall extends ethereum.Call {
-  get inputs(): AddProvidedMileageCall__Inputs {
-    return new AddProvidedMileageCall__Inputs(this);
+export class AddProvidedPointCall extends ethereum.Call {
+  get inputs(): AddProvidedPointCall__Inputs {
+    return new AddProvidedPointCall__Inputs(this);
   }
 
-  get outputs(): AddProvidedMileageCall__Outputs {
-    return new AddProvidedMileageCall__Outputs(this);
-  }
-}
-
-export class AddProvidedMileageCall__Inputs {
-  _call: AddProvidedMileageCall;
-
-  constructor(call: AddProvidedMileageCall) {
-    this._call = call;
-  }
-
-  get _franchiseeId(): string {
-    return this._call.inputValues[0].value.toString();
-  }
-
-  get _amount(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
-  get _purchaseId(): string {
-    return this._call.inputValues[2].value.toString();
+  get outputs(): AddProvidedPointCall__Outputs {
+    return new AddProvidedPointCall__Outputs(this);
   }
 }
 
-export class AddProvidedMileageCall__Outputs {
-  _call: AddProvidedMileageCall;
+export class AddProvidedPointCall__Inputs {
+  _call: AddProvidedPointCall;
 
-  constructor(call: AddProvidedMileageCall) {
-    this._call = call;
-  }
-}
-
-export class AddUsedMileageCall extends ethereum.Call {
-  get inputs(): AddUsedMileageCall__Inputs {
-    return new AddUsedMileageCall__Inputs(this);
-  }
-
-  get outputs(): AddUsedMileageCall__Outputs {
-    return new AddUsedMileageCall__Outputs(this);
-  }
-}
-
-export class AddUsedMileageCall__Inputs {
-  _call: AddUsedMileageCall;
-
-  constructor(call: AddUsedMileageCall) {
+  constructor(call: AddProvidedPointCall) {
     this._call = call;
   }
 
@@ -510,10 +472,48 @@ export class AddUsedMileageCall__Inputs {
   }
 }
 
-export class AddUsedMileageCall__Outputs {
-  _call: AddUsedMileageCall;
+export class AddProvidedPointCall__Outputs {
+  _call: AddProvidedPointCall;
 
-  constructor(call: AddUsedMileageCall) {
+  constructor(call: AddProvidedPointCall) {
+    this._call = call;
+  }
+}
+
+export class AddUsedPointCall extends ethereum.Call {
+  get inputs(): AddUsedPointCall__Inputs {
+    return new AddUsedPointCall__Inputs(this);
+  }
+
+  get outputs(): AddUsedPointCall__Outputs {
+    return new AddUsedPointCall__Outputs(this);
+  }
+}
+
+export class AddUsedPointCall__Inputs {
+  _call: AddUsedPointCall;
+
+  constructor(call: AddUsedPointCall) {
+    this._call = call;
+  }
+
+  get _franchiseeId(): string {
+    return this._call.inputValues[0].value.toString();
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+
+  get _purchaseId(): string {
+    return this._call.inputValues[2].value.toString();
+  }
+}
+
+export class AddUsedPointCall__Outputs {
+  _call: AddUsedPointCall;
+
+  constructor(call: AddUsedPointCall) {
     this._call = call;
   }
 }

@@ -80,7 +80,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "amountMileage",
+        "name": "amountPoint",
         "type": "uint256"
       },
       {
@@ -92,7 +92,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "balanceMileage",
+        "name": "balancePoint",
         "type": "uint256"
       },
       {
@@ -102,7 +102,7 @@
         "type": "uint256"
       }
     ],
-    "name": "ExchangedMileageToToken",
+    "name": "ExchangedPointToToken",
     "type": "event"
   },
   {
@@ -117,7 +117,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "amountMileage",
+        "name": "amountPoint",
         "type": "uint256"
       },
       {
@@ -129,7 +129,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "balanceMileage",
+        "name": "balancePoint",
         "type": "uint256"
       },
       {
@@ -139,7 +139,7 @@
         "type": "uint256"
       }
     ],
-    "name": "ExchangedTokenToMileage",
+    "name": "ExchangedTokenToPoint",
     "type": "event"
   },
   {
@@ -154,7 +154,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "paidAmountMileage",
+        "name": "paidAmountPoint",
         "type": "uint256"
       },
       {
@@ -166,7 +166,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "balanceMileage",
+        "name": "balancePoint",
         "type": "uint256"
       },
       {
@@ -182,7 +182,7 @@
         "type": "string"
       }
     ],
-    "name": "PaidMileage",
+    "name": "PaidPoint",
     "type": "event"
   },
   {
@@ -240,7 +240,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "providedAmountMileage",
+        "name": "providedAmountPoint",
         "type": "uint256"
       },
       {
@@ -252,7 +252,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "balanceMileage",
+        "name": "balancePoint",
         "type": "uint256"
       },
       {
@@ -268,7 +268,7 @@
         "type": "string"
       }
     ],
-    "name": "ProvidedMileage",
+    "name": "ProvidedPoint",
     "type": "event"
   },
   {
@@ -283,7 +283,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "providedAmountMileage",
+        "name": "providedAmountPoint",
         "type": "uint256"
       },
       {
@@ -295,7 +295,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "balanceMileage",
+        "name": "balancePoint",
         "type": "uint256"
       },
       {
@@ -311,7 +311,7 @@
         "type": "string"
       }
     ],
-    "name": "ProvidedMileageToFranchisee",
+    "name": "ProvidedPointToFranchisee",
     "type": "event"
   },
   {
@@ -458,13 +458,13 @@
       { "internalType": "bytes32", "name": "_email", "type": "bytes32" },
       {
         "internalType": "uint256",
-        "name": "_amountMileage",
+        "name": "_amountPoint",
         "type": "uint256"
       },
       { "internalType": "address", "name": "_signer", "type": "address" },
       { "internalType": "bytes", "name": "_signature", "type": "bytes" }
     ],
-    "name": "exchangeMileageToToken",
+    "name": "exchangePointToToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -476,7 +476,7 @@
       { "internalType": "address", "name": "_signer", "type": "address" },
       { "internalType": "bytes", "name": "_signature", "type": "bytes" }
     ],
-    "name": "exchangeTokenToMileage",
+    "name": "exchangeTokenToPoint",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -506,7 +506,7 @@
     "inputs": [
       { "internalType": "bytes32", "name": "_hash", "type": "bytes32" }
     ],
-    "name": "mileageBalanceOf",
+    "name": "pointBalanceOf",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
@@ -529,7 +529,7 @@
       { "internalType": "address", "name": "_signer", "type": "address" },
       { "internalType": "bytes", "name": "_signature", "type": "bytes" }
     ],
-    "name": "payMileage",
+    "name": "payPoint",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

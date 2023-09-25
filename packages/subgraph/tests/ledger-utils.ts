@@ -2,12 +2,12 @@ import { newMockEvent } from "matchstick-as";
 import { ethereum, Bytes, BigInt, Address } from "@graphprotocol/graph-ts";
 import {
     Deposited,
-    ExchangedMileageToToken,
-    ExchangedTokenToMileage,
-    PaidMileage,
+    ExchangedPointToToken,
+    ExchangedTokenToPoint,
+    PaidPoint,
     PaidToken,
-    ProvidedMileage,
-    ProvidedMileageToFranchisee,
+    ProvidedPoint,
+    ProvidedPointToFranchisee,
     ProvidedToken,
     SavedPurchase,
     Withdrawn,
@@ -37,88 +37,84 @@ export function createDepositedEvent(
     return depositedEvent;
 }
 
-export function createExchangedMileageToTokenEvent(
+export function createExchangedPointToTokenEvent(
     email: Bytes,
-    amountMileage: BigInt,
+    amountPoint: BigInt,
     amountToken: BigInt,
-    balanceMileage: BigInt,
+    balancePoint: BigInt,
     balanceToken: BigInt
-): ExchangedMileageToToken {
-    let exchangedMileageToTokenEvent = changetype<ExchangedMileageToToken>(newMockEvent());
+): ExchangedPointToToken {
+    let exchangedPointToTokenEvent = changetype<ExchangedPointToToken>(newMockEvent());
 
-    exchangedMileageToTokenEvent.parameters = new Array();
+    exchangedPointToTokenEvent.parameters = new Array();
 
-    exchangedMileageToTokenEvent.parameters.push(
-        new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email))
+    exchangedPointToTokenEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
+    exchangedPointToTokenEvent.parameters.push(
+        new ethereum.EventParam("amountPoint", ethereum.Value.fromUnsignedBigInt(amountPoint))
     );
-    exchangedMileageToTokenEvent.parameters.push(
-        new ethereum.EventParam("amountMileage", ethereum.Value.fromUnsignedBigInt(amountMileage))
-    );
-    exchangedMileageToTokenEvent.parameters.push(
+    exchangedPointToTokenEvent.parameters.push(
         new ethereum.EventParam("amountToken", ethereum.Value.fromUnsignedBigInt(amountToken))
     );
-    exchangedMileageToTokenEvent.parameters.push(
-        new ethereum.EventParam("balanceMileage", ethereum.Value.fromUnsignedBigInt(balanceMileage))
+    exchangedPointToTokenEvent.parameters.push(
+        new ethereum.EventParam("balancePoint", ethereum.Value.fromUnsignedBigInt(balancePoint))
     );
-    exchangedMileageToTokenEvent.parameters.push(
+    exchangedPointToTokenEvent.parameters.push(
         new ethereum.EventParam("balanceToken", ethereum.Value.fromUnsignedBigInt(balanceToken))
     );
 
-    return exchangedMileageToTokenEvent;
+    return exchangedPointToTokenEvent;
 }
 
-export function createExchangedTokenToMileageEvent(
+export function createExchangedTokenToPointEvent(
     email: Bytes,
-    amountMileage: BigInt,
+    amountPoint: BigInt,
     amountToken: BigInt,
-    balanceMileage: BigInt,
+    balancePoint: BigInt,
     balanceToken: BigInt
-): ExchangedTokenToMileage {
-    let exchangedTokenToMileageEvent = changetype<ExchangedTokenToMileage>(newMockEvent());
+): ExchangedTokenToPoint {
+    let exchangedTokenToPointEvent = changetype<ExchangedTokenToPoint>(newMockEvent());
 
-    exchangedTokenToMileageEvent.parameters = new Array();
+    exchangedTokenToPointEvent.parameters = new Array();
 
-    exchangedTokenToMileageEvent.parameters.push(
-        new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email))
+    exchangedTokenToPointEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
+    exchangedTokenToPointEvent.parameters.push(
+        new ethereum.EventParam("amountPoint", ethereum.Value.fromUnsignedBigInt(amountPoint))
     );
-    exchangedTokenToMileageEvent.parameters.push(
-        new ethereum.EventParam("amountMileage", ethereum.Value.fromUnsignedBigInt(amountMileage))
-    );
-    exchangedTokenToMileageEvent.parameters.push(
+    exchangedTokenToPointEvent.parameters.push(
         new ethereum.EventParam("amountToken", ethereum.Value.fromUnsignedBigInt(amountToken))
     );
-    exchangedTokenToMileageEvent.parameters.push(
-        new ethereum.EventParam("balanceMileage", ethereum.Value.fromUnsignedBigInt(balanceMileage))
+    exchangedTokenToPointEvent.parameters.push(
+        new ethereum.EventParam("balancePoint", ethereum.Value.fromUnsignedBigInt(balancePoint))
     );
-    exchangedTokenToMileageEvent.parameters.push(
+    exchangedTokenToPointEvent.parameters.push(
         new ethereum.EventParam("balanceToken", ethereum.Value.fromUnsignedBigInt(balanceToken))
     );
 
-    return exchangedTokenToMileageEvent;
+    return exchangedTokenToPointEvent;
 }
 
-export function createPaidMileageEvent(
+export function createPaidPointEvent(
     email: Bytes,
-    paidAmountMileage: BigInt,
+    paidAmountPoint: BigInt,
     value: BigInt,
-    balanceMileage: BigInt,
+    balancePoint: BigInt,
     purchaseId: string
-): PaidMileage {
-    let paidMileageEvent = changetype<PaidMileage>(newMockEvent());
+): PaidPoint {
+    let paidPointEvent = changetype<PaidPoint>(newMockEvent());
 
-    paidMileageEvent.parameters = new Array();
+    paidPointEvent.parameters = new Array();
 
-    paidMileageEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
-    paidMileageEvent.parameters.push(
-        new ethereum.EventParam("paidAmountMileage", ethereum.Value.fromUnsignedBigInt(paidAmountMileage))
+    paidPointEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
+    paidPointEvent.parameters.push(
+        new ethereum.EventParam("paidAmountPoint", ethereum.Value.fromUnsignedBigInt(paidAmountPoint))
     );
-    paidMileageEvent.parameters.push(new ethereum.EventParam("value", ethereum.Value.fromUnsignedBigInt(value)));
-    paidMileageEvent.parameters.push(
-        new ethereum.EventParam("balanceMileage", ethereum.Value.fromUnsignedBigInt(balanceMileage))
+    paidPointEvent.parameters.push(new ethereum.EventParam("value", ethereum.Value.fromUnsignedBigInt(value)));
+    paidPointEvent.parameters.push(
+        new ethereum.EventParam("balancePoint", ethereum.Value.fromUnsignedBigInt(balancePoint))
     );
-    paidMileageEvent.parameters.push(new ethereum.EventParam("purchaseId", ethereum.Value.fromString(purchaseId)));
+    paidPointEvent.parameters.push(new ethereum.EventParam("purchaseId", ethereum.Value.fromString(purchaseId)));
 
-    return paidMileageEvent;
+    return paidPointEvent;
 }
 
 export function createPaidTokenEvent(
@@ -145,58 +141,58 @@ export function createPaidTokenEvent(
     return paidTokenEvent;
 }
 
-export function createProvidedMileageEvent(
+export function createProvidedPointEvent(
     email: Bytes,
-    providedAmountMileage: BigInt,
+    providedAmountPoint: BigInt,
     value: BigInt,
-    balanceMileage: BigInt,
+    balancePoint: BigInt,
     purchaseId: string
-): ProvidedMileage {
-    let providedMileageEvent = changetype<ProvidedMileage>(newMockEvent());
+): ProvidedPoint {
+    let providedPointEvent = changetype<ProvidedPoint>(newMockEvent());
 
-    providedMileageEvent.parameters = new Array();
+    providedPointEvent.parameters = new Array();
 
-    providedMileageEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
-    providedMileageEvent.parameters.push(
-        new ethereum.EventParam("providedAmountMileage", ethereum.Value.fromUnsignedBigInt(providedAmountMileage))
+    providedPointEvent.parameters.push(new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email)));
+    providedPointEvent.parameters.push(
+        new ethereum.EventParam("providedAmountPoint", ethereum.Value.fromUnsignedBigInt(providedAmountPoint))
     );
-    providedMileageEvent.parameters.push(new ethereum.EventParam("value", ethereum.Value.fromUnsignedBigInt(value)));
-    providedMileageEvent.parameters.push(
-        new ethereum.EventParam("balanceMileage", ethereum.Value.fromUnsignedBigInt(balanceMileage))
+    providedPointEvent.parameters.push(new ethereum.EventParam("value", ethereum.Value.fromUnsignedBigInt(value)));
+    providedPointEvent.parameters.push(
+        new ethereum.EventParam("balancePoint", ethereum.Value.fromUnsignedBigInt(balancePoint))
     );
-    providedMileageEvent.parameters.push(new ethereum.EventParam("purchaseId", ethereum.Value.fromString(purchaseId)));
+    providedPointEvent.parameters.push(new ethereum.EventParam("purchaseId", ethereum.Value.fromString(purchaseId)));
 
-    return providedMileageEvent;
+    return providedPointEvent;
 }
 
-export function createProvidedMileageToFranchiseeEvent(
+export function createProvidedPointToFranchiseeEvent(
     email: Bytes,
-    providedAmountMileage: BigInt,
+    providedAmountPoint: BigInt,
     value: BigInt,
-    balanceMileage: BigInt,
+    balancePoint: BigInt,
     franchiseeId: string
-): ProvidedMileageToFranchisee {
-    let providedMileageToFranchiseeEvent = changetype<ProvidedMileageToFranchisee>(newMockEvent());
+): ProvidedPointToFranchisee {
+    let providedPointToFranchiseeEvent = changetype<ProvidedPointToFranchisee>(newMockEvent());
 
-    providedMileageToFranchiseeEvent.parameters = new Array();
+    providedPointToFranchiseeEvent.parameters = new Array();
 
-    providedMileageToFranchiseeEvent.parameters.push(
+    providedPointToFranchiseeEvent.parameters.push(
         new ethereum.EventParam("email", ethereum.Value.fromFixedBytes(email))
     );
-    providedMileageToFranchiseeEvent.parameters.push(
-        new ethereum.EventParam("providedAmountMileage", ethereum.Value.fromUnsignedBigInt(providedAmountMileage))
+    providedPointToFranchiseeEvent.parameters.push(
+        new ethereum.EventParam("providedAmountPoint", ethereum.Value.fromUnsignedBigInt(providedAmountPoint))
     );
-    providedMileageToFranchiseeEvent.parameters.push(
+    providedPointToFranchiseeEvent.parameters.push(
         new ethereum.EventParam("value", ethereum.Value.fromUnsignedBigInt(value))
     );
-    providedMileageToFranchiseeEvent.parameters.push(
-        new ethereum.EventParam("balanceMileage", ethereum.Value.fromUnsignedBigInt(balanceMileage))
+    providedPointToFranchiseeEvent.parameters.push(
+        new ethereum.EventParam("balancePoint", ethereum.Value.fromUnsignedBigInt(balancePoint))
     );
-    providedMileageToFranchiseeEvent.parameters.push(
+    providedPointToFranchiseeEvent.parameters.push(
         new ethereum.EventParam("franchiseeId", ethereum.Value.fromString(franchiseeId))
     );
 
-    return providedMileageToFranchiseeEvent;
+    return providedPointToFranchiseeEvent;
 }
 
 export function createProvidedTokenEvent(
