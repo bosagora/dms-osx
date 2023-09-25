@@ -17,8 +17,6 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - Deposited
-        - ExchangedPointToToken
-        - ExchangedTokenToPoint
         - PaidPoint
         - PaidToken
         - ProvidedPoint
@@ -32,10 +30,6 @@ dataSources:
       eventHandlers:
         - event: Deposited(bytes32,uint256,uint256,uint256,address)
           handler: handleDeposited
-        - event: ExchangedPointToToken(bytes32,uint256,uint256,uint256,uint256)
-          handler: handleExchangedPointToToken
-        - event: ExchangedTokenToPoint(bytes32,uint256,uint256,uint256,uint256)
-          handler: handleExchangedTokenToPoint
         - event: PaidPoint(bytes32,uint256,uint256,uint256,string,string)
           handler: handlePaidPoint
         - event: PaidToken(bytes32,uint256,uint256,uint256,string,string)

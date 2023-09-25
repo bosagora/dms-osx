@@ -23,30 +23,6 @@ type Deposited @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type ExchangedPointToToken @entity(immutable: true) {
-  id: Bytes!
-  email: Bytes! # bytes32
-  amountPoint: BigInt! # uint256
-  amountToken: BigInt! # uint256
-  balancePoint: BigInt! # uint256
-  balanceToken: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type ExchangedTokenToPoint @entity(immutable: true) {
-  id: Bytes!
-  email: Bytes! # bytes32
-  amountPoint: BigInt! # uint256
-  amountToken: BigInt! # uint256
-  balancePoint: BigInt! # uint256
-  balanceToken: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
 type PaidPoint @entity(immutable: true) {
   id: Bytes!
   email: Bytes! # bytes32
@@ -131,8 +107,6 @@ enum UserAction {
   PaidToken,
   DepositedToken,
   WithdrawnToken,
-  ExchangedPointToToken,
-  ExchangedTokenToPoint,
   ClearedPoint
 }
 
