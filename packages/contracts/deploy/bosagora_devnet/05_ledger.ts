@@ -80,16 +80,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             const tx8 = await ledgerContract.connect(signer).deposit(depositAmount);
             console.log(`Deposit user's amount (tx: ${tx8.hash})...`);
             await tx8.wait();
-
-            const exchangeAmount = balance.div(4);
-            const userAccount = ContractUtils.sha256String(user.email);
-            const nonce = await ledgerContract.nonceOf(user.address);
-            const signature = await ContractUtils.signExchange(signer, userAccount, exchangeAmount, nonce);
-            const tx9 = await ledgerContract
-                .connect(await ethers.getSigner(deployer))
-                .exchangeTokenToPoint(userAccount, exchangeAmount, user.address, signature);
-            console.log(`Exchange token to point (tx: ${tx9.hash})...`);
-            await tx9.wait();
         }
     }
 };

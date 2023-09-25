@@ -100,22 +100,6 @@ contract Ledger {
     event Deposited(bytes32 email, uint256 depositAmount, uint256 value, uint256 balanceToken, address account);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
     event Withdrawn(bytes32 email, uint256 withdrawAmount, uint256 value, uint256 balanceToken, address account);
-    /// @notice 포인트를 토큰으로 교환했을 때 발생하는 이벤트
-    event ExchangedPointToToken(
-        bytes32 email,
-        uint256 amountPoint,
-        uint256 amountToken,
-        uint256 balancePoint,
-        uint256 balanceToken
-    );
-    /// @notice 토큰을 포인트로 교환했을 때 발생하는 이벤트
-    event ExchangedTokenToPoint(
-        bytes32 email,
-        uint256 amountPoint,
-        uint256 amountToken,
-        uint256 balancePoint,
-        uint256 balanceToken
-    );
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
@@ -376,70 +360,6 @@ contract Ledger {
 
         uint256 amountPoint = convertTokenToPoint(_amount);
         emit Withdrawn(email, _amount, amountPoint, tokenLedger[email], msg.sender);
-    }
-
-    /// @notice 포인트를 토큰으로 교환합니다
-    /// @dev 중계서버를 통해서 호출됩니다.
-    /// @param _email 사용자의 이메일 해시
-    /// @param _amountPoint 교환할 포인트의 량
-    /// @param _signer 사용자의 주소
-    /// @param _signature 서명
-    function exchangePointToToken(
-        bytes32 _email,
-        uint256 _amountPoint,
-        address _signer,
-        bytes calldata _signature
-    ) public {
-        bytes32 dataHash = keccak256(abi.encode(_email, _amountPoint, _signer, nonce[_signer]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
-        address userAddress = linkCollection.toAddress(_email);
-        require(userAddress != address(0x00), "Unregistered email-address");
-        require(userAddress == _signer, "Invalid address");
-
-        require(pointLedger[_email] >= _amountPoint, "Insufficient balance");
-
-        uint256 amountToken = convertPointToToken(_amountPoint);
-        require(tokenLedger[foundationAccount] >= amountToken, "Insufficient foundation balance");
-
-        pointLedger[_email] -= _amountPoint;
-
-        tokenLedger[_email] += amountToken;
-        tokenLedger[foundationAccount] -= amountToken;
-
-        nonce[_signer]++;
-
-        emit ExchangedPointToToken(_email, _amountPoint, amountToken, pointLedger[_email], tokenLedger[_email]);
-    }
-
-    /// @notice 토큰을 포인트로 교환합니다
-    /// @dev 중계서버를 통해서 호출됩니다.
-    /// @param _email 사용자의 이메일 해시
-    /// @param _amountToken 교환할 토큰의 량
-    /// @param _signer 사용자의 주소
-    /// @param _signature 서명
-    function exchangeTokenToPoint(
-        bytes32 _email,
-        uint256 _amountToken,
-        address _signer,
-        bytes calldata _signature
-    ) public {
-        bytes32 dataHash = keccak256(abi.encode(_email, _amountToken, _signer, nonce[_signer]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
-        address userAddress = linkCollection.toAddress(_email);
-        require(userAddress != address(0x00), "Unregistered email-address");
-        require(userAddress == _signer, "Invalid address");
-
-        require(tokenLedger[_email] >= _amountToken, "Insufficient balance");
-
-        tokenLedger[_email] -= _amountToken;
-        tokenLedger[foundationAccount] += _amountToken;
-
-        uint256 amountPoint = convertTokenToPoint(_amountToken);
-        pointLedger[_email] += amountPoint;
-
-        nonce[_signer]++;
-
-        emit ExchangedTokenToPoint(_email, amountPoint, _amountToken, pointLedger[_email], tokenLedger[_email]);
     }
 
     /// @notice 포인트의 잔고를 리턴한다

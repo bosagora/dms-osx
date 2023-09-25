@@ -1,7 +1,5 @@
 import {
     Deposited as DepositedEvent,
-    ExchangedPointToToken as ExchangedPointToTokenEvent,
-    ExchangedTokenToPoint as ExchangedTokenToPointEvent,
     PaidPoint as PaidPointEvent,
     PaidToken as PaidTokenEvent,
     ProvidedPoint as ProvidedPointEvent,
@@ -12,8 +10,6 @@ import {
 } from "../generated/Ledger/Ledger";
 import {
     Deposited,
-    ExchangedPointToToken,
-    ExchangedTokenToPoint,
     PaidPoint,
     PaidToken,
     ProvidedPoint,
@@ -42,40 +38,6 @@ export function handleDeposited(event: DepositedEvent): void {
     entity.save();
 
     handleDepositedForHistory(event);
-}
-
-export function handleExchangedPointToToken(event: ExchangedPointToTokenEvent): void {
-    let entity = new ExchangedPointToToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
-    entity.amountPoint = event.params.amountPoint;
-    entity.amountToken = event.params.amountToken;
-    entity.balancePoint = event.params.balancePoint;
-    entity.balanceToken = event.params.balanceToken;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-
-    entity.save();
-
-    handleExchangedPointToTokenForHistory(event);
-}
-
-export function handleExchangedTokenToPoint(event: ExchangedTokenToPointEvent): void {
-    let entity = new ExchangedTokenToPoint(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
-    entity.amountPoint = event.params.amountPoint;
-    entity.amountToken = event.params.amountToken;
-    entity.balancePoint = event.params.balancePoint;
-    entity.balanceToken = event.params.balanceToken;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-
-    entity.save();
-
-    handleExchangedTokenToPointForHistory(event);
 }
 
 export function handlePaidPoint(event: PaidPointEvent): void {
@@ -439,76 +401,4 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     entity.blockTimestamp = event.block.timestamp;
     entity.transactionHash = event.transaction.hash;
     entity.save();
-}
-
-export function handleExchangedPointToTokenForHistory(event: ExchangedPointToTokenEvent): void {
-    let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
-    entity.action = "ExchangedPointToToken";
-    entity.assetFlow = "None";
-    entity.amountPoint = event.params.amountPoint.div(AmountUnit);
-    entity.amountToken = event.params.amountToken.div(AmountUnit);
-    entity.value = event.params.amountPoint.div(AmountUnit);
-    entity.balancePoint = event.params.balancePoint.div(AmountUnit);
-    entity.balanceToken = event.params.balanceToken.div(AmountUnit);
-    entity.purchaseId = "";
-    entity.shopId = "";
-    entity.account = NullAccount;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-
-    entity.save();
-
-    handleChangedBalancePoint(
-        event.params.email,
-        event.params.balancePoint,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-    handleChangedBalanceToken(
-        event.params.email,
-        event.params.balanceToken,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-}
-
-export function handleExchangedTokenToPointForHistory(event: ExchangedTokenToPointEvent): void {
-    let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
-    entity.action = "ExchangedTokenToPoint";
-    entity.assetFlow = "None";
-    entity.amountPoint = event.params.amountPoint.div(AmountUnit);
-    entity.amountToken = event.params.amountToken.div(AmountUnit);
-    entity.value = event.params.amountPoint.div(AmountUnit);
-    entity.balancePoint = event.params.balancePoint.div(AmountUnit);
-    entity.balanceToken = event.params.balanceToken.div(AmountUnit);
-    entity.purchaseId = "";
-    entity.shopId = "";
-    entity.account = NullAccount;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-
-    entity.save();
-
-    handleChangedBalancePoint(
-        event.params.email,
-        event.params.balancePoint,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-    handleChangedBalanceToken(
-        event.params.email,
-        event.params.balanceToken,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
 }

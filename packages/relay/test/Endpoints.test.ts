@@ -1,7 +1,7 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
-import { ShopCollection, Ledger, LinkCollection, Token, TokenPrice, ValidatorCollection } from "../typechain-types";
 import { ContractUtils } from "../src/utils/ContractUtils";
+import { Ledger, LinkCollection, ShopCollection, Token, TokenPrice, ValidatorCollection } from "../typechain-types";
 import { TestClient, TestServer } from "./helper/Utility";
 
 import chai, { expect } from "chai";
@@ -12,7 +12,7 @@ import * as path from "path";
 import { URL } from "url";
 
 import * as assert from "assert";
-import { BigNumber, Wallet } from "ethers";
+import { BigNumber } from "ethers";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -190,15 +190,6 @@ describe("Test of Server", function () {
         },
     ];
 
-    const purchaseData = {
-        purchaseId: "P000001",
-        timestamp: 1672844400,
-        amount: 100,
-        userEmail: "a@example.com",
-        shopId: "F000100",
-        method: 0,
-    };
-
     let reqId: string;
     context("Test token & point relay endpoints", () => {
         before("Deploy", async () => {
@@ -252,6 +243,51 @@ describe("Test of Server", function () {
             });
         });
 
+        context("Save Purchase Data", () => {
+            const purchaseData1 = {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                userEmail: "a@example.com",
+                shopId: "F000100",
+                method: 0,
+            };
+
+            it("Save Purchase Data", async () => {
+                const hash = emailHashes[0];
+                const purchaseAmount = Amount.make(purchaseData1.amount, 18).value;
+                const amt = purchaseAmount.div(100);
+                await expect(
+                    ledgerContract
+                        .connect(validators[0])
+                        .savePurchase(
+                            purchaseData1.purchaseId,
+                            purchaseData1.timestamp,
+                            purchaseAmount,
+                            hash,
+                            purchaseData1.shopId,
+                            purchaseData1.method
+                        )
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchaseData1.purchaseId,
+                        purchaseData1.timestamp,
+                        purchaseAmount,
+                        hash,
+                        purchaseData1.shopId,
+                        purchaseData1.method
+                    )
+                    .emit(ledgerContract, "ProvidedPoint")
+                    .withNamedArgs({
+                        email: hash,
+                        providedAmountPoint: amt,
+                        value: amt,
+                        purchaseId: purchaseData1.purchaseId,
+                    });
+            });
+        });
+
         context("Prepare email-address", () => {
             it("Link email-address", async () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
@@ -268,7 +304,16 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Exchange token & point", () => {
+        context("payPoint & payToken", () => {
+            const purchaseData = {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 100,
+                userEmail: "a@example.com",
+                shopId: "F000100",
+                method: 0,
+            };
+
             const amountDepositToken = BigNumber.from(amount.value.mul(2));
             const amountToken = BigNumber.from(amount.value);
             const amountPoint = amountToken.mul(price).div(multiple);
@@ -279,127 +324,6 @@ describe("Test of Server", function () {
                     ledgerContract,
                     "Deposited"
                 );
-            });
-
-            it("Failure Exchange token to point", async () => {
-                const over_purchaseAmount = Amount.make(90_000_000, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(
-                    users[0],
-                    emailHashes[0],
-                    over_purchaseAmount,
-                    nonce
-                );
-
-                const uri = URI(serverURL).directory("exchangeTokenToPoint");
-                const url = uri.toString();
-
-                const response = await client.post(url, {
-                    email: emailHashes[0],
-                    amountToken: over_purchaseAmount.toString(),
-                    signer: users[0].address,
-                    signature,
-                });
-                assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.message === "Insufficient balance");
-            });
-
-            it("Failure Exchange token to point", async () => {
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(users[1], emailHashes[0], amountToken, nonce);
-
-                const uri = URI(serverURL).directory("exchangeTokenToPoint");
-                const url = uri.toString();
-
-                const response = await client.post(url, {
-                    email: emailHashes[0],
-                    amountToken: amountToken.toString(),
-                    signer: users[0].address,
-                    signature,
-                });
-                assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.message === "Signature is not valid.");
-            });
-
-            it("Success Exchange token to point", async () => {
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(users[0], emailHashes[0], amountToken, nonce);
-
-                const uri = URI(serverURL).directory("exchangeTokenToPoint");
-                const url = uri.toString();
-
-                const response = await client.post(url, {
-                    email: emailHashes[0],
-                    amountToken: amountToken.toString(),
-                    signer: users[0].address,
-                    signature,
-                });
-                assert.deepStrictEqual(response.data.code, 200);
-                assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.txHash !== undefined);
-            });
-
-            it("Failure Exchange point to token", async () => {
-                const over_amount = Amount.make(90_000_000, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(users[0], emailHashes[0], over_amount, nonce);
-
-                const uri = URI(serverURL).directory("exchangePointToToken");
-                const url = uri.toString();
-
-                const response = await client.post(url, {
-                    email: emailHashes[0],
-                    amountPoint: over_amount.toString(),
-                    signer: users[0].address,
-                    signature,
-                });
-                assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.message === "Insufficient balance");
-            });
-
-            it("Failure Exchange point to token", async () => {
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(
-                    users[1],
-                    emailHashes[0],
-                    purchaseData.amount,
-                    nonce
-                );
-
-                const uri = URI(serverURL).directory("exchangePointToToken");
-                const url = uri.toString();
-
-                const response = await client.post(url, {
-                    email: emailHashes[0],
-                    amountPoint: purchaseData.amount.toString(),
-                    signer: users[0].address,
-                    signature,
-                });
-                assert.deepStrictEqual(response.data.code, 500);
-                assert.ok(response.data.error.message === "Signature is not valid.");
-            });
-
-            it("Success Exchange point to token", async () => {
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signExchange(
-                    users[0],
-                    emailHashes[0],
-                    purchaseData.amount,
-                    nonce
-                );
-
-                const uri = URI(serverURL).directory("exchangePointToToken");
-                const url = uri.toString();
-
-                const response = await client.post(url, {
-                    email: emailHashes[0],
-                    amountPoint: purchaseData.amount.toString(),
-                    signer: users[0].address,
-                    signature,
-                });
-                assert.deepStrictEqual(response.data.code, 200);
-                assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.txHash !== undefined);
             });
 
             it("Failure test of the path /payPoint 'Insufficient balance'", async () => {
