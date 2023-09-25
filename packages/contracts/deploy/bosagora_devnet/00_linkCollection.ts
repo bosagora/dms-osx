@@ -17,7 +17,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { network } = hre;
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, foundation, linkValidator1, linkValidator2, linkValidator3 } = await getNamedAccounts();
+    const { deployer, owner, foundation, linkValidator1, linkValidator2, linkValidator3 } = await getNamedAccounts();
     const validators = [linkValidator1, linkValidator2, linkValidator3];
 
     const officialLinkCollectionAddress = LINK_COLLECTION_ADDRESSES[network.name];

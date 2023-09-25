@@ -14,38 +14,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, foundation } = await getNamedAccounts();
+    const { deployer, owner, foundation } = await getNamedAccounts();
 
     const deployResult = await deploy("Token", {
         from: deployer,
-        args: ["Sample", "SAM"],
+        args: [owner, "Sample", "SAM"],
         log: true,
     });
 
     if (deployResult.newlyDeployed) {
-        const assetAmount = Amount.make(10_000_000, 18);
         const contractAddress = await getContractAddress("Token", hre);
         const contract = (await ethers.getContractAt("Token", contractAddress)) as Token;
-        const tx = await contract.connect(await ethers.getSigner(deployer)).transfer(foundation, assetAmount.value);
-        console.log(`Transfer token to foundation (tx: ${tx.hash})...`);
-        await tx.wait();
+
+        const assetAmount = Amount.make(10_000_000, 18);
+        const tx1 = await contract.connect(await ethers.getSigner(owner)).transfer(foundation, assetAmount.value);
+        console.log(`Transfer token to foundation (tx: ${tx1.hash})...`);
+        await tx1.wait();
 
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json"));
+        const addresses = users.map((m: { address: string }) => m.address);
         const userAmount = Amount.make(100_000, 18);
-        for (const user of users) {
-            const tx2 = await contract
-                .connect(await ethers.getSigner(deployer))
-                .transfer(user.address, userAmount.value);
-            console.log(`Transfer token to user ${user.address} (tx: ${tx2.hash})...`);
-            await tx2.wait();
-        }
-        //
-        // const users = JSON.parse(fs.readFileSync("./deploy/data/users.json"));
-        // const addresses = users.map((m: { address: string }) => m.address);
-        // const userAmount = Amount.make(100_000, 18);
-        // const tx2 = await contract.connect(await ethers.getSigner(deployer)).multiTransfer(addresses, userAmount.value);
-        // console.log(`Transfer token to users (tx: ${tx2.hash})...`);
-        // await tx2.wait();
+        const tx2 = await contract.connect(await ethers.getSigner(owner)).multiTransfer(addresses, userAmount.value);
+        console.log(`Transfer token to users (tx: ${tx2.hash})...`);
+        await tx2.wait();
     }
 };
 

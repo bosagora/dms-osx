@@ -13,7 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, validator1, validator2, validator3, validator4, validator5 } = await getNamedAccounts();
+    const { deployer, owner, validator1, validator2, validator3, validator4, validator5 } = await getNamedAccounts();
     const validators = [validator1, validator2, validator3, validator4, validator5];
 
     const tokenAddress = await getContractAddress("Token", hre);
@@ -35,7 +35,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         const depositAmount = Amount.make(50_000, 18);
 
         for (const elem of validators) {
-            await tokenContract.connect(await ethers.getSigner(deployer)).transfer(elem, amount.value);
+            await tokenContract.connect(await ethers.getSigner(owner)).transfer(elem, amount.value);
         }
 
         for (const elem of validators) {
