@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /// @notice 검증자들을 저장하는 컨트랙트
 contract ValidatorCollection {
-    uint256 public constant MINIMUM_DEPOSIT_AMOUNT = 50000000000000000000000;
+    uint256 public constant MINIMUM_DEPOSIT_AMOUNT = 20000000000000000000000;
 
     address public tokenAddress;
 

@@ -20,8 +20,8 @@ describe("Test for ValidatorCollection", () => {
     let contract: ValidatorCollection;
     let tokenContract: Token;
 
-    const amount = Amount.make(50000, 18);
-    const halfAmount = Amount.make(25000, 18);
+    const amount = Amount.make(20000, 18);
+    const halfAmount = Amount.make(10000, 18);
 
     before(async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");

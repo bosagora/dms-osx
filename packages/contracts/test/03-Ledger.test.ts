@@ -46,7 +46,7 @@ describe("Test for Ledger", () => {
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
 
-    const amount = Amount.make(50_000, 18);
+    const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
     const foundationEmail = "foundation@example.com";
     const foundationAccount = ContractUtils.sha256String(foundationEmail);
