@@ -119,14 +119,6 @@ contract ValidatorCollection {
         emit RequestedToExitValidator(msg.sender, validator);
     }
 
-    function makeActiveItems() public {
-        ValidatorData memory item = validators[msg.sender];
-        require(item.validator == msg.sender, "Not validator");
-        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "Invalid validator");
-
-        _makeActiveItems();
-    }
-
     /// @notice 등록된 검증자를 리턴한다.
     /// @param _idx 배열의 순번
     function itemOf(uint256 _idx) public view returns (address) {
@@ -138,15 +130,27 @@ contract ValidatorCollection {
         return items.length;
     }
 
-    /// @notice 유효한 검증자를 리턴한다.
-    /// @param _idx 배열의 순번
-    function activeItemOf(uint256 _idx) public view returns (address) {
-        return activeItems[_idx];
+
+    function isActiveValidator(address _account) public view returns (bool) {
+        ValidatorData memory item = validators[_account];
+
+        if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /// @notice 유효한 검증자의 수를 리턴합니다.
     function activeItemsLength() public view returns (uint256) {
-        return activeItems.length;
+        uint256 value = 0;
+        for (uint256 i = 0; i < items.length; ++i) {
+            ValidatorData memory item = validators[items[i]];
+            if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
+                value++;
+            }
+        }
+        return value;
     }
 
     /// @notice 검증자의 데이타를 리턴합니다.
@@ -155,25 +159,13 @@ contract ValidatorCollection {
         return validators[_account];
     }
 
-    function _makeActiveItems() internal {
-        while (activeItems.length > 0) activeItems.pop();
-        for (uint256 i = 0; i < items.length; ++i) {
-            ValidatorData memory item = validators[items[i]];
-
-            if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
-                activeItems.push(items[i]);
-            }
-        }
-    }
-
     /// @notice 자발적으로 탈퇴하기 위해 사용되는 함수입니다.
     function exit() public {
         ValidatorData memory item = validators[msg.sender];
         require(item.validator == msg.sender, "Not validator");
         require(item.status == Status.ACTIVE && item.start <= block.timestamp, "Invalid validator");
 
-        makeActiveItems();
-        require(activeItems.length > 1, "Last validator");
+        require(activeItemsLength() > 1, "Last validator");
 
         validators[msg.sender].status = Status.EXIT;
 

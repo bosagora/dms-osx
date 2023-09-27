@@ -50,7 +50,6 @@ describe("Test for CurrencyRate", () => {
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
         }
-        await validatorContract.connect(validators[0]).makeActiveItems();
 
         const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
         currencyRateContract = (await currencyRateFactory

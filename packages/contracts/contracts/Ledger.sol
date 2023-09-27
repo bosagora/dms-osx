@@ -131,14 +131,7 @@ contract Ledger {
     }
 
     modifier onlyValidator(address _account) {
-        bool isValidator = false;
-        for (uint256 i = 0; i < validatorCollection.activeItemsLength(); ++i) {
-            if (_account == validatorCollection.activeItemOf(i)) {
-                isValidator = true;
-                break;
-            }
-        }
-        require(isValidator, "Not validator");
+        require(validatorCollection.isActiveValidator(_account), "Not validator");
         _;
     }
 

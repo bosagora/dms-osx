@@ -93,7 +93,6 @@ describe("Test of Server", function () {
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
         }
-        await validatorContract.connect(validators[0]).makeActiveItems();
     };
 
     const deployLinkCollection = async () => {
