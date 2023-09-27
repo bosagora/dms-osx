@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "./ValidatorCollection.sol";
 
 /// @notice 토큰 가격을 제공하는 스마트컨트랙트
-contract TokenPrice {
+contract CurrencyRate {
     uint256 public constant MULTIPLE = 1000000000;
     mapping(string => uint256) private prices;
 

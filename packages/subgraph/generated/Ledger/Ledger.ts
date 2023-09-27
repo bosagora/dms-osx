@@ -352,6 +352,29 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
+  currencyRateAddress(): Address {
+    let result = super.call(
+      "currencyRateAddress",
+      "currencyRateAddress():(address)",
+      []
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_currencyRateAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "currencyRateAddress",
+      "currencyRateAddress():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   foundationAccount(): Bytes {
     let result = super.call(
       "foundationAccount",
@@ -574,29 +597,6 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  tokenPriceAddress(): Address {
-    let result = super.call(
-      "tokenPriceAddress",
-      "tokenPriceAddress():(address)",
-      []
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_tokenPriceAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "tokenPriceAddress",
-      "tokenPriceAddress():(address)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
   validatorAddress(): Address {
     let result = super.call(
       "validatorAddress",
@@ -654,7 +654,7 @@ export class ConstructorCall__Inputs {
     return this._call.inputValues[3].value.toAddress();
   }
 
-  get _tokenPriceAddress(): Address {
+  get _currencyRateAddress(): Address {
     return this._call.inputValues[4].value.toAddress();
   }
 

@@ -1,6 +1,6 @@
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { Ledger, LinkCollection, ShopCollection, Token, TokenPrice, ValidatorCollection } from "../typechain-types";
+import { CurrencyRate, Ledger, LinkCollection, ShopCollection, Token, ValidatorCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -40,7 +40,7 @@ describe("Test for Ledger", () => {
     let tokenContract: Token;
     let ledgerContract: Ledger;
     let linkCollectionContract: LinkCollection;
-    let tokenPriceContract: TokenPrice;
+    let currencyRateContract: CurrencyRate;
     let shopCollection: ShopCollection;
 
     const multiple = BigNumber.from(1000000000);
@@ -94,14 +94,14 @@ describe("Test for Ledger", () => {
         await linkCollectionContract.deployTransaction.wait();
     };
 
-    const deployTokenPrice = async () => {
-        const tokenPriceFactory = await hre.ethers.getContractFactory("TokenPrice");
-        tokenPriceContract = (await tokenPriceFactory
+    const deployCurrencyRate = async () => {
+        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
+        currencyRateContract = (await currencyRateFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as TokenPrice;
-        await tokenPriceContract.deployed();
-        await tokenPriceContract.deployTransaction.wait();
-        await tokenPriceContract.connect(validators[0]).set("KRW", price);
+            .deploy(validatorContract.address)) as CurrencyRate;
+        await currencyRateContract.deployed();
+        await currencyRateContract.deployTransaction.wait();
+        await currencyRateContract.connect(validators[0]).set(await tokenContract.symbol(), price);
     };
 
     const deployShopCollection = async () => {
@@ -121,7 +121,7 @@ describe("Test for Ledger", () => {
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
-                tokenPriceContract.address,
+                currencyRateContract.address,
                 shopCollection.address
             )) as Ledger;
         await ledgerContract.deployed();
@@ -135,7 +135,7 @@ describe("Test for Ledger", () => {
         await deployValidatorCollection();
         await depositValidators();
         await deployLinkCollection();
-        await deployTokenPrice();
+        await deployCurrencyRate();
         await deployShopCollection();
         await deployLedger();
     };

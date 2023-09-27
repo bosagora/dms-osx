@@ -1,5 +1,5 @@
 import { Amount } from "../src/utils/Amount";
-import { Token, TokenPrice, ValidatorCollection } from "../typechain-types";
+import { CurrencyRate, Token, ValidatorCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -12,14 +12,14 @@ import * as hre from "hardhat";
 
 chai.use(solidity);
 
-describe("Test for TokenPrice", () => {
+describe("Test for CurrencyRate", () => {
     const provider = hre.waffle.provider;
     const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
-    let tokenPriceContract: TokenPrice;
+    let currencyRateContract: CurrencyRate;
 
     const amount = Amount.make(50_000, 18);
 
@@ -52,40 +52,40 @@ describe("Test for TokenPrice", () => {
         }
         await validatorContract.connect(validators[0]).makeActiveItems();
 
-        const tokenPriceFactory = await hre.ethers.getContractFactory("TokenPrice");
-        tokenPriceContract = (await tokenPriceFactory
+        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
+        currencyRateContract = (await currencyRateFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as TokenPrice;
-        await tokenPriceContract.deployed();
-        await tokenPriceContract.deployTransaction.wait();
+            .deploy(validatorContract.address)) as CurrencyRate;
+        await currencyRateContract.deployed();
+        await currencyRateContract.deployTransaction.wait();
     });
 
     context("Set", () => {
         it("Not validator", async () => {
-            const currency = "KRW";
+            const currency = "the9";
             const price = 123000000000;
-            await expect(tokenPriceContract.connect(user1).set(currency, price)).to.revertedWith("Not validator");
+            await expect(currencyRateContract.connect(user1).set(currency, price)).to.revertedWith("Not validator");
         });
         it("Success", async () => {
-            const currency = "KRW";
+            const currency = "the9";
             const price = 123000000000;
-            await expect(tokenPriceContract.connect(validators[0]).set(currency, price))
-                .to.emit(tokenPriceContract, "SetPrice")
+            await expect(currencyRateContract.connect(validators[0]).set(currency, price))
+                .to.emit(currencyRateContract, "SetPrice")
                 .withNamedArgs({ currency, price });
         });
     });
 
     context("Get", () => {
-        it("Success - USD", async () => {
-            const currency = "USD";
+        it("Success - usd", async () => {
+            const currency = "usd";
             const price = 0;
-            expect(await tokenPriceContract.connect(validators[0]).get(currency)).to.equal(price);
+            expect(await currencyRateContract.connect(validators[0]).get(currency)).to.equal(price);
         });
 
-        it("Success - KRW", async () => {
-            const currency = "KRW";
+        it("Success - the9", async () => {
+            const currency = "the9";
             const price = 123000000000;
-            expect(await tokenPriceContract.connect(validators[0]).get(currency)).to.equal(price);
+            expect(await currencyRateContract.connect(validators[0]).get(currency)).to.equal(price);
         });
     });
 });
