@@ -1,5 +1,5 @@
-import { Token, ValidatorCollection } from "../typechain-types";
 import { Amount } from "../src/utils/Amount";
+import { Token, ValidatorCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -89,7 +89,6 @@ describe("Test for ValidatorCollection", () => {
             assert.deepStrictEqual(item.balance, amount.value);
         }
 
-        await contract.connect(validator1).makeActiveItems();
         assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "3");
     });
 
@@ -117,7 +116,6 @@ describe("Test for ValidatorCollection", () => {
         assert.deepStrictEqual(item.status, 1);
         assert.deepStrictEqual(item.balance, amount.value);
 
-        await contract.connect(validator1).makeActiveItems();
         assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "3");
     });
 
@@ -133,7 +131,6 @@ describe("Test for ValidatorCollection", () => {
         const balanceAfter = await tokenContract.balanceOf(contract.address);
         assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
 
-        await contract.connect(validator1).makeActiveItems();
         assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "2");
     });
 
@@ -149,7 +146,6 @@ describe("Test for ValidatorCollection", () => {
         const balanceAfter = await tokenContract.balanceOf(contract.address);
         assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
 
-        await contract.connect(validator2).makeActiveItems();
         assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "1");
     });
 

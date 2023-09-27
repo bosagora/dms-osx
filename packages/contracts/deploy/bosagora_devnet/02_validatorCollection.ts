@@ -49,9 +49,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             console.log(`Deposit validator's amount (tx: ${tx2.hash})...`);
             await tx2.wait();
         }
-        const tx = await validatorContract.connect(await ethers.getSigner(validators[0])).makeActiveItems();
-        console.log(`Call makeActiveItems (tx: ${tx.hash})...`);
-        await tx.wait();
     }
 };
 export default func;

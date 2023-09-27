@@ -51,7 +51,6 @@ describe("Test for ShopCollection", () => {
             assert.deepStrictEqual(item.status, 1);
             assert.deepStrictEqual(item.balance, amount.value);
         }
-        await validatorContract.connect(validators[0]).makeActiveItems();
 
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
