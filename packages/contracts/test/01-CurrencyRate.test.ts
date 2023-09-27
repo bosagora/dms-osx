@@ -21,7 +21,7 @@ describe("Test for CurrencyRate", () => {
     let tokenContract: Token;
     let currencyRateContract: CurrencyRate;
 
-    const amount = Amount.make(50_000, 18);
+    const amount = Amount.make(20_000, 18);
 
     before(async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");

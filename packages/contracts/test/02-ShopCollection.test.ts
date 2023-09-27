@@ -22,7 +22,7 @@ describe("Test for ShopCollection", () => {
     let tokenContract: Token;
     let shopCollection: ShopCollection;
 
-    const amount = Amount.make(50_000, 18);
+    const amount = Amount.make(20_000, 18);
 
     before(async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");

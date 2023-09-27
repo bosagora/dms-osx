@@ -32,7 +32,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             validatorContractAddress
         )) as ValidatorCollection;
         const amount = Amount.make(100_000, 18);
-        const depositAmount = Amount.make(50_000, 18);
+        const depositAmount = Amount.make(20_000, 18);
 
         for (const elem of validators) {
             await tokenContract.connect(await ethers.getSigner(owner)).transfer(elem, amount.value);
