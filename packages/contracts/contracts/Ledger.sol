@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "del-osx-artifacts/contracts/LinkCollection.sol";
 import "./ValidatorCollection.sol";
-import "./TokenPrice.sol";
+import "./CurrencyRate.sol";
 import "./ShopCollection.sol";
 
 /// @notice 포인트와 토큰의 원장
@@ -33,13 +33,13 @@ contract Ledger {
     address public tokenAddress;
     address public validatorAddress;
     address public linkCollectionAddress;
-    address public tokenPriceAddress;
+    address public currencyRateAddress;
     address public shopCollectionAddress;
 
-    IERC20 private token;
+    ERC20 private token;
     ValidatorCollection private validatorCollection;
     LinkCollection private linkCollection;
-    TokenPrice private tokenPrice;
+    CurrencyRate private currencyRate;
     ShopCollection private shopCollection;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
@@ -106,27 +106,27 @@ contract Ledger {
     /// @param _tokenAddress 토큰 컨트랙트의 주소
     /// @param _validatorAddress 검증자 컬랙션 컨트랙트의 주소
     /// @param _linkCollectionAddress 이메일-지갑주소 링크 컨트랙트의 주소
-    /// @param _tokenPriceAddress 토큰가격을 제공하는 컨트랙트의 주소
+    /// @param _currencyRateAddress 환률을 제공하는 컨트랙트의 주소
     /// @param _shopCollectionAddress 가맹점 컬랙션 컨트랙트의 주소
     constructor(
         bytes32 _foundationAccount,
         address _tokenAddress,
         address _validatorAddress,
         address _linkCollectionAddress,
-        address _tokenPriceAddress,
+        address _currencyRateAddress,
         address _shopCollectionAddress
     ) {
         foundationAccount = _foundationAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;
-        tokenPriceAddress = _tokenPriceAddress;
+        currencyRateAddress = _currencyRateAddress;
         shopCollectionAddress = _shopCollectionAddress;
 
-        token = IERC20(_tokenAddress);
+        token = ERC20(_tokenAddress);
         validatorCollection = ValidatorCollection(_validatorAddress);
         linkCollection = LinkCollection(_linkCollectionAddress);
-        tokenPrice = TokenPrice(_tokenPriceAddress);
+        currencyRate = CurrencyRate(_currencyRateAddress);
         shopCollection = ShopCollection(_shopCollectionAddress);
     }
 
@@ -323,13 +323,13 @@ contract Ledger {
     }
 
     function convertPointToToken(uint256 amount) internal view returns (uint256) {
-        uint256 price = tokenPrice.get("KRW");
-        return (amount * tokenPrice.MULTIPLE()) / price;
+        uint256 price = currencyRate.get(token.symbol());
+        return (amount * currencyRate.MULTIPLE()) / price;
     }
 
     function convertTokenToPoint(uint256 amount) internal view returns (uint256) {
-        uint256 price = tokenPrice.get("KRW");
-        return (amount * price) / tokenPrice.MULTIPLE();
+        uint256 price = currencyRate.get(token.symbol());
+        return (amount * price) / currencyRate.MULTIPLE();
     }
 
     /// @notice 토큰을 예치합니다.

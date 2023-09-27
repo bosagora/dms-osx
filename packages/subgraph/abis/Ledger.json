@@ -19,7 +19,7 @@
             },
             {
                 "internalType": "address",
-                "name": "_tokenPriceAddress",
+                "name": "_currencyRateAddress",
                 "type": "address"
             },
             {
@@ -611,7 +611,7 @@
     },
     {
         "inputs": [],
-        "name": "tokenPriceAddress",
+        "name": "currencyRateAddress",
         "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
         "stateMutability": "view",
         "type": "function"

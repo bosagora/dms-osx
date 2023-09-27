@@ -19,10 +19,10 @@
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write",
         "docgen": "hardhat docgen",
-        "debug:Ledger": "hardhat test test/Ledger.test.ts",
-        "debug:Validator": "hardhat test test/ValidatorCollection.test.ts",
-        "debug:TokenPrice": "hardhat test test/TokenPrice.test.ts",
-        "debug:ShopCollection": "hardhat test test/ShopCollection.test.ts"
+        "test:Validator": "hardhat test test/00-ValidatorCollection.test.ts",
+        "test:CurrencyRate": "hardhat test test/01-CurrencyRate.test.ts",
+        "test:ShopCollection": "hardhat test test/02-ShopCollection.test.ts",
+        "test:Ledger": "hardhat test test/03-Ledger.test.ts"
     },
     "repository": {
         "type": "git",

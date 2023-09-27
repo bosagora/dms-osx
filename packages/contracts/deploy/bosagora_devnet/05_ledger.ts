@@ -24,7 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const linkCollectionContractAddress = await getLinkCollectionContractAddress("LinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
-    const tokenPriceContractAddress = await getContractAddress("TokenPrice", hre);
+    const currencyRateContractAddress = await getContractAddress("TokenPrice", hre);
     const shopContractAddress = await getContractAddress("ShopCollection", hre);
 
     const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
@@ -35,7 +35,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             tokenContractAddress,
             validatorContractAddress,
             linkCollectionContractAddress,
-            tokenPriceContractAddress,
+            currencyRateContractAddress,
             shopContractAddress,
         ],
         log: true,
