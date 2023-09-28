@@ -6,6 +6,7 @@ type SavedPurchase @entity(immutable: true) {
   email: Bytes! # bytes32
   shopId: String! # string
   method: BigInt! # uint32
+  currency: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!

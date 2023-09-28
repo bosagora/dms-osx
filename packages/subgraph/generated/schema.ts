@@ -132,6 +132,19 @@ export class SavedPurchase extends Entity {
     this.set("method", Value.fromBigInt(value));
   }
 
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
   get blockNumber(): BigInt {
     let value = this.get("blockNumber");
     if (!value || value.kind == ValueKind.NULL) {

@@ -40,7 +40,7 @@ dataSources:
           handler: handleProvidedPointToShop
         - event: ProvidedToken(bytes32,uint256,uint256,uint256,string,string)
           handler: handleProvidedToken
-        - event: SavedPurchase(string,uint256,uint256,bytes32,string,uint32)
+        - event: SavedPurchase(string,uint256,uint256,bytes32,string,uint32,string)
           handler: handleSavedPurchase
         - event: Withdrawn(bytes32,uint256,uint256,uint256,address)
           handler: handleWithdrawn

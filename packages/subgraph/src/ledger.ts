@@ -138,6 +138,7 @@ export function handleSavedPurchase(event: SavedPurchaseEvent): void {
     entity.email = event.params.email;
     entity.shopId = event.params.shopId;
     entity.method = event.params.method;
+    entity.currency = event.params.currency;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
