@@ -260,6 +260,7 @@ describe("Test of Server", function () {
                 userEmail: "a@example.com",
                 shopId: "F000100",
                 method: 0,
+                currency: "krw",
             };
 
             it("Save Purchase Data", async () => {
@@ -275,7 +276,8 @@ describe("Test of Server", function () {
                             purchaseAmount,
                             hash,
                             purchaseData1.shopId,
-                            purchaseData1.method
+                            purchaseData1.method,
+                            purchaseData1.currency.toLowerCase()
                         )
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -285,7 +287,8 @@ describe("Test of Server", function () {
                         purchaseAmount,
                         hash,
                         purchaseData1.shopId,
-                        purchaseData1.method
+                        purchaseData1.method,
+                        purchaseData1.currency.toLowerCase()
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({

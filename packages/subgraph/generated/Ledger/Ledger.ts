@@ -270,6 +270,10 @@ export class SavedPurchase__Params {
   get method(): BigInt {
     return this._event.parameters[5].value.toBigInt();
   }
+
+  get currency(): string {
+    return this._event.parameters[6].value.toString();
+  }
 }
 
 export class Withdrawn extends ethereum.Event {
@@ -330,11 +334,34 @@ export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
   get method(): BigInt {
     return this[5].toBigInt();
   }
+
+  get currency(): string {
+    return this[6].toString();
+  }
 }
 
 export class Ledger extends ethereum.SmartContract {
   static bind(address: Address): Ledger {
     return new Ledger("Ledger", address);
+  }
+
+  BASE_CURRENCY(): Bytes {
+    let result = super.call("BASE_CURRENCY", "BASE_CURRENCY():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_BASE_CURRENCY(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "BASE_CURRENCY",
+      "BASE_CURRENCY():(bytes32)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
   NULL(): Bytes {
@@ -345,6 +372,25 @@ export class Ledger extends ethereum.SmartContract {
 
   try_NULL(): ethereum.CallResult<Bytes> {
     let result = super.tryCall("NULL", "NULL():(bytes32)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  NULL_CURRENCY(): Bytes {
+    let result = super.call("NULL_CURRENCY", "NULL_CURRENCY():(bytes32)", []);
+
+    return result[0].toBytes();
+  }
+
+  try_NULL_CURRENCY(): ethereum.CallResult<Bytes> {
+    let result = super.tryCall(
+      "NULL_CURRENCY",
+      "NULL_CURRENCY():(bytes32)",
+      []
+    );
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -487,7 +533,7 @@ export class Ledger extends ethereum.SmartContract {
   purchaseOf(_purchaseId: string): Ledger__purchaseOfResultValue0Struct {
     let result = super.call(
       "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,bytes32,string,uint32))",
+      "purchaseOf(string):((string,uint256,uint256,bytes32,string,uint32,string))",
       [ethereum.Value.fromString(_purchaseId)]
     );
 
@@ -501,7 +547,7 @@ export class Ledger extends ethereum.SmartContract {
   ): ethereum.CallResult<Ledger__purchaseOfResultValue0Struct> {
     let result = super.tryCall(
       "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,bytes32,string,uint32))",
+      "purchaseOf(string):((string,uint256,uint256,bytes32,string,uint32,string))",
       [ethereum.Value.fromString(_purchaseId)]
     );
     if (result.reverted) {
@@ -840,6 +886,10 @@ export class SavePurchaseCall__Inputs {
 
   get _method(): BigInt {
     return this._call.inputValues[5].value.toBigInt();
+  }
+
+  get _currency(): string {
+    return this._call.inputValues[6].value.toString();
   }
 }
 

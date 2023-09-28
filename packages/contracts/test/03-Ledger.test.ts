@@ -21,6 +21,7 @@ interface PurchaseData {
     userEmail: string;
     shopId: string;
     method: number;
+    currency: string;
 }
 
 describe("Test for Ledger", () => {
@@ -156,6 +157,7 @@ describe("Test for Ledger", () => {
                 userEmail: "a@example.com",
                 shopId: "F000100",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000002",
@@ -164,6 +166,7 @@ describe("Test for Ledger", () => {
                 userEmail: "b@example.com",
                 shopId: "F000100",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000003",
@@ -172,6 +175,7 @@ describe("Test for Ledger", () => {
                 userEmail: "c@example.com",
                 shopId: "F000200",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000004",
@@ -180,6 +184,7 @@ describe("Test for Ledger", () => {
                 userEmail: "d@example.com",
                 shopId: "F000300",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000005",
@@ -188,6 +193,7 @@ describe("Test for Ledger", () => {
                 userEmail: "a@example.com",
                 shopId: "F000200",
                 method: 0,
+                currency: "krw",
             },
         ];
 
@@ -294,7 +300,8 @@ describe("Test for Ledger", () => {
                                 purchaseAmount,
                                 hash,
                                 purchase.shopId,
-                                purchase.method
+                                purchase.method,
+                                purchase.currency.toLowerCase()
                             )
                     ).to.be.revertedWith("Not validator");
                 }
@@ -316,7 +323,8 @@ describe("Test for Ledger", () => {
                                 purchaseAmount,
                                 emailHash,
                                 purchase.shopId,
-                                purchase.method
+                                purchase.method,
+                                purchase.currency.toLowerCase()
                             )
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
@@ -326,7 +334,8 @@ describe("Test for Ledger", () => {
                             purchaseAmount,
                             emailHash,
                             purchase.shopId,
-                            purchase.method
+                            purchase.method,
+                            purchase.currency.toLowerCase()
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
@@ -378,6 +387,7 @@ describe("Test for Ledger", () => {
                     userEmail: "a@example.com",
                     shopId: "F000600",
                     method: 0,
+                    currency: "krw",
                 };
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData.find((m) => m.shopId === purchase.shopId);
@@ -398,7 +408,8 @@ describe("Test for Ledger", () => {
                             purchaseAmount,
                             emailHash,
                             purchase.shopId,
-                            purchase.method
+                            purchase.method,
+                            purchase.currency.toLowerCase()
                         )
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -408,7 +419,8 @@ describe("Test for Ledger", () => {
                         purchaseAmount,
                         emailHash,
                         purchase.shopId,
-                        purchase.method
+                        purchase.method,
+                        purchase.currency.toLowerCase()
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
@@ -432,6 +444,7 @@ describe("Test for Ledger", () => {
                     userEmail: "b@example.com",
                     shopId: "F000600",
                     method: 0,
+                    currency: "krw",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
@@ -450,7 +463,8 @@ describe("Test for Ledger", () => {
                             purchaseAmount,
                             emailHash,
                             purchase.shopId,
-                            purchase.method
+                            purchase.method,
+                            purchase.currency.toLowerCase()
                         )
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -460,7 +474,8 @@ describe("Test for Ledger", () => {
                         purchaseAmount,
                         emailHash,
                         purchase.shopId,
-                        purchase.method
+                        purchase.method,
+                        purchase.currency.toLowerCase()
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
@@ -1005,6 +1020,7 @@ describe("Test for Ledger", () => {
                 userEmail: "a@example.com",
                 shopId: "F000100",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000002",
@@ -1013,6 +1029,7 @@ describe("Test for Ledger", () => {
                 userEmail: "a@example.com",
                 shopId: "F000100",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000003",
@@ -1021,6 +1038,7 @@ describe("Test for Ledger", () => {
                 userEmail: "a@example.com",
                 shopId: "F000100",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000004",
@@ -1029,6 +1047,7 @@ describe("Test for Ledger", () => {
                 userEmail: "b@example.com",
                 shopId: "F000200",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000005",
@@ -1037,6 +1056,7 @@ describe("Test for Ledger", () => {
                 userEmail: "b@example.com",
                 shopId: "F000300",
                 method: 0,
+                currency: "krw",
             },
             {
                 purchaseId: "P000005",
@@ -1045,6 +1065,7 @@ describe("Test for Ledger", () => {
                 userEmail: "b@example.com",
                 shopId: "F000400",
                 method: 0,
+                currency: "krw",
             },
         ];
 
@@ -1160,7 +1181,8 @@ describe("Test for Ledger", () => {
                                 purchaseAmount,
                                 emailHash,
                                 purchase.shopId,
-                                purchase.method
+                                purchase.method,
+                                purchase.currency.toLowerCase()
                             )
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
@@ -1170,7 +1192,8 @@ describe("Test for Ledger", () => {
                             purchaseAmount,
                             emailHash,
                             purchase.shopId,
-                            purchase.method
+                            purchase.method,
+                            purchase.currency.toLowerCase()
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
@@ -1361,6 +1384,262 @@ describe("Test for Ledger", () => {
                 expect(shop3.providedPoint).to.equal(Amount.make(100, 18).value);
                 expect(shop3.usedPoint).to.equal(Amount.make(500, 18).value);
                 expect(shop3.clearedPoint).to.equal(Amount.make(400, 18).value);
+            });
+        });
+    });
+
+    context("Multi Currency", () => {
+        const purchaseData: PurchaseData[] = [
+            {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                userEmail: "a@example.com",
+                shopId: "F000100",
+                method: 0,
+                currency: "KRW",
+            },
+            {
+                purchaseId: "P000002",
+                timestamp: 1675522800,
+                amount: 10000,
+                userEmail: "a@example.com",
+                shopId: "F000100",
+                method: 0,
+                currency: "USD",
+            },
+            {
+                purchaseId: "P000003",
+                timestamp: 1677942000,
+                amount: 10000,
+                userEmail: "a@example.com",
+                shopId: "F000100",
+                method: 0,
+                currency: "JPY",
+            },
+            {
+                purchaseId: "P000004",
+                timestamp: 1680620400,
+                amount: 10000,
+                userEmail: "b@example.com",
+                shopId: "F000200",
+                method: 0,
+                currency: "CNY",
+            },
+            {
+                purchaseId: "P000005",
+                timestamp: 1683212400,
+                amount: 10000,
+                userEmail: "b@example.com",
+                shopId: "F000300",
+                method: 0,
+                currency: "KRW",
+            },
+            {
+                purchaseId: "P000005",
+                timestamp: 1683212400,
+                amount: 10000,
+                userEmail: "b@example.com",
+                shopId: "F000400",
+                method: 0,
+                currency: "KRW",
+            },
+        ];
+
+        const shopData: IShopData[] = [
+            {
+                shopId: "F000100",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f1@example.com",
+            },
+            {
+                shopId: "F000200",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f2@example.com",
+            },
+            {
+                shopId: "F000300",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f3@example.com",
+            },
+            {
+                shopId: "F000400",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f4@example.com",
+            },
+            {
+                shopId: "F000500",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f5@example.com",
+            },
+            {
+                shopId: "F000600",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f6@example.com",
+            },
+        ];
+
+        before("Deploy", async () => {
+            await deployAllContract();
+        });
+
+        before("Prepare Token", async () => {
+            for (const elem of users) {
+                await tokenContract.connect(deployer).transfer(elem.address, amount.value);
+            }
+        });
+
+        before("Set Other Currency", async () => {
+            await currencyRateContract.connect(validators[0]).set("usd", BigNumber.from(3).mul(multiple));
+            await currencyRateContract.connect(validators[0]).set("jpy", BigNumber.from(2).mul(multiple));
+            await currencyRateContract.connect(validators[0]).set("cny", BigNumber.from(1).mul(multiple));
+            await currencyRateContract.connect(validators[0]).set("krw", BigNumber.from(1).mul(multiple));
+        });
+
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
+                    const email = ContractUtils.sha256String(elem.email);
+                    await expect(
+                        shopCollection
+                            .connect(validator1)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                    )
+                        .to.emit(shopCollection, "AddedShop")
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
+                }
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+            });
+        });
+
+        context("Prepare foundation's asset", () => {
+            it("Register foundation's account", async () => {
+                const nonce = await linkCollectionContract.nonceOf(foundation.address);
+                const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
+                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
+                await expect(
+                    linkCollectionContract
+                        .connect(relay)
+                        .addRequest(requestId, foundationAccount, foundation.address, signature)
+                )
+                    .to.emit(linkCollectionContract, "AddedRequestItem")
+                    .withArgs(requestId, foundationAccount, foundation.address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
+                await linkCollectionContract.connect(validator1).countVote(requestId);
+            });
+
+            it("Deposit foundation's token", async () => {
+                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        email: foundationAccount,
+                        depositAmount: assetAmount.value,
+                        balanceToken: assetAmount.value,
+                        account: foundation.address,
+                    });
+            });
+        });
+
+        context("Save Purchase Data", () => {
+            it("Save Purchase Data", async () => {
+                for (const purchase of purchaseData) {
+                    const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const currency = purchase.currency.toLowerCase();
+                    const rate = await currencyRateContract.get(currency);
+                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                    const amt =
+                        shop !== undefined
+                            ? purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100)
+                            : BigNumber.from(0);
+                    await expect(
+                        ledgerContract
+                            .connect(validators[0])
+                            .savePurchase(
+                                purchase.purchaseId,
+                                purchase.timestamp,
+                                purchaseAmount,
+                                emailHash,
+                                purchase.shopId,
+                                purchase.method,
+                                currency
+                            )
+                    )
+                        .to.emit(ledgerContract, "SavedPurchase")
+                        .withArgs(
+                            purchase.purchaseId,
+                            purchase.timestamp,
+                            purchaseAmount,
+                            emailHash,
+                            purchase.shopId,
+                            purchase.method,
+                            currency
+                        )
+                        .emit(ledgerContract, "ProvidedPoint")
+                        .withNamedArgs({
+                            email: emailHash,
+                            providedAmountPoint: amt,
+                            value: amt,
+                            purchaseId: purchase.purchaseId,
+                        });
+                }
+            });
+
+            it("Check balances", async () => {
+                const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
+                for (const purchase of purchaseData) {
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const key = ContractUtils.sha256String(purchase.userEmail);
+                    const oldValue = expected.get(key);
+
+                    const rate = await currencyRateContract.get(purchase.currency.toLowerCase());
+                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                    const point =
+                        shop !== undefined
+                            ? purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100)
+                            : BigNumber.from(0);
+
+                    if (oldValue !== undefined) expected.set(key, oldValue.add(point));
+                    else expected.set(key, point);
+                }
+                for (const key of expected.keys())
+                    expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+            });
+
+            it("Check shop data", async () => {
+                const shop1 = await shopCollection.shopOf(shopData[0].shopId);
+                expect(shop1.providedPoint).to.equal(
+                    Amount.make(10000 * 6, 18)
+                        .value.mul(shopData[0].providePercent)
+                        .div(100)
+                );
+
+                const shop2 = await shopCollection.shopOf(shopData[1].shopId);
+                expect(shop2.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[1].providePercent)
+                        .div(100)
+                );
+                const shop3 = await shopCollection.shopOf(shopData[2].shopId);
+                expect(shop3.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[2].providePercent)
+                        .div(100)
+                );
+                const shop4 = await shopCollection.shopOf(shopData[3].shopId);
+                expect(shop4.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[3].providePercent)
+                        .div(100)
+                );
             });
         });
     });

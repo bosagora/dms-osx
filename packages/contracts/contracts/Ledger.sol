@@ -13,6 +13,9 @@ import "./ShopCollection.sol";
 contract Ledger {
     /// @notice Hash value of a blank string
     bytes32 public constant NULL = 0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855;
+    bytes32 public constant BASE_CURRENCY = keccak256(bytes("krw"));
+    bytes32 public constant NULL_CURRENCY = keccak256(bytes(""));
+
     mapping(bytes32 => uint256) private pointLedger;
     mapping(bytes32 => uint256) private tokenLedger;
     mapping(address => uint256) private nonce;
@@ -24,6 +27,7 @@ contract Ledger {
         bytes32 email;
         string shopId;
         uint32 method;
+        string currency;
     }
 
     mapping(string => PurchaseData) private purchases;
@@ -49,7 +53,8 @@ contract Ledger {
         uint256 amount,
         bytes32 email,
         string shopId,
-        uint32 method
+        uint32 method,
+        string currency
     );
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedPoint(
@@ -143,13 +148,15 @@ contract Ledger {
     /// @param _email 구매한 사용자의 이메일 해시
     /// @param _shopId 구매한 가맹점 아이디
     /// @param _method 0: 현금또는 카드, 1 : 포인트, 2: 토큰
+    /// @param _currency 통화코드
     function savePurchase(
         string memory _purchaseId,
         uint256 _timestamp,
         uint256 _amount,
         bytes32 _email,
         string memory _shopId,
-        uint32 _method
+        uint32 _method,
+        string memory _currency
     ) public onlyValidator(msg.sender) {
         PurchaseData memory data = PurchaseData({
             purchaseId: _purchaseId,
@@ -157,7 +164,8 @@ contract Ledger {
             amount: _amount,
             email: _email,
             shopId: _shopId,
-            method: _method
+            method: _method,
+            currency: _currency
         });
         purchaseIds.push(_purchaseId);
         purchases[_purchaseId] = data;
@@ -165,7 +173,7 @@ contract Ledger {
         if ((_method == 0) && (_email != NULL)) {
             ShopCollection.ShopData memory shop = shopCollection.shopOf(_shopId);
             if (shop.status == ShopCollection.ShopStatus.ACTIVE) {
-                uint256 point = _amount * shop.providePercent / 100;
+                uint256 point = (convertCurrencyToPoint(_amount, _currency) * shop.providePercent) / 100;
                 address account = linkCollection.toAddress(_email);
                 if (account == address(0x00)) {
                     providePoint(_email, point, _purchaseId, _shopId);
@@ -175,7 +183,7 @@ contract Ledger {
                 shopCollection.addProvidedPoint(_shopId, point, _purchaseId);
             }
         }
-        emit SavedPurchase(_purchaseId, _timestamp, _amount, _email, _shopId, _method);
+        emit SavedPurchase(_purchaseId, _timestamp, _amount, _email, _shopId, _method, _currency);
     }
 
     /// @notice 포인트를 지급합니다.
@@ -184,12 +192,7 @@ contract Ledger {
     /// @param _amount 지급할 포인트
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
-    function providePoint(
-        bytes32 _email,
-        uint256 _amount,
-        string memory _purchaseId,
-        string memory _shopId
-    ) internal {
+    function providePoint(bytes32 _email, uint256 _amount, string memory _purchaseId, string memory _shopId) internal {
         pointLedger[_email] += _amount;
         emit ProvidedPoint(_email, _amount, _amount, pointLedger[_email], _purchaseId, _shopId);
     }
@@ -200,12 +203,7 @@ contract Ledger {
     /// @param _amount 지급할 토큰
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
-    function provideToken(
-        bytes32 _email,
-        uint256 _amount,
-        string memory _purchaseId,
-        string memory _shopId
-    ) internal {
+    function provideToken(bytes32 _email, uint256 _amount, string memory _purchaseId, string memory _shopId) internal {
         uint256 amountToken = convertPointToToken(_amount);
 
         require(tokenLedger[foundationAccount] >= amountToken, "Insufficient foundation balance");
@@ -326,6 +324,16 @@ contract Ledger {
     function convertTokenToPoint(uint256 amount) internal view returns (uint256) {
         uint256 price = currencyRate.get(token.symbol());
         return (amount * price) / currencyRate.MULTIPLE();
+    }
+
+    function convertCurrencyToPoint(uint256 _amount, string memory _currency) internal view returns (uint256) {
+        bytes32 byteCurrency = keccak256(bytes(_currency));
+        if ((byteCurrency == BASE_CURRENCY) || (byteCurrency == NULL_CURRENCY)) {
+            return _amount;
+        } else {
+            uint256 rate = currencyRate.get(_currency);
+            return (_amount * rate) / currencyRate.MULTIPLE();
+        }
     }
 
     /// @notice 토큰을 예치합니다.
