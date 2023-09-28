@@ -158,33 +158,39 @@ describe("Test of Server", function () {
 
     interface IShopData {
         shopId: string;
-        timestamp: number;
+        provideWaitTime: number;
+        providePercent: number;
         email: string;
     }
     const shopData: IShopData[] = [
         {
             shopId: "F000100",
-            timestamp: 0,
+            provideWaitTime: 0,
+            providePercent: 1,
             email: "f1@example.com",
         },
         {
             shopId: "F000200",
-            timestamp: 0,
+            provideWaitTime: 0,
+            providePercent: 1,
             email: "f2@example.com",
         },
         {
             shopId: "F000300",
-            timestamp: 0,
+            provideWaitTime: 0,
+            providePercent: 1,
             email: "f3@example.com",
         },
         {
             shopId: "F000400",
-            timestamp: 0,
+            provideWaitTime: 0,
+            providePercent: 1,
             email: "f4@example.com",
         },
         {
             shopId: "F000500",
-            timestamp: 0,
+            provideWaitTime: 0,
+            providePercent: 1,
             email: "f5@example.com",
         },
     ];
@@ -234,9 +240,13 @@ describe("Test of Server", function () {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                    await expect(
+                        shopCollection
+                            .connect(validator1)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                    )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.timestamp, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });

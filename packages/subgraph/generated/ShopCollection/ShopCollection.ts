@@ -31,8 +31,12 @@ export class AddedShop__Params {
     return this._event.parameters[1].value.toBigInt();
   }
 
+  get providePercent(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
   get email(): Bytes {
-    return this._event.parameters[2].value.toBytes();
+    return this._event.parameters[3].value.toBytes();
   }
 }
 
@@ -135,24 +139,28 @@ export class ShopCollection__shopOfResultValue0Struct extends ethereum.Tuple {
     return this[1].toBigInt();
   }
 
+  get providePercent(): BigInt {
+    return this[2].toBigInt();
+  }
+
   get email(): Bytes {
-    return this[2].toBytes();
+    return this[3].toBytes();
   }
 
   get providedPoint(): BigInt {
-    return this[3].toBigInt();
-  }
-
-  get usedPoint(): BigInt {
     return this[4].toBigInt();
   }
 
-  get clearedPoint(): BigInt {
+  get usedPoint(): BigInt {
     return this[5].toBigInt();
   }
 
+  get clearedPoint(): BigInt {
+    return this[6].toBigInt();
+  }
+
   get status(): i32 {
-    return this[6].toI32();
+    return this[7].toI32();
   }
 }
 
@@ -255,7 +263,7 @@ export class ShopCollection extends ethereum.SmartContract {
   shopOf(_shopId: string): ShopCollection__shopOfResultValue0Struct {
     let result = super.call(
       "shopOf",
-      "shopOf(string):((string,uint256,bytes32,uint256,uint256,uint256,uint8))",
+      "shopOf(string):((string,uint256,uint256,bytes32,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromString(_shopId)]
     );
 
@@ -269,7 +277,7 @@ export class ShopCollection extends ethereum.SmartContract {
   ): ethereum.CallResult<ShopCollection__shopOfResultValue0Struct> {
     let result = super.tryCall(
       "shopOf",
-      "shopOf(string):((string,uint256,bytes32,uint256,uint256,uint256,uint8))",
+      "shopOf(string):((string,uint256,uint256,bytes32,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromString(_shopId)]
     );
     if (result.reverted) {
@@ -371,12 +379,16 @@ export class AddCall__Inputs {
     return this._call.inputValues[0].value.toString();
   }
 
-  get _payoutWaitTime(): BigInt {
+  get _provideWaitTime(): BigInt {
     return this._call.inputValues[1].value.toBigInt();
   }
 
+  get _providePercent(): BigInt {
+    return this._call.inputValues[2].value.toBigInt();
+  }
+
   get _email(): Bytes {
-    return this._call.inputValues[2].value.toBytes();
+    return this._call.inputValues[3].value.toBytes();
   }
 }
 

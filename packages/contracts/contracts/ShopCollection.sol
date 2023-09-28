@@ -19,6 +19,7 @@ contract ShopCollection {
     struct ShopData {
         string shopId; // 가맹점 아이디
         uint256 provideWaitTime; // 제품구매 후 포인트 지급시간
+        uint256 providePercent; // 구매금액에 대한 포인트 지급량
         bytes32 email; // 가맹점주 이메일 해시
         uint256 providedPoint; // 제공된 포인트 총량
         uint256 usedPoint; // 사용된 포인트 총량
@@ -34,7 +35,7 @@ contract ShopCollection {
     ValidatorCollection private validatorCollection;
 
     /// @notice 가맹점이 추가될 때 발생되는 이벤트
-    event AddedShop(string shopId, uint256 provideWaitTime, bytes32 email);
+    event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent, bytes32 email);
     /// @notice 가맹점의 포인트가 증가할 때 발생되는 이벤트
     event IncreasedProvidedPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
@@ -76,20 +77,23 @@ contract ShopCollection {
 
     /// @notice 가맹점을 추가한다
     /// @param _shopId 가맹점 아이디
-    /// @param _payoutWaitTime 제품구매 후 포인트가 지급될 시간
+    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
+    /// @param _providePercent 구매금액에 대한 포인트 지급량
     /// @param _email 가맹점주 이메일 해시
     function add(
         string memory _shopId,
-        uint256 _payoutWaitTime,
+        uint256 _provideWaitTime,
+        uint256 _providePercent,
         bytes32 _email
     ) public onlyValidator(msg.sender) {
-        _add(_shopId, _payoutWaitTime, _email);
+        _add(_shopId, _provideWaitTime, _providePercent, _email);
     }
 
-    function _add(string memory _shopId, uint256 _payoutWaitTime, bytes32 _email) internal {
+    function _add(string memory _shopId, uint256 _provideWaitTime, uint256 _providePercent, bytes32 _email) internal {
         ShopData memory data = ShopData({
             shopId: _shopId,
-            provideWaitTime: _payoutWaitTime,
+            provideWaitTime: _provideWaitTime,
+            providePercent: _providePercent,
             email: _email,
             providedPoint: 0,
             usedPoint: 0,
@@ -99,7 +103,7 @@ contract ShopCollection {
         items.push(_shopId);
         shops[_shopId] = data;
 
-        emit AddedShop(_shopId, _payoutWaitTime, _email);
+        emit AddedShop(_shopId, _provideWaitTime, _providePercent, _email);
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
@@ -109,7 +113,7 @@ contract ShopCollection {
         string memory _purchaseId
     ) public onlyLedger {
         if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, NULL);
+            _add(_shopId, 0, 5, NULL);
         }
 
         shops[_shopId].providedPoint += _amount;
@@ -119,7 +123,7 @@ contract ShopCollection {
     /// @notice 사용된 총 마일지리를 누적한다
     function addUsedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
         if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, NULL);
+            _add(_shopId, 0, 5, NULL);
         }
         shops[_shopId].usedPoint += _amount;
         emit IncreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId);
@@ -132,7 +136,7 @@ contract ShopCollection {
         string memory _purchaseId
     ) public onlyLedger {
         if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, NULL);
+            _add(_shopId, 0, 5, NULL);
         }
         shops[_shopId].clearedPoint += _amount;
         emit IncreasedClearedPoint(_shopId, _amount, shops[_shopId].clearedPoint, _purchaseId);

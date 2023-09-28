@@ -163,14 +163,17 @@ contract Ledger {
         purchases[_purchaseId] = data;
 
         if ((_method == 0) && (_email != NULL)) {
-            uint256 point = _amount / 100;
-            address account = linkCollection.toAddress(_email);
-            if (account == address(0x00)) {
-                providePoint(_email, point, _purchaseId, _shopId);
-            } else {
-                provideToken(_email, point, _purchaseId, _shopId);
+            ShopCollection.ShopData memory shop = shopCollection.shopOf(_shopId);
+            if (shop.status == ShopCollection.ShopStatus.ACTIVE) {
+                uint256 point = _amount * shop.providePercent / 100;
+                address account = linkCollection.toAddress(_email);
+                if (account == address(0x00)) {
+                    providePoint(_email, point, _purchaseId, _shopId);
+                } else {
+                    provideToken(_email, point, _purchaseId, _shopId);
+                }
+                shopCollection.addProvidedPoint(_shopId, point, _purchaseId);
             }
-            shopCollection.addProvidedPoint(_shopId, point, _purchaseId);
         }
         emit SavedPurchase(_purchaseId, _timestamp, _amount, _email, _shopId, _method);
     }

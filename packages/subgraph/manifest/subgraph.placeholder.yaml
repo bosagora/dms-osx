@@ -66,7 +66,7 @@ dataSources:
         - name: ShopCollection
           file: $DMS_OSX_MODULE/artifacts/contracts/ShopCollection.sol/ShopCollection.json
       eventHandlers:
-        - event: AddedShop(string,uint256,bytes32)
+        - event: AddedShop(string,uint256,uint256,bytes32)
           handler: handleAddedShop
         - event: IncreasedClearedPoint(string,uint256,uint256,string)
           handler: handleIncreasedClearedPoint

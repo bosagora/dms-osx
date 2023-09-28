@@ -12,6 +12,7 @@ export function handleAddedShop(event: AddedShopEvent): void {
     let entity = new Shop(event.params.shopId);
 
     entity.provideWaitTime = event.params.provideWaitTime;
+    entity.providePercent = event.params.providePercent;
     entity.email = event.params.email;
 
     entity.providedPoint = BigInt.fromI32(0);

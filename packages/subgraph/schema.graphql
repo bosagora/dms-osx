@@ -175,6 +175,7 @@ type Shop @entity {
   id: ID! # shopId
 
   provideWaitTime: BigInt! # uint256
+  providePercent: BigInt! # uint256
   email: Bytes! # bytes32
 
   providedPoint: BigInt!
