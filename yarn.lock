@@ -3212,6 +3212,11 @@ del-osx-artifacts@^1.0.7:
   resolved "https://registry.yarnpkg.com/del-osx-artifacts/-/del-osx-artifacts-1.0.7.tgz#fc5c6da574da9b4781786d93c1b7dcb39bd0e215"
   integrity sha512-OeUswmSreXiaGlFQ9gBR2ngWdlfckQFZQBT1+fSVkhOj4gbiVKNY2FwsTi4lwqel7fol94LP0xO/ulwNmgJDVA==
 
+del-osx-artifacts@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/del-osx-artifacts/-/del-osx-artifacts-1.1.0.tgz#3b55d806579fd1a6ddcac3f36c1824367f16b5bf"
+  integrity sha512-Yl9ya4N8XF1GTGJ4cN1oJ2dEexI/nIaloRt65HPJ8TapFQJKbS4bNrvBHmBvBNVhvrQt76FFm/4YDSNnWKWR+Q==
+
 delay@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/delay/-/delay-5.0.0.tgz#137045ef1b96e5071060dd5be60bf9334436bd1d"

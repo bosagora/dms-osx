@@ -1,4 +1,4 @@
-import { Ledger, LinkCollection, Token } from "../../typechain-types";
+import { Ledger, EmailLinkCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
@@ -50,7 +50,7 @@ export class DefaultRouter {
      * 이메일 지갑주소 링크 컨트랙트
      * @private
      */
-    private _emailLinkerContract: LinkCollection | undefined;
+    private _emailLinkerContract: EmailLinkCollection | undefined;
 
     /**
      *
@@ -151,9 +151,9 @@ export class DefaultRouter {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getEmailLinkerContract(): Promise<LinkCollection> {
+    private async getEmailLinkerContract(): Promise<EmailLinkCollection> {
         if (this._emailLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("LinkCollection");
+            const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
             this._emailLinkerContract = linkCollectionFactory.attach(this._config.contracts.emailLinkerAddress);
         }
         return this._emailLinkerContract;

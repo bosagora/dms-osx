@@ -8,7 +8,7 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Scheduler } from "./Scheduler";
 
-import { Ledger, LinkCollection, Token } from "../../typechain-types";
+import { Ledger, EmailLinkCollection, Token } from "../../typechain-types";
 
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
@@ -41,7 +41,7 @@ export class DefaultScheduler extends Scheduler {
      * 이메일 지갑주소 링크 컨트랙트
      * @private
      */
-    private _emailLinkerContract: LinkCollection | undefined;
+    private _emailLinkerContract: EmailLinkCollection | undefined;
 
     private _purchaseIdx: number = 0;
 
@@ -114,12 +114,12 @@ export class DefaultScheduler extends Scheduler {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getEmailLinkerContract(): Promise<LinkCollection> {
+    private async getEmailLinkerContract(): Promise<EmailLinkCollection> {
         if (this._emailLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("LinkCollection");
+            const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
             this._emailLinkerContract = linkCollectionFactory.attach(
                 this._config.contracts.emailLinkerAddress
-            ) as LinkCollection;
+            ) as EmailLinkCollection;
         }
         return this._emailLinkerContract;
     }

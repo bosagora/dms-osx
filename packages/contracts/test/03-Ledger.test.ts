@@ -1,6 +1,13 @@
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { CurrencyRate, Ledger, LinkCollection, ShopCollection, Token, ValidatorCollection } from "../typechain-types";
+import {
+    CurrencyRate,
+    EmailLinkCollection,
+    Ledger,
+    ShopCollection,
+    Token,
+    ValidatorCollection,
+} from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -33,14 +40,14 @@ describe("Test for Ledger", () => {
     const linkValidators = [validator1];
     const users = [user1, user2, user3];
     const emailHashes: string[] = [
-        ContractUtils.sha256String("a@example.com"),
-        ContractUtils.sha256String("b@example.com"),
-        ContractUtils.sha256String("c@example.com"),
+        ContractUtils.getEmailHash("a@example.com"),
+        ContractUtils.getEmailHash("b@example.com"),
+        ContractUtils.getEmailHash("c@example.com"),
     ];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
-    let linkCollectionContract: LinkCollection;
+    let linkCollectionContract: EmailLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopCollection: ShopCollection;
 
@@ -50,7 +57,7 @@ describe("Test for Ledger", () => {
     const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
     const foundationEmail = "foundation@example.com";
-    const foundationAccount = ContractUtils.sha256String(foundationEmail);
+    const foundationAccount = ContractUtils.getEmailHash(foundationEmail);
 
     const deployToken = async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
@@ -85,11 +92,11 @@ describe("Test for Ledger", () => {
         }
     };
 
-    const deployLinkCollection = async () => {
-        const linkCollectionFactory = await hre.ethers.getContractFactory("LinkCollection");
+    const deployEmailLinkCollection = async () => {
+        const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
         linkCollectionContract = (await linkCollectionFactory
             .connect(deployer)
-            .deploy(linkValidators.map((m) => m.address))) as LinkCollection;
+            .deploy(linkValidators.map((m) => m.address))) as EmailLinkCollection;
         await linkCollectionContract.deployed();
         await linkCollectionContract.deployTransaction.wait();
     };
@@ -134,7 +141,7 @@ describe("Test for Ledger", () => {
         await deployToken();
         await deployValidatorCollection();
         await depositValidators();
-        await deployLinkCollection();
+        await deployEmailLinkCollection();
         await deployCurrencyRate();
         await deployShopCollection();
         await deployLedger();
@@ -243,7 +250,7 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.sha256String(elem.email);
+                    const email = ContractUtils.getEmailHash(elem.email);
                     await expect(
                         shopCollection
                             .connect(validator1)
@@ -289,7 +296,7 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data - Not validator", async () => {
                 for (const purchase of purchaseData) {
-                    const hash = ContractUtils.sha256String(purchase.userEmail);
+                    const hash = ContractUtils.getEmailHash(purchase.userEmail);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     await expect(
                         ledgerContract
@@ -309,7 +316,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                    const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
                     const amt =
@@ -351,7 +358,7 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.sha256String(purchase.userEmail);
+                    const key = ContractUtils.getEmailHash(purchase.userEmail);
                     const oldValue = expected.get(key);
 
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
@@ -395,7 +402,7 @@ describe("Test for Ledger", () => {
                     shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
 
                 const tokenAmount = pointAmount.mul(multiple).div(price);
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
@@ -451,7 +458,7 @@ describe("Test for Ledger", () => {
                 const shop = shopData.find((m) => m.shopId === purchase.shopId);
                 const pointAmount =
                     shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
                 await expect(
@@ -499,7 +506,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -532,7 +539,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -565,7 +572,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signPayment(
                     users[1],
@@ -598,7 +605,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -631,7 +638,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -673,7 +680,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -706,7 +713,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -739,7 +746,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signPayment(
                     users[1],
@@ -772,7 +779,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -807,7 +814,7 @@ describe("Test for Ledger", () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -896,7 +903,7 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.sha256String(elem.email);
+                    const email = ContractUtils.getEmailHash(elem.email);
                     await expect(
                         shopCollection
                             .connect(validator1)
@@ -1121,7 +1128,7 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.sha256String(elem.email);
+                    const email = ContractUtils.getEmailHash(elem.email);
                     await expect(
                         shopCollection
                             .connect(validator1)
@@ -1167,7 +1174,7 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                    const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
                     const amt =
@@ -1209,7 +1216,7 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.sha256String(purchase.userEmail);
+                    const key = ContractUtils.getEmailHash(purchase.userEmail);
                     const oldValue = expected.get(key);
 
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
@@ -1278,7 +1285,7 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -1347,7 +1354,7 @@ describe("Test for Ledger", () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
-                const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
@@ -1505,7 +1512,7 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.sha256String(elem.email);
+                    const email = ContractUtils.getEmailHash(elem.email);
                     await expect(
                         shopCollection
                             .connect(validator1)
@@ -1551,7 +1558,7 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const emailHash = ContractUtils.sha256String(purchase.userEmail);
+                    const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const currency = purchase.currency.toLowerCase();
                     const rate = await currencyRateContract.get(currency);
@@ -1597,7 +1604,7 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.sha256String(purchase.userEmail);
+                    const key = ContractUtils.getEmailHash(purchase.userEmail);
                     const oldValue = expected.get(key);
 
                     const rate = await currencyRateContract.get(purchase.currency.toLowerCase());

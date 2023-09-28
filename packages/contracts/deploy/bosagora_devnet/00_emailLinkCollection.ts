@@ -5,14 +5,14 @@ import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import { LinkCollection } from "../../typechain-types";
-import { getLinkCollectionContractAddress, LINK_COLLECTION_ADDRESSES } from "../helpers";
+import { EmailLinkCollection } from "../../typechain-types";
+import { EMAIL_LINK_COLLECTION_ADDRESSES, getEmailLinkCollectionContractAddress } from "../helpers";
 
 import { BigNumber, Wallet } from "ethers";
 import fs from "fs";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    console.log(`\nDeploying LinkCollection.`);
+    console.log(`\nDeploying EmailLinkCollection.`);
 
     const { network } = hre;
     const { deployments, getNamedAccounts, ethers } = hre;
@@ -20,21 +20,21 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployer, owner, foundation, linkValidator1, linkValidator2, linkValidator3 } = await getNamedAccounts();
     const validators = [linkValidator1, linkValidator2, linkValidator3];
 
-    const officialLinkCollectionAddress = LINK_COLLECTION_ADDRESSES[network.name];
+    const officialEmailLinkCollectionAddress = EMAIL_LINK_COLLECTION_ADDRESSES[network.name];
 
-    if (!officialLinkCollectionAddress) {
-        await deploy("LinkCollection", {
+    if (!officialEmailLinkCollectionAddress) {
+        await deploy("EmailLinkCollection", {
             from: deployer,
             args: [validators],
             log: true,
         });
     }
 
-    const linkCollectionContractAddress = await getLinkCollectionContractAddress("LinkCollection", hre);
+    const linkCollectionContractAddress = await getEmailLinkCollectionContractAddress("EmailLinkCollection", hre);
     const linkCollectionContract = (await ethers.getContractAt(
-        "LinkCollection",
+        "EmailLinkCollection",
         linkCollectionContractAddress
-    )) as LinkCollection;
+    )) as EmailLinkCollection;
 
     const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
     if ((await linkCollectionContract.toAddress(foundationAccount)) !== foundation) {
@@ -107,4 +107,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
 };
 export default func;
-func.tags = ["LinkCollection"];
+func.tags = ["EmailLinkCollection"];

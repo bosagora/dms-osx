@@ -102,13 +102,13 @@ describe("Test for ShopCollection", () => {
         ];
 
         it("Not validator", async () => {
-            const email = ContractUtils.sha256String("f100@example.com");
+            const email = ContractUtils.getEmailHash("f100@example.com");
             await expect(shopCollection.connect(user1).add("F000100", 0, 5, email)).to.revertedWith("Not validator");
         });
 
         it("Success", async () => {
             for (const elem of shopData) {
-                const email = ContractUtils.sha256String(elem.email);
+                const email = ContractUtils.getEmailHash(elem.email);
                 await expect(
                     shopCollection
                         .connect(validator1)
