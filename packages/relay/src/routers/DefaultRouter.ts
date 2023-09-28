@@ -1,4 +1,4 @@
-import { Ledger, EmailLinkCollection, Token } from "../../typechain-types";
+import { Ledger, PhoneLinkCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
@@ -50,7 +50,7 @@ export class DefaultRouter {
      * 이메일 지갑주소 링크 컨트랙트
      * @private
      */
-    private _emailLinkerContract: EmailLinkCollection | undefined;
+    private _phoneLinkerContract: PhoneLinkCollection | undefined;
 
     /**
      *
@@ -151,12 +151,12 @@ export class DefaultRouter {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getEmailLinkerContract(): Promise<EmailLinkCollection> {
-        if (this._emailLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
-            this._emailLinkerContract = linkCollectionFactory.attach(this._config.contracts.emailLinkerAddress);
+    private async getPhoneLinkerContract(): Promise<PhoneLinkCollection> {
+        if (this._phoneLinkerContract === undefined) {
+            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
+            this._phoneLinkerContract = linkCollectionFactory.attach(this._config.contracts.phoneLinkerAddress);
         }
-        return this._emailLinkerContract;
+        return this._phoneLinkerContract;
     }
 
     /**
@@ -184,7 +184,7 @@ export class DefaultRouter {
             [
                 body("purchaseId").exists(),
                 body("amount").custom(Validation.isAmount),
-                body("email")
+                body("phone")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("shopId").exists(),
@@ -202,7 +202,7 @@ export class DefaultRouter {
             [
                 body("purchaseId").exists(),
                 body("amount").custom(Validation.isAmount),
-                body("email")
+                body("phone")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("shopId").exists(),
@@ -241,7 +241,7 @@ export class DefaultRouter {
         try {
             const purchaseId: string = String(req.body.purchaseId); // 구매 아이디
             const amount: string = String(req.body.amount); // 구매 금액
-            const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
+            const phone: string = String(req.body.phone); // 구매한 사용자의 이메일 해시
             const shopId: string = String(req.body.shopId); // 구매한 가맹점 아이디
             const signer: string = String(req.body.signer); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
@@ -250,7 +250,7 @@ export class DefaultRouter {
 
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
-            if (!ContractUtils.verifyPayment(purchaseId, amount, email, shopId, signer, userNonce, signature))
+            if (!ContractUtils.verifyPayment(purchaseId, amount, phone, shopId, signer, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -258,17 +258,17 @@ export class DefaultRouter {
                 );
 
             // 컨트랙트에서 이메일 등록여부 체크 및 구매자 주소와 동일여부
-            const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
-            if (emailToAddress !== signer) {
+            const phoneToAddress: string = await (await this.getPhoneLinkerContract()).toAddress(phone);
+            if (phoneToAddress !== signer) {
                 return res.status(200).json(
                     this.makeResponseData(502, undefined, {
-                        message: "Email is not valid.",
+                        message: "Phone is not valid.",
                     })
                 );
             }
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .payPoint(purchaseId, amount, email, shopId, signer, signature);
+                .payPoint(purchaseId, amount, phone, shopId, signer, signature);
 
             logger.http(`TxHash(payPoint): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
@@ -308,7 +308,7 @@ export class DefaultRouter {
         try {
             const purchaseId: string = String(req.body.purchaseId); // 구매 아이디
             const amount: string = String(req.body.amount); // 구매 금액
-            const email: string = String(req.body.email); // 구매한 사용자의 이메일 해시
+            const phone: string = String(req.body.phone); // 구매한 사용자의 이메일 해시
             const shopId: string = String(req.body.shopId); // 구매한 가맹점 아이디
             const signer: string = String(req.body.signer); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
@@ -316,7 +316,7 @@ export class DefaultRouter {
             // TODO amount > 0 조건 검사
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
-            if (!ContractUtils.verifyPayment(purchaseId, amount, email, shopId, signer, userNonce, signature))
+            if (!ContractUtils.verifyPayment(purchaseId, amount, phone, shopId, signer, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -324,17 +324,17 @@ export class DefaultRouter {
                 );
 
             // 컨트랙트에서 이메일 등록여부 체크 및 구매자 주소와 동일여부
-            const emailToAddress: string = await (await this.getEmailLinkerContract()).toAddress(email);
-            if (emailToAddress !== signer) {
+            const phoneToAddress: string = await (await this.getPhoneLinkerContract()).toAddress(phone);
+            if (phoneToAddress !== signer) {
                 return res.status(200).json(
                     this.makeResponseData(502, undefined, {
-                        message: "Email is not valid.",
+                        message: "Phone is not valid.",
                     })
                 );
             }
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .payToken(purchaseId, amount, email, shopId, signer, signature);
+                .payToken(purchaseId, amount, phone, shopId, signer, signature);
 
             logger.http(`TxHash(payToken): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));

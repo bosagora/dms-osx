@@ -3,12 +3,12 @@ import { Amount } from "../common/Amount";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
-import { IShopData, IPurchaseData, IUserData } from "../types/index";
+import { IPurchaseData, IShopData, IUserData } from "../types/index";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Scheduler } from "./Scheduler";
 
-import { Ledger, EmailLinkCollection, Token } from "../../typechain-types";
+import { Ledger, PhoneLinkCollection, Token } from "../../typechain-types";
 
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
@@ -41,7 +41,7 @@ export class DefaultScheduler extends Scheduler {
      * 이메일 지갑주소 링크 컨트랙트
      * @private
      */
-    private _emailLinkerContract: EmailLinkCollection | undefined;
+    private _phoneLinkerContract: PhoneLinkCollection | undefined;
 
     private _purchaseIdx: number = 0;
 
@@ -114,14 +114,14 @@ export class DefaultScheduler extends Scheduler {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getEmailLinkerContract(): Promise<EmailLinkCollection> {
-        if (this._emailLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
-            this._emailLinkerContract = linkCollectionFactory.attach(
-                this._config.contracts.emailLinkerAddress
-            ) as EmailLinkCollection;
+    private async getEmailLinkerContract(): Promise<PhoneLinkCollection> {
+        if (this._phoneLinkerContract === undefined) {
+            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
+            this._phoneLinkerContract = linkCollectionFactory.attach(
+                this._config.contracts.phoneLinkerAddress
+            ) as PhoneLinkCollection;
         }
-        return this._emailLinkerContract;
+        return this._phoneLinkerContract;
     }
 
     /***
@@ -147,14 +147,14 @@ export class DefaultScheduler extends Scheduler {
                     purchaseId: `P${this._purchaseIdx.toString().padStart(6, "0")}`,
                     timestamp: Utils.getTimeStamp(),
                     amount: amount.value,
-                    userEmail:
-                        Math.random() < 0.1 ? "" : this._users[Math.floor(Math.random() * this._users.length)].email,
+                    userPhone:
+                        Math.random() < 0.1 ? "" : this._users[Math.floor(Math.random() * this._users.length)].phone,
                     shopId: this._shops[Math.floor(Math.random() * this._shops.length)].shopId,
                 };
-                const emailHash = ContractUtils.sha256String(data.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(data.userPhone);
                 const tx = await (await this.getLedgerContract())
                     .connect(await this.getSigner())
-                    .savePurchase(data.purchaseId, data.timestamp, data.amount, emailHash, data.shopId, 0);
+                    .savePurchase(data.purchaseId, data.timestamp, data.amount, phoneHash, data.shopId, 0, "krw");
 
                 console.log(
                     `Send purchase data (purchaseId: ${

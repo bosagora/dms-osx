@@ -271,7 +271,7 @@ export class SettingConfig implements ISettingConfig {
 export class ContractsConfig implements IContractsConfig {
     public tokenAddress: string;
     public ledgerAddress: string;
-    public emailLinkerAddress: string;
+    public phoneLinkerAddress: string;
 
     /**
      * Constructor
@@ -281,7 +281,7 @@ export class ContractsConfig implements IContractsConfig {
 
         this.tokenAddress = defaults.tokenAddress;
         this.ledgerAddress = defaults.ledgerAddress;
-        this.emailLinkerAddress = defaults.emailLinkerAddress;
+        this.phoneLinkerAddress = defaults.phoneLinkerAddress;
     }
 
     /**
@@ -291,7 +291,7 @@ export class ContractsConfig implements IContractsConfig {
         return {
             tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
             ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
-            emailLinkerAddress: process.env.EMAIL_LINKER_CONTRACT_ADDRESS || "",
+            phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
         };
     }
 
@@ -302,7 +302,7 @@ export class ContractsConfig implements IContractsConfig {
     public readFromObject(config: IContractsConfig) {
         if (config.tokenAddress !== undefined) this.tokenAddress = config.tokenAddress;
         if (config.ledgerAddress !== undefined) this.ledgerAddress = config.ledgerAddress;
-        if (config.emailLinkerAddress !== undefined) this.emailLinkerAddress = config.emailLinkerAddress;
+        if (config.phoneLinkerAddress !== undefined) this.phoneLinkerAddress = config.phoneLinkerAddress;
     }
 }
 /**
@@ -378,7 +378,7 @@ export interface ISettingConfig {
 export interface IContractsConfig {
     tokenAddress: string;
     ledgerAddress: string;
-    emailLinkerAddress: string;
+    phoneLinkerAddress: string;
 }
 
 /**

@@ -23,7 +23,7 @@ export class Deposited__Params {
     this._event = event;
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
@@ -57,7 +57,7 @@ export class PaidPoint__Params {
     this._event = event;
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
@@ -95,7 +95,7 @@ export class PaidToken__Params {
     this._event = event;
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
@@ -133,7 +133,7 @@ export class ProvidedPoint__Params {
     this._event = event;
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
@@ -171,7 +171,7 @@ export class ProvidedPointToShop__Params {
     this._event = event;
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
@@ -209,7 +209,7 @@ export class ProvidedToken__Params {
     this._event = event;
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
@@ -259,7 +259,7 @@ export class SavedPurchase__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[3].value.toBytes();
   }
 
@@ -289,7 +289,7 @@ export class Withdrawn__Params {
     this._event = event;
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[0].value.toBytes();
   }
 
@@ -323,7 +323,7 @@ export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
     return this[2].toBigInt();
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this[3].toBytes();
   }
 
@@ -772,7 +772,7 @@ export class PayPointCall__Inputs {
     return this._call.inputValues[1].value.toBigInt();
   }
 
-  get _email(): Bytes {
+  get _phone(): Bytes {
     return this._call.inputValues[2].value.toBytes();
   }
 
@@ -822,7 +822,7 @@ export class PayTokenCall__Inputs {
     return this._call.inputValues[1].value.toBigInt();
   }
 
-  get _email(): Bytes {
+  get _phone(): Bytes {
     return this._call.inputValues[2].value.toBytes();
   }
 
@@ -876,7 +876,7 @@ export class SavePurchaseCall__Inputs {
     return this._call.inputValues[2].value.toBigInt();
   }
 
-  get _email(): Bytes {
+  get _phone(): Bytes {
     return this._call.inputValues[3].value.toBytes();
   }
 

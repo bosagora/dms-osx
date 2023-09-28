@@ -6,9 +6,6 @@ import "./ValidatorCollection.sol";
 
 /// @notice 가맹점컬랙션
 contract ShopCollection {
-    /// @notice Hash value of a blank string
-    bytes32 public constant NULL = 0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855;
-
     /// @notice 검증자의 상태코드
     enum ShopStatus {
         INVALID,
@@ -20,7 +17,6 @@ contract ShopCollection {
         string shopId; // 가맹점 아이디
         uint256 provideWaitTime; // 제품구매 후 포인트 지급시간
         uint256 providePercent; // 구매금액에 대한 포인트 지급량
-        bytes32 email; // 가맹점주 이메일 해시
         uint256 providedPoint; // 제공된 포인트 총량
         uint256 usedPoint; // 사용된 포인트 총량
         uint256 clearedPoint; // 정산된 포인트 총량
@@ -35,7 +31,7 @@ contract ShopCollection {
     ValidatorCollection private validatorCollection;
 
     /// @notice 가맹점이 추가될 때 발생되는 이벤트
-    event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent, bytes32 email);
+    event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent);
     /// @notice 가맹점의 포인트가 증가할 때 발생되는 이벤트
     event IncreasedProvidedPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
@@ -79,22 +75,19 @@ contract ShopCollection {
     /// @param _shopId 가맹점 아이디
     /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
     /// @param _providePercent 구매금액에 대한 포인트 지급량
-    /// @param _email 가맹점주 이메일 해시
     function add(
         string memory _shopId,
         uint256 _provideWaitTime,
-        uint256 _providePercent,
-        bytes32 _email
+        uint256 _providePercent
     ) public onlyValidator(msg.sender) {
-        _add(_shopId, _provideWaitTime, _providePercent, _email);
+        _add(_shopId, _provideWaitTime, _providePercent);
     }
 
-    function _add(string memory _shopId, uint256 _provideWaitTime, uint256 _providePercent, bytes32 _email) internal {
+    function _add(string memory _shopId, uint256 _provideWaitTime, uint256 _providePercent) internal {
         ShopData memory data = ShopData({
             shopId: _shopId,
             provideWaitTime: _provideWaitTime,
             providePercent: _providePercent,
-            email: _email,
             providedPoint: 0,
             usedPoint: 0,
             clearedPoint: 0,
@@ -103,17 +96,13 @@ contract ShopCollection {
         items.push(_shopId);
         shops[_shopId] = data;
 
-        emit AddedShop(_shopId, _provideWaitTime, _providePercent, _email);
+        emit AddedShop(_shopId, _provideWaitTime, _providePercent);
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
-    function addProvidedPoint(
-        string memory _shopId,
-        uint256 _amount,
-        string memory _purchaseId
-    ) public onlyLedger {
+    function addProvidedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
         if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, 5, NULL);
+            _add(_shopId, 0, 5);
         }
 
         shops[_shopId].providedPoint += _amount;
@@ -123,20 +112,16 @@ contract ShopCollection {
     /// @notice 사용된 총 마일지리를 누적한다
     function addUsedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
         if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, 5, NULL);
+            _add(_shopId, 0, 5);
         }
         shops[_shopId].usedPoint += _amount;
         emit IncreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId);
     }
 
     /// @notice 정산된 총 마일지리를 누적한다
-    function addClearedPoint(
-        string memory _shopId,
-        uint256 _amount,
-        string memory _purchaseId
-    ) public onlyLedger {
+    function addClearedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
         if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, 5, NULL);
+            _add(_shopId, 0, 5);
         }
         shops[_shopId].clearedPoint += _amount;
         emit IncreasedClearedPoint(_shopId, _amount, shops[_shopId].clearedPoint, _purchaseId);

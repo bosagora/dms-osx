@@ -35,6 +35,19 @@ export class ContractUtils {
         return "0x" + data.toString("hex");
     }
 
+    public static getPhoneHash(phone: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "string"],
+            ["BOSagora Phone Number", phone]
+        );
+        return hre.ethers.utils.keccak256(encodedResult);
+    }
+
+    public static getEmailHash(phone: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
+        return hre.ethers.utils.keccak256(encodedResult);
+    }
+
     public static async sign(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256"],
