@@ -4,27 +4,23 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ContractUtils } from "../../src/utils/ContractUtils";
-import { LinkCollection } from "../../typechain-types";
-import { getContractAddress, LINK_COLLECTION_ADDRESSES } from "../helpers";
-
-import { BigNumber, Wallet } from "ethers";
-import fs from "fs";
+import { EmailLinkCollection } from "../../typechain-types";
+import { EMAIL_LINK_COLLECTION_ADDRESSES } from "../helpers";
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    console.log(`\nDeploying LinkCollection.`);
+    console.log(`\nDeploying EmailLinkCollection.`);
 
     const { network } = hre;
 
-    const officialLinkCollectionAddress = LINK_COLLECTION_ADDRESSES[network.name];
+    const officialEmailLinkCollectionAddress = EMAIL_LINK_COLLECTION_ADDRESSES[network.name];
 
-    if (!officialLinkCollectionAddress) {
+    if (!officialEmailLinkCollectionAddress) {
         const { deployments, getNamedAccounts, ethers } = hre;
         const { deploy } = deployments;
         const { deployer, linkValidator1, linkValidator2, linkValidator3 } = await getNamedAccounts();
         const validators = [linkValidator1, linkValidator2, linkValidator3];
 
-        await deploy("LinkCollection", {
+        await deploy("EmailLinkCollection", {
             from: deployer,
             args: [validators],
             log: true,
@@ -32,4 +28,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
 };
 export default func;
-func.tags = ["LinkCollection"];
+func.tags = ["EmailLinkCollection"];

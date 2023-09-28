@@ -10,8 +10,9 @@
 
 import crypto from "crypto";
 import { BigNumberish, Signer } from "ethers";
-import * as hre from "hardhat";
+// tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
+import * as hre from "hardhat";
 
 export class ContractUtils {
     /**
@@ -41,6 +42,19 @@ export class ContractUtils {
      */
     public static BufferToString(data: Buffer): string {
         return "0x" + data.toString("hex");
+    }
+
+    public static getPhoneHash(phone: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "string"],
+            ["BOSagora Phone Number", phone]
+        );
+        return hre.ethers.utils.keccak256(encodedResult);
+    }
+
+    public static getEmailHash(phone: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
+        return hre.ethers.utils.keccak256(encodedResult);
     }
 
     public static getRequestId(emailHash: string, address: string, nonce: BigNumberish): string {

@@ -1,7 +1,14 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { CurrencyRate, Ledger, LinkCollection, ShopCollection, Token, ValidatorCollection } from "../typechain-types";
+import {
+    CurrencyRate,
+    Ledger,
+    EmailLinkCollection,
+    ShopCollection,
+    Token,
+    ValidatorCollection,
+} from "../typechain-types";
 import { TestClient, TestServer } from "./helper/Utility";
 
 import chai, { expect } from "chai";
@@ -50,7 +57,7 @@ describe("Test of Server", function () {
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
-    let linkCollectionContract: LinkCollection;
+    let linkCollectionContract: EmailLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopCollection: ShopCollection;
 
@@ -95,11 +102,11 @@ describe("Test of Server", function () {
         }
     };
 
-    const deployLinkCollection = async () => {
-        const linkCollectionFactory = await hre.ethers.getContractFactory("LinkCollection");
+    const deployEmailLinkCollection = async () => {
+        const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
         linkCollectionContract = (await linkCollectionFactory
             .connect(deployer)
-            .deploy(linkValidators.map((m) => m.address))) as LinkCollection;
+            .deploy(linkValidators.map((m) => m.address))) as EmailLinkCollection;
         await linkCollectionContract.deployed();
         await linkCollectionContract.deployTransaction.wait();
     };
@@ -145,7 +152,7 @@ describe("Test of Server", function () {
         await deployToken();
         await deployValidatorCollection();
         await depositValidators();
-        await deployLinkCollection();
+        await deployEmailLinkCollection();
         await deployCurrencyRate();
         await deployShopCollection();
         await deployLedger();

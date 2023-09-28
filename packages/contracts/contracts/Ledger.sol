@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "del-osx-artifacts/contracts/LinkCollection.sol";
+import "del-osx-artifacts/contracts/EmailLinkCollection.sol";
+import "del-osx-artifacts/contracts/PhoneLinkCollection.sol";
 import "./ValidatorCollection.sol";
 import "./CurrencyRate.sol";
 import "./ShopCollection.sol";
@@ -12,7 +13,7 @@ import "./ShopCollection.sol";
 /// @notice 포인트와 토큰의 원장
 contract Ledger {
     /// @notice Hash value of a blank string
-    bytes32 public constant NULL = 0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855;
+    bytes32 public constant NULL = 0xd669bffe0491667304d87185db312d6477ed1f0fa95a26ff5405a90e6dddc0d6;
     bytes32 public constant BASE_CURRENCY = keccak256(bytes("krw"));
     bytes32 public constant NULL_CURRENCY = keccak256(bytes(""));
 
@@ -42,7 +43,7 @@ contract Ledger {
 
     ERC20 private token;
     ValidatorCollection private validatorCollection;
-    LinkCollection private linkCollection;
+    EmailLinkCollection private linkCollection;
     CurrencyRate private currencyRate;
     ShopCollection private shopCollection;
 
@@ -130,7 +131,7 @@ contract Ledger {
 
         token = ERC20(_tokenAddress);
         validatorCollection = ValidatorCollection(_validatorAddress);
-        linkCollection = LinkCollection(_linkCollectionAddress);
+        linkCollection = EmailLinkCollection(_linkCollectionAddress);
         currencyRate = CurrencyRate(_currencyRateAddress);
         shopCollection = ShopCollection(_shopCollectionAddress);
     }
