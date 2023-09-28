@@ -25,7 +25,7 @@ interface PurchaseData {
     purchaseId: string;
     timestamp: number;
     amount: number;
-    userEmail: string;
+    userPhone: string;
     shopId: string;
     method: number;
     currency: string;
@@ -39,10 +39,10 @@ describe("Test for Ledger", () => {
     const validators = [validator1, validator2, validator3];
     const linkValidators = [validator1];
     const users = [user1, user2, user3];
-    const emailHashes: string[] = [
-        ContractUtils.getEmailHash("a@example.com"),
-        ContractUtils.getEmailHash("b@example.com"),
-        ContractUtils.getEmailHash("c@example.com"),
+    const phoneHashes: string[] = [
+        ContractUtils.getPhoneHash("08201012341001"),
+        ContractUtils.getPhoneHash("08201012341002"),
+        ContractUtils.getPhoneHash("08201012341003"),
     ];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
@@ -56,8 +56,8 @@ describe("Test for Ledger", () => {
 
     const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
-    const foundationEmail = "foundation@example.com";
-    const foundationAccount = ContractUtils.getEmailHash(foundationEmail);
+    const foundationPhone = "08201012341000";
+    const foundationAccount = ContractUtils.getPhoneHash(foundationPhone);
 
     const deployToken = async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
@@ -93,7 +93,7 @@ describe("Test for Ledger", () => {
     };
 
     const deployEmailLinkCollection = async () => {
-        const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
+        const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
         linkCollectionContract = (await linkCollectionFactory
             .connect(deployer)
             .deploy(linkValidators.map((m) => m.address))) as EmailLinkCollection;
@@ -151,7 +151,7 @@ describe("Test for Ledger", () => {
         shopId: string;
         provideWaitTime: number;
         providePercent: number;
-        email: string;
+        phone: string;
     }
 
     let requestId: string;
@@ -161,7 +161,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "krw",
@@ -170,7 +170,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000002",
                 timestamp: 1675522800,
                 amount: 10000,
-                userEmail: "b@example.com",
+                userPhone: "08201012341002",
                 shopId: "F000100",
                 method: 0,
                 currency: "krw",
@@ -179,7 +179,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000003",
                 timestamp: 1677942000,
                 amount: 10000,
-                userEmail: "c@example.com",
+                userPhone: "08201012341003",
                 shopId: "F000200",
                 method: 0,
                 currency: "krw",
@@ -188,7 +188,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000004",
                 timestamp: 1680620400,
                 amount: 10000,
-                userEmail: "d@example.com",
+                userPhone: "08201012341004",
                 shopId: "F000300",
                 method: 0,
                 currency: "krw",
@@ -197,7 +197,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000200",
                 method: 0,
                 currency: "krw",
@@ -209,37 +209,37 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
-                email: "f1@example.com",
+                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 6,
-                email: "f2@example.com",
+                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 7,
-                email: "f3@example.com",
+                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 8,
-                email: "f4@example.com",
+                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 9,
-                email: "f5@example.com",
+                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 10,
-                email: "f6@example.com",
+                phone: "08201012342006",
             },
         ];
 
@@ -250,14 +250,14 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.getEmailHash(elem.email);
+                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -285,7 +285,7 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        email: foundationAccount,
+                        phone: foundationAccount,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
                         account: foundation.address,
@@ -296,7 +296,7 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data - Not validator", async () => {
                 for (const purchase of purchaseData) {
-                    const hash = ContractUtils.getEmailHash(purchase.userEmail);
+                    const hash = ContractUtils.getPhoneHash(purchase.userPhone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     await expect(
                         ledgerContract
@@ -316,7 +316,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                    const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
                     const amt =
@@ -328,7 +328,7 @@ describe("Test for Ledger", () => {
                                 purchase.purchaseId,
                                 purchase.timestamp,
                                 purchaseAmount,
-                                emailHash,
+                                phoneHash,
                                 purchase.shopId,
                                 purchase.method,
                                 purchase.currency.toLowerCase()
@@ -339,14 +339,14 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             purchase.method,
                             purchase.currency.toLowerCase()
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
-                            email: emailHash,
+                            phone: phoneHash,
                             providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
@@ -358,7 +358,7 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.getEmailHash(purchase.userEmail);
+                    const key = ContractUtils.getPhoneHash(purchase.userPhone);
                     const oldValue = expected.get(key);
 
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
@@ -372,9 +372,9 @@ describe("Test for Ledger", () => {
                     expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
             });
 
-            it("Link email-address", async () => {
+            it("Link phone-address", async () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = emailHashes[0];
+                const hash = phoneHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
                 await expect(
@@ -386,12 +386,12 @@ describe("Test for Ledger", () => {
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
 
-            it("Save Purchase Data - email and address are registered", async () => {
+            it("Save Purchase Data - phone and address are registered", async () => {
                 const purchase = {
                     purchaseId: "P000006",
                     timestamp: 1672844400,
                     amount: 10000,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                     method: 0,
                     currency: "krw",
@@ -402,9 +402,9 @@ describe("Test for Ledger", () => {
                     shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
 
                 const tokenAmount = pointAmount.mul(multiple).div(price);
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(phoneHash);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHash);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
                 await expect(
                     ledgerContract
@@ -413,7 +413,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             purchase.method,
                             purchase.currency.toLowerCase()
@@ -424,31 +424,31 @@ describe("Test for Ledger", () => {
                         purchase.purchaseId,
                         purchase.timestamp,
                         purchaseAmount,
-                        emailHash,
+                        phoneHash,
                         purchase.shopId,
                         purchase.method,
                         purchase.currency.toLowerCase()
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
-                        email: emailHash,
+                        phone: phoneHash,
                         providedAmountToken: tokenAmount,
                         value: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
-                expect(await ledgerContract.pointBalanceOf(emailHash)).to.deep.equal(oldPointBalance);
-                expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance.add(tokenAmount));
+                expect(await ledgerContract.pointBalanceOf(phoneHash)).to.deep.equal(oldPointBalance);
+                expect(await ledgerContract.tokenBalanceOf(phoneHash)).to.deep.equal(oldTokenBalance.add(tokenAmount));
                 expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
                     oldFoundationTokenBalance.sub(tokenAmount)
                 );
             });
 
-            it("Save Purchase Data - email and address are not registered", async () => {
+            it("Save Purchase Data - phone and address are not registered", async () => {
                 const purchase = {
                     purchaseId: "P000007",
                     timestamp: 1672844400,
                     amount: 10000,
-                    userEmail: "b@example.com",
+                    userPhone: "08201012341002",
                     shopId: "F000600",
                     method: 0,
                     currency: "krw",
@@ -458,9 +458,9 @@ describe("Test for Ledger", () => {
                 const shop = shopData.find((m) => m.shopId === purchase.shopId);
                 const pointAmount =
                     shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(phoneHash);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHash);
                 await expect(
                     ledgerContract
                         .connect(validators[0])
@@ -468,7 +468,7 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             purchase.method,
                             purchase.currency.toLowerCase()
@@ -479,20 +479,20 @@ describe("Test for Ledger", () => {
                         purchase.purchaseId,
                         purchase.timestamp,
                         purchaseAmount,
-                        emailHash,
+                        phoneHash,
                         purchase.shopId,
                         purchase.method,
                         purchase.currency.toLowerCase()
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
-                        email: emailHash,
+                        phone: phoneHash,
                         providedAmountPoint: pointAmount,
                         value: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
-                expect(await ledgerContract.pointBalanceOf(emailHash)).to.deep.equal(oldPointBalance.add(pointAmount));
-                expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance);
+                expect(await ledgerContract.pointBalanceOf(phoneHash)).to.deep.equal(oldPointBalance.add(pointAmount));
+                expect(await ledgerContract.tokenBalanceOf(phoneHash)).to.deep.equal(oldTokenBalance);
             });
         });
 
@@ -501,18 +501,18 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -522,7 +522,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[1].address,
                             signature
@@ -530,22 +530,22 @@ describe("Test for Ledger", () => {
                 ).to.be.revertedWith("Invalid signature");
             });
 
-            it("Pay point - Unregistered email-address", async () => {
+            it("Pay point - Unregistered phone-address", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
-                    userEmail: "b@example.com",
+                    userPhone: "08201012341002",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -555,30 +555,30 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
                         )
-                ).to.be.revertedWith("Unregistered email-address");
+                ).to.be.revertedWith("Unregistered phone-address");
             });
 
             it("Pay point - Invalid address", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signPayment(
                     users[1],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -588,7 +588,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[1].address,
                             signature
@@ -600,18 +600,18 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 10000,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -621,7 +621,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
@@ -633,18 +633,18 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -654,7 +654,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
@@ -662,7 +662,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
-                        email: emailHash,
+                        phone: phoneHash,
                         paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
@@ -675,18 +675,18 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -696,7 +696,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[1].address,
                             signature
@@ -704,22 +704,22 @@ describe("Test for Ledger", () => {
                 ).to.be.revertedWith("Invalid signature");
             });
 
-            it("Pay token - Unregistered email-address", async () => {
+            it("Pay token - Unregistered phone-address", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
-                    userEmail: "b@example.com",
+                    userPhone: "08201012341002",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -729,30 +729,30 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
                         )
-                ).to.be.revertedWith("Unregistered email-address");
+                ).to.be.revertedWith("Unregistered phone-address");
             });
 
             it("Pay token - Invalid address", async () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 100,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[1].address);
                 const signature = await ContractUtils.signPayment(
                     users[1],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -762,7 +762,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[1].address,
                             signature
@@ -774,18 +774,18 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 10000,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -795,7 +795,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
@@ -807,20 +807,20 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 1,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000600",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -830,7 +830,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
@@ -838,7 +838,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
-                        email: emailHash,
+                        phone: phoneHash,
                         paidAmountToken: tokenAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
@@ -856,37 +856,37 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
-                email: "f1@example.com",
+                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 6,
-                email: "f2@example.com",
+                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 7,
-                email: "f3@example.com",
+                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 8,
-                email: "f4@example.com",
+                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 9,
-                email: "f5@example.com",
+                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 10,
-                email: "f6@example.com",
+                phone: "08201012342006",
             },
         ];
 
@@ -903,23 +903,23 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.getEmailHash(elem.email);
+                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
-        context("Prepare email-address", () => {
-            it("Link email-address", async () => {
+        context("Prepare phone-address", () => {
+            it("Link phone-address", async () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = emailHashes[0];
+                const hash = phoneHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
                 await expect(
@@ -954,7 +954,7 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        email: foundationAccount,
+                        phone: foundationAccount,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
                         account: foundation.address,
@@ -963,55 +963,55 @@ describe("Test for Ledger", () => {
         });
 
         context("Deposit token", () => {
-            it("Deposit token - Unregistered email-address", async () => {
+            it("Deposit token - Unregistered phone-address", async () => {
                 await tokenContract.connect(users[1]).approve(ledgerContract.address, amount.value);
                 await expect(ledgerContract.connect(users[1]).deposit(amount.value)).to.revertedWith(
-                    "Unregistered email-address"
+                    "Unregistered phone-address"
                 );
             });
 
             it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        email: emailHashes[0],
+                        phone: phoneHashes[0],
                         depositAmount: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
                         account: users[0].address,
                     });
-                expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(phoneHashes[0])).to.deep.equal(
                     oldTokenBalance.add(amount.value)
                 );
             });
         });
 
         context("Withdraw token", () => {
-            it("Withdraw token - Unregistered email-address", async () => {
+            it("Withdraw token - Unregistered phone-address", async () => {
                 await expect(ledgerContract.connect(users[1]).withdraw(amount.value)).to.revertedWith(
-                    "Unregistered email-address"
+                    "Unregistered phone-address"
                 );
             });
 
             it("Withdraw token - Insufficient balance", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
                 await expect(ledgerContract.connect(users[0]).withdraw(oldTokenBalance.add(1))).to.revertedWith(
                     "Insufficient balance"
                 );
             });
 
             it("Withdraw token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
                 await expect(ledgerContract.connect(users[0]).withdraw(amount.value))
                     .to.emit(ledgerContract, "Withdrawn")
                     .withNamedArgs({
-                        email: emailHashes[0],
+                        phone: phoneHashes[0],
                         withdrawAmount: amount.value,
                         balanceToken: oldTokenBalance.sub(amount.value),
                         account: users[0].address,
                     });
-                expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(phoneHashes[0])).to.deep.equal(
                     oldTokenBalance.sub(amount.value)
                 );
             });
@@ -1024,7 +1024,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "krw",
@@ -1033,7 +1033,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000002",
                 timestamp: 1675522800,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "krw",
@@ -1042,7 +1042,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000003",
                 timestamp: 1677942000,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "krw",
@@ -1051,7 +1051,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000004",
                 timestamp: 1680620400,
                 amount: 10000,
-                userEmail: "b@example.com",
+                userPhone: "08201012341002",
                 shopId: "F000200",
                 method: 0,
                 currency: "krw",
@@ -1060,7 +1060,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userEmail: "b@example.com",
+                userPhone: "08201012341002",
                 shopId: "F000300",
                 method: 0,
                 currency: "krw",
@@ -1069,7 +1069,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userEmail: "b@example.com",
+                userPhone: "08201012341002",
                 shopId: "F000400",
                 method: 0,
                 currency: "krw",
@@ -1081,37 +1081,37 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f1@example.com",
+                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f2@example.com",
+                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f3@example.com",
+                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f4@example.com",
+                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f5@example.com",
+                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f6@example.com",
+                phone: "08201012342006",
             },
         ];
 
@@ -1128,14 +1128,14 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.getEmailHash(elem.email);
+                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1163,7 +1163,7 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        email: foundationAccount,
+                        phone: foundationAccount,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
                         account: foundation.address,
@@ -1174,7 +1174,7 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                    const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
                     const amt =
@@ -1186,7 +1186,7 @@ describe("Test for Ledger", () => {
                                 purchase.purchaseId,
                                 purchase.timestamp,
                                 purchaseAmount,
-                                emailHash,
+                                phoneHash,
                                 purchase.shopId,
                                 purchase.method,
                                 purchase.currency.toLowerCase()
@@ -1197,14 +1197,14 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             purchase.method,
                             purchase.currency.toLowerCase()
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
-                            email: emailHash,
+                            phone: phoneHash,
                             providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
@@ -1216,7 +1216,7 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.getEmailHash(purchase.userEmail);
+                    const key = ContractUtils.getPhoneHash(purchase.userPhone);
                     const oldValue = expected.get(key);
 
                     const shop = shopData.find((m) => m.shopId === purchase.shopId);
@@ -1259,10 +1259,10 @@ describe("Test for Ledger", () => {
             });
         });
 
-        context("Prepare email-address", () => {
-            it("Link email-address", async () => {
+        context("Prepare phone-address", () => {
+            it("Link phone-address", async () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = emailHashes[0];
+                const hash = phoneHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
                 await expect(
@@ -1280,18 +1280,18 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 300,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000200",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -1303,7 +1303,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
@@ -1312,7 +1312,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "ProvidedPointToShop")
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
-                        email: emailHash,
+                        phone: phoneHash,
                         paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
@@ -1326,17 +1326,17 @@ describe("Test for Ledger", () => {
 
         context("Deposit token", () => {
             it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        email: emailHashes[0],
+                        phone: phoneHashes[0],
                         depositAmount: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
                         account: users[0].address,
                     });
-                expect(await ledgerContract.tokenBalanceOf(emailHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(phoneHashes[0])).to.deep.equal(
                     oldTokenBalance.add(amount.value)
                 );
             });
@@ -1347,20 +1347,20 @@ describe("Test for Ledger", () => {
                 const purchase = {
                     purchaseId: "P000008",
                     amount: 500,
-                    userEmail: "a@example.com",
+                    userPhone: "08201012341001",
                     shopId: "F000300",
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
-                const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchase.purchaseId,
                     purchaseAmount,
-                    emailHash,
+                    phoneHash,
                     purchase.shopId,
                     nonce
                 );
@@ -1370,7 +1370,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             users[0].address,
                             signature
@@ -1379,7 +1379,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "ProvidedPointToShop")
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
-                        email: emailHash,
+                        phone: phoneHash,
                         paidAmountToken: tokenAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
@@ -1401,7 +1401,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "KRW",
@@ -1410,7 +1410,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000002",
                 timestamp: 1675522800,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "USD",
@@ -1419,7 +1419,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000003",
                 timestamp: 1677942000,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "JPY",
@@ -1428,7 +1428,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000004",
                 timestamp: 1680620400,
                 amount: 10000,
-                userEmail: "b@example.com",
+                userPhone: "08201012341002",
                 shopId: "F000200",
                 method: 0,
                 currency: "CNY",
@@ -1437,7 +1437,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userEmail: "b@example.com",
+                userPhone: "08201012341002",
                 shopId: "F000300",
                 method: 0,
                 currency: "KRW",
@@ -1446,7 +1446,7 @@ describe("Test for Ledger", () => {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userEmail: "b@example.com",
+                userPhone: "08201012341002",
                 shopId: "F000400",
                 method: 0,
                 currency: "KRW",
@@ -1458,37 +1458,37 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f1@example.com",
+                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f2@example.com",
+                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f3@example.com",
+                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f4@example.com",
+                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f5@example.com",
+                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 1,
-                email: "f6@example.com",
+                phone: "08201012342006",
             },
         ];
 
@@ -1512,14 +1512,14 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.getEmailHash(elem.email);
+                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1547,7 +1547,7 @@ describe("Test for Ledger", () => {
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        email: foundationAccount,
+                        phone: foundationAccount,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
                         account: foundation.address,
@@ -1558,7 +1558,7 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const emailHash = ContractUtils.getEmailHash(purchase.userEmail);
+                    const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const currency = purchase.currency.toLowerCase();
                     const rate = await currencyRateContract.get(currency);
@@ -1574,7 +1574,7 @@ describe("Test for Ledger", () => {
                                 purchase.purchaseId,
                                 purchase.timestamp,
                                 purchaseAmount,
-                                emailHash,
+                                phoneHash,
                                 purchase.shopId,
                                 purchase.method,
                                 currency
@@ -1585,14 +1585,14 @@ describe("Test for Ledger", () => {
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            emailHash,
+                            phoneHash,
                             purchase.shopId,
                             purchase.method,
                             currency
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
-                            email: emailHash,
+                            phone: phoneHash,
                             providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
@@ -1604,7 +1604,7 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.getEmailHash(purchase.userEmail);
+                    const key = ContractUtils.getPhoneHash(purchase.userPhone);
                     const oldValue = expected.get(key);
 
                     const rate = await currencyRateContract.get(purchase.currency.toLowerCase());

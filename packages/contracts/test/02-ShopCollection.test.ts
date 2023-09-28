@@ -65,7 +65,7 @@ describe("Test for ShopCollection", () => {
             shopId: string;
             provideWaitTime: number;
             providePercent: number;
-            email: string;
+            phone: string;
         }
 
         const shopData: IShopData[] = [
@@ -73,49 +73,49 @@ describe("Test for ShopCollection", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
-                email: "f1@example.com",
+                phone: "08201012341001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 5,
-                email: "f2@example.com",
+                phone: "08201012341002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 5,
-                email: "f3@example.com",
+                phone: "08201012341003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 5,
-                email: "f4@example.com",
+                phone: "08201012341004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 5,
-                email: "f5@example.com",
+                phone: "08201012341005",
             },
         ];
 
         it("Not validator", async () => {
-            const email = ContractUtils.getEmailHash("f100@example.com");
-            await expect(shopCollection.connect(user1).add("F000100", 0, 5, email)).to.revertedWith("Not validator");
+            const phone = ContractUtils.getPhoneHash("08201012341001");
+            await expect(shopCollection.connect(user1).add("F000100", 0, 5, phone)).to.revertedWith("Not validator");
         });
 
         it("Success", async () => {
             for (const elem of shopData) {
-                const email = ContractUtils.getEmailHash(elem.email);
+                const phone = ContractUtils.getPhoneHash(elem.phone);
                 await expect(
                     shopCollection
                         .connect(validator1)
-                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
                 )
                     .to.emit(shopCollection, "AddedShop")
-                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
+                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
             }
             expect(await shopCollection.shopsLength()).to.equal(shopData.length);
         });

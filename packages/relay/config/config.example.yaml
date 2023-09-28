@@ -25,5 +25,5 @@ relay:
 contracts:
   tokenAddress : ${TOKEN_CONTRACT_ADDRESS}
   ledgerAddress : ${LEDGER_CONTRACT_ADDRESS}
-  emailLinkerAddress : ${EMAIL_LINKER_CONTRACT_ADDRESS}
+  phoneLinkerAddress : ${PHONE_LINKER_CONTRACT_ADDRESS}
 

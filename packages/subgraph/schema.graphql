@@ -3,7 +3,7 @@ type SavedPurchase @entity(immutable: true) {
   purchaseId: String! # string
   timestamp: BigInt! # uint256
   amount: BigInt! # uint256
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   shopId: String! # string
   method: BigInt! # uint32
   currency: String! # string
@@ -14,7 +14,7 @@ type SavedPurchase @entity(immutable: true) {
 
 type Deposited @entity(immutable: true) {
   id: Bytes!
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   depositAmount: BigInt! # uint256
   value: BigInt! # uint256
   balanceToken: BigInt! # uint256
@@ -26,7 +26,7 @@ type Deposited @entity(immutable: true) {
 
 type PaidPoint @entity(immutable: true) {
   id: Bytes!
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   paidAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
@@ -39,7 +39,7 @@ type PaidPoint @entity(immutable: true) {
 
 type PaidToken @entity(immutable: true) {
   id: Bytes!
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   paidAmountToken: BigInt! # uint256
   value: BigInt! # uint256
   balanceToken: BigInt! # uint256
@@ -52,7 +52,7 @@ type PaidToken @entity(immutable: true) {
 
 type ProvidedPoint @entity(immutable: true) {
   id: Bytes!
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   providedAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
@@ -65,7 +65,7 @@ type ProvidedPoint @entity(immutable: true) {
 
 type ProvidedPointToShop @entity(immutable: true) {
   id: Bytes!
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   providedAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
@@ -78,7 +78,7 @@ type ProvidedPointToShop @entity(immutable: true) {
 
 type ProvidedToken @entity(immutable: true) {
   id: Bytes!
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   providedAmountToken: BigInt! # uint256
   value: BigInt! # uint256
   balanceToken: BigInt! # uint256
@@ -91,7 +91,7 @@ type ProvidedToken @entity(immutable: true) {
 
 type Withdrawn @entity(immutable: true) {
   id: Bytes!
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
   withdrawAmount: BigInt! # uint256
   value: BigInt! # uint256
   balanceToken: BigInt! # uint256
@@ -121,7 +121,7 @@ enum AssetFlow {
 
 type UserTradeHistory @entity(immutable: true) {
   id: Bytes!
-  email: Bytes!
+  phone: Bytes!
   action: UserAction!
   assetFlow: AssetFlow!
   amountPoint: BigInt!
@@ -138,7 +138,7 @@ type UserTradeHistory @entity(immutable: true) {
 }
 
 type UserBalance @entity {
-  id: ID! # email
+  id: ID! # phone
 
   point: BigInt!
   token: BigInt!
@@ -177,7 +177,7 @@ type Shop @entity {
 
   provideWaitTime: BigInt! # uint256
   providePercent: BigInt! # uint256
-  email: Bytes! # bytes32
+  phone: Bytes! # bytes32
 
   providedPoint: BigInt!
   usedPoint: BigInt!

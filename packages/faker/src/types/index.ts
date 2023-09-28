@@ -4,19 +4,19 @@ export interface IPurchaseData {
     purchaseId: string;
     timestamp: number;
     amount: BigNumber;
-    userEmail: string;
+    userPhone: string;
     shopId: string;
 }
 
 export interface IShopData {
     shopId: string;
     provideWaitTime: number;
-    email: string;
+    phone: string;
 }
 
 export interface IUserData {
     idx: number;
-    email: string;
+    phone: string;
     address: string;
     privateKey: string;
     register: boolean;

@@ -35,7 +35,7 @@ export class AddedShop__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this._event.parameters[3].value.toBytes();
   }
 }
@@ -143,7 +143,7 @@ export class ShopCollection__shopOfResultValue0Struct extends ethereum.Tuple {
     return this[2].toBigInt();
   }
 
-  get email(): Bytes {
+  get phone(): Bytes {
     return this[3].toBytes();
   }
 
@@ -387,7 +387,7 @@ export class AddCall__Inputs {
     return this._call.inputValues[2].value.toBigInt();
   }
 
-  get _email(): Bytes {
+  get _phone(): Bytes {
     return this._call.inputValues[3].value.toBytes();
   }
 }

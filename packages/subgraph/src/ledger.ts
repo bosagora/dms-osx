@@ -25,7 +25,7 @@ import { AmountUnit, NullAccount } from "./utils";
 
 export function handleDeposited(event: DepositedEvent): void {
     let entity = new Deposited(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.depositAmount = event.params.depositAmount;
     entity.value = event.params.value;
     entity.balanceToken = event.params.balanceToken;
@@ -42,7 +42,7 @@ export function handleDeposited(event: DepositedEvent): void {
 
 export function handlePaidPoint(event: PaidPointEvent): void {
     let entity = new PaidPoint(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.paidAmountPoint = event.params.paidAmountPoint;
     entity.value = event.params.value;
     entity.balancePoint = event.params.balancePoint;
@@ -60,7 +60,7 @@ export function handlePaidPoint(event: PaidPointEvent): void {
 
 export function handlePaidToken(event: PaidTokenEvent): void {
     let entity = new PaidToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.paidAmountToken = event.params.paidAmountToken;
     entity.value = event.params.value;
     entity.balanceToken = event.params.balanceToken;
@@ -78,7 +78,7 @@ export function handlePaidToken(event: PaidTokenEvent): void {
 
 export function handleProvidedPoint(event: ProvidedPointEvent): void {
     let entity = new ProvidedPoint(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.providedAmountPoint = event.params.providedAmountPoint;
     entity.value = event.params.value;
     entity.balancePoint = event.params.balancePoint;
@@ -96,7 +96,7 @@ export function handleProvidedPoint(event: ProvidedPointEvent): void {
 
 export function handleProvidedPointToShop(event: ProvidedPointToShopEvent): void {
     let entity = new ProvidedPointToShop(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.providedAmountPoint = event.params.providedAmountPoint;
     entity.value = event.params.value;
     entity.balancePoint = event.params.balancePoint;
@@ -114,7 +114,7 @@ export function handleProvidedPointToShop(event: ProvidedPointToShopEvent): void
 
 export function handleProvidedToken(event: ProvidedTokenEvent): void {
     let entity = new ProvidedToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.providedAmountToken = event.params.providedAmountToken;
     entity.value = event.params.value;
     entity.balanceToken = event.params.balanceToken;
@@ -135,7 +135,7 @@ export function handleSavedPurchase(event: SavedPurchaseEvent): void {
     entity.purchaseId = event.params.purchaseId;
     entity.timestamp = event.params.timestamp;
     entity.amount = event.params.amount;
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.shopId = event.params.shopId;
     entity.method = event.params.method;
     entity.currency = event.params.currency;
@@ -149,7 +149,7 @@ export function handleSavedPurchase(event: SavedPurchaseEvent): void {
 
 export function handleWithdrawn(event: WithdrawnEvent): void {
     let entity = new Withdrawn(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.withdrawAmount = event.params.withdrawAmount;
     entity.value = event.params.value;
     entity.balanceToken = event.params.balanceToken;
@@ -165,13 +165,13 @@ export function handleWithdrawn(event: WithdrawnEvent): void {
 }
 
 export function handleChangedBalancePoint(
-    email: Bytes,
+    phone: Bytes,
     balance: BigInt,
     blockNumber: BigInt,
     blockTimestamp: BigInt,
     transactionHash: Bytes
 ): UserBalance {
-    let entity = UserBalance.load(email.toHex());
+    let entity = UserBalance.load(phone.toHex());
     if (entity !== null) {
         entity.point = balance.div(AmountUnit);
         entity.blockNumber = blockNumber;
@@ -179,7 +179,7 @@ export function handleChangedBalancePoint(
         entity.transactionHash = transactionHash;
         entity.save();
     } else {
-        entity = new UserBalance(email.toHex());
+        entity = new UserBalance(phone.toHex());
         entity.point = balance.div(AmountUnit);
         entity.token = BigInt.fromI32(0);
         entity.blockNumber = blockNumber;
@@ -191,13 +191,13 @@ export function handleChangedBalancePoint(
 }
 
 export function handleChangedBalanceToken(
-    email: Bytes,
+    phone: Bytes,
     balance: BigInt,
     blockNumber: BigInt,
     blockTimestamp: BigInt,
     transactionHash: Bytes
 ): UserBalance {
-    let entity = UserBalance.load(email.toHex());
+    let entity = UserBalance.load(phone.toHex());
     if (entity !== null) {
         entity.token = balance.div(AmountUnit);
         entity.blockNumber = blockNumber;
@@ -205,7 +205,7 @@ export function handleChangedBalanceToken(
         entity.transactionHash = transactionHash;
         entity.save();
     } else {
-        entity = new UserBalance(email.toHex());
+        entity = new UserBalance(phone.toHex());
         entity.token = balance.div(AmountUnit);
         entity.point = BigInt.fromI32(0);
         entity.blockNumber = blockNumber;
@@ -218,14 +218,14 @@ export function handleChangedBalanceToken(
 
 export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     const balanceEntity = handleChangedBalancePoint(
-        event.params.email,
+        event.params.phone,
         event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.action = "ProvidedPoint";
     entity.assetFlow = "PointInput";
     entity.amountPoint = event.params.providedAmountPoint;
@@ -245,14 +245,14 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
 
 export function handleProvidedPointToShopForHistory(event: ProvidedPointToShopEvent): void {
     const balanceEntity = handleChangedBalancePoint(
-        event.params.email,
+        event.params.phone,
         event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.action = "ClearedPoint";
     entity.assetFlow = "PointInput";
     entity.amountPoint = event.params.providedAmountPoint.div(AmountUnit);
@@ -271,14 +271,14 @@ export function handleProvidedPointToShopForHistory(event: ProvidedPointToShopEv
 
 export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     const balanceEntity = handleChangedBalanceToken(
-        event.params.email,
+        event.params.phone,
         event.params.balanceToken,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.action = "ProvidedToken";
     entity.assetFlow = "TokenInput";
     entity.amountPoint = BigInt.fromI32(0);
@@ -298,14 +298,14 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
 
 export function handlePaidPointForHistory(event: PaidPointEvent): void {
     const balanceEntity = handleChangedBalanceToken(
-        event.params.email,
+        event.params.phone,
         event.params.balancePoint,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.action = "PaidPoint";
     entity.assetFlow = "PointOutput";
     entity.amountPoint = event.params.paidAmountPoint.div(AmountUnit);
@@ -325,14 +325,14 @@ export function handlePaidPointForHistory(event: PaidPointEvent): void {
 
 export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
     const balanceEntity = handleChangedBalanceToken(
-        event.params.email,
+        event.params.phone,
         event.params.balanceToken,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.action = "PaidToken";
     entity.assetFlow = "TokenOutput";
     entity.amountPoint = BigInt.fromI32(0);
@@ -352,14 +352,14 @@ export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
 
 export function handleDepositedForHistory(event: DepositedEvent): void {
     const balanceEntity = handleChangedBalanceToken(
-        event.params.email,
+        event.params.phone,
         event.params.balanceToken,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.action = "DepositedToken";
     entity.assetFlow = "TokenInput";
     entity.amountPoint = BigInt.fromI32(0);
@@ -379,14 +379,14 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
 
 export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     const balanceEntity = handleChangedBalanceToken(
-        event.params.email,
+        event.params.phone,
         event.params.balanceToken,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
     entity.action = "WithdrawnToken";
     entity.assetFlow = "TokenOutput";
     entity.amountPoint = BigInt.fromI32(0);

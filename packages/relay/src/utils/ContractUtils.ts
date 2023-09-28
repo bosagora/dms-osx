@@ -26,6 +26,19 @@ export class ContractUtils {
         return Buffer.from(hex.substring(start), "hex");
     }
 
+    public static getPhoneHash(phone: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "string"],
+            ["BOSagora Phone Number", phone]
+        );
+        return hre.ethers.utils.keccak256(encodedResult);
+    }
+
+    public static getEmailHash(phone: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
+        return hre.ethers.utils.keccak256(encodedResult);
+    }
+
     /**
      * Convert Buffer into hexadecimal strings.
      * @param data The data

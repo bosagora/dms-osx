@@ -2,51 +2,51 @@
     {
         "shopId": "F000100",
         "provideWaitTime": 0,
-        "email": "f0@example.com"
+        "phone": "f0@example.com"
     },
     {
         "shopId": "F000200",
         "provideWaitTime": 0,
-        "email": "f1@example.com"
+        "phone": "f1@example.com"
     },
     {
         "shopId": "F000300",
         "provideWaitTime": 0,
-        "email": "f2@example.com"
+        "phone": "f2@example.com"
     },
     {
         "shopId": "F000400",
         "provideWaitTime": 0,
-        "email": "f3@example.com"
+        "phone": "f3@example.com"
     },
     {
         "shopId": "F000500",
         "provideWaitTime": 0,
-        "email": "f4@example.com"
+        "phone": "f4@example.com"
     },
     {
         "shopId": "F000600",
         "provideWaitTime": 0,
-        "email": "f5@example.com"
+        "phone": "f5@example.com"
     },
     {
         "shopId": "F000700",
         "provideWaitTime": 0,
-        "email": "f6@example.com"
+        "phone": "f6@example.com"
     },
     {
         "shopId": "F000800",
         "provideWaitTime": 0,
-        "email": "f7@example.com"
+        "phone": "f7@example.com"
     },
     {
         "shopId": "F000900",
         "provideWaitTime": 0,
-        "email": "f8@example.com"
+        "phone": "f8@example.com"
     },
     {
         "shopId": "F001000",
         "provideWaitTime": 0,
-        "email": "f9@example.com"
+        "phone": "f9@example.com"
     }
 ]

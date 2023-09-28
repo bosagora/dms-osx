@@ -4,7 +4,7 @@ import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
     Ledger,
-    EmailLinkCollection,
+    PhoneLinkCollection,
     ShopCollection,
     Token,
     ValidatorCollection,
@@ -48,16 +48,16 @@ describe("Test of Server", function () {
     const validators = [validator1, validator2, validator3];
     const linkValidators = [validator1];
     const users = [user1, user2, user3];
-    const emailHashes: string[] = [
-        ContractUtils.sha256String("a@example.com"),
-        ContractUtils.sha256String("b@example.com"),
-        ContractUtils.sha256String("c@example.com"),
-        ContractUtils.sha256String("d@example.com"),
+    const phoneHashes: string[] = [
+        ContractUtils.getPhoneHash("08201012341001"),
+        ContractUtils.getPhoneHash("08201012341002"),
+        ContractUtils.getPhoneHash("08201012341003"),
+        ContractUtils.getPhoneHash("08201012341004"),
     ];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
-    let linkCollectionContract: EmailLinkCollection;
+    let linkCollectionContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopCollection: ShopCollection;
 
@@ -66,8 +66,8 @@ describe("Test of Server", function () {
 
     const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
-    const foundationEmail = "foundation@example.com";
-    const foundationAccount = ContractUtils.sha256String(foundationEmail);
+    const foundationPhone = "08201012341000";
+    const foundationAccount = ContractUtils.getPhoneHash(foundationPhone);
 
     const deployToken = async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
@@ -102,11 +102,11 @@ describe("Test of Server", function () {
         }
     };
 
-    const deployEmailLinkCollection = async () => {
-        const linkCollectionFactory = await hre.ethers.getContractFactory("EmailLinkCollection");
+    const deployPhoneLinkCollection = async () => {
+        const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
         linkCollectionContract = (await linkCollectionFactory
             .connect(deployer)
-            .deploy(linkValidators.map((m) => m.address))) as EmailLinkCollection;
+            .deploy(linkValidators.map((m) => m.address))) as PhoneLinkCollection;
         await linkCollectionContract.deployed();
         await linkCollectionContract.deployTransaction.wait();
     };
@@ -152,7 +152,7 @@ describe("Test of Server", function () {
         await deployToken();
         await deployValidatorCollection();
         await depositValidators();
-        await deployEmailLinkCollection();
+        await deployPhoneLinkCollection();
         await deployCurrencyRate();
         await deployShopCollection();
         await deployLedger();
@@ -167,38 +167,38 @@ describe("Test of Server", function () {
         shopId: string;
         provideWaitTime: number;
         providePercent: number;
-        email: string;
+        phone: string;
     }
     const shopData: IShopData[] = [
         {
             shopId: "F000100",
             provideWaitTime: 0,
             providePercent: 1,
-            email: "f1@example.com",
+            phone: "08201012342001",
         },
         {
             shopId: "F000200",
             provideWaitTime: 0,
             providePercent: 1,
-            email: "f2@example.com",
+            phone: "08201012342002",
         },
         {
             shopId: "F000300",
             provideWaitTime: 0,
             providePercent: 1,
-            email: "f3@example.com",
+            phone: "08201012342003",
         },
         {
             shopId: "F000400",
             provideWaitTime: 0,
             providePercent: 1,
-            email: "f4@example.com",
+            phone: "08201012342004",
         },
         {
             shopId: "F000500",
             provideWaitTime: 0,
             providePercent: 1,
-            email: "f5@example.com",
+            phone: "08201012342005",
         },
     ];
 
@@ -218,7 +218,7 @@ describe("Test of Server", function () {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.emailLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
 
             config.relay.managerKeys = [
@@ -246,14 +246,14 @@ describe("Test of Server", function () {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const email = ContractUtils.sha256String(elem.email);
+                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -264,14 +264,14 @@ describe("Test of Server", function () {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
                 currency: "krw",
             };
 
             it("Save Purchase Data", async () => {
-                const hash = emailHashes[0];
+                const hash = phoneHashes[0];
                 const purchaseAmount = Amount.make(purchaseData1.amount, 18).value;
                 const amt = purchaseAmount.div(100);
                 await expect(
@@ -299,7 +299,7 @@ describe("Test of Server", function () {
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
-                        email: hash,
+                        phone: hash,
                         providedAmountPoint: amt,
                         value: amt,
                         purchaseId: purchaseData1.purchaseId,
@@ -307,10 +307,10 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Prepare email-address", () => {
-            it("Link email-address", async () => {
+        context("Prepare phone-address", () => {
+            it("Link phone-address", async () => {
                 const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = emailHashes[0];
+                const hash = phoneHashes[0];
                 const signature = await ContractUtils.sign(users[0], hash, nonce);
                 reqId = ContractUtils.getRequestId(hash, users[0].address, nonce);
                 await expect(
@@ -328,7 +328,7 @@ describe("Test of Server", function () {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 100,
-                userEmail: "a@example.com",
+                userPhone: "08201012341001",
                 shopId: "F000100",
                 method: 0,
             };
@@ -352,7 +352,7 @@ describe("Test of Server", function () {
                     users[0],
                     purchaseData.purchaseId,
                     over_purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -361,7 +361,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: over_purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
@@ -371,14 +371,14 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure test of the path /payPoint 'Email is not valid.'", async () => {
+            it("Failure test of the path /payPoint 'Phone is not valid.'", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -387,7 +387,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: "",
                     signature,
@@ -404,7 +404,7 @@ describe("Test of Server", function () {
                     users[1],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -413,7 +413,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
@@ -423,14 +423,14 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Failure test of the path /payPoint 'Email is not valid.'", async () => {
+            it("Failure test of the path /payPoint 'Phone is not valid.'", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[1],
+                    phoneHashes[1],
                     shopData[0].shopId,
                     nonce
                 );
@@ -439,14 +439,14 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[1],
+                    phone: phoneHashes[1],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
 
                 assert.deepStrictEqual(response.data.code, 502);
-                assert.ok(response.data.error.message === "Email is not valid.");
+                assert.ok(response.data.error.message === "Phone is not valid.");
             });
 
             it("Success Test of the path /payPoint", async () => {
@@ -456,7 +456,7 @@ describe("Test of Server", function () {
                     users[0],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -465,7 +465,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
@@ -483,7 +483,7 @@ describe("Test of Server", function () {
                     users[0],
                     purchaseData.purchaseId,
                     over_purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -492,7 +492,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: over_purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
@@ -502,14 +502,14 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure test of the path /payToken 'Email is not valid.'", async () => {
+            it("Failure test of the path /payToken 'Phone is not valid.'", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -518,7 +518,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: "",
                     signature,
@@ -535,7 +535,7 @@ describe("Test of Server", function () {
                     users[1],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -544,7 +544,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
@@ -554,14 +554,14 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Failure test of the path /payToken 'Email is not valid.'", async () => {
+            it("Failure test of the path /payToken 'Phone is not valid.'", async () => {
                 const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
                     users[0],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[1],
+                    phoneHashes[1],
                     shopData[0].shopId,
                     nonce
                 );
@@ -570,14 +570,14 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[1],
+                    phone: phoneHashes[1],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,
                 });
 
                 assert.deepStrictEqual(response.data.code, 502);
-                assert.ok(response.data.error.message === "Email is not valid.");
+                assert.ok(response.data.error.message === "Phone is not valid.");
             });
 
             it("Success Test of the path /payToken", async () => {
@@ -587,7 +587,7 @@ describe("Test of Server", function () {
                     users[0],
                     purchaseData.purchaseId,
                     purchaseAmount,
-                    emailHashes[0],
+                    phoneHashes[0],
                     shopData[0].shopId,
                     nonce
                 );
@@ -596,7 +596,7 @@ describe("Test of Server", function () {
                 const response = await client.post(url, {
                     purchaseId: purchaseData.purchaseId,
                     amount: purchaseAmount.toString(),
-                    email: emailHashes[0],
+                    phone: phoneHashes[0],
                     shopId: purchaseData.shopId,
                     signer: users[0].address,
                     signature,

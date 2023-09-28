@@ -13,7 +13,7 @@ export function handleAddedShop(event: AddedShopEvent): void {
 
     entity.provideWaitTime = event.params.provideWaitTime;
     entity.providePercent = event.params.providePercent;
-    entity.email = event.params.email;
+    entity.phone = event.params.phone;
 
     entity.providedPoint = BigInt.fromI32(0);
     entity.usedPoint = BigInt.fromI32(0);
