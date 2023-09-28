@@ -141,36 +141,10 @@ describe("Test for Ledger", () => {
 
     interface IShopData {
         shopId: string;
-        timestamp: number;
+        provideWaitTime: number;
+        providePercent: number;
         email: string;
     }
-    const shopData: IShopData[] = [
-        {
-            shopId: "F000100",
-            timestamp: 0,
-            email: "f1@example.com",
-        },
-        {
-            shopId: "F000200",
-            timestamp: 0,
-            email: "f2@example.com",
-        },
-        {
-            shopId: "F000300",
-            timestamp: 0,
-            email: "f3@example.com",
-        },
-        {
-            shopId: "F000400",
-            timestamp: 0,
-            email: "f4@example.com",
-        },
-        {
-            shopId: "F000500",
-            timestamp: 0,
-            email: "f5@example.com",
-        },
-    ];
 
     let requestId: string;
     context("Save Purchase Data & Pay (point, token)", () => {
@@ -217,6 +191,45 @@ describe("Test for Ledger", () => {
             },
         ];
 
+        const shopData: IShopData[] = [
+            {
+                shopId: "F000100",
+                provideWaitTime: 0,
+                providePercent: 5,
+                email: "f1@example.com",
+            },
+            {
+                shopId: "F000200",
+                provideWaitTime: 0,
+                providePercent: 6,
+                email: "f2@example.com",
+            },
+            {
+                shopId: "F000300",
+                provideWaitTime: 0,
+                providePercent: 7,
+                email: "f3@example.com",
+            },
+            {
+                shopId: "F000400",
+                provideWaitTime: 0,
+                providePercent: 8,
+                email: "f4@example.com",
+            },
+            {
+                shopId: "F000500",
+                provideWaitTime: 0,
+                providePercent: 9,
+                email: "f5@example.com",
+            },
+            {
+                shopId: "F000600",
+                provideWaitTime: 0,
+                providePercent: 10,
+                email: "f6@example.com",
+            },
+        ];
+
         before("Deploy", async () => {
             await deployAllContract();
         });
@@ -225,9 +238,13 @@ describe("Test for Ledger", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                    await expect(
+                        shopCollection
+                            .connect(validator1)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                    )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.timestamp, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -287,7 +304,9 @@ describe("Test for Ledger", () => {
                 for (const purchase of purchaseData) {
                     const emailHash = ContractUtils.sha256String(purchase.userEmail);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const amt = purchaseAmount.div(100);
+                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                    const amt =
+                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
                     await expect(
                         ledgerContract
                             .connect(validators[0])
@@ -325,7 +344,11 @@ describe("Test for Ledger", () => {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const key = ContractUtils.sha256String(purchase.userEmail);
                     const oldValue = expected.get(key);
-                    const point = purchaseAmount.div(100);
+
+                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                    const point =
+                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+
                     if (oldValue !== undefined) expected.set(key, oldValue.add(point));
                     else expected.set(key, point);
                 }
@@ -357,7 +380,10 @@ describe("Test for Ledger", () => {
                     method: 0,
                 };
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const pointAmount = purchaseAmount.div(100);
+                const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                const pointAmount =
+                    shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+
                 const tokenAmount = pointAmount.mul(multiple).div(price);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
                 const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
@@ -409,7 +435,9 @@ describe("Test for Ledger", () => {
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const amt = purchaseAmount.div(100);
+                const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                const pointAmount =
+                    shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
                 const emailHash = ContractUtils.sha256String(purchase.userEmail);
                 const oldPointBalance = await ledgerContract.pointBalanceOf(emailHash);
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(emailHash);
@@ -437,11 +465,11 @@ describe("Test for Ledger", () => {
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         email: emailHash,
-                        providedAmountPoint: amt,
-                        value: amt,
+                        providedAmountPoint: pointAmount,
+                        value: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
-                expect(await ledgerContract.pointBalanceOf(emailHash)).to.deep.equal(oldPointBalance.add(amt));
+                expect(await ledgerContract.pointBalanceOf(emailHash)).to.deep.equal(oldPointBalance.add(pointAmount));
                 expect(await ledgerContract.tokenBalanceOf(emailHash)).to.deep.equal(oldTokenBalance);
             });
         });
@@ -801,6 +829,45 @@ describe("Test for Ledger", () => {
     });
 
     context("Deposit & Withdraw", () => {
+        const shopData: IShopData[] = [
+            {
+                shopId: "F000100",
+                provideWaitTime: 0,
+                providePercent: 5,
+                email: "f1@example.com",
+            },
+            {
+                shopId: "F000200",
+                provideWaitTime: 0,
+                providePercent: 6,
+                email: "f2@example.com",
+            },
+            {
+                shopId: "F000300",
+                provideWaitTime: 0,
+                providePercent: 7,
+                email: "f3@example.com",
+            },
+            {
+                shopId: "F000400",
+                provideWaitTime: 0,
+                providePercent: 8,
+                email: "f4@example.com",
+            },
+            {
+                shopId: "F000500",
+                provideWaitTime: 0,
+                providePercent: 9,
+                email: "f5@example.com",
+            },
+            {
+                shopId: "F000600",
+                provideWaitTime: 0,
+                providePercent: 10,
+                email: "f6@example.com",
+            },
+        ];
+
         before("Deploy", async () => {
             await deployAllContract();
         });
@@ -815,9 +882,13 @@ describe("Test for Ledger", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                    await expect(
+                        shopCollection
+                            .connect(validator1)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                    )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.timestamp, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -977,6 +1048,45 @@ describe("Test for Ledger", () => {
             },
         ];
 
+        const shopData: IShopData[] = [
+            {
+                shopId: "F000100",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f1@example.com",
+            },
+            {
+                shopId: "F000200",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f2@example.com",
+            },
+            {
+                shopId: "F000300",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f3@example.com",
+            },
+            {
+                shopId: "F000400",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f4@example.com",
+            },
+            {
+                shopId: "F000500",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f5@example.com",
+            },
+            {
+                shopId: "F000600",
+                provideWaitTime: 0,
+                providePercent: 1,
+                email: "f6@example.com",
+            },
+        ];
+
         before("Deploy", async () => {
             await deployAllContract();
         });
@@ -991,9 +1101,13 @@ describe("Test for Ledger", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const email = ContractUtils.sha256String(elem.email);
-                    await expect(shopCollection.connect(validator1).add(elem.shopId, elem.timestamp, email))
+                    await expect(
+                        shopCollection
+                            .connect(validator1)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                    )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.timestamp, email);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1034,7 +1148,9 @@ describe("Test for Ledger", () => {
                 for (const purchase of purchaseData) {
                     const emailHash = ContractUtils.sha256String(purchase.userEmail);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const amt = purchaseAmount.div(100);
+                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                    const amt =
+                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
                     await expect(
                         ledgerContract
                             .connect(validators[0])
@@ -1072,7 +1188,11 @@ describe("Test for Ledger", () => {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const key = ContractUtils.sha256String(purchase.userEmail);
                     const oldValue = expected.get(key);
-                    const point = purchaseAmount.div(100);
+
+                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                    const point =
+                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+
                     if (oldValue !== undefined) expected.set(key, oldValue.add(point));
                     else expected.set(key, point);
                 }
@@ -1081,14 +1201,31 @@ describe("Test for Ledger", () => {
             });
 
             it("Check shop data", async () => {
-                const shop1 = await shopCollection.shopOf("F000100");
-                expect(shop1.providedPoint).to.equal(Amount.make(10000 * 3, 18).value.div(100));
-                const shop2 = await shopCollection.shopOf("F000200");
-                expect(shop2.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
-                const shop3 = await shopCollection.shopOf("F000300");
-                expect(shop3.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
-                const shop4 = await shopCollection.shopOf("F000400");
-                expect(shop4.providedPoint).to.equal(Amount.make(10000 * 1, 18).value.div(100));
+                const shop1 = await shopCollection.shopOf(shopData[0].shopId);
+                expect(shop1.providedPoint).to.equal(
+                    Amount.make(10000 * 3, 18)
+                        .value.mul(shopData[0].providePercent)
+                        .div(100)
+                );
+
+                const shop2 = await shopCollection.shopOf(shopData[1].shopId);
+                expect(shop2.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[1].providePercent)
+                        .div(100)
+                );
+                const shop3 = await shopCollection.shopOf(shopData[2].shopId);
+                expect(shop3.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[2].providePercent)
+                        .div(100)
+                );
+                const shop4 = await shopCollection.shopOf(shopData[3].shopId);
+                expect(shop4.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[3].providePercent)
+                        .div(100)
+                );
             });
         });
 
@@ -1128,6 +1265,8 @@ describe("Test for Ledger", () => {
                     purchase.shopId,
                     nonce
                 );
+                const shop = shopData.find((m) => m.shopId === purchase.shopId);
+                const amt = shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
                 await expect(
                     ledgerContract
                         .connect(relay)

@@ -1844,6 +1844,19 @@ export class Shop extends Entity {
     this.set("provideWaitTime", Value.fromBigInt(value));
   }
 
+  get providePercent(): BigInt {
+    let value = this.get("providePercent");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set providePercent(value: BigInt) {
+    this.set("providePercent", Value.fromBigInt(value));
+  }
+
   get email(): Bytes {
     let value = this.get("email");
     if (!value || value.kind == ValueKind.NULL) {

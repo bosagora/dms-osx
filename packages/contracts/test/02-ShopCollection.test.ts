@@ -1,4 +1,5 @@
 import { Amount } from "../src/utils/Amount";
+import { ContractUtils } from "../src/utils/ContractUtils";
 import { ShopCollection, Token, ValidatorCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
@@ -9,7 +10,6 @@ import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
 import * as hre from "hardhat";
-import { ContractUtils } from "../src/utils/ContractUtils";
 
 chai.use(solidity);
 
@@ -64,6 +64,7 @@ describe("Test for ShopCollection", () => {
         interface IShopData {
             shopId: string;
             provideWaitTime: number;
+            providePercent: number;
             email: string;
         }
 
@@ -71,41 +72,50 @@ describe("Test for ShopCollection", () => {
             {
                 shopId: "F000100",
                 provideWaitTime: 0,
+                providePercent: 5,
                 email: "f1@example.com",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
+                providePercent: 5,
                 email: "f2@example.com",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
+                providePercent: 5,
                 email: "f3@example.com",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
+                providePercent: 5,
                 email: "f4@example.com",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
+                providePercent: 5,
                 email: "f5@example.com",
             },
         ];
 
         it("Not validator", async () => {
             const email = ContractUtils.sha256String("f100@example.com");
-            await expect(shopCollection.connect(user1).add("F000100", 0, email)).to.revertedWith("Not validator");
+            await expect(shopCollection.connect(user1).add("F000100", 0, 5, email)).to.revertedWith("Not validator");
         });
 
         it("Success", async () => {
             for (const elem of shopData) {
                 const email = ContractUtils.sha256String(elem.email);
-                await expect(shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, email))
+                await expect(
+                    shopCollection
+                        .connect(validator1)
+                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, email)
+                )
                     .to.emit(shopCollection, "AddedShop")
-                    .withArgs(elem.shopId, elem.provideWaitTime, email);
+                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, email);
             }
             expect(await shopCollection.shopsLength()).to.equal(shopData.length);
         });
