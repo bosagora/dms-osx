@@ -2,51 +2,51 @@
     {
         "shopId": "F000100",
         "provideWaitTime": 0,
-        "phone": "f0@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000200",
         "provideWaitTime": 0,
-        "phone": "f1@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000300",
         "provideWaitTime": 0,
-        "phone": "f2@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000400",
         "provideWaitTime": 0,
-        "phone": "f3@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000500",
         "provideWaitTime": 0,
-        "phone": "f4@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000600",
         "provideWaitTime": 0,
-        "phone": "f5@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000700",
         "provideWaitTime": 0,
-        "phone": "f6@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000800",
         "provideWaitTime": 0,
-        "phone": "f7@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F000900",
         "provideWaitTime": 0,
-        "phone": "f8@example.com"
+        "providePercent": "5"
     },
     {
         "shopId": "F001000",
         "provideWaitTime": 0,
-        "phone": "f9@example.com"
+        "providePercent": "5"
     }
 ]
