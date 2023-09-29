@@ -74,18 +74,30 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
+    public static async getPaymentMessage(
+        signer: Signer,
+        purchaseId: string,
+        amount: BigNumberish,
+        currency: string,
+        shopId: string,
+        nonce: BigNumberish
+    ): Promise<Uint8Array> {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "uint256", "string", "string", "address", "uint256"],
+            [purchaseId, amount, currency, shopId, await signer.getAddress(), nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
     public static async signPayment(
         signer: Signer,
         purchaseId: string,
         amount: BigNumberish,
+        currency: string,
         shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "string", "address", "uint256"],
-            [purchaseId, amount, shopId, await signer.getAddress(), nonce]
-        );
-        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const message = await ContractUtils.getPaymentMessage(signer, purchaseId, amount, currency, shopId, nonce);
         return signer.signMessage(message);
     }
 }

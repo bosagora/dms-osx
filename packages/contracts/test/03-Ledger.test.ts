@@ -756,6 +756,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -765,6 +766,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex + 1].address,
                             signature
@@ -790,6 +792,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -799,6 +802,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex].address,
                             signature
@@ -824,6 +828,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -833,6 +838,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex].address,
                             signature
@@ -844,6 +850,7 @@ describe("Test for Ledger", () => {
                         paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        purchaseAmount,
                         shopId: shop.shopId,
                     });
             });
@@ -868,6 +875,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -877,6 +885,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex + 1].address,
                             signature
@@ -902,6 +911,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -911,6 +921,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex].address,
                             signature
@@ -938,6 +949,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -948,6 +960,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex].address,
                             signature
@@ -959,6 +972,7 @@ describe("Test for Ledger", () => {
                         paidAmountToken: tokenAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        purchaseAmount,
                         shopId: shop.shopId,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
@@ -1429,6 +1443,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -1440,6 +1455,7 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex].address,
                             signature
@@ -1452,6 +1468,7 @@ describe("Test for Ledger", () => {
                         paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        purchaseAmount,
                         shopId: shop.shopId,
                     });
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
@@ -1499,6 +1516,7 @@ describe("Test for Ledger", () => {
                     users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
+                    purchase.currency,
                     shop.shopId,
                     nonce
                 );
@@ -1508,6 +1526,7 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
+                            purchase.currency.toLowerCase(),
                             shop.shopId,
                             users[purchase.userIndex].address,
                             signature
@@ -1519,6 +1538,7 @@ describe("Test for Ledger", () => {
                         paidAmountToken: tokenAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        purchaseAmount,
                         shopId: shop.shopId,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
