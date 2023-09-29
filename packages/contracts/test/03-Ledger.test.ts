@@ -19,30 +19,46 @@ import { solidity } from "ethereum-waffle";
 import { BigNumber } from "ethers";
 import * as hre from "hardhat";
 
+import { AddressZero } from "@ethersproject/constants";
+
 chai.use(solidity);
 
-interface PurchaseData {
+interface IPurchaseData {
     purchaseId: string;
     timestamp: number;
     amount: number;
-    userPhone: string;
-    shopId: string;
     method: number;
     currency: string;
+    userIndex: number;
+    shopIndex: number;
+}
+
+interface IShopData {
+    shopId: string;
+    provideWaitTime: number;
+    providePercent: number;
+}
+
+interface IUserData {
+    phone: string;
+    address: string;
+    privateKey: string;
 }
 
 describe("Test for Ledger", () => {
     const provider = hre.waffle.provider;
-    const [deployer, foundation, validator1, validator2, validator3, relay, user1, user2, user3] =
+    const [deployer, foundation, validator1, validator2, validator3, relay, user1, user2, user3, user4, user5] =
         provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     const linkValidators = [validator1];
-    const users = [user1, user2, user3];
+    const users = [user1, user2, user3, user4, user5];
     const phoneHashes: string[] = [
         ContractUtils.getPhoneHash("08201012341001"),
         ContractUtils.getPhoneHash("08201012341002"),
         ContractUtils.getPhoneHash("08201012341003"),
+        ContractUtils.getPhoneHash("08201012341004"),
+        ContractUtils.getPhoneHash("08201012341005"),
     ];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
@@ -56,8 +72,6 @@ describe("Test for Ledger", () => {
 
     const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
-    const foundationPhone = "08201012341000";
-    const foundationAccount = ContractUtils.getPhoneHash(foundationPhone);
 
     const deployToken = async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
@@ -92,7 +106,7 @@ describe("Test for Ledger", () => {
         }
     };
 
-    const deployEmailLinkCollection = async () => {
+    const deployLinkCollection = async () => {
         const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
         linkCollectionContract = (await linkCollectionFactory
             .connect(deployer)
@@ -124,7 +138,7 @@ describe("Test for Ledger", () => {
         ledgerContract = (await ledgerFactory
             .connect(deployer)
             .deploy(
-                foundationAccount,
+                foundation.address,
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
@@ -141,66 +155,87 @@ describe("Test for Ledger", () => {
         await deployToken();
         await deployValidatorCollection();
         await depositValidators();
-        await deployEmailLinkCollection();
+        await deployLinkCollection();
         await deployCurrencyRate();
         await deployShopCollection();
         await deployLedger();
     };
 
-    interface IShopData {
-        shopId: string;
-        provideWaitTime: number;
-        providePercent: number;
-        phone: string;
-    }
-
     let requestId: string;
     context("Save Purchase Data & Pay (point, token)", () => {
-        const purchaseData: PurchaseData[] = [
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: users[0].address,
+                privateKey: users[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: users[1].address,
+                privateKey: users[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: users[2].address,
+                privateKey: users[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: "",
+                privateKey: "",
+            },
+            {
+                phone: "08201012341005",
+                address: "",
+                privateKey: "",
+            },
+        ];
+
+        const purchaseData: IPurchaseData[] = [
             {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000002",
                 timestamp: 1675522800,
                 amount: 10000,
-                userPhone: "08201012341002",
-                shopId: "F000100",
                 method: 0,
                 currency: "krw",
+                shopIndex: 0,
+                userIndex: 1,
             },
             {
                 purchaseId: "P000003",
                 timestamp: 1677942000,
                 amount: 10000,
-                userPhone: "08201012341003",
-                shopId: "F000200",
                 method: 0,
                 currency: "krw",
+                shopIndex: 1,
+                userIndex: 2,
             },
             {
                 purchaseId: "P000004",
                 timestamp: 1680620400,
                 amount: 10000,
-                userPhone: "08201012341004",
-                shopId: "F000300",
                 method: 0,
                 currency: "krw",
+                shopIndex: 2,
+                userIndex: 3,
             },
             {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000200",
                 method: 0,
                 currency: "krw",
+                shopIndex: 1,
+                userIndex: 4,
             },
         ];
 
@@ -209,37 +244,31 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 6,
-                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 7,
-                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 8,
-                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 9,
-                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 10,
-                phone: "08201012342006",
             },
         ];
 
@@ -250,45 +279,26 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
-                        shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
+                        shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
         context("Prepare foundation's asset", () => {
-            it("Register foundation's account", async () => {
-                const nonce = await linkCollectionContract.nonceOf(foundation.address);
-                const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
-                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
-                await expect(
-                    linkCollectionContract
-                        .connect(relay)
-                        .addRequest(requestId, foundationAccount, foundation.address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-
             it("Deposit foundation's token", async () => {
                 await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
                 await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        phone: foundationAccount,
+                        account: foundation.address,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
-                        account: foundation.address,
                     });
             });
         });
@@ -296,57 +306,63 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data - Not validator", async () => {
                 for (const purchase of purchaseData) {
-                    const hash = ContractUtils.getPhoneHash(purchase.userPhone);
+                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const userAccount =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : AddressZero;
                     await expect(
-                        ledgerContract
-                            .connect(deployer)
-                            .savePurchase(
-                                purchase.purchaseId,
-                                purchase.timestamp,
-                                purchaseAmount,
-                                hash,
-                                purchase.shopId,
-                                purchase.method,
-                                purchase.currency.toLowerCase()
-                            )
+                        ledgerContract.connect(deployer).savePurchase({
+                            purchaseId: purchase.purchaseId,
+                            timestamp: purchase.timestamp,
+                            amount: purchaseAmount,
+                            currency: purchase.currency.toLowerCase(),
+                            shopId: shopData[purchase.shopIndex].shopId,
+                            method: purchase.method,
+                            userAccount,
+                            userPhone: phoneHash,
+                        })
                     ).to.be.revertedWith("Not validator");
                 }
             });
 
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
+                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                    const amt =
-                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+                    const shop = shopData[purchase.shopIndex];
+                    const amt = purchaseAmount.mul(shop.providePercent).div(100);
+                    const userAccount =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : AddressZero;
                     await expect(
-                        ledgerContract
-                            .connect(validators[0])
-                            .savePurchase(
-                                purchase.purchaseId,
-                                purchase.timestamp,
-                                purchaseAmount,
-                                phoneHash,
-                                purchase.shopId,
-                                purchase.method,
-                                purchase.currency.toLowerCase()
-                            )
+                        ledgerContract.connect(validators[0]).savePurchase({
+                            purchaseId: purchase.purchaseId,
+                            timestamp: purchase.timestamp,
+                            amount: purchaseAmount,
+                            currency: purchase.currency.toLowerCase(),
+                            shopId: shopData[purchase.shopIndex].shopId,
+                            method: purchase.method,
+                            userAccount,
+                            userPhone: phoneHash,
+                        })
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
+                            purchase.currency.toLowerCase(),
+                            shopData[purchase.shopIndex].shopId,
                             purchase.method,
-                            purchase.currency.toLowerCase()
+                            userAccount,
+                            phoneHash
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
-                            phone: phoneHash,
+                            account: userAccount,
                             providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
@@ -358,131 +374,69 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.getPhoneHash(purchase.userPhone);
+                    const key =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
                     const oldValue = expected.get(key);
 
-                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                    const point =
-                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+                    const shop = shopData[purchase.shopIndex];
+                    const point = purchaseAmount.mul(shop.providePercent).div(100);
 
                     if (oldValue !== undefined) expected.set(key, oldValue.add(point));
                     else expected.set(key, point);
                 }
-                for (const key of expected.keys())
-                    expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
-            });
-
-            it("Link phone-address", async () => {
-                const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = phoneHashes[0];
-                const signature = await ContractUtils.sign(users[0], hash, nonce);
-                requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
-                await expect(
-                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[0].address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-
-            it("Save Purchase Data - phone and address are registered", async () => {
-                const purchase = {
-                    purchaseId: "P000006",
-                    timestamp: 1672844400,
-                    amount: 10000,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
-                    method: 0,
-                    currency: "krw",
-                };
-                const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                const pointAmount =
-                    shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
-
-                const tokenAmount = pointAmount.mul(multiple).div(price);
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(phoneHash);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHash);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
-                await expect(
-                    ledgerContract
-                        .connect(validators[0])
-                        .savePurchase(
-                            purchase.purchaseId,
-                            purchase.timestamp,
-                            purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            purchase.method,
-                            purchase.currency.toLowerCase()
-                        )
-                )
-                    .to.emit(ledgerContract, "SavedPurchase")
-                    .withArgs(
-                        purchase.purchaseId,
-                        purchase.timestamp,
-                        purchaseAmount,
-                        phoneHash,
-                        purchase.shopId,
-                        purchase.method,
-                        purchase.currency.toLowerCase()
-                    )
-                    .emit(ledgerContract, "ProvidedToken")
-                    .withNamedArgs({
-                        phone: phoneHash,
-                        providedAmountToken: tokenAmount,
-                        value: pointAmount,
-                        purchaseId: purchase.purchaseId,
-                    });
-                expect(await ledgerContract.pointBalanceOf(phoneHash)).to.deep.equal(oldPointBalance);
-                expect(await ledgerContract.tokenBalanceOf(phoneHash)).to.deep.equal(oldTokenBalance.add(tokenAmount));
-                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
-                    oldFoundationTokenBalance.sub(tokenAmount)
-                );
+                for (const key of expected.keys()) {
+                    if (key.match(/^0x[A-Fa-f0-9]{64}$/i)) {
+                        expect(await ledgerContract.unPayablePointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    } else {
+                        expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    }
+                }
             });
 
             it("Save Purchase Data - phone and address are not registered", async () => {
-                const purchase = {
-                    purchaseId: "P000007",
-                    timestamp: 1672844400,
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
                     amount: 10000,
-                    userPhone: "08201012341002",
-                    shopId: "F000600",
                     method: 0,
                     currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 3,
                 };
-
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                const pointAmount =
-                    shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(phoneHash);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHash);
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
-                    ledgerContract
-                        .connect(validators[0])
-                        .savePurchase(
-                            purchase.purchaseId,
-                            purchase.timestamp,
-                            purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            purchase.method,
-                            purchase.currency.toLowerCase()
-                        )
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        userAccount,
+                        userPhone: phoneHash,
+                    })
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
                         purchaseAmount,
-                        phoneHash,
-                        purchase.shopId,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
                         purchase.method,
-                        purchase.currency.toLowerCase()
+                        userAccount,
+                        phoneHash
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
@@ -491,29 +445,318 @@ describe("Test for Ledger", () => {
                         value: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
-                expect(await ledgerContract.pointBalanceOf(phoneHash)).to.deep.equal(oldPointBalance.add(pointAmount));
-                expect(await ledgerContract.tokenBalanceOf(phoneHash)).to.deep.equal(oldTokenBalance);
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(
+                    oldUnPayablePointBalance.add(pointAmount)
+                );
+            });
+
+            it("Link phone-address", async () => {
+                const nonce = await linkCollectionContract.nonceOf(users[3].address);
+                const hash = phoneHashes[3];
+                const signature = await ContractUtils.sign(users[3], hash, nonce);
+                requestId = ContractUtils.getRequestId(hash, users[3].address, nonce);
+                await expect(
+                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[3].address, signature)
+                )
+                    .to.emit(linkCollectionContract, "AddedRequestItem")
+                    .withArgs(requestId, hash, users[3].address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
+                await linkCollectionContract.connect(validator1).countVote(requestId);
+            });
+
+            it("Save Purchase Data - phone and address are registered (user: 3, point type : 0)", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
+                    amount: 10000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 3,
+                };
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(users[purchase.userIndex].address);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                await expect(
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        userAccount,
+                        userPhone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
+                        purchase.method,
+                        userAccount,
+                        phoneHash
+                    )
+                    .emit(ledgerContract, "ProvidedPoint")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        providedAmountPoint: pointAmount,
+                        value: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                    });
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
+                expect(await ledgerContract.pointBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldPointBalance.add(pointAmount)
+                );
+                expect(await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldTokenBalance
+                );
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                    oldFoundationTokenBalance
+                );
+            });
+
+            it("Change point type (user: 3)", async () => {
+                await ledgerContract.connect(users[3]).setPointType(1);
+            });
+
+            it("Save Purchase Data - phone and address are registered (user: 3, point type : 1)", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
+                    amount: 10000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 3,
+                };
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(users[purchase.userIndex].address);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                await expect(
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        userAccount,
+                        userPhone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
+                        purchase.method,
+                        userAccount,
+                        phoneHash
+                    )
+                    .emit(ledgerContract, "ProvidedToken")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        providedAmountToken: tokenAmount,
+                        value: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                    });
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
+                expect(await ledgerContract.pointBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldPointBalance
+                );
+                expect(await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldTokenBalance.add(tokenAmount)
+                );
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                    oldFoundationTokenBalance.sub(tokenAmount)
+                );
+            });
+
+            it("Save Purchase Data -(user: 1, point type : 0)", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
+                    amount: 10000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 1,
+                };
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(users[purchase.userIndex].address);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                await expect(
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        userAccount,
+                        userPhone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
+                        purchase.method,
+                        userAccount,
+                        phoneHash
+                    )
+                    .emit(ledgerContract, "ProvidedPoint")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        providedAmountPoint: pointAmount,
+                        value: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                    });
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
+                expect(await ledgerContract.pointBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldPointBalance.add(pointAmount)
+                );
+                expect(await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldTokenBalance
+                );
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                    oldFoundationTokenBalance
+                );
+            });
+
+            it("Change point type (user: 1)", async () => {
+                await ledgerContract.connect(users[1]).setPointType(1);
+            });
+
+            it("Save Purchase Data - (user: 1, point type : 1)", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
+                    amount: 100000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 1,
+                };
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(users[purchase.userIndex].address);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                await expect(
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        userAccount,
+                        userPhone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
+                        purchase.method,
+                        userAccount,
+                        phoneHash
+                    )
+                    .emit(ledgerContract, "ProvidedToken")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        providedAmountToken: tokenAmount,
+                        value: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                    });
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
+                expect(await ledgerContract.pointBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldPointBalance
+                );
+                expect(await ledgerContract.tokenBalanceOf(users[purchase.userIndex].address)).to.deep.equal(
+                    oldTokenBalance.add(tokenAmount)
+                );
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                    oldFoundationTokenBalance.sub(tokenAmount)
+                );
             });
         });
 
         context("Pay point", () => {
             it("Pay point - Invalid signature", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000100",
+                    timestamp: 1672849000,
                     amount: 100,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 0,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
                 await expect(
@@ -522,97 +765,32 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[1].address,
+                            shop.shopId,
+                            users[purchase.userIndex + 1].address,
                             signature
                         )
                 ).to.be.revertedWith("Invalid signature");
             });
 
-            it("Pay point - Unregistered phone-address", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
-                    amount: 100,
-                    userPhone: "08201012341002",
-                    shopId: "F000600",
-                };
-
-                const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchase.purchaseId,
-                    purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
-                    nonce
-                );
-                await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payPoint(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
-                            signature
-                        )
-                ).to.be.revertedWith("Unregistered phone-address");
-            });
-
-            it("Pay point - Invalid address", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
-                    amount: 100,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
-                };
-
-                const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[1].address);
-                const signature = await ContractUtils.signPayment(
-                    users[1],
-                    purchase.purchaseId,
-                    purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
-                    nonce
-                );
-                await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payPoint(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[1].address,
-                            signature
-                        )
-                ).to.be.revertedWith("Invalid address");
-            });
-
             it("Pay point - Insufficient balance", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
-                    amount: 10000,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000100",
+                    timestamp: 1672849000,
+                    amount: 100000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 0,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
                 await expect(
@@ -621,31 +799,32 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
+                            shop.shopId,
+                            users[purchase.userIndex].address,
                             signature
                         )
                 ).to.be.revertedWith("Insufficient balance");
             });
 
             it("Pay point - Success", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000100",
+                    timestamp: 1672849000,
                     amount: 100,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 0,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
                 await expect(
@@ -654,40 +833,42 @@ describe("Test for Ledger", () => {
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
+                            shop.shopId,
+                            users[purchase.userIndex].address,
                             signature
                         )
                 )
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: users[purchase.userIndex].address,
                         paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
                     });
             });
         });
 
         context("Pay token", () => {
             it("Pay token - Invalid signature", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000000",
+                    timestamp: 1672849000,
                     amount: 100,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 1,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
                 await expect(
@@ -696,97 +877,32 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[1].address,
+                            shop.shopId,
+                            users[purchase.userIndex + 1].address,
                             signature
                         )
                 ).to.be.revertedWith("Invalid signature");
             });
 
-            it("Pay token - Unregistered phone-address", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
-                    amount: 100,
-                    userPhone: "08201012341002",
-                    shopId: "F000600",
-                };
-
-                const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchase.purchaseId,
-                    purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
-                    nonce
-                );
-                await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payToken(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
-                            signature
-                        )
-                ).to.be.revertedWith("Unregistered phone-address");
-            });
-
-            it("Pay token - Invalid address", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
-                    amount: 100,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
-                };
-
-                const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[1].address);
-                const signature = await ContractUtils.signPayment(
-                    users[1],
-                    purchase.purchaseId,
-                    purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
-                    nonce
-                );
-                await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payToken(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[1].address,
-                            signature
-                        )
-                ).to.be.revertedWith("Invalid address");
-            });
-
             it("Pay token - Insufficient balance", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
-                    amount: 10000,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000000",
+                    timestamp: 1672849000,
+                    amount: 100000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 1,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
                 await expect(
@@ -795,55 +911,57 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
+                            shop.shopId,
+                            users[purchase.userIndex].address,
                             signature
                         )
                 ).to.be.revertedWith("Insufficient balance");
             });
 
             it("Pay token - Success", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
-                    amount: 1,
-                    userPhone: "08201012341001",
-                    shopId: "F000600",
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000000",
+                    timestamp: 1672849000,
+                    amount: 100,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 1,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
+
                 await expect(
                     ledgerContract
                         .connect(relay)
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
+                            shop.shopId,
+                            users[purchase.userIndex].address,
                             signature
                         )
                 )
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: users[purchase.userIndex].address,
                         paidAmountToken: tokenAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
                     });
-                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
             });
@@ -851,42 +969,112 @@ describe("Test for Ledger", () => {
     });
 
     context("Deposit & Withdraw", () => {
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: users[0].address,
+                privateKey: users[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: users[1].address,
+                privateKey: users[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: users[2].address,
+                privateKey: users[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: "",
+                privateKey: "",
+            },
+            {
+                phone: "08201012341005",
+                address: "",
+                privateKey: "",
+            },
+        ];
+
+        const purchaseData: IPurchaseData[] = [
+            {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000002",
+                timestamp: 1675522800,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 0,
+                userIndex: 1,
+            },
+            {
+                purchaseId: "P000003",
+                timestamp: 1677942000,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 2,
+            },
+            {
+                purchaseId: "P000004",
+                timestamp: 1680620400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 2,
+                userIndex: 3,
+            },
+            {
+                purchaseId: "P000005",
+                timestamp: 1683212400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 4,
+            },
+        ];
+
         const shopData: IShopData[] = [
             {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 6,
-                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 7,
-                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 8,
-                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 9,
-                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 10,
-                phone: "08201012342006",
             },
         ];
 
@@ -903,115 +1091,65 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
-                        shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
+                        shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
-        context("Prepare phone-address", () => {
-            it("Link phone-address", async () => {
-                const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = phoneHashes[0];
-                const signature = await ContractUtils.sign(users[0], hash, nonce);
-                requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
-                await expect(
-                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[0].address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-        });
-
         context("Prepare foundation's asset", () => {
-            it("Register foundation's account", async () => {
-                const nonce = await linkCollectionContract.nonceOf(foundation.address);
-                const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
-                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
-                await expect(
-                    linkCollectionContract
-                        .connect(relay)
-                        .addRequest(requestId, foundationAccount, foundation.address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-
             it("Deposit foundation's token", async () => {
                 await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
                 await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        phone: foundationAccount,
+                        account: foundation.address,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
-                        account: foundation.address,
                     });
             });
         });
 
         context("Deposit token", () => {
-            it("Deposit token - Unregistered phone-address", async () => {
-                await tokenContract.connect(users[1]).approve(ledgerContract.address, amount.value);
-                await expect(ledgerContract.connect(users[1]).deposit(amount.value)).to.revertedWith(
-                    "Unregistered phone-address"
-                );
-            });
-
             it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[0].address);
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        phone: phoneHashes[0],
+                        account: users[0].address,
                         depositAmount: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
-                        account: users[0].address,
                     });
-                expect(await ledgerContract.tokenBalanceOf(phoneHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(users[0].address)).to.deep.equal(
                     oldTokenBalance.add(amount.value)
                 );
             });
         });
 
         context("Withdraw token", () => {
-            it("Withdraw token - Unregistered phone-address", async () => {
-                await expect(ledgerContract.connect(users[1]).withdraw(amount.value)).to.revertedWith(
-                    "Unregistered phone-address"
-                );
-            });
-
             it("Withdraw token - Insufficient balance", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[0].address);
                 await expect(ledgerContract.connect(users[0]).withdraw(oldTokenBalance.add(1))).to.revertedWith(
                     "Insufficient balance"
                 );
             });
 
             it("Withdraw token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[0].address);
                 await expect(ledgerContract.connect(users[0]).withdraw(amount.value))
                     .to.emit(ledgerContract, "Withdrawn")
                     .withNamedArgs({
-                        phone: phoneHashes[0],
+                        account: users[0].address,
                         withdrawAmount: amount.value,
                         balanceToken: oldTokenBalance.sub(amount.value),
-                        account: users[0].address,
                     });
-                expect(await ledgerContract.tokenBalanceOf(phoneHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(users[0].address)).to.deep.equal(
                     oldTokenBalance.sub(amount.value)
                 );
             });
@@ -1019,60 +1157,88 @@ describe("Test for Ledger", () => {
     });
 
     context("Clearing for shops", () => {
-        const purchaseData: PurchaseData[] = [
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: users[0].address,
+                privateKey: users[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: users[1].address,
+                privateKey: users[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: users[2].address,
+                privateKey: users[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: users[3].address,
+                privateKey: users[3].privateKey,
+            },
+            {
+                phone: "08201012341005",
+                address: users[4].address,
+                privateKey: users[4].privateKey,
+            },
+        ];
+
+        const purchaseData: IPurchaseData[] = [
             {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000002",
                 timestamp: 1675522800,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000003",
                 timestamp: 1677942000,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000004",
                 timestamp: 1680620400,
                 amount: 10000,
-                userPhone: "08201012341002",
-                shopId: "F000200",
                 method: 0,
                 currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userPhone: "08201012341002",
-                shopId: "F000300",
                 method: 0,
                 currency: "krw",
+                shopIndex: 2,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userPhone: "08201012341002",
-                shopId: "F000400",
                 method: 0,
                 currency: "krw",
+                shopIndex: 3,
+                userIndex: 0,
             },
         ];
 
@@ -1081,37 +1247,31 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342006",
             },
         ];
 
@@ -1128,45 +1288,26 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
-                        shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
+                        shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
         context("Prepare foundation's asset", () => {
-            it("Register foundation's account", async () => {
-                const nonce = await linkCollectionContract.nonceOf(foundation.address);
-                const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
-                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
-                await expect(
-                    linkCollectionContract
-                        .connect(relay)
-                        .addRequest(requestId, foundationAccount, foundation.address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-
             it("Deposit foundation's token", async () => {
                 await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
                 await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        phone: foundationAccount,
+                        account: foundation.address,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
-                        account: foundation.address,
                     });
             });
         });
@@ -1174,37 +1315,40 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
+                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                    const amt =
-                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+                    const shop = shopData[purchase.shopIndex];
+                    const amt = purchaseAmount.mul(shop.providePercent).div(100);
+                    const userAccount =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : AddressZero;
                     await expect(
-                        ledgerContract
-                            .connect(validators[0])
-                            .savePurchase(
-                                purchase.purchaseId,
-                                purchase.timestamp,
-                                purchaseAmount,
-                                phoneHash,
-                                purchase.shopId,
-                                purchase.method,
-                                purchase.currency.toLowerCase()
-                            )
+                        ledgerContract.connect(validators[0]).savePurchase({
+                            purchaseId: purchase.purchaseId,
+                            timestamp: purchase.timestamp,
+                            amount: purchaseAmount,
+                            currency: purchase.currency.toLowerCase(),
+                            shopId: shopData[purchase.shopIndex].shopId,
+                            method: purchase.method,
+                            userAccount,
+                            userPhone: phoneHash,
+                        })
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
+                            purchase.currency.toLowerCase(),
+                            shopData[purchase.shopIndex].shopId,
                             purchase.method,
-                            purchase.currency.toLowerCase()
+                            userAccount,
+                            phoneHash
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
-                            phone: phoneHash,
+                            account: userAccount,
                             providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
@@ -1216,18 +1360,25 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.getPhoneHash(purchase.userPhone);
+                    const key =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
                     const oldValue = expected.get(key);
 
-                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                    const point =
-                        shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+                    const shop = shopData[purchase.shopIndex];
+                    const point = purchaseAmount.mul(shop.providePercent).div(100);
 
                     if (oldValue !== undefined) expected.set(key, oldValue.add(point));
                     else expected.set(key, point);
                 }
-                for (const key of expected.keys())
-                    expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                for (const key of expected.keys()) {
+                    if (key.match(/^0x[A-Fa-f0-9]{64}$/i)) {
+                        expect(await ledgerContract.unPayablePointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    } else {
+                        expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    }
+                }
             });
 
             it("Check shop data", async () => {
@@ -1259,84 +1410,69 @@ describe("Test for Ledger", () => {
             });
         });
 
-        context("Prepare phone-address", () => {
-            it("Link phone-address", async () => {
-                const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = phoneHashes[0];
-                const signature = await ContractUtils.sign(users[0], hash, nonce);
-                requestId = ContractUtils.getRequestId(hash, users[0].address, nonce);
-                await expect(
-                    linkCollectionContract.connect(relay).addRequest(requestId, hash, users[0].address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-        });
-
         context("Pay point", () => {
             it("Pay point - Success", async () => {
                 const purchase = {
-                    purchaseId: "P000008",
+                    purchaseId: "P000100",
+                    timestamp: 1672849000,
                     amount: 300,
-                    userPhone: "08201012341001",
-                    shopId: "F000200",
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
-                const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                const amt = shop !== undefined ? purchaseAmount.mul(shop.providePercent).div(100) : BigNumber.from(0);
+
+                const amt = purchaseAmount.mul(shop.providePercent).div(100);
                 await expect(
                     ledgerContract
                         .connect(relay)
                         .payPoint(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
+                            shop.shopId,
+                            users[purchase.userIndex].address,
                             signature
                         )
                 )
                     .to.emit(ledgerContract, "ProvidedPointToShop")
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: users[purchase.userIndex].address,
                         paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
                     });
-                const shop2 = await shopCollection.shopOf("F000200");
-                expect(shop2.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(shop2.usedPoint).to.equal(Amount.make(300, 18).value);
-                expect(shop2.clearedPoint).to.equal(Amount.make(200, 18).value);
+                const shopInfo = await shopCollection.shopOf(shop.shopId);
+                expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo.usedPoint).to.equal(Amount.make(300, 18).value);
+                expect(shopInfo.clearedPoint).to.equal(Amount.make(200, 18).value);
             });
         });
 
         context("Deposit token", () => {
             it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(phoneHashes[0]);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(users[0].address);
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amount.value);
                 await expect(ledgerContract.connect(users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        phone: phoneHashes[0],
+                        account: users[0].address,
                         depositAmount: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
-                        account: users[0].address,
                     });
-                expect(await ledgerContract.tokenBalanceOf(phoneHashes[0])).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(users[0].address)).to.deep.equal(
                     oldTokenBalance.add(amount.value)
                 );
             });
@@ -1344,24 +1480,26 @@ describe("Test for Ledger", () => {
 
         context("Pay token", () => {
             it("Pay token - Success", async () => {
-                const purchase = {
-                    purchaseId: "P000008",
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000200",
+                    timestamp: 1672849000,
                     amount: 500,
-                    userPhone: "08201012341001",
-                    shopId: "F000300",
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 2,
+                    userIndex: 0,
                 };
 
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundationAccount);
-                const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
+                    users[purchase.userIndex],
                     purchase.purchaseId,
                     purchaseAmount,
-                    phoneHash,
-                    purchase.shopId,
+                    shop.shopId,
                     nonce
                 );
                 await expect(
@@ -1370,24 +1508,23 @@ describe("Test for Ledger", () => {
                         .payToken(
                             purchase.purchaseId,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
-                            users[0].address,
+                            shop.shopId,
+                            users[purchase.userIndex].address,
                             signature
                         )
                 )
-                    .to.emit(ledgerContract, "ProvidedPointToShop")
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: users[purchase.userIndex].address,
                         paidAmountToken: tokenAmount,
                         value: purchaseAmount,
                         purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
                     });
-                expect(await ledgerContract.tokenBalanceOf(foundationAccount)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
-                const shop3 = await shopCollection.shopOf("F000300");
+                const shop3 = await shopCollection.shopOf(shop.shopId);
                 expect(shop3.providedPoint).to.equal(Amount.make(100, 18).value);
                 expect(shop3.usedPoint).to.equal(Amount.make(500, 18).value);
                 expect(shop3.clearedPoint).to.equal(Amount.make(400, 18).value);
@@ -1396,60 +1533,88 @@ describe("Test for Ledger", () => {
     });
 
     context("Multi Currency", () => {
-        const purchaseData: PurchaseData[] = [
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: users[0].address,
+                privateKey: users[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: users[1].address,
+                privateKey: users[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: users[2].address,
+                privateKey: users[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: "",
+                privateKey: "",
+            },
+            {
+                phone: "08201012341005",
+                address: "",
+                privateKey: "",
+            },
+        ];
+
+        const purchaseData: IPurchaseData[] = [
             {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "KRW",
+                shopIndex: 0,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000002",
                 timestamp: 1675522800,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "USD",
+                shopIndex: 0,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000003",
                 timestamp: 1677942000,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "JPY",
+                shopIndex: 0,
+                userIndex: 0,
             },
             {
                 purchaseId: "P000004",
                 timestamp: 1680620400,
                 amount: 10000,
-                userPhone: "08201012341002",
-                shopId: "F000200",
                 method: 0,
                 currency: "CNY",
+                shopIndex: 1,
+                userIndex: 1,
             },
             {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userPhone: "08201012341002",
-                shopId: "F000300",
                 method: 0,
                 currency: "KRW",
+                shopIndex: 2,
+                userIndex: 1,
             },
             {
                 purchaseId: "P000005",
                 timestamp: 1683212400,
                 amount: 10000,
-                userPhone: "08201012341002",
-                shopId: "F000400",
                 method: 0,
                 currency: "KRW",
+                shopIndex: 3,
+                userIndex: 2,
             },
         ];
 
@@ -1458,37 +1623,31 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342005",
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201012342006",
             },
         ];
 
@@ -1512,45 +1671,26 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phone = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
-                        shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
+                        shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
         context("Prepare foundation's asset", () => {
-            it("Register foundation's account", async () => {
-                const nonce = await linkCollectionContract.nonceOf(foundation.address);
-                const signature = await ContractUtils.sign(foundation, foundationAccount, nonce);
-                requestId = ContractUtils.getRequestId(foundationAccount, foundation.address, nonce);
-                await expect(
-                    linkCollectionContract
-                        .connect(relay)
-                        .addRequest(requestId, foundationAccount, foundation.address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, foundationAccount, foundation.address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-
             it("Deposit foundation's token", async () => {
                 await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
                 await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
                 await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        phone: foundationAccount,
+                        account: foundation.address,
                         depositAmount: assetAmount.value,
                         balanceToken: assetAmount.value,
-                        account: foundation.address,
                     });
             });
         });
@@ -1558,41 +1698,42 @@ describe("Test for Ledger", () => {
         context("Save Purchase Data", () => {
             it("Save Purchase Data", async () => {
                 for (const purchase of purchaseData) {
-                    const phoneHash = ContractUtils.getPhoneHash(purchase.userPhone);
+                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const shop = shopData[purchase.shopIndex];
+                    const userAccount =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : AddressZero;
                     const currency = purchase.currency.toLowerCase();
                     const rate = await currencyRateContract.get(currency);
-                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                    const amt =
-                        shop !== undefined
-                            ? purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100)
-                            : BigNumber.from(0);
+                    const amt = purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100);
                     await expect(
-                        ledgerContract
-                            .connect(validators[0])
-                            .savePurchase(
-                                purchase.purchaseId,
-                                purchase.timestamp,
-                                purchaseAmount,
-                                phoneHash,
-                                purchase.shopId,
-                                purchase.method,
-                                currency
-                            )
+                        ledgerContract.connect(validators[0]).savePurchase({
+                            purchaseId: purchase.purchaseId,
+                            timestamp: purchase.timestamp,
+                            amount: purchaseAmount,
+                            currency,
+                            shopId: shopData[purchase.shopIndex].shopId,
+                            method: purchase.method,
+                            userAccount,
+                            userPhone: phoneHash,
+                        })
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
                             purchase.timestamp,
                             purchaseAmount,
-                            phoneHash,
-                            purchase.shopId,
+                            purchase.currency.toLowerCase(),
+                            shopData[purchase.shopIndex].shopId,
                             purchase.method,
-                            currency
+                            userAccount,
+                            phoneHash
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
-                            phone: phoneHash,
+                            account: userAccount,
                             providedAmountPoint: amt,
                             value: amt,
                             purchaseId: purchase.purchaseId,
@@ -1604,21 +1745,26 @@ describe("Test for Ledger", () => {
                 const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
                 for (const purchase of purchaseData) {
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key = ContractUtils.getPhoneHash(purchase.userPhone);
+                    const key =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
                     const oldValue = expected.get(key);
 
                     const rate = await currencyRateContract.get(purchase.currency.toLowerCase());
-                    const shop = shopData.find((m) => m.shopId === purchase.shopId);
-                    const point =
-                        shop !== undefined
-                            ? purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100)
-                            : BigNumber.from(0);
+                    const shop = shopData[purchase.shopIndex];
+                    const point = purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100);
 
                     if (oldValue !== undefined) expected.set(key, oldValue.add(point));
                     else expected.set(key, point);
                 }
-                for (const key of expected.keys())
-                    expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                for (const key of expected.keys()) {
+                    if (key.match(/^0x[A-Fa-f0-9]{64}$/i)) {
+                        expect(await ledgerContract.unPayablePointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    } else {
+                        expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    }
+                }
             });
 
             it("Check shop data", async () => {
