@@ -13,6 +13,9 @@ import { Ledger, PhoneLinkCollection, Token } from "../../typechain-types";
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
 
+// tslint:disable-next-line:no-implicit-dependencies
+import { AddressZero } from "@ethersproject/constants";
+
 import * as fs from "fs";
 import * as hre from "hardhat";
 
@@ -114,7 +117,7 @@ export class DefaultScheduler extends Scheduler {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getEmailLinkerContract(): Promise<PhoneLinkCollection> {
+    private async getPhoneLinkerContract(): Promise<PhoneLinkCollection> {
         if (this._phoneLinkerContract === undefined) {
             const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
             this._phoneLinkerContract = linkCollectionFactory.attach(
@@ -143,21 +146,22 @@ export class DefaultScheduler extends Scheduler {
             if (enable) {
                 this._purchaseIdx += 100;
                 const amount = Amount.make((Math.floor(Math.random() * 10) + 1) * 1_000, 18);
+                const userIdx = Math.floor(Math.random() * this._users.length);
+                const phoneHash = ContractUtils.getPhoneHash(this._users[userIdx].phone);
                 const data: IPurchaseData = {
                     purchaseId: `P${this._purchaseIdx.toString().padStart(6, "0")}`,
                     timestamp: Utils.getTimeStamp(),
                     amount: amount.value,
-                    userPhone:
-                        Math.random() < 0.1 ? "" : this._users[Math.floor(Math.random() * this._users.length)].phone,
+                    currency: "krw",
                     shopId: this._shops[Math.floor(Math.random() * this._shops.length)].shopId,
+                    method: 0,
+                    account: Math.random() < 0.1 ? AddressZero : this._users[userIdx].address,
+                    phone: phoneHash,
                 };
-                const phoneHash = ContractUtils.getPhoneHash(data.userPhone);
-                const tx = await (await this.getLedgerContract())
-                    .connect(await this.getSigner())
-                    .savePurchase(data.purchaseId, data.timestamp, data.amount, phoneHash, data.shopId, 0, "krw");
+                const tx = await (await this.getLedgerContract()).connect(await this.getSigner()).savePurchase(data);
 
                 console.log(
-                    `Send purchase data (purchaseId: ${
+                    `Send purchase data (account: ${data.account}, phone: ${data.phone}, purchaseId: ${
                         data.purchaseId
                     }, amount: ${amount.toIntegralString()}, shopId: ${data.shopId}, tx: ${tx.hash})...`
                 );

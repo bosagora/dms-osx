@@ -4,14 +4,17 @@ export interface IPurchaseData {
     purchaseId: string;
     timestamp: number;
     amount: BigNumber;
-    userPhone: string;
+    currency: string;
+    method: number;
+    account: string;
+    phone: string;
     shopId: string;
 }
 
 export interface IShopData {
     shopId: string;
     provideWaitTime: number;
-    phone: string;
+    providePercent: number;
 }
 
 export interface IUserData {
@@ -19,5 +22,5 @@ export interface IUserData {
     phone: string;
     address: string;
     privateKey: string;
-    register: boolean;
+    pointType: number;
 }
