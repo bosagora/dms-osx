@@ -6,13 +6,14 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 // tslint:disable-next-line:only-arrow-functions
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("\nPrinting deployed contracts.");
     const { deployments } = hre;
 
     const deployedContracts = await deployments.all();
     const deployedContractAddresses: { [index: string]: string } = {};
 
+    // tslint:disable-next-line:forin
     for (const deployment in deployedContracts) {
         deployedContractAddresses[deployment] = deployedContracts[deployment].address;
         console.log(`${deployment}: ${deployedContracts[deployment].address}`);

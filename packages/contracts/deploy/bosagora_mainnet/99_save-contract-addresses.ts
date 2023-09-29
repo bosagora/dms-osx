@@ -1,12 +1,11 @@
-import "hardhat-deploy";
 import { promises as fs } from "fs";
+import "hardhat-deploy";
 // tslint:disable-next-line:no-submodule-imports
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 
-// tslint:disable-next-line:only-arrow-functions
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log("\nPrinting deployed contracts.");
     const { deployments } = hre;
 

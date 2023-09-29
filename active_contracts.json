@@ -2,21 +2,21 @@
   "bosagora_mainnet": {
     "Token": "0xFDa3d1ff3C570c2f76c2157Ef7A8640A75794eD9",
     "ValidatorCollection": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
-    "TokenPrice": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
+    "CurrencyRate": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
     "ShopCollection": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
     "Ledger": "0x12c316e0358d914A211A3d477db912A503cFCc21"
   },
   "bosagora_testnet": {
     "Token": "0xFDa3d1ff3C570c2f76c2157Ef7A8640A75794eD9",
     "ValidatorCollection": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
-    "TokenPrice": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
+    "CurrencyRate": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
     "ShopCollection": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
     "Ledger": "0x12c316e0358d914A211A3d477db912A503cFCc21"
   },
   "bosagora_devnet": {
     "Token": "0xFDa3d1ff3C570c2f76c2157Ef7A8640A75794eD9",
     "ValidatorCollection": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
-    "TokenPrice": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
+    "CurrencyRate": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
     "ShopCollection": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
     "Ledger": "0x12c316e0358d914A211A3d477db912A503cFCc21"
   }

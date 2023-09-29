@@ -5,10 +5,8 @@ import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Token } from "../../typechain-types";
-import { getContractAddress } from "../helpers";
-import { Amount } from "../../src/utils/Amount";
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying Token.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;
@@ -17,7 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     await deploy("Token", {
         from: deployer,
-        args: ["Sample", "SAM"],
+        args: ["Sample", "the9"],
         log: true,
     });
 };

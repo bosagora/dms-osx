@@ -7,8 +7,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { PhoneLinkCollection } from "../../typechain-types";
 import { PHONE_LINK_COLLECTION_ADDRESSES } from "../helpers";
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    console.log(`\nDeploying EmailLinkCollection.`);
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
+    console.log(`\nDeploying PhoneLinkCollection.`);
 
     const { network } = hre;
 
@@ -28,4 +28,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
 };
 export default func;
-func.tags = ["EmailLinkCollection"];
+func.tags = ["PhoneLinkCollection"];

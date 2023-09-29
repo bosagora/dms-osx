@@ -6,9 +6,8 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { ShopCollection, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
-import { ContractUtils } from "../../src/utils/ContractUtils";
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying ShopCollection.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;

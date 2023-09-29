@@ -6,7 +6,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Amount } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import { ShopCollection, Ledger, Token } from "../../typechain-types";
+import { Ledger, ShopCollection, Token } from "../../typechain-types";
 import { getContractAddress, getEmailLinkCollectionContractAddress } from "../helpers";
 
 import { Wallet } from "ethers";
@@ -14,24 +14,24 @@ import { Wallet } from "ethers";
 import fs from "fs";
 
 // tslint:disable-next-line:only-arrow-functions
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying Ledger.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, foundation } = await getNamedAccounts();
+    const { deployer, foundation, settlements } = await getNamedAccounts();
 
     const linkCollectionContractAddress = await getEmailLinkCollectionContractAddress("EmailLinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
-    const currencyRateContractAddress = await getContractAddress("TokenPrice", hre);
+    const currencyRateContractAddress = await getContractAddress("CurrencyRate", hre);
     const shopContractAddress = await getContractAddress("ShopCollection", hre);
 
-    const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
     const deployResult = await deploy("Ledger", {
         from: deployer,
         args: [
-            foundationAccount,
+            foundation,
+            settlements,
             tokenContractAddress,
             validatorContractAddress,
             linkCollectionContractAddress,
@@ -67,8 +67,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
         for (const user of users) {
-            if (!user.register) continue;
-
             const balance = await tokenContract.balanceOf(user.address);
 
             const depositAmount = balance.div(2);
@@ -80,6 +78,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
             const tx8 = await ledgerContract.connect(signer).deposit(depositAmount);
             console.log(`Deposit user's amount (tx: ${tx8.hash})...`);
             await tx8.wait();
+
+            if (user.pointType === 1) {
+                const tx9 = await ledgerContract.connect(signer).setPointType(1);
+                console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
+                await tx9.wait();
+            }
         }
     }
 };

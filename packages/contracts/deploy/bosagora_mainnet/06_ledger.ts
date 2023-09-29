@@ -4,28 +4,27 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ShopCollection, Ledger, Token } from "../../typechain-types";
+import { Ledger, ShopCollection, Token } from "../../typechain-types";
 import { getContractAddress, getEmailLinkCollectionContractAddress } from "../helpers";
-import { ContractUtils } from "../../src/utils/ContractUtils";
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying Ledger.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, owner } = await getNamedAccounts();
+    const { deployer, foundation, settlements } = await getNamedAccounts();
 
     const linkCollectionContractAddress = await getEmailLinkCollectionContractAddress("EmailLinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
-    const currencyRateContractAddress = await getContractAddress("TokenPrice", hre);
+    const currencyRateContractAddress = await getContractAddress("CurrencyRate", hre);
     const shopContractAddress = await getContractAddress("ShopCollection", hre);
 
-    const foundationAccount = ContractUtils.sha256String(process.env.FOUNDATION_EMAIL || "");
     await deploy("Ledger", {
         from: deployer,
         args: [
-            foundationAccount,
+            foundation,
+            settlements,
             tokenContractAddress,
             validatorContractAddress,
             linkCollectionContractAddress,

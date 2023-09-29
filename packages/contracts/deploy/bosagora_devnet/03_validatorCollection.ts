@@ -8,7 +8,7 @@ import { Amount } from "../../src/utils/Amount";
 import { Token, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying ValidatorCollection.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;

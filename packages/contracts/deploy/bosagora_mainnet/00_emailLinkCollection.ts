@@ -4,10 +4,9 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { EmailLinkCollection } from "../../typechain-types";
 import { EMAIL_LINK_COLLECTION_ADDRESSES } from "../helpers";
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying EmailLinkCollection.`);
 
     const { network } = hre;
