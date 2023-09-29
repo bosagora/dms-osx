@@ -78,27 +78,12 @@ export class ContractUtils {
         signer: Signer,
         purchaseId: string,
         amount: BigNumberish,
-        userEmail: string,
         shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "bytes32", "string", "address", "uint256"],
-            [purchaseId, amount, userEmail, shopId, await signer.getAddress(), nonce]
-        );
-        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
-        return signer.signMessage(message);
-    }
-
-    public static async signExchange(
-        signer: Signer,
-        userEmail: string,
-        amount: BigNumberish,
-        nonce: BigNumberish
-    ): Promise<string> {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "uint256", "address", "uint256"],
-            [userEmail, amount, await signer.getAddress(), nonce]
+            ["string", "uint256", "string", "address", "uint256"],
+            [purchaseId, amount, shopId, await signer.getAddress(), nonce]
         );
         const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
         return signer.signMessage(message);

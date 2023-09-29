@@ -156,21 +156,21 @@ contract Ledger {
                 if (data.userAccount != address(0x0)) {
                     uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
                     if (pointTypes[data.userAccount] == PointType.POINT) {
-                        providePoint(data.userAccount, point, data.purchaseId, data.shopId);
+                        providePoint(data.userAccount, data.userPhone, point, data.purchaseId, data.shopId);
                     } else {
-                        provideToken(data.userAccount, point, data.purchaseId, data.shopId);
+                        provideToken(data.userAccount, data.userPhone, point, data.purchaseId, data.shopId);
                     }
                     shopCollection.addProvidedPoint(data.shopId, point, data.purchaseId);
                 } else if (data.userPhone != NULL) {
                     uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
                     address account = linkCollection.toAddress(data.userPhone);
                     if (account == address(0x00)) {
-                        provideUnPayablePoint(data.userPhone, point, data.purchaseId, data.shopId);
+                        provideUnPayablePoint(account, data.userPhone, point, data.purchaseId, data.shopId);
                     } else {
                         if (pointTypes[account] == PointType.POINT) {
-                            providePoint(account, point, data.purchaseId, data.shopId);
+                            providePoint(account, data.userPhone, point, data.purchaseId, data.shopId);
                         } else {
-                            provideToken(account, point, data.purchaseId, data.shopId);
+                            provideToken(account, data.userPhone, point, data.purchaseId, data.shopId);
                         }
                     }
                     shopCollection.addProvidedPoint(data.shopId, point, data.purchaseId);
@@ -193,51 +193,49 @@ contract Ledger {
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
+    /// @param _phone 전화번호 해시
     /// @param _amount 지급할 포인트
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function providePoint(
         address _account,
+        bytes32 _phone,
         uint256 _amount,
         string memory _purchaseId,
         string memory _shopId
     ) internal {
         pointBalances[_account] += _amount;
-        emit ProvidedPoint(_account, bytes32(0x0), _amount, _amount, pointBalances[_account], _purchaseId, _shopId);
+        emit ProvidedPoint(_account, _phone, _amount, _amount, pointBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
+    /// @param _account 사용자의 지갑주소
     /// @param _phone 전화번호 해시
     /// @param _amount 지급할 포인트
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function provideUnPayablePoint(
+        address _account,
         bytes32 _phone,
         uint256 _amount,
         string memory _purchaseId,
         string memory _shopId
     ) internal {
         unPayablePointBalances[_phone] += _amount;
-        emit ProvidedPoint(
-            address(0x0),
-            _phone,
-            _amount,
-            _amount,
-            unPayablePointBalances[_phone],
-            _purchaseId,
-            _shopId
-        );
+        emit ProvidedPoint(_account, _phone, _amount, _amount, unPayablePointBalances[_phone], _purchaseId, _shopId);
     }
 
     /// @notice 토큰을 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
+    /// @param _phone 전화번호 해시
     /// @param _amount 지급할 토큰
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function provideToken(
         address _account,
+        bytes32 _phone,
         uint256 _amount,
         string memory _purchaseId,
         string memory _shopId
@@ -248,7 +246,7 @@ contract Ledger {
         tokenBalances[_account] += amountToken;
         tokenBalances[foundationAccount] -= amountToken;
 
-        emit ProvidedToken(_account, bytes32(0x0), amountToken, _amount, tokenBalances[_account], _purchaseId, _shopId);
+        emit ProvidedToken(_account, _phone, amountToken, _amount, tokenBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 구매에 사용하는 함수
@@ -267,6 +265,7 @@ contract Ledger {
     ) public {
         bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _shopId, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
+        require(pointBalances[_signer] >= _amount, "Insufficient balance");
 
         pointBalances[_signer] -= _amount;
         shopCollection.addUsedPoint(_shopId, _amount, _purchaseId);

@@ -65,7 +65,6 @@ describe("Test for ShopCollection", () => {
             shopId: string;
             provideWaitTime: number;
             providePercent: number;
-            phone: string;
         }
 
         const shopData: IShopData[] = [
@@ -73,49 +72,41 @@ describe("Test for ShopCollection", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201012341001",
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201012341002",
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201012341003",
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201012341004",
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201012341005",
             },
         ];
 
         it("Not validator", async () => {
             const phone = ContractUtils.getPhoneHash("08201012341001");
-            await expect(shopCollection.connect(user1).add("F000100", 0, 5, phone)).to.revertedWith("Not validator");
+            await expect(shopCollection.connect(user1).add("F000100", 0, 5)).to.revertedWith("Not validator");
         });
 
         it("Success", async () => {
             for (const elem of shopData) {
-                const phone = ContractUtils.getPhoneHash(elem.phone);
                 await expect(
-                    shopCollection
-                        .connect(validator1)
-                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
+                    shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, elem.providePercent)
                 )
                     .to.emit(shopCollection, "AddedShop")
-                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
+                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent);
             }
             expect(await shopCollection.shopsLength()).to.equal(shopData.length);
         });
