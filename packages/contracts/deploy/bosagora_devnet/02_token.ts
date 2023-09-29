@@ -9,6 +9,7 @@ import { Amount } from "../../src/utils/Amount";
 import { Token } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 
+// tslint:disable-next-line:only-arrow-functions
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     console.log(`\nDeploying Token.`);
 
@@ -18,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const deployResult = await deploy("Token", {
         from: deployer,
-        args: [owner, "Sample", "SAM"],
+        args: [owner, "Sample", "the9"],
         log: true,
     });
 

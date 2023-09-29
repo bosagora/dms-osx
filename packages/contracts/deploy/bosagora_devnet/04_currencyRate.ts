@@ -8,7 +8,7 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { CurrencyRate, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying CurrencyRate.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;
@@ -32,8 +32,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         )) as CurrencyRate;
 
         const multiple = BigNumber.from(1000000000);
-        const price = BigNumber.from(150).mul(multiple);
-        const tx1 = await currencyRateContract.connect(await ethers.getSigner(validators[0])).set("the9", price);
+        let price = BigNumber.from(150).mul(multiple);
+        let tx1 = await currencyRateContract.connect(await ethers.getSigner(validators[0])).set("the9", price);
+        console.log(`Set token price (tx: ${tx1.hash})...`);
+        await tx1.wait();
+
+        price = BigNumber.from(1000).mul(multiple);
+        tx1 = await currencyRateContract.connect(await ethers.getSigner(validators[0])).set("usd", price);
+        console.log(`Set token price (tx: ${tx1.hash})...`);
+        await tx1.wait();
+
+        price = BigNumber.from(10).mul(multiple);
+        tx1 = await currencyRateContract.connect(await ethers.getSigner(validators[0])).set("jpy", price);
         console.log(`Set token price (tx: ${tx1.hash})...`);
         await tx1.wait();
     }

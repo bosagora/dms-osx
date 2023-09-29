@@ -522,7 +522,7 @@ describe("Test for Ledger", () => {
             it("Link phone-address", async () => {
                 const nonce = await linkCollectionContract.nonceOf(userWallets[3].address);
                 const hash = phoneHashes[3];
-                const signature = await ContractUtils.sign(userWallets[3], hash, nonce);
+                const signature = await ContractUtils.signRequestHash(userWallets[3], hash, nonce);
                 requestId = ContractUtils.getRequestId(hash, userWallets[3].address, nonce);
                 await expect(
                     linkCollectionContract.connect(relay).addRequest(requestId, hash, userWallets[3].address, signature)
@@ -1833,7 +1833,7 @@ describe("Test for Ledger", () => {
                     const wallet = shopWallets[idx];
                     const nonce = await linkCollectionContract.nonceOf(wallet.address);
                     const phoneHash = ContractUtils.getPhoneHash(shop.phone);
-                    const signature = await ContractUtils.sign(wallet, phoneHash, nonce);
+                    const signature = await ContractUtils.signRequestHash(wallet, phoneHash, nonce);
                     requestId = ContractUtils.getRequestId(phoneHash, wallet.address, nonce);
                     await expect(
                         linkCollectionContract
