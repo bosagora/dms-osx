@@ -94,6 +94,7 @@ contract Ledger {
         uint256 value,
         uint256 balancePoint,
         string purchaseId,
+        uint256 purchaseAmount,
         string shopId
     );
     /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
@@ -103,6 +104,7 @@ contract Ledger {
         uint256 value,
         uint256 balanceToken,
         string purchaseId,
+        uint256 purchaseAmount,
         string shopId
     );
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
@@ -253,22 +255,27 @@ contract Ledger {
     /// @dev 중계서버를 통해서 호출됩니다.
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
+    /// @param _currency 구매 금액의 통화코드
     /// @param _shopId 구매한 가맹점 아이디
     /// @param _signer 구매자의 주소
     /// @param _signature 서명
     function payPoint(
         string memory _purchaseId,
         uint256 _amount,
+        string memory _currency,
         string memory _shopId,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _shopId, _signer, nonce[_signer]));
+        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _currency, _shopId, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
-        require(pointBalances[_signer] >= _amount, "Insufficient balance");
 
-        pointBalances[_signer] -= _amount;
-        shopCollection.addUsedPoint(_shopId, _amount, _purchaseId);
+        uint256 purchaseAmount = convertCurrencyToPoint(_amount, _currency);
+
+        require(pointBalances[_signer] >= purchaseAmount, "Insufficient balance");
+
+        pointBalances[_signer] -= purchaseAmount;
+        shopCollection.addUsedPoint(_shopId, purchaseAmount, _purchaseId);
 
         uint256 clearAmount = shopCollection.getClearPoint(_shopId);
         if (clearAmount > 0) {
@@ -278,27 +285,30 @@ contract Ledger {
 
         nonce[_signer]++;
 
-        emit PaidPoint(_signer, _amount, _amount, pointBalances[_signer], _purchaseId, _shopId);
+        emit PaidPoint(_signer, purchaseAmount, purchaseAmount, pointBalances[_signer], _purchaseId, _amount, _shopId);
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
     /// @param _purchaseId 구매 아이디
     /// @param _amount 구매 금액
+    /// @param _currency 구매 금액의 통화코드
     /// @param _shopId 구매한 가맹점 아이디
     /// @param _signer 구매자의 주소
     /// @param _signature 서명
     function payToken(
         string memory _purchaseId,
         uint256 _amount,
+        string memory _currency,
         string memory _shopId,
         address _signer,
         bytes calldata _signature
     ) public {
-        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _shopId, _signer, nonce[_signer]));
+        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _currency, _shopId, _signer, nonce[_signer]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
 
-        uint256 amountToken = convertPointToToken(_amount);
+        uint256 purchaseAmount = convertCurrencyToPoint(_amount, _currency);
+        uint256 amountToken = convertPointToToken(purchaseAmount);
         require(tokenBalances[_signer] >= amountToken, "Insufficient balance");
 
         uint256 lAmount = _amount;
@@ -306,7 +316,7 @@ contract Ledger {
         string memory lShopId = _shopId;
         tokenBalances[_signer] -= amountToken;
         tokenBalances[foundationAccount] += amountToken;
-        shopCollection.addUsedPoint(lShopId, lAmount, lPurchaseId);
+        shopCollection.addUsedPoint(lShopId, purchaseAmount, lPurchaseId);
 
         uint256 clearAmount = shopCollection.getClearPoint(lShopId);
         if (clearAmount > 0) {
@@ -316,7 +326,7 @@ contract Ledger {
 
         nonce[_signer]++;
 
-        emit PaidToken(_signer, amountToken, lAmount, tokenBalances[_signer], lPurchaseId, lShopId);
+        emit PaidToken(_signer, amountToken, purchaseAmount, tokenBalances[_signer], lPurchaseId, lAmount, lShopId);
     }
 
     function convertPointToToken(uint256 amount) internal view returns (uint256) {
