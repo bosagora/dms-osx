@@ -67,6 +67,7 @@ describe("Test for ShopCollection", () => {
             shopId: string;
             provideWaitTime: number;
             providePercent: number;
+            phone: string;
             account: string;
         }
 
@@ -75,49 +76,58 @@ describe("Test for ShopCollection", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
+                phone: "08201020001000",
                 account: shopWallets[0].address,
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 5,
+                phone: "08201020001001",
                 account: shopWallets[1].address,
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 5,
+                phone: "08201020001002",
                 account: shopWallets[2].address,
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 5,
+                phone: "08201020001003",
                 account: shopWallets[3].address,
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 5,
+                phone: "08201020001004",
                 account: shopWallets[4].address,
             },
         ];
 
         it("Not validator", async () => {
-            await expect(shopCollection.connect(user1).add("F000100", 0, 5, shopWallets[0].address)).to.revertedWith(
-                "Not validator"
-            );
+            const phoneHash = ContractUtils.getPhoneHash(shopData[0].phone);
+            await expect(
+                shopCollection
+                    .connect(user1)
+                    .add(shopData[0].shopId, shopData[0].provideWaitTime, shopData[0].providePercent, phoneHash)
+            ).to.revertedWith("Not validator");
         });
 
         it("Success", async () => {
             for (const elem of shopData) {
+                const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                 await expect(
                     shopCollection
                         .connect(validator1)
-                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
                 )
                     .to.emit(shopCollection, "AddedShop")
-                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
             }
             expect(await shopCollection.shopsLength()).to.equal(shopData.length);
         });
