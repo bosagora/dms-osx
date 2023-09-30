@@ -40,16 +40,16 @@ export class AddedShop__Params {
   }
 }
 
-export class IncreasedClearedPoint extends ethereum.Event {
-  get params(): IncreasedClearedPoint__Params {
-    return new IncreasedClearedPoint__Params(this);
+export class IncreasedProvidedPoint extends ethereum.Event {
+  get params(): IncreasedProvidedPoint__Params {
+    return new IncreasedProvidedPoint__Params(this);
   }
 }
 
-export class IncreasedClearedPoint__Params {
-  _event: IncreasedClearedPoint;
+export class IncreasedProvidedPoint__Params {
+  _event: IncreasedProvidedPoint;
 
-  constructor(event: IncreasedClearedPoint) {
+  constructor(event: IncreasedProvidedPoint) {
     this._event = event;
   }
 
@@ -70,16 +70,16 @@ export class IncreasedClearedPoint__Params {
   }
 }
 
-export class IncreasedProvidedPoint extends ethereum.Event {
-  get params(): IncreasedProvidedPoint__Params {
-    return new IncreasedProvidedPoint__Params(this);
+export class IncreasedSettledPoint extends ethereum.Event {
+  get params(): IncreasedSettledPoint__Params {
+    return new IncreasedSettledPoint__Params(this);
   }
 }
 
-export class IncreasedProvidedPoint__Params {
-  _event: IncreasedProvidedPoint;
+export class IncreasedSettledPoint__Params {
+  _event: IncreasedSettledPoint;
 
-  constructor(event: IncreasedProvidedPoint) {
+  constructor(event: IncreasedSettledPoint) {
     this._event = event;
   }
 
@@ -130,6 +130,70 @@ export class IncreasedUsedPoint__Params {
   }
 }
 
+export class UpdatedShop extends ethereum.Event {
+  get params(): UpdatedShop__Params {
+    return new UpdatedShop__Params(this);
+  }
+}
+
+export class UpdatedShop__Params {
+  _event: UpdatedShop;
+
+  constructor(event: UpdatedShop) {
+    this._event = event;
+  }
+
+  get shopId(): string {
+    return this._event.parameters[0].value.toString();
+  }
+
+  get provideWaitTime(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get providePercent(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get phone(): Bytes {
+    return this._event.parameters[3].value.toBytes();
+  }
+}
+
+export class ShopCollection__shopByPhoneOfResultValue0Struct extends ethereum.Tuple {
+  get shopId(): string {
+    return this[0].toString();
+  }
+
+  get provideWaitTime(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get providePercent(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get phone(): Bytes {
+    return this[3].toBytes();
+  }
+
+  get providedPoint(): BigInt {
+    return this[4].toBigInt();
+  }
+
+  get usedPoint(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get settledPoint(): BigInt {
+    return this[6].toBigInt();
+  }
+
+  get status(): i32 {
+    return this[7].toI32();
+  }
+}
+
 export class ShopCollection__shopOfResultValue0Struct extends ethereum.Tuple {
   get shopId(): string {
     return this[0].toString();
@@ -155,7 +219,7 @@ export class ShopCollection__shopOfResultValue0Struct extends ethereum.Tuple {
     return this[5].toBigInt();
   }
 
-  get clearedPoint(): BigInt {
+  get settledPoint(): BigInt {
     return this[6].toBigInt();
   }
 
@@ -199,20 +263,20 @@ export class ShopCollection extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
-  getClearPoint(_shopId: string): BigInt {
+  getSettlementPoint(_shopId: string): BigInt {
     let result = super.call(
-      "getClearPoint",
-      "getClearPoint(string):(uint256)",
+      "getSettlementPoint",
+      "getSettlementPoint(string):(uint256)",
       [ethereum.Value.fromString(_shopId)]
     );
 
     return result[0].toBigInt();
   }
 
-  try_getClearPoint(_shopId: string): ethereum.CallResult<BigInt> {
+  try_getSettlementPoint(_shopId: string): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
-      "getClearPoint",
-      "getClearPoint(string):(uint256)",
+      "getSettlementPoint",
+      "getSettlementPoint(string):(uint256)",
       [ethereum.Value.fromString(_shopId)]
     );
     if (result.reverted) {
@@ -239,6 +303,39 @@ export class ShopCollection extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  shopByPhoneOf(
+    _phone: Bytes
+  ): ShopCollection__shopByPhoneOfResultValue0Struct {
+    let result = super.call(
+      "shopByPhoneOf",
+      "shopByPhoneOf(bytes32):((string,uint256,uint256,bytes32,uint256,uint256,uint256,uint8))",
+      [ethereum.Value.fromFixedBytes(_phone)]
+    );
+
+    return changetype<ShopCollection__shopByPhoneOfResultValue0Struct>(
+      result[0].toTuple()
+    );
+  }
+
+  try_shopByPhoneOf(
+    _phone: Bytes
+  ): ethereum.CallResult<ShopCollection__shopByPhoneOfResultValue0Struct> {
+    let result = super.tryCall(
+      "shopByPhoneOf",
+      "shopByPhoneOf(bytes32):((string,uint256,uint256,bytes32,uint256,uint256,uint256,uint8))",
+      [ethereum.Value.fromFixedBytes(_phone)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      changetype<ShopCollection__shopByPhoneOfResultValue0Struct>(
+        value[0].toTuple()
+      )
+    );
   }
 
   shopIdOf(_idx: BigInt): string {
@@ -400,44 +497,6 @@ export class AddCall__Outputs {
   }
 }
 
-export class AddClearedPointCall extends ethereum.Call {
-  get inputs(): AddClearedPointCall__Inputs {
-    return new AddClearedPointCall__Inputs(this);
-  }
-
-  get outputs(): AddClearedPointCall__Outputs {
-    return new AddClearedPointCall__Outputs(this);
-  }
-}
-
-export class AddClearedPointCall__Inputs {
-  _call: AddClearedPointCall;
-
-  constructor(call: AddClearedPointCall) {
-    this._call = call;
-  }
-
-  get _shopId(): string {
-    return this._call.inputValues[0].value.toString();
-  }
-
-  get _amount(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
-  get _purchaseId(): string {
-    return this._call.inputValues[2].value.toString();
-  }
-}
-
-export class AddClearedPointCall__Outputs {
-  _call: AddClearedPointCall;
-
-  constructor(call: AddClearedPointCall) {
-    this._call = call;
-  }
-}
-
 export class AddProvidedPointCall extends ethereum.Call {
   get inputs(): AddProvidedPointCall__Inputs {
     return new AddProvidedPointCall__Inputs(this);
@@ -472,6 +531,44 @@ export class AddProvidedPointCall__Outputs {
   _call: AddProvidedPointCall;
 
   constructor(call: AddProvidedPointCall) {
+    this._call = call;
+  }
+}
+
+export class AddSettledPointCall extends ethereum.Call {
+  get inputs(): AddSettledPointCall__Inputs {
+    return new AddSettledPointCall__Inputs(this);
+  }
+
+  get outputs(): AddSettledPointCall__Outputs {
+    return new AddSettledPointCall__Outputs(this);
+  }
+}
+
+export class AddSettledPointCall__Inputs {
+  _call: AddSettledPointCall;
+
+  constructor(call: AddSettledPointCall) {
+    this._call = call;
+  }
+
+  get _shopId(): string {
+    return this._call.inputValues[0].value.toString();
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+
+  get _purchaseId(): string {
+    return this._call.inputValues[2].value.toString();
+  }
+}
+
+export class AddSettledPointCall__Outputs {
+  _call: AddSettledPointCall;
+
+  constructor(call: AddSettledPointCall) {
     this._call = call;
   }
 }

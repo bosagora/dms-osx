@@ -16,33 +16,39 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
+        - ChangedToPayablePoint
         - Deposited
         - PaidPoint
         - PaidToken
         - ProvidedPoint
-        - ProvidedPointToShop
         - ProvidedToken
+        - ProvidedTokenForSettlement
+        - ProvidedUnPayablePoint
         - SavedPurchase
         - Withdrawn
       abis:
         - name: Ledger
           file: $DMS_OSX_MODULE/artifacts/contracts/Ledger.sol/Ledger.json
       eventHandlers:
-        - event: Deposited(bytes32,uint256,uint256,uint256,address)
+        - event: ChangedToPayablePoint(bytes32,address,uint256,uint256,uint256)
+          handler: handleChangedToPayablePoint
+        - event: Deposited(address,uint256,uint256,uint256)
           handler: handleDeposited
-        - event: PaidPoint(bytes32,uint256,uint256,uint256,string,string)
+        - event: PaidPoint(address,uint256,uint256,uint256,string,uint256,string)
           handler: handlePaidPoint
-        - event: PaidToken(bytes32,uint256,uint256,uint256,string,string)
+        - event: PaidToken(address,uint256,uint256,uint256,string,uint256,string)
           handler: handlePaidToken
-        - event: ProvidedPoint(bytes32,uint256,uint256,uint256,string,string)
+        - event: ProvidedPoint(address,uint256,uint256,uint256,string,string)
           handler: handleProvidedPoint
-        - event: ProvidedPointToShop(bytes32,uint256,uint256,uint256,string,string)
-          handler: handleProvidedPointToShop
-        - event: ProvidedToken(bytes32,uint256,uint256,uint256,string,string)
+        - event: ProvidedToken(address,uint256,uint256,uint256,string,string)
           handler: handleProvidedToken
-        - event: SavedPurchase(string,uint256,uint256,bytes32,string,uint32,string)
+        - event: ProvidedTokenForSettlement(address,string,uint256,uint256,uint256,uint256,string)
+          handler: handleProvidedTokenForSettlement
+        - event: ProvidedUnPayablePoint(bytes32,uint256,uint256,uint256,string,string)
+          handler: handleProvidedUnPayablePoint
+        - event: SavedPurchase(string,uint256,uint256,string,string,uint32,address,bytes32)
           handler: handleSavedPurchase
-        - event: Withdrawn(bytes32,uint256,uint256,uint256,address)
+        - event: Withdrawn(address,uint256,uint256,uint256)
           handler: handleWithdrawn
       file: ./src/ledger.ts
 
@@ -59,19 +65,22 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - AddedShop
-        - IncreasedClearedPoint
         - IncreasedProvidedPoint
+        - IncreasedSettledPoint
         - IncreasedUsedPoint
+        - UpdatedShop
       abis:
         - name: ShopCollection
           file: $DMS_OSX_MODULE/artifacts/contracts/ShopCollection.sol/ShopCollection.json
       eventHandlers:
         - event: AddedShop(string,uint256,uint256,bytes32)
           handler: handleAddedShop
-        - event: IncreasedClearedPoint(string,uint256,uint256,string)
-          handler: handleIncreasedClearedPoint
         - event: IncreasedProvidedPoint(string,uint256,uint256,string)
           handler: handleIncreasedProvidedPoint
+        - event: IncreasedSettledPoint(string,uint256,uint256,string)
+          handler: handleIncreasedSettledPoint
         - event: IncreasedUsedPoint(string,uint256,uint256,string)
           handler: handleIncreasedUsedPoint
+        - event: UpdatedShop(string,uint256,uint256,bytes32)
+          handler: handleUpdatedShop
       file: ./src/shop-collection.ts

@@ -1,8 +1,9 @@
 import {
     AddedShop as AddedShopEvent,
-    IncreasedClearedPoint as IncreasedClearedPointEvent,
+    IncreasedSettledPoint as IncreasedSettledPointEvent,
     IncreasedProvidedPoint as IncreasedProvidedPointEvent,
     IncreasedUsedPoint as IncreasedUsedPointEvent,
+    UpdatedShop as UpdatedShopEvent,
 } from "../generated/ShopCollection/ShopCollection";
 import { Shop, ShopTradeHistory } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
@@ -17,7 +18,7 @@ export function handleAddedShop(event: AddedShopEvent): void {
 
     entity.providedPoint = BigInt.fromI32(0);
     entity.usedPoint = BigInt.fromI32(0);
-    entity.clearedPoint = BigInt.fromI32(0);
+    entity.settledPoint = BigInt.fromI32(0);
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -26,19 +27,33 @@ export function handleAddedShop(event: AddedShopEvent): void {
     entity.save();
 }
 
-export function handleIncreasedClearedPoint(event: IncreasedClearedPointEvent): void {
+export function handleUpdatedShop(event: UpdatedShopEvent): void {
+    let shopEntity = Shop.load(event.params.shopId);
+    if (shopEntity !== null) {
+        shopEntity.phone = event.params.phone;
+        shopEntity.provideWaitTime = event.params.provideWaitTime;
+        shopEntity.providePercent = event.params.providePercent;
+
+        shopEntity.blockNumber = event.block.number;
+        shopEntity.blockTimestamp = event.block.timestamp;
+        shopEntity.transactionHash = event.transaction.hash;
+        shopEntity.save();
+    }
+}
+
+export function handleIncreasedSettledPoint(event: IncreasedSettledPointEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.action = "ClearedPoint";
+    entity.action = "SettledPoint";
     entity.shopId = event.params.shopId;
     entity.purchaseId = event.params.purchaseId;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.clearedPoint = event.params.total.div(AmountUnit);
+    entity.settledPoint = event.params.total.div(AmountUnit);
 
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         entity.providedPoint = shopEntity.providedPoint;
         entity.usedPoint = shopEntity.usedPoint;
-        shopEntity.clearedPoint = entity.clearedPoint;
+        shopEntity.settledPoint = entity.settledPoint;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
         shopEntity.transactionHash = event.transaction.hash;
@@ -66,7 +81,7 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         entity.usedPoint = shopEntity.usedPoint;
-        entity.clearedPoint = shopEntity.clearedPoint;
+        entity.settledPoint = shopEntity.settledPoint;
         shopEntity.providedPoint = entity.providedPoint;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
@@ -74,7 +89,7 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
         shopEntity.save();
     } else {
         entity.usedPoint = BigInt.fromI32(0);
-        entity.clearedPoint = BigInt.fromI32(0);
+        entity.settledPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -95,7 +110,7 @@ export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         entity.providedPoint = shopEntity.providedPoint;
-        entity.clearedPoint = shopEntity.clearedPoint;
+        entity.settledPoint = shopEntity.settledPoint;
         shopEntity.usedPoint = entity.usedPoint;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
@@ -103,7 +118,7 @@ export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
         shopEntity.save();
     } else {
         entity.providedPoint = BigInt.fromI32(0);
-        entity.clearedPoint = BigInt.fromI32(0);
+        entity.settledPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
