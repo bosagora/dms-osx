@@ -15,9 +15,11 @@ chai.use(solidity);
 
 describe("Test for ShopCollection", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
+    const [deployer, validator1, validator2, validator3, user1, shop1, shop2, shop3, shop4, shop5] =
+        provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
+    const shopWallets = [shop1, shop2, shop3, shop4, shop5];
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let shopCollection: ShopCollection;
@@ -65,6 +67,7 @@ describe("Test for ShopCollection", () => {
             shopId: string;
             provideWaitTime: number;
             providePercent: number;
+            account: string;
         }
 
         const shopData: IShopData[] = [
@@ -72,41 +75,49 @@ describe("Test for ShopCollection", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
+                account: shopWallets[0].address,
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 5,
+                account: shopWallets[1].address,
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 5,
+                account: shopWallets[2].address,
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 5,
+                account: shopWallets[3].address,
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 5,
+                account: shopWallets[4].address,
             },
         ];
 
         it("Not validator", async () => {
-            const phone = ContractUtils.getPhoneHash("08201012341001");
-            await expect(shopCollection.connect(user1).add("F000100", 0, 5)).to.revertedWith("Not validator");
+            await expect(shopCollection.connect(user1).add("F000100", 0, 5, shopWallets[0].address)).to.revertedWith(
+                "Not validator"
+            );
         });
 
         it("Success", async () => {
             for (const elem of shopData) {
                 await expect(
-                    shopCollection.connect(validator1).add(elem.shopId, elem.provideWaitTime, elem.providePercent)
+                    shopCollection
+                        .connect(validator1)
+                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
                 )
                     .to.emit(shopCollection, "AddedShop")
-                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent);
+                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
             }
             expect(await shopCollection.shopsLength()).to.equal(shopData.length);
         });

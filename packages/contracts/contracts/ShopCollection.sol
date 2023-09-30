@@ -17,6 +17,7 @@ contract ShopCollection {
         string shopId; // 가맹점 아이디
         uint256 provideWaitTime; // 제품구매 후 포인트 지급시간
         uint256 providePercent; // 구매금액에 대한 포인트 지급량
+        address account;
         uint256 providedPoint; // 제공된 포인트 총량
         uint256 usedPoint; // 사용된 포인트 총량
         uint256 clearedPoint; // 정산된 포인트 총량
@@ -31,7 +32,7 @@ contract ShopCollection {
     ValidatorCollection private validatorCollection;
 
     /// @notice 가맹점이 추가될 때 발생되는 이벤트
-    event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent);
+    event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent, address account);
     /// @notice 가맹점의 포인트가 증가할 때 발생되는 이벤트
     event IncreasedProvidedPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
@@ -78,16 +79,18 @@ contract ShopCollection {
     function add(
         string memory _shopId,
         uint256 _provideWaitTime,
-        uint256 _providePercent
+        uint256 _providePercent,
+        address _account
     ) public onlyValidator(msg.sender) {
-        _add(_shopId, _provideWaitTime, _providePercent);
+        _add(_shopId, _provideWaitTime, _providePercent, _account);
     }
 
-    function _add(string memory _shopId, uint256 _provideWaitTime, uint256 _providePercent) internal {
+    function _add(string memory _shopId, uint256 _provideWaitTime, uint256 _providePercent, address _account) internal {
         ShopData memory data = ShopData({
             shopId: _shopId,
             provideWaitTime: _provideWaitTime,
             providePercent: _providePercent,
+            account: _account,
             providedPoint: 0,
             usedPoint: 0,
             clearedPoint: 0,
@@ -96,35 +99,31 @@ contract ShopCollection {
         items.push(_shopId);
         shops[_shopId] = data;
 
-        emit AddedShop(_shopId, _provideWaitTime, _providePercent);
+        emit AddedShop(_shopId, _provideWaitTime, _providePercent, _account);
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
     function addProvidedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
-        if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, 5);
+        if (shops[_shopId].status != ShopStatus.INVALID) {
+            shops[_shopId].providedPoint += _amount;
+            emit IncreasedProvidedPoint(_shopId, _amount, shops[_shopId].providedPoint, _purchaseId);
         }
-
-        shops[_shopId].providedPoint += _amount;
-        emit IncreasedProvidedPoint(_shopId, _amount, shops[_shopId].providedPoint, _purchaseId);
     }
 
     /// @notice 사용된 총 마일지리를 누적한다
     function addUsedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
-        if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, 5);
+        if (shops[_shopId].status != ShopStatus.INVALID) {
+            shops[_shopId].usedPoint += _amount;
+            emit IncreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId);
         }
-        shops[_shopId].usedPoint += _amount;
-        emit IncreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId);
     }
 
     /// @notice 정산된 총 마일지리를 누적한다
     function addClearedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
-        if (shops[_shopId].status == ShopStatus.INVALID) {
-            _add(_shopId, 0, 5);
+        if (shops[_shopId].status != ShopStatus.INVALID) {
+            shops[_shopId].clearedPoint += _amount;
+            emit IncreasedClearedPoint(_shopId, _amount, shops[_shopId].clearedPoint, _purchaseId);
         }
-        shops[_shopId].clearedPoint += _amount;
-        emit IncreasedClearedPoint(_shopId, _amount, shops[_shopId].clearedPoint, _purchaseId);
     }
 
     /// @notice 정산되어야 할 마일지리의 량을 리턴합니다.
