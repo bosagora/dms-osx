@@ -10,6 +10,40 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
+export class ChangedToPayablePoint extends ethereum.Event {
+  get params(): ChangedToPayablePoint__Params {
+    return new ChangedToPayablePoint__Params(this);
+  }
+}
+
+export class ChangedToPayablePoint__Params {
+  _event: ChangedToPayablePoint;
+
+  constructor(event: ChangedToPayablePoint) {
+    this._event = event;
+  }
+
+  get phone(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get account(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+
+  get changedAmountPoint(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get value(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+
+  get balancePoint(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
+  }
+}
+
 export class Deposited extends ethereum.Event {
   get params(): Deposited__Params {
     return new Deposited__Params(this);
@@ -23,8 +57,8 @@ export class Deposited__Params {
     this._event = event;
   }
 
-  get phone(): Bytes {
-    return this._event.parameters[0].value.toBytes();
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
   }
 
   get depositAmount(): BigInt {
@@ -37,10 +71,6 @@ export class Deposited__Params {
 
   get balanceToken(): BigInt {
     return this._event.parameters[3].value.toBigInt();
-  }
-
-  get account(): Address {
-    return this._event.parameters[4].value.toAddress();
   }
 }
 
@@ -57,8 +87,8 @@ export class PaidPoint__Params {
     this._event = event;
   }
 
-  get phone(): Bytes {
-    return this._event.parameters[0].value.toBytes();
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
   }
 
   get paidAmountPoint(): BigInt {
@@ -77,8 +107,12 @@ export class PaidPoint__Params {
     return this._event.parameters[4].value.toString();
   }
 
+  get purchaseAmount(): BigInt {
+    return this._event.parameters[5].value.toBigInt();
+  }
+
   get shopId(): string {
-    return this._event.parameters[5].value.toString();
+    return this._event.parameters[6].value.toString();
   }
 }
 
@@ -95,8 +129,8 @@ export class PaidToken__Params {
     this._event = event;
   }
 
-  get phone(): Bytes {
-    return this._event.parameters[0].value.toBytes();
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
   }
 
   get paidAmountToken(): BigInt {
@@ -115,8 +149,12 @@ export class PaidToken__Params {
     return this._event.parameters[4].value.toString();
   }
 
+  get purchaseAmount(): BigInt {
+    return this._event.parameters[5].value.toBigInt();
+  }
+
   get shopId(): string {
-    return this._event.parameters[5].value.toString();
+    return this._event.parameters[6].value.toString();
   }
 }
 
@@ -133,46 +171,8 @@ export class ProvidedPoint__Params {
     this._event = event;
   }
 
-  get phone(): Bytes {
-    return this._event.parameters[0].value.toBytes();
-  }
-
-  get providedAmountPoint(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-
-  get value(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
-  }
-
-  get balancePoint(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
-  }
-
-  get purchaseId(): string {
-    return this._event.parameters[4].value.toString();
-  }
-
-  get shopId(): string {
-    return this._event.parameters[5].value.toString();
-  }
-}
-
-export class ProvidedPointToShop extends ethereum.Event {
-  get params(): ProvidedPointToShop__Params {
-    return new ProvidedPointToShop__Params(this);
-  }
-}
-
-export class ProvidedPointToShop__Params {
-  _event: ProvidedPointToShop;
-
-  constructor(event: ProvidedPointToShop) {
-    this._event = event;
-  }
-
-  get phone(): Bytes {
-    return this._event.parameters[0].value.toBytes();
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
   }
 
   get providedAmountPoint(): BigInt {
@@ -209,8 +209,8 @@ export class ProvidedToken__Params {
     this._event = event;
   }
 
-  get phone(): Bytes {
-    return this._event.parameters[0].value.toBytes();
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
   }
 
   get providedAmountToken(): BigInt {
@@ -222,6 +222,86 @@ export class ProvidedToken__Params {
   }
 
   get balanceToken(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+
+  get purchaseId(): string {
+    return this._event.parameters[4].value.toString();
+  }
+
+  get shopId(): string {
+    return this._event.parameters[5].value.toString();
+  }
+}
+
+export class ProvidedTokenForSettlement extends ethereum.Event {
+  get params(): ProvidedTokenForSettlement__Params {
+    return new ProvidedTokenForSettlement__Params(this);
+  }
+}
+
+export class ProvidedTokenForSettlement__Params {
+  _event: ProvidedTokenForSettlement;
+
+  constructor(event: ProvidedTokenForSettlement) {
+    this._event = event;
+  }
+
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get shopId(): string {
+    return this._event.parameters[1].value.toString();
+  }
+
+  get providedAmountPoint(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get providedAmountToken(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
+  }
+
+  get value(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
+  }
+
+  get balanceToken(): BigInt {
+    return this._event.parameters[5].value.toBigInt();
+  }
+
+  get purchaseId(): string {
+    return this._event.parameters[6].value.toString();
+  }
+}
+
+export class ProvidedUnPayablePoint extends ethereum.Event {
+  get params(): ProvidedUnPayablePoint__Params {
+    return new ProvidedUnPayablePoint__Params(this);
+  }
+}
+
+export class ProvidedUnPayablePoint__Params {
+  _event: ProvidedUnPayablePoint;
+
+  constructor(event: ProvidedUnPayablePoint) {
+    this._event = event;
+  }
+
+  get phone(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get providedAmountPoint(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get value(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get balancePoint(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -259,8 +339,8 @@ export class SavedPurchase__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get phone(): Bytes {
-    return this._event.parameters[3].value.toBytes();
+  get currency(): string {
+    return this._event.parameters[3].value.toString();
   }
 
   get shopId(): string {
@@ -271,8 +351,12 @@ export class SavedPurchase__Params {
     return this._event.parameters[5].value.toBigInt();
   }
 
-  get currency(): string {
-    return this._event.parameters[6].value.toString();
+  get account(): Address {
+    return this._event.parameters[6].value.toAddress();
+  }
+
+  get phone(): Bytes {
+    return this._event.parameters[7].value.toBytes();
   }
 }
 
@@ -289,8 +373,8 @@ export class Withdrawn__Params {
     this._event = event;
   }
 
-  get phone(): Bytes {
-    return this._event.parameters[0].value.toBytes();
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
   }
 
   get withdrawAmount(): BigInt {
@@ -303,10 +387,6 @@ export class Withdrawn__Params {
 
   get balanceToken(): BigInt {
     return this._event.parameters[3].value.toBigInt();
-  }
-
-  get account(): Address {
-    return this._event.parameters[4].value.toAddress();
   }
 }
 
@@ -323,8 +403,8 @@ export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
     return this[2].toBigInt();
   }
 
-  get phone(): Bytes {
-    return this[3].toBytes();
+  get currency(): string {
+    return this[3].toString();
   }
 
   get shopId(): string {
@@ -335,8 +415,12 @@ export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
     return this[5].toBigInt();
   }
 
-  get currency(): string {
-    return this[6].toString();
+  get account(): Address {
+    return this[6].toAddress();
+  }
+
+  get phone(): Bytes {
+    return this[7].toBytes();
   }
 }
 
@@ -421,27 +505,27 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
-  foundationAccount(): Bytes {
+  foundationAccount(): Address {
     let result = super.call(
       "foundationAccount",
-      "foundationAccount():(bytes32)",
+      "foundationAccount():(address)",
       []
     );
 
-    return result[0].toBytes();
+    return result[0].toAddress();
   }
 
-  try_foundationAccount(): ethereum.CallResult<Bytes> {
+  try_foundationAccount(): ethereum.CallResult<Address> {
     let result = super.tryCall(
       "foundationAccount",
-      "foundationAccount():(bytes32)",
+      "foundationAccount():(address)",
       []
     );
     if (result.reverted) {
       return new ethereum.CallResult();
     }
     let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBytes());
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   linkCollectionAddress(): Address {
@@ -486,27 +570,46 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  pointBalanceOf(_hash: Bytes): BigInt {
+  pointBalanceOf(_account: Address): BigInt {
     let result = super.call(
       "pointBalanceOf",
-      "pointBalanceOf(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(_hash)]
+      "pointBalanceOf(address):(uint256)",
+      [ethereum.Value.fromAddress(_account)]
     );
 
     return result[0].toBigInt();
   }
 
-  try_pointBalanceOf(_hash: Bytes): ethereum.CallResult<BigInt> {
+  try_pointBalanceOf(_account: Address): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
       "pointBalanceOf",
-      "pointBalanceOf(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(_hash)]
+      "pointBalanceOf(address):(uint256)",
+      [ethereum.Value.fromAddress(_account)]
     );
     if (result.reverted) {
       return new ethereum.CallResult();
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  pointTypeOf(_account: Address): i32 {
+    let result = super.call("pointTypeOf", "pointTypeOf(address):(uint8)", [
+      ethereum.Value.fromAddress(_account)
+    ]);
+
+    return result[0].toI32();
+  }
+
+  try_pointTypeOf(_account: Address): ethereum.CallResult<i32> {
+    let result = super.tryCall("pointTypeOf", "pointTypeOf(address):(uint8)", [
+      ethereum.Value.fromAddress(_account)
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toI32());
   }
 
   purchaseIdOf(_idx: BigInt): string {
@@ -533,7 +636,7 @@ export class Ledger extends ethereum.SmartContract {
   purchaseOf(_purchaseId: string): Ledger__purchaseOfResultValue0Struct {
     let result = super.call(
       "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,bytes32,string,uint32,string))",
+      "purchaseOf(string):((string,uint256,uint256,string,string,uint32,address,bytes32))",
       [ethereum.Value.fromString(_purchaseId)]
     );
 
@@ -547,7 +650,7 @@ export class Ledger extends ethereum.SmartContract {
   ): ethereum.CallResult<Ledger__purchaseOfResultValue0Struct> {
     let result = super.tryCall(
       "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,bytes32,string,uint32,string))",
+      "purchaseOf(string):((string,uint256,uint256,string,string,uint32,address,bytes32))",
       [ethereum.Value.fromString(_purchaseId)]
     );
     if (result.reverted) {
@@ -580,6 +683,29 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  settlementAccount(): Address {
+    let result = super.call(
+      "settlementAccount",
+      "settlementAccount():(address)",
+      []
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_settlementAccount(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "settlementAccount",
+      "settlementAccount():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   shopCollectionAddress(): Address {
@@ -620,20 +746,43 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
-  tokenBalanceOf(_hash: Bytes): BigInt {
+  tokenBalanceOf(_account: Address): BigInt {
     let result = super.call(
       "tokenBalanceOf",
-      "tokenBalanceOf(bytes32):(uint256)",
+      "tokenBalanceOf(address):(uint256)",
+      [ethereum.Value.fromAddress(_account)]
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_tokenBalanceOf(_account: Address): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "tokenBalanceOf",
+      "tokenBalanceOf(address):(uint256)",
+      [ethereum.Value.fromAddress(_account)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  unPayablePointBalanceOf(_hash: Bytes): BigInt {
+    let result = super.call(
+      "unPayablePointBalanceOf",
+      "unPayablePointBalanceOf(bytes32):(uint256)",
       [ethereum.Value.fromFixedBytes(_hash)]
     );
 
     return result[0].toBigInt();
   }
 
-  try_tokenBalanceOf(_hash: Bytes): ethereum.CallResult<BigInt> {
+  try_unPayablePointBalanceOf(_hash: Bytes): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
-      "tokenBalanceOf",
-      "tokenBalanceOf(bytes32):(uint256)",
+      "unPayablePointBalanceOf",
+      "unPayablePointBalanceOf(bytes32):(uint256)",
       [ethereum.Value.fromFixedBytes(_hash)]
     );
     if (result.reverted) {
@@ -684,28 +833,32 @@ export class ConstructorCall__Inputs {
     this._call = call;
   }
 
-  get _foundationAccount(): Bytes {
-    return this._call.inputValues[0].value.toBytes();
+  get _foundationAccount(): Address {
+    return this._call.inputValues[0].value.toAddress();
   }
 
-  get _tokenAddress(): Address {
+  get _settlementAccount(): Address {
     return this._call.inputValues[1].value.toAddress();
   }
 
-  get _validatorAddress(): Address {
+  get _tokenAddress(): Address {
     return this._call.inputValues[2].value.toAddress();
   }
 
-  get _linkCollectionAddress(): Address {
+  get _validatorAddress(): Address {
     return this._call.inputValues[3].value.toAddress();
   }
 
-  get _currencyRateAddress(): Address {
+  get _linkCollectionAddress(): Address {
     return this._call.inputValues[4].value.toAddress();
   }
 
-  get _shopCollectionAddress(): Address {
+  get _currencyRateAddress(): Address {
     return this._call.inputValues[5].value.toAddress();
+  }
+
+  get _shopCollectionAddress(): Address {
+    return this._call.inputValues[6].value.toAddress();
   }
 }
 
@@ -713,6 +866,44 @@ export class ConstructorCall__Outputs {
   _call: ConstructorCall;
 
   constructor(call: ConstructorCall) {
+    this._call = call;
+  }
+}
+
+export class ChangeToPayablePointCall extends ethereum.Call {
+  get inputs(): ChangeToPayablePointCall__Inputs {
+    return new ChangeToPayablePointCall__Inputs(this);
+  }
+
+  get outputs(): ChangeToPayablePointCall__Outputs {
+    return new ChangeToPayablePointCall__Outputs(this);
+  }
+}
+
+export class ChangeToPayablePointCall__Inputs {
+  _call: ChangeToPayablePointCall;
+
+  constructor(call: ChangeToPayablePointCall) {
+    this._call = call;
+  }
+
+  get _phone(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
+  }
+}
+
+export class ChangeToPayablePointCall__Outputs {
+  _call: ChangeToPayablePointCall;
+
+  constructor(call: ChangeToPayablePointCall) {
     this._call = call;
   }
 }
@@ -764,28 +955,10 @@ export class PayPointCall__Inputs {
     this._call = call;
   }
 
-  get _purchaseId(): string {
-    return this._call.inputValues[0].value.toString();
-  }
-
-  get _amount(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
-  get _phone(): Bytes {
-    return this._call.inputValues[2].value.toBytes();
-  }
-
-  get _shopId(): string {
-    return this._call.inputValues[3].value.toString();
-  }
-
-  get _signer(): Address {
-    return this._call.inputValues[4].value.toAddress();
-  }
-
-  get _signature(): Bytes {
-    return this._call.inputValues[5].value.toBytes();
+  get data(): PayPointCallDataStruct {
+    return changetype<PayPointCallDataStruct>(
+      this._call.inputValues[0].value.toTuple()
+    );
   }
 }
 
@@ -794,6 +967,32 @@ export class PayPointCall__Outputs {
 
   constructor(call: PayPointCall) {
     this._call = call;
+  }
+}
+
+export class PayPointCallDataStruct extends ethereum.Tuple {
+  get purchaseId(): string {
+    return this[0].toString();
+  }
+
+  get amount(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get currency(): string {
+    return this[2].toString();
+  }
+
+  get shopId(): string {
+    return this[3].toString();
+  }
+
+  get account(): Address {
+    return this[4].toAddress();
+  }
+
+  get signature(): Bytes {
+    return this[5].toBytes();
   }
 }
 
@@ -814,28 +1013,10 @@ export class PayTokenCall__Inputs {
     this._call = call;
   }
 
-  get _purchaseId(): string {
-    return this._call.inputValues[0].value.toString();
-  }
-
-  get _amount(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
-  get _phone(): Bytes {
-    return this._call.inputValues[2].value.toBytes();
-  }
-
-  get _shopId(): string {
-    return this._call.inputValues[3].value.toString();
-  }
-
-  get _signer(): Address {
-    return this._call.inputValues[4].value.toAddress();
-  }
-
-  get _signature(): Bytes {
-    return this._call.inputValues[5].value.toBytes();
+  get data(): PayTokenCallDataStruct {
+    return changetype<PayTokenCallDataStruct>(
+      this._call.inputValues[0].value.toTuple()
+    );
   }
 }
 
@@ -844,6 +1025,32 @@ export class PayTokenCall__Outputs {
 
   constructor(call: PayTokenCall) {
     this._call = call;
+  }
+}
+
+export class PayTokenCallDataStruct extends ethereum.Tuple {
+  get purchaseId(): string {
+    return this[0].toString();
+  }
+
+  get amount(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get currency(): string {
+    return this[2].toString();
+  }
+
+  get shopId(): string {
+    return this[3].toString();
+  }
+
+  get account(): Address {
+    return this[4].toAddress();
+  }
+
+  get signature(): Bytes {
+    return this[5].toBytes();
   }
 }
 
@@ -864,32 +1071,10 @@ export class SavePurchaseCall__Inputs {
     this._call = call;
   }
 
-  get _purchaseId(): string {
-    return this._call.inputValues[0].value.toString();
-  }
-
-  get _timestamp(): BigInt {
-    return this._call.inputValues[1].value.toBigInt();
-  }
-
-  get _amount(): BigInt {
-    return this._call.inputValues[2].value.toBigInt();
-  }
-
-  get _phone(): Bytes {
-    return this._call.inputValues[3].value.toBytes();
-  }
-
-  get _shopId(): string {
-    return this._call.inputValues[4].value.toString();
-  }
-
-  get _method(): BigInt {
-    return this._call.inputValues[5].value.toBigInt();
-  }
-
-  get _currency(): string {
-    return this._call.inputValues[6].value.toString();
+  get data(): SavePurchaseCallDataStruct {
+    return changetype<SavePurchaseCallDataStruct>(
+      this._call.inputValues[0].value.toTuple()
+    );
   }
 }
 
@@ -897,6 +1082,70 @@ export class SavePurchaseCall__Outputs {
   _call: SavePurchaseCall;
 
   constructor(call: SavePurchaseCall) {
+    this._call = call;
+  }
+}
+
+export class SavePurchaseCallDataStruct extends ethereum.Tuple {
+  get purchaseId(): string {
+    return this[0].toString();
+  }
+
+  get timestamp(): BigInt {
+    return this[1].toBigInt();
+  }
+
+  get amount(): BigInt {
+    return this[2].toBigInt();
+  }
+
+  get currency(): string {
+    return this[3].toString();
+  }
+
+  get shopId(): string {
+    return this[4].toString();
+  }
+
+  get method(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get account(): Address {
+    return this[6].toAddress();
+  }
+
+  get phone(): Bytes {
+    return this[7].toBytes();
+  }
+}
+
+export class SetPointTypeCall extends ethereum.Call {
+  get inputs(): SetPointTypeCall__Inputs {
+    return new SetPointTypeCall__Inputs(this);
+  }
+
+  get outputs(): SetPointTypeCall__Outputs {
+    return new SetPointTypeCall__Outputs(this);
+  }
+}
+
+export class SetPointTypeCall__Inputs {
+  _call: SetPointTypeCall;
+
+  constructor(call: SetPointTypeCall) {
+    this._call = call;
+  }
+
+  get _type(): i32 {
+    return this._call.inputValues[0].value.toI32();
+  }
+}
+
+export class SetPointTypeCall__Outputs {
+  _call: SetPointTypeCall;
+
+  constructor(call: SetPointTypeCall) {
     this._call = call;
   }
 }
