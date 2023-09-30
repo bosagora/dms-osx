@@ -2,8 +2,8 @@ import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
-    EmailLinkCollection,
     Ledger,
+    PhoneLinkCollection,
     ShopCollection,
     Token,
     ValidatorCollection,
@@ -37,6 +37,7 @@ interface IShopData {
     shopId: string;
     provideWaitTime: number;
     providePercent: number;
+    phone: string;
     account: string;
 }
 
@@ -82,7 +83,7 @@ describe("Test for Ledger", () => {
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
-    let linkCollectionContract: EmailLinkCollection;
+    let linkCollectionContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopCollection: ShopCollection;
 
@@ -129,7 +130,7 @@ describe("Test for Ledger", () => {
         const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
         linkCollectionContract = (await linkCollectionFactory
             .connect(deployer)
-            .deploy(linkValidators.map((m) => m.address))) as EmailLinkCollection;
+            .deploy(linkValidators.map((m) => m.address))) as PhoneLinkCollection;
         await linkCollectionContract.deployed();
         await linkCollectionContract.deployTransaction.wait();
     };
@@ -263,36 +264,42 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
+                phone: "08201020001000",
                 account: shopWallets[0].address,
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 6,
+                phone: "08201020001001",
                 account: shopWallets[1].address,
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 7,
+                phone: "08201020001002",
                 account: shopWallets[2].address,
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 8,
+                phone: "08201020001003",
                 account: shopWallets[3].address,
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 9,
+                phone: "08201020001004",
                 account: shopWallets[4].address,
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 10,
+                phone: "08201020001005",
                 account: shopWallets[5].address,
             },
         ];
@@ -304,13 +311,14 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1091,36 +1099,42 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 5,
+                phone: "08201020001000",
                 account: shopWallets[0].address,
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 6,
+                phone: "08201020001001",
                 account: shopWallets[1].address,
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 7,
+                phone: "08201020001002",
                 account: shopWallets[2].address,
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 8,
+                phone: "08201020001003",
                 account: shopWallets[3].address,
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 9,
+                phone: "08201020001004",
                 account: shopWallets[4].address,
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 10,
+                phone: "08201020001005",
                 account: shopWallets[5].address,
             },
         ];
@@ -1138,13 +1152,14 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1296,36 +1311,42 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001000",
                 account: shopWallets[0].address,
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001001",
                 account: shopWallets[1].address,
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001002",
                 account: shopWallets[2].address,
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001003",
                 account: shopWallets[3].address,
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001004",
                 account: shopWallets[4].address,
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001005",
                 account: shopWallets[5].address,
             },
         ];
@@ -1343,13 +1364,14 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1686,36 +1708,42 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001000",
                 account: shopWallets[0].address,
             },
             {
                 shopId: "F000200",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001001",
                 account: shopWallets[1].address,
             },
             {
                 shopId: "F000300",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001002",
                 account: shopWallets[2].address,
             },
             {
                 shopId: "F000400",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001003",
                 account: shopWallets[3].address,
             },
             {
                 shopId: "F000500",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001004",
                 account: shopWallets[4].address,
             },
             {
                 shopId: "F000600",
                 provideWaitTime: 0,
                 providePercent: 1,
+                phone: "08201020001005",
                 account: shopWallets[5].address,
             },
         ];
@@ -1740,15 +1768,36 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+            });
+
+            it("Link phone-wallet of shops", async () => {
+                for (let idx = 0; idx < shopData.length; idx++) {
+                    const shop = shopData[idx];
+                    const wallet = shopWallets[idx];
+                    const nonce = await linkCollectionContract.nonceOf(wallet.address);
+                    const phoneHash = ContractUtils.getPhoneHash(shop.phone);
+                    const signature = await ContractUtils.sign(wallet, phoneHash, nonce);
+                    requestId = ContractUtils.getRequestId(phoneHash, wallet.address, nonce);
+                    await expect(
+                        linkCollectionContract
+                            .connect(relay)
+                            .addRequest(requestId, phoneHash, wallet.address, signature)
+                    )
+                        .to.emit(linkCollectionContract, "AddedRequestItem")
+                        .withArgs(requestId, phoneHash, wallet.address);
+                    await linkCollectionContract.connect(validator1).voteRequest(requestId);
+                    await linkCollectionContract.connect(validator1).countVote(requestId);
+                }
             });
         });
 
