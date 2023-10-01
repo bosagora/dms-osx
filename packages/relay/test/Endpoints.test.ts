@@ -21,6 +21,9 @@ import { URL } from "url";
 import * as assert from "assert";
 import { BigNumber } from "ethers";
 
+// tslint:disable-next-line:no-implicit-dependencies
+import { AddressZero } from "@ethersproject/constants";
+
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
 
@@ -66,8 +69,6 @@ describe("Test of Server", function () {
 
     const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
-    const foundationPhone = "08201012341000";
-    const foundationAccount = ContractUtils.getPhoneHash(foundationPhone);
 
     const deployToken = async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
@@ -135,7 +136,8 @@ describe("Test of Server", function () {
         ledgerContract = (await ledgerFactory
             .connect(deployer)
             .deploy(
-                foundationAccount,
+                foundation.address,
+                foundation.address,
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
@@ -169,40 +171,74 @@ describe("Test of Server", function () {
         providePercent: number;
         phone: string;
     }
+
     const shopData: IShopData[] = [
         {
             shopId: "F000100",
             provideWaitTime: 0,
             providePercent: 1,
-            phone: "08201012342001",
+            phone: "08201020001000",
         },
         {
             shopId: "F000200",
             provideWaitTime: 0,
             providePercent: 1,
-            phone: "08201012342002",
+            phone: "08201020001001",
         },
         {
             shopId: "F000300",
             provideWaitTime: 0,
             providePercent: 1,
-            phone: "08201012342003",
+            phone: "08201020001002",
         },
         {
             shopId: "F000400",
             provideWaitTime: 0,
             providePercent: 1,
-            phone: "08201012342004",
+            phone: "08201020001003",
         },
         {
             shopId: "F000500",
             provideWaitTime: 0,
             providePercent: 1,
-            phone: "08201012342005",
+            phone: "08201020001004",
         },
     ];
 
-    let reqId: string;
+    interface IUserData {
+        phone: string;
+        address: string;
+        privateKey: string;
+    }
+
+    const userData: IUserData[] = [
+        {
+            phone: "08201012341001",
+            address: users[0].address,
+            privateKey: users[0].privateKey,
+        },
+        {
+            phone: "08201012341002",
+            address: users[1].address,
+            privateKey: users[1].privateKey,
+        },
+        {
+            phone: "08201012341003",
+            address: users[2].address,
+            privateKey: users[2].privateKey,
+        },
+    ];
+
+    interface IPurchaseData {
+        purchaseId: string;
+        timestamp: number;
+        amount: number;
+        method: number;
+        currency: string;
+        userIndex: number;
+        shopIndex: number;
+    }
+
     context("Test token & point relay endpoints", () => {
         before("Deploy", async () => {
             await deployAllContract();
@@ -246,96 +282,88 @@ describe("Test of Server", function () {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phone = ContractUtils.getPhoneHash(elem.phone);
+                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phone)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phone);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
         });
 
         context("Save Purchase Data", () => {
-            const purchaseData1 = {
+            const purchase: IPurchaseData = {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
                 amount: 10000,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
                 currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
             };
 
             it("Save Purchase Data", async () => {
-                const hash = phoneHashes[0];
-                const purchaseAmount = Amount.make(purchaseData1.amount, 18).value;
-                const amt = purchaseAmount.div(100);
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
                 await expect(
-                    ledgerContract
-                        .connect(validators[0])
-                        .savePurchase(
-                            purchaseData1.purchaseId,
-                            purchaseData1.timestamp,
-                            purchaseAmount,
-                            hash,
-                            purchaseData1.shopId,
-                            purchaseData1.method,
-                            purchaseData1.currency.toLowerCase()
-                        )
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
-                    .withArgs(
-                        purchaseData1.purchaseId,
-                        purchaseData1.timestamp,
-                        purchaseAmount,
-                        hash,
-                        purchaseData1.shopId,
-                        purchaseData1.method,
-                        purchaseData1.currency.toLowerCase()
-                    )
+                    .withNamedArgs({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
-                        phone: hash,
-                        providedAmountPoint: amt,
-                        value: amt,
-                        purchaseId: purchaseData1.purchaseId,
+                        account: userAccount,
+                        providedAmountPoint: pointAmount,
+                        value: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
                     });
             });
         });
 
-        context("Prepare phone-address", () => {
-            it("Link phone-address", async () => {
-                const nonce = await linkCollectionContract.nonceOf(users[0].address);
-                const hash = phoneHashes[0];
-                const signature = await ContractUtils.sign(users[0], hash, nonce);
-                reqId = ContractUtils.getRequestId(hash, users[0].address, nonce);
-                await expect(
-                    linkCollectionContract.connect(relay1).addRequest(reqId, hash, users[0].address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(reqId, hash, users[0].address);
-                await linkCollectionContract.connect(validator1).voteRequest(reqId);
-                await linkCollectionContract.connect(validator1).countVote(reqId);
-            });
-        });
-
         context("payPoint & payToken", () => {
-            const purchaseData = {
+            const purchase: IPurchaseData = {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
+                timestamp: 100,
                 amount: 100,
-                userPhone: "08201012341001",
-                shopId: "F000100",
                 method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
             };
 
             const amountDepositToken = BigNumber.from(amount.value.mul(2));
             const amountToken = BigNumber.from(amount.value);
             const amountPoint = amountToken.mul(price).div(multiple);
+            const shop = shopData[purchase.shopIndex];
 
             before("Deposit token", async () => {
                 await tokenContract.connect(users[0]).approve(ledgerContract.address, amountDepositToken);
@@ -347,23 +375,23 @@ describe("Test of Server", function () {
 
             it("Failure test of the path /payPoint 'Insufficient balance'", async () => {
                 const over_purchaseAmount = Amount.make(90_000_000, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[0].address);
+                const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
+                    users[purchase.userIndex],
+                    purchase.purchaseId,
                     over_purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
+                    purchase.currency,
+                    shop.shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
+                    purchaseId: purchase.purchaseId,
                     amount: over_purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
+                    currency: purchase.currency,
+                    shopId: shop.shopId,
+                    signer: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -371,51 +399,25 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure test of the path /payPoint 'Phone is not valid.'", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
-                    purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
-                    nonce
-                );
-                const uri = URI(serverURL).directory("payPoint");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
-                    amount: purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: "",
-                    signature,
-                });
-
-                assert.deepStrictEqual(response.data.code, 501);
-                assert.ok(response.data.error.message === "Failed to check the validity of parameters.");
-            });
-
             it("Failure test of the path /payPoint 'Invalid signature'", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
-                    users[1],
-                    purchaseData.purchaseId,
+                    users[purchase.userIndex + 1],
+                    purchase.purchaseId,
                     purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
+                    purchase.currency,
+                    shop.shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
+                    purchaseId: purchase.purchaseId,
                     amount: purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
+                    currency: purchase.currency,
+                    shopId: shop.shopId,
+                    signer: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -423,53 +425,29 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Failure test of the path /payPoint 'Phone is not valid.'", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
-                    purchaseAmount,
-                    phoneHashes[1],
-                    shopData[0].shopId,
-                    nonce
-                );
-                const uri = URI(serverURL).directory("payPoint");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
-                    amount: purchaseAmount.toString(),
-                    phone: phoneHashes[1],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
-                    signature,
-                });
-
-                assert.deepStrictEqual(response.data.code, 502);
-                assert.ok(response.data.error.message === "Phone is not valid.");
-            });
-
             it("Success Test of the path /payPoint", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
+                    users[purchase.userIndex],
+                    purchase.purchaseId,
                     purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
+                    purchase.currency,
+                    shop.shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
+                    purchaseId: purchase.purchaseId,
                     amount: purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
+                    currency: purchase.currency,
+                    shopId: shop.shopId,
+                    signer: users[purchase.userIndex].address,
                     signature,
                 });
+
+                console.log(response.data);
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
@@ -480,21 +458,21 @@ describe("Test of Server", function () {
                 const over_purchaseAmount = Amount.make(90_000_000, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
+                    users[purchase.userIndex],
+                    purchase.purchaseId,
                     over_purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
+                    purchase.currency,
+                    shop.shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
+                    purchaseId: purchase.purchaseId,
                     amount: over_purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
+                    currency: purchase.currency,
+                    shopId: shop.shopId,
+                    signer: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -502,51 +480,25 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure test of the path /payToken 'Phone is not valid.'", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
-                    purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
-                    nonce
-                );
-                const uri = URI(serverURL).directory("payToken");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
-                    amount: purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: "",
-                    signature,
-                });
-
-                assert.deepStrictEqual(response.data.code, 501);
-                assert.ok(response.data.error.message === "Failed to check the validity of parameters.");
-            });
-
             it("Failure test of the path /payToken 'Invalid signature'", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
-                    users[1],
-                    purchaseData.purchaseId,
+                    users[purchase.userIndex + 1],
+                    purchase.purchaseId,
                     purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
+                    purchase.currency,
+                    shop.shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
+                    purchaseId: purchase.purchaseId,
                     amount: purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
+                    currency: purchase.currency,
+                    shopId: shop.shopId,
+                    signer: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -554,51 +506,25 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Failure test of the path /payToken 'Phone is not valid.'", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[0].address);
-                const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
-                    purchaseAmount,
-                    phoneHashes[1],
-                    shopData[0].shopId,
-                    nonce
-                );
-                const uri = URI(serverURL).directory("payToken");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
-                    amount: purchaseAmount.toString(),
-                    phone: phoneHashes[1],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
-                    signature,
-                });
-
-                assert.deepStrictEqual(response.data.code, 502);
-                assert.ok(response.data.error.message === "Phone is not valid.");
-            });
-
             it("Success Test of the path /payToken", async () => {
-                const purchaseAmount = Amount.make(purchaseData.amount, 18).value;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
-                    users[0],
-                    purchaseData.purchaseId,
+                    users[purchase.userIndex],
+                    purchase.purchaseId,
                     purchaseAmount,
-                    phoneHashes[0],
-                    shopData[0].shopId,
+                    purchase.currency,
+                    shop.shopId,
                     nonce
                 );
                 const uri = URI(serverURL).directory("payToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    purchaseId: purchaseData.purchaseId,
+                    purchaseId: purchase.purchaseId,
                     amount: purchaseAmount.toString(),
-                    phone: phoneHashes[0],
-                    shopId: purchaseData.shopId,
-                    signer: users[0].address,
+                    currency: purchase.currency,
+                    shopId: shop.shopId,
+                    signer: users[purchase.userIndex].address,
                     signature,
                 });
 

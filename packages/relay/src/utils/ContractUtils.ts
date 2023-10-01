@@ -84,71 +84,50 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
+    public static getPaymentMessage(
+        address: string,
+        purchaseId: string,
+        amount: BigNumberish,
+        currency: string,
+        shopId: string,
+        nonce: BigNumberish
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "uint256", "string", "string", "address", "uint256"],
+            [purchaseId, amount, currency, shopId, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
     public static async signPayment(
         signer: Signer,
         purchaseId: string,
         amount: BigNumberish,
-        userEmail: string,
+        currency: string,
         shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const encodedResult = ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "bytes32", "string", "address", "uint256"],
-            [purchaseId, amount, userEmail, shopId, await signer.getAddress(), nonce]
+        const message = ContractUtils.getPaymentMessage(
+            await signer.getAddress(),
+            purchaseId,
+            amount,
+            currency,
+            shopId,
+            nonce
         );
-        const message = arrayify(ethers.utils.keccak256(encodedResult));
         return signer.signMessage(message);
     }
 
     public static verifyPayment(
         purchaseId: string,
         amount: BigNumberish,
-        userEmail: string,
+        currency: string,
         shopId: string,
         signerAddress: string,
         nonce: BigNumberish,
         signature: string
     ): boolean {
-        const encodedResult = ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "bytes32", "string", "address", "uint256"],
-            [purchaseId, amount, userEmail, shopId, signerAddress, nonce]
-        );
-        const message = arrayify(ethers.utils.keccak256(encodedResult));
-        let res: string;
-        try {
-            res = ethers.utils.verifyMessage(message, signature);
-        } catch (error) {
-            return false;
-        }
-        return res.toLowerCase() === signerAddress.toLowerCase();
-    }
-
-    public static async signExchange(
-        signer: Signer,
-        userEmail: string,
-        amount: BigNumberish,
-        nonce: BigNumberish
-    ): Promise<string> {
-        const encodedResult = ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "uint256", "address", "uint256"],
-            [userEmail, amount, await signer.getAddress(), nonce]
-        );
-        const message = arrayify(ethers.utils.keccak256(encodedResult));
-        return signer.signMessage(message);
-    }
-
-    public static verifyExchange(
-        signerAddress: string,
-        userEmail: string,
-        amount: BigNumberish,
-        nonce: BigNumberish,
-        signature: string
-    ): boolean {
-        const encodedResult = ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "uint256", "address", "uint256"],
-            [userEmail, amount, signerAddress, nonce]
-        );
-        const message = arrayify(ethers.utils.keccak256(encodedResult));
+        const message = ContractUtils.getPaymentMessage(signerAddress, purchaseId, amount, currency, shopId, nonce);
         let res: string;
         try {
             res = ethers.utils.verifyMessage(message, signature);
