@@ -356,8 +356,8 @@ describe("Test for Ledger", () => {
                             currency: purchase.currency.toLowerCase(),
                             shopId: shopData[purchase.shopIndex].shopId,
                             method: purchase.method,
-                            userAccount,
-                            userPhone: phoneHash,
+                            account: userAccount,
+                            phone: phoneHash,
                         })
                     ).to.be.revertedWith("Not validator");
                 }
@@ -382,8 +382,8 @@ describe("Test for Ledger", () => {
                                 currency: purchase.currency.toLowerCase(),
                                 shopId: shopData[purchase.shopIndex].shopId,
                                 method: purchase.method,
-                                userAccount,
-                                userPhone: phoneHash,
+                                account: userAccount,
+                                phone: phoneHash,
                             })
                         )
                             .to.emit(ledgerContract, "SavedPurchase")
@@ -413,8 +413,8 @@ describe("Test for Ledger", () => {
                                 currency: purchase.currency.toLowerCase(),
                                 shopId: shopData[purchase.shopIndex].shopId,
                                 method: purchase.method,
-                                userAccount,
-                                userPhone: phoneHash,
+                                account: userAccount,
+                                phone: phoneHash,
                             })
                         )
                             .to.emit(ledgerContract, "SavedPurchase")
@@ -492,8 +492,8 @@ describe("Test for Ledger", () => {
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
                         method: purchase.method,
-                        userAccount,
-                        userPhone: phoneHash,
+                        account: userAccount,
+                        phone: phoneHash,
                     })
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -565,8 +565,8 @@ describe("Test for Ledger", () => {
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
                         method: purchase.method,
-                        userAccount,
-                        userPhone: phoneHash,
+                        account: userAccount,
+                        phone: phoneHash,
                     })
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -659,8 +659,8 @@ describe("Test for Ledger", () => {
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
                         method: purchase.method,
-                        userAccount,
-                        userPhone: phoneHash,
+                        account: userAccount,
+                        phone: phoneHash,
                     })
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -725,8 +725,8 @@ describe("Test for Ledger", () => {
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
                         method: purchase.method,
-                        userAccount,
-                        userPhone: phoneHash,
+                        account: userAccount,
+                        phone: phoneHash,
                     })
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -795,8 +795,8 @@ describe("Test for Ledger", () => {
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
                         method: purchase.method,
-                        userAccount,
-                        userPhone: phoneHash,
+                        account: userAccount,
+                        phone: phoneHash,
                     })
                 )
                     .to.emit(ledgerContract, "SavedPurchase")
@@ -1456,8 +1456,8 @@ describe("Test for Ledger", () => {
                             currency: purchase.currency.toLowerCase(),
                             shopId: shopData[purchase.shopIndex].shopId,
                             method: purchase.method,
-                            userAccount,
-                            userPhone: phoneHash,
+                            account: userAccount,
+                            phone: phoneHash,
                         })
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
@@ -1883,8 +1883,8 @@ describe("Test for Ledger", () => {
                             currency,
                             shopId: shopData[purchase.shopIndex].shopId,
                             method: purchase.method,
-                            userAccount,
-                            userPhone: phoneHash,
+                            account: userAccount,
+                            phone: phoneHash,
                         })
                     )
                         .to.emit(ledgerContract, "SavedPurchase")
