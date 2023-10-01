@@ -38,10 +38,20 @@ contract Ledger {
         bytes32 userPhone;
     }
 
+    struct PaymentData {
+        string purchaseId;
+        uint256 amount;
+        string currency;
+        string shopId;
+        address account;
+        bytes signature;
+    }
+
     mapping(string => PurchaseData) private purchases;
     string[] private purchaseIds;
 
     address public foundationAccount;
+    address public clearManagerAccount;
     address public tokenAddress;
     address public validatorAddress;
     address public linkCollectionAddress;
@@ -76,7 +86,12 @@ contract Ledger {
         string shopId
     );
     /// @notice 포인트가 정산될 때 발생되는 이벤트
-    event ProvidedPointToShop(string shopId, uint256 providedAmountPoint, string purchaseId);
+    event ProvidedPointToShop(
+        string shopId,
+        uint256 providedAmountPoint,
+        uint256 providedAmountToken,
+        string purchaseId
+    );
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(
         address account,
@@ -121,6 +136,7 @@ contract Ledger {
     /// @param _shopCollectionAddress 가맹점 컬랙션 컨트랙트의 주소
     constructor(
         address _foundationAccount,
+        address _clearManagerAccount,
         address _tokenAddress,
         address _validatorAddress,
         address _linkCollectionAddress,
@@ -128,6 +144,7 @@ contract Ledger {
         address _shopCollectionAddress
     ) {
         foundationAccount = _foundationAccount;
+        clearManagerAccount = _clearManagerAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;
@@ -253,80 +270,87 @@ contract Ledger {
 
     /// @notice 포인트를 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    /// @param _purchaseId 구매 아이디
-    /// @param _amount 구매 금액
-    /// @param _currency 구매 금액의 통화코드
-    /// @param _shopId 구매한 가맹점 아이디
-    /// @param _signer 구매자의 주소
-    /// @param _signature 서명
-    function payPoint(
-        string memory _purchaseId,
-        uint256 _amount,
-        string memory _currency,
-        string memory _shopId,
-        address _signer,
-        bytes calldata _signature
-    ) public {
-        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _currency, _shopId, _signer, nonce[_signer]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
+    function payPoint(PaymentData calldata data) public {
+        bytes32 dataHash = keccak256(
+            abi.encode(data.purchaseId, data.amount, data.currency, data.shopId, data.account, nonce[data.account])
+        );
+        require(
+            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account,
+            "Invalid signature"
+        );
 
-        uint256 purchaseAmount = convertCurrencyToPoint(_amount, _currency);
+        uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
 
-        require(pointBalances[_signer] >= purchaseAmount, "Insufficient balance");
+        require(pointBalances[data.account] >= purchaseAmount, "Insufficient balance");
 
-        pointBalances[_signer] -= purchaseAmount;
-        shopCollection.addUsedPoint(_shopId, purchaseAmount, _purchaseId);
+        pointBalances[data.account] -= purchaseAmount;
+        shopCollection.addUsedPoint(data.shopId, purchaseAmount, data.purchaseId);
 
-        uint256 clearAmount = shopCollection.getClearPoint(_shopId);
-        if (clearAmount > 0) {
-            shopCollection.addClearedPoint(_shopId, clearAmount, _purchaseId);
-            emit ProvidedPointToShop(_shopId, clearAmount, _purchaseId);
+        uint256 settlementAmount = shopCollection.getSettlementPoint(data.shopId);
+        if (settlementAmount > 0) {
+            uint256 settlementToken = convertPointToToken(settlementAmount);
+            if (tokenBalances[foundationAccount] >= settlementToken) {
+                tokenBalances[clearManagerAccount] += settlementToken;
+                tokenBalances[foundationAccount] -= settlementToken;
+                shopCollection.addSettledPoint(data.shopId, settlementAmount, data.purchaseId);
+                emit ProvidedPointToShop(data.shopId, settlementAmount, settlementToken, data.purchaseId);
+            }
         }
 
-        nonce[_signer]++;
+        nonce[data.account]++;
 
-        emit PaidPoint(_signer, purchaseAmount, purchaseAmount, pointBalances[_signer], _purchaseId, _amount, _shopId);
+        emit PaidPoint(
+            data.account,
+            purchaseAmount,
+            purchaseAmount,
+            pointBalances[data.account],
+            data.purchaseId,
+            data.amount,
+            data.shopId
+        );
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    /// @param _purchaseId 구매 아이디
-    /// @param _amount 구매 금액
-    /// @param _currency 구매 금액의 통화코드
-    /// @param _shopId 구매한 가맹점 아이디
-    /// @param _signer 구매자의 주소
-    /// @param _signature 서명
-    function payToken(
-        string memory _purchaseId,
-        uint256 _amount,
-        string memory _currency,
-        string memory _shopId,
-        address _signer,
-        bytes calldata _signature
-    ) public {
-        bytes32 dataHash = keccak256(abi.encode(_purchaseId, _amount, _currency, _shopId, _signer, nonce[_signer]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _signer, "Invalid signature");
+    function payToken(PaymentData calldata data) public {
+        bytes32 dataHash = keccak256(
+            abi.encode(data.purchaseId, data.amount, data.currency, data.shopId, data.account, nonce[data.account])
+        );
+        require(
+            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account,
+            "Invalid signature"
+        );
 
-        uint256 purchaseAmount = convertCurrencyToPoint(_amount, _currency);
+        uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
         uint256 amountToken = convertPointToToken(purchaseAmount);
-        require(tokenBalances[_signer] >= amountToken, "Insufficient balance");
+        require(tokenBalances[data.account] >= amountToken, "Insufficient balance");
 
-        uint256 lAmount = _amount;
-        string memory lPurchaseId = _purchaseId;
-        string memory lShopId = _shopId;
-        tokenBalances[_signer] -= amountToken;
+        tokenBalances[data.account] -= amountToken;
         tokenBalances[foundationAccount] += amountToken;
-        shopCollection.addUsedPoint(lShopId, purchaseAmount, lPurchaseId);
+        shopCollection.addUsedPoint(data.shopId, purchaseAmount, data.purchaseId);
 
-        uint256 clearAmount = shopCollection.getClearPoint(lShopId);
-        if (clearAmount > 0) {
-            shopCollection.addClearedPoint(lShopId, clearAmount, lPurchaseId);
-            emit ProvidedPointToShop(lShopId, clearAmount, lPurchaseId);
+        uint256 settlementAmount = shopCollection.getSettlementPoint(data.shopId);
+        if (settlementAmount > 0) {
+            uint256 settlementToken = convertPointToToken(settlementAmount);
+            if (tokenBalances[foundationAccount] >= settlementToken) {
+                tokenBalances[clearManagerAccount] += settlementToken;
+                tokenBalances[foundationAccount] -= settlementToken;
+                shopCollection.addSettledPoint(data.shopId, settlementAmount, data.purchaseId);
+                emit ProvidedPointToShop(data.shopId, settlementAmount, settlementToken, data.purchaseId);
+            }
         }
 
-        nonce[_signer]++;
+        nonce[data.account]++;
 
-        emit PaidToken(_signer, amountToken, purchaseAmount, tokenBalances[_signer], lPurchaseId, lAmount, lShopId);
+        emit PaidToken(
+            data.account,
+            amountToken,
+            purchaseAmount,
+            tokenBalances[data.account],
+            data.purchaseId,
+            data.amount,
+            data.shopId
+        );
     }
 
     function convertPointToToken(uint256 amount) internal view returns (uint256) {

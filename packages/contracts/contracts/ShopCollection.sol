@@ -22,7 +22,7 @@ contract ShopCollection {
         bytes32 phone; // 상점주의 전화번호
         uint256 providedPoint; // 제공된 포인트 총량
         uint256 usedPoint; // 사용된 포인트 총량
-        uint256 clearedPoint; // 정산된 포인트 총량
+        uint256 settledPoint; // 정산된 포인트 총량
         ShopStatus status;
     }
 
@@ -43,7 +43,7 @@ contract ShopCollection {
     /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
     event IncreasedUsedPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 정산된 마일리가 증가할 때 발생되는 이벤트
-    event IncreasedClearedPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
+    event IncreasedSettledPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
 
     address public ledgerAddress;
     address public deployer;
@@ -101,7 +101,7 @@ contract ShopCollection {
                 phone: _phone,
                 providedPoint: 0,
                 usedPoint: 0,
-                clearedPoint: 0,
+                settledPoint: 0,
                 status: ShopStatus.ACTIVE
             });
             items.push(_shopId);
@@ -139,19 +139,19 @@ contract ShopCollection {
     }
 
     /// @notice 정산된 총 마일지리를 누적한다
-    function addClearedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
+    function addSettledPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
         if (shops[_shopId].status != ShopStatus.INVALID) {
-            shops[_shopId].clearedPoint += _amount;
-            emit IncreasedClearedPoint(_shopId, _amount, shops[_shopId].clearedPoint, _purchaseId);
+            shops[_shopId].settledPoint += _amount;
+            emit IncreasedSettledPoint(_shopId, _amount, shops[_shopId].settledPoint, _purchaseId);
         }
     }
 
     /// @notice 정산되어야 할 마일지리의 량을 리턴합니다.
-    function getClearPoint(string memory _shopId) public view returns (uint256) {
+    function getSettlementPoint(string memory _shopId) public view returns (uint256) {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             ShopData memory data = shops[_shopId];
-            if (data.providedPoint + data.clearedPoint < data.usedPoint) {
-                return (data.usedPoint - data.providedPoint - data.clearedPoint);
+            if (data.providedPoint + data.settledPoint < data.usedPoint) {
+                return (data.usedPoint - data.providedPoint - data.settledPoint);
             } else {
                 return 0;
             }
