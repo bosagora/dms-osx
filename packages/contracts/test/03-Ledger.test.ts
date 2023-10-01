@@ -159,6 +159,7 @@ describe("Test for Ledger", () => {
             .connect(deployer)
             .deploy(
                 foundation.address,
+                foundation.address,
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
@@ -796,16 +797,14 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payPoint(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex + 1].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payPoint({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex + 1].address,
+                        signature,
+                    })
                 ).to.be.revertedWith("Invalid signature");
             });
 
@@ -832,16 +831,14 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payPoint(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payPoint({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
                 ).to.be.revertedWith("Insufficient balance");
             });
 
@@ -868,16 +865,14 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payPoint(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payPoint({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
                 )
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
@@ -915,16 +910,14 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payToken(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex + 1].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payToken({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex + 1].address,
+                        signature,
+                    })
                 ).to.be.revertedWith("Invalid signature");
             });
 
@@ -951,16 +944,14 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payToken(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payToken({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
                 ).to.be.revertedWith("Insufficient balance");
             });
 
@@ -990,16 +981,14 @@ describe("Test for Ledger", () => {
                 );
 
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payToken(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payToken({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
                 )
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
@@ -1515,16 +1504,14 @@ describe("Test for Ledger", () => {
 
                 const amt = purchaseAmount.mul(shop.providePercent).div(100);
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payPoint(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payPoint({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
                 )
                     .to.emit(ledgerContract, "ProvidedPointToShop")
                     .to.emit(ledgerContract, "PaidPoint")
@@ -1539,7 +1526,7 @@ describe("Test for Ledger", () => {
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo.usedPoint).to.equal(Amount.make(300, 18).value);
-                expect(shopInfo.clearedPoint).to.equal(Amount.make(200, 18).value);
+                expect(shopInfo.settledPoint).to.equal(Amount.make(200, 18).value);
             });
         });
 
@@ -1586,16 +1573,14 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    ledgerContract
-                        .connect(relay)
-                        .payToken(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shop.shopId,
-                            userWallets[purchase.userIndex].address,
-                            signature
-                        )
+                    ledgerContract.connect(relay).payToken({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
                 )
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
@@ -1612,7 +1597,7 @@ describe("Test for Ledger", () => {
                 const shopInfo3 = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo3.providedPoint).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo3.usedPoint).to.equal(Amount.make(500, 18).value);
-                expect(shopInfo3.clearedPoint).to.equal(Amount.make(400, 18).value);
+                expect(shopInfo3.settledPoint).to.equal(Amount.make(400, 18).value);
             });
         });
     });
