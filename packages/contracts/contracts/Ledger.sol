@@ -34,8 +34,8 @@ contract Ledger {
         string currency;
         string shopId;
         uint32 method;
-        address userAccount;
-        bytes32 userPhone;
+        address account;
+        bytes32 phone;
     }
 
     struct PaymentData {
@@ -190,19 +190,19 @@ contract Ledger {
         if (data.method == 0) {
             ShopCollection.ShopData memory shop = shopCollection.shopOf(data.shopId);
             if (shop.status == ShopCollection.ShopStatus.ACTIVE) {
-                if (data.userAccount != address(0x0)) {
+                if (data.account != address(0x0)) {
                     uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
-                    if (pointTypes[data.userAccount] == PointType.POINT) {
-                        providePoint(data.userAccount, point, data.purchaseId, data.shopId);
+                    if (pointTypes[data.account] == PointType.POINT) {
+                        providePoint(data.account, point, data.purchaseId, data.shopId);
                     } else {
-                        provideToken(data.userAccount, point, data.purchaseId, data.shopId);
+                        provideToken(data.account, point, data.purchaseId, data.shopId);
                     }
                     shopCollection.addProvidedPoint(data.shopId, point, data.purchaseId);
-                } else if (data.userPhone != NULL) {
+                } else if (data.phone != NULL) {
                     uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
-                    address account = linkCollection.toAddress(data.userPhone);
+                    address account = linkCollection.toAddress(data.phone);
                     if (account == address(0x00)) {
-                        provideUnPayablePoint(data.userPhone, point, data.purchaseId, data.shopId);
+                        provideUnPayablePoint(data.phone, point, data.purchaseId, data.shopId);
                     } else {
                         if (pointTypes[account] == PointType.POINT) {
                             providePoint(account, point, data.purchaseId, data.shopId);
@@ -222,8 +222,8 @@ contract Ledger {
             data.currency,
             data.shopId,
             data.method,
-            data.userAccount,
-            data.userPhone
+            data.account,
+            data.phone
         );
     }
 
