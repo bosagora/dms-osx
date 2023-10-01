@@ -93,12 +93,22 @@ contract Ledger {
         string purchaseId,
         string shopId
     );
+    /// @notice 사용가능한 포인트로 변환될 때 발생되는 이벤트
+    event ChangedToPayablePoint(
+        bytes32 phone,
+        address account,
+        uint256 changedAmountPoint,
+        uint256 value,
+        uint256 balancePoint
+    );
     /// @notice 포인트가 정산될 때 발생되는 이벤트
     event ProvidedTokenForSettlement(
         address account,
         string shopId,
         uint256 providedAmountPoint,
         uint256 providedAmountToken,
+        uint256 value,
+        uint256 balanceToken,
         string purchaseId
     );
     /// @notice 토큰이 지급될 때 발생되는 이벤트
@@ -270,6 +280,24 @@ contract Ledger {
         emit ProvidedToken(_account, amountToken, _amount, tokenBalances[_account], _purchaseId, _shopId);
     }
 
+    /// @notice 사용가능한 포인트로 전환합니다.
+    /// @dev 중계서버를 통해서 호출됩니다.
+    function changeToPayablePoint(bytes32 _phone, address _account, bytes calldata _signature) public {
+        bytes32 dataHash = keccak256(abi.encode(_phone, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+        address userAddress = linkCollection.toAddress(_phone);
+        require(userAddress != address(0x00), "Unregistered email-address");
+        require(userAddress == _account, "Invalid address");
+        require(unPayablePointBalances[_phone] > 0, "Insufficient balance");
+
+        uint256 amount = unPayablePointBalances[_phone];
+        uint256 value = amount;
+        unPayablePointBalances[_phone] = 0;
+        pointBalances[_account] += amount;
+
+        emit ChangedToPayablePoint(_phone, _account, amount, value, pointBalances[_account]);
+    }
+
     /// @notice 포인트를 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
     function payPoint(PaymentData calldata data) public {
@@ -300,6 +328,8 @@ contract Ledger {
                     data.shopId,
                     settlementAmount,
                     settlementToken,
+                    settlementAmount,
+                    tokenBalances[settlementAccount],
                     data.purchaseId
                 );
             }
@@ -349,6 +379,8 @@ contract Ledger {
                     data.shopId,
                     settlementAmount,
                     settlementToken,
+                    settlementAmount,
+                    tokenBalances[settlementAccount],
                     data.purchaseId
                 );
             }
