@@ -51,7 +51,7 @@ contract Ledger {
     string[] private purchaseIds;
 
     address public foundationAccount;
-    address public clearManagerAccount;
+    address public settlementAccount;
     address public tokenAddress;
     address public validatorAddress;
     address public linkCollectionAddress;
@@ -72,12 +72,20 @@ contract Ledger {
         string currency,
         string shopId,
         uint32 method,
-        address userAccount,
-        bytes32 userPhone
+        address account,
+        bytes32 phone
     );
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedPoint(
         address account,
+        uint256 providedAmountPoint,
+        uint256 value,
+        uint256 balancePoint,
+        string purchaseId,
+        string shopId
+    );
+    /// @notice 포인트가 지급될 때 발생되는 이벤트
+    event ProvidedUnPayablePoint(
         bytes32 phone,
         uint256 providedAmountPoint,
         uint256 value,
@@ -86,7 +94,8 @@ contract Ledger {
         string shopId
     );
     /// @notice 포인트가 정산될 때 발생되는 이벤트
-    event ProvidedPointToShop(
+    event ProvidedTokenForSettlement(
+        address account,
         string shopId,
         uint256 providedAmountPoint,
         uint256 providedAmountToken,
@@ -95,7 +104,6 @@ contract Ledger {
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(
         address account,
-        bytes32 phone,
         uint256 providedAmountToken,
         uint256 value,
         uint256 balanceToken,
@@ -136,7 +144,7 @@ contract Ledger {
     /// @param _shopCollectionAddress 가맹점 컬랙션 컨트랙트의 주소
     constructor(
         address _foundationAccount,
-        address _clearManagerAccount,
+        address _settlementAccount,
         address _tokenAddress,
         address _validatorAddress,
         address _linkCollectionAddress,
@@ -144,7 +152,7 @@ contract Ledger {
         address _shopCollectionAddress
     ) {
         foundationAccount = _foundationAccount;
-        clearManagerAccount = _clearManagerAccount;
+        settlementAccount = _settlementAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;
@@ -175,21 +183,21 @@ contract Ledger {
                 if (data.userAccount != address(0x0)) {
                     uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
                     if (pointTypes[data.userAccount] == PointType.POINT) {
-                        providePoint(data.userAccount, data.userPhone, point, data.purchaseId, data.shopId);
+                        providePoint(data.userAccount, point, data.purchaseId, data.shopId);
                     } else {
-                        provideToken(data.userAccount, data.userPhone, point, data.purchaseId, data.shopId);
+                        provideToken(data.userAccount, point, data.purchaseId, data.shopId);
                     }
                     shopCollection.addProvidedPoint(data.shopId, point, data.purchaseId);
                 } else if (data.userPhone != NULL) {
                     uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
                     address account = linkCollection.toAddress(data.userPhone);
                     if (account == address(0x00)) {
-                        provideUnPayablePoint(account, data.userPhone, point, data.purchaseId, data.shopId);
+                        provideUnPayablePoint(data.userPhone, point, data.purchaseId, data.shopId);
                     } else {
                         if (pointTypes[account] == PointType.POINT) {
-                            providePoint(account, data.userPhone, point, data.purchaseId, data.shopId);
+                            providePoint(account, point, data.purchaseId, data.shopId);
                         } else {
-                            provideToken(account, data.userPhone, point, data.purchaseId, data.shopId);
+                            provideToken(account, point, data.purchaseId, data.shopId);
                         }
                     }
                     shopCollection.addProvidedPoint(data.shopId, point, data.purchaseId);
@@ -212,49 +220,43 @@ contract Ledger {
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
-    /// @param _phone 전화번호 해시
     /// @param _amount 지급할 포인트
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function providePoint(
         address _account,
-        bytes32 _phone,
         uint256 _amount,
         string memory _purchaseId,
         string memory _shopId
     ) internal {
         pointBalances[_account] += _amount;
-        emit ProvidedPoint(_account, _phone, _amount, _amount, pointBalances[_account], _purchaseId, _shopId);
+        emit ProvidedPoint(_account, _amount, _amount, pointBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
-    /// @param _account 사용자의 지갑주소
     /// @param _phone 전화번호 해시
     /// @param _amount 지급할 포인트
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function provideUnPayablePoint(
-        address _account,
         bytes32 _phone,
         uint256 _amount,
         string memory _purchaseId,
         string memory _shopId
     ) internal {
         unPayablePointBalances[_phone] += _amount;
-        emit ProvidedPoint(_account, _phone, _amount, _amount, unPayablePointBalances[_phone], _purchaseId, _shopId);
+        emit ProvidedUnPayablePoint(_phone, _amount, _amount, unPayablePointBalances[_phone], _purchaseId, _shopId);
     }
 
     /// @notice 토큰을 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
-    /// @param _phone 전화번호 해시
     /// @param _amount 지급할 토큰
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function provideToken(
         address _account,
-        bytes32 _phone,
         uint256 _amount,
         string memory _purchaseId,
         string memory _shopId
@@ -265,7 +267,7 @@ contract Ledger {
         tokenBalances[_account] += amountToken;
         tokenBalances[foundationAccount] -= amountToken;
 
-        emit ProvidedToken(_account, _phone, amountToken, _amount, tokenBalances[_account], _purchaseId, _shopId);
+        emit ProvidedToken(_account, amountToken, _amount, tokenBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 구매에 사용하는 함수
@@ -290,10 +292,16 @@ contract Ledger {
         if (settlementAmount > 0) {
             uint256 settlementToken = convertPointToToken(settlementAmount);
             if (tokenBalances[foundationAccount] >= settlementToken) {
-                tokenBalances[clearManagerAccount] += settlementToken;
+                tokenBalances[settlementAccount] += settlementToken;
                 tokenBalances[foundationAccount] -= settlementToken;
                 shopCollection.addSettledPoint(data.shopId, settlementAmount, data.purchaseId);
-                emit ProvidedPointToShop(data.shopId, settlementAmount, settlementToken, data.purchaseId);
+                emit ProvidedTokenForSettlement(
+                    settlementAccount,
+                    data.shopId,
+                    settlementAmount,
+                    settlementToken,
+                    data.purchaseId
+                );
             }
         }
 
@@ -333,10 +341,16 @@ contract Ledger {
         if (settlementAmount > 0) {
             uint256 settlementToken = convertPointToToken(settlementAmount);
             if (tokenBalances[foundationAccount] >= settlementToken) {
-                tokenBalances[clearManagerAccount] += settlementToken;
+                tokenBalances[settlementAccount] += settlementToken;
                 tokenBalances[foundationAccount] -= settlementToken;
                 shopCollection.addSettledPoint(data.shopId, settlementAmount, data.purchaseId);
-                emit ProvidedPointToShop(data.shopId, settlementAmount, settlementToken, data.purchaseId);
+                emit ProvidedTokenForSettlement(
+                    settlementAccount,
+                    data.shopId,
+                    settlementAmount,
+                    settlementToken,
+                    data.purchaseId
+                );
             }
         }
 

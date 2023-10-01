@@ -373,36 +373,69 @@ describe("Test for Ledger", () => {
                         userData[purchase.userIndex].address.trim() !== ""
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
-                    await expect(
-                        ledgerContract.connect(validatorWallets[0]).savePurchase({
-                            purchaseId: purchase.purchaseId,
-                            timestamp: purchase.timestamp,
-                            amount: purchaseAmount,
-                            currency: purchase.currency.toLowerCase(),
-                            shopId: shopData[purchase.shopIndex].shopId,
-                            method: purchase.method,
-                            userAccount,
-                            userPhone: phoneHash,
-                        })
-                    )
-                        .to.emit(ledgerContract, "SavedPurchase")
-                        .withArgs(
-                            purchase.purchaseId,
-                            purchase.timestamp,
-                            purchaseAmount,
-                            purchase.currency.toLowerCase(),
-                            shopData[purchase.shopIndex].shopId,
-                            purchase.method,
-                            userAccount,
-                            phoneHash
+                    if (userAccount !== AddressZero) {
+                        await expect(
+                            ledgerContract.connect(validatorWallets[0]).savePurchase({
+                                purchaseId: purchase.purchaseId,
+                                timestamp: purchase.timestamp,
+                                amount: purchaseAmount,
+                                currency: purchase.currency.toLowerCase(),
+                                shopId: shopData[purchase.shopIndex].shopId,
+                                method: purchase.method,
+                                userAccount,
+                                userPhone: phoneHash,
+                            })
                         )
-                        .emit(ledgerContract, "ProvidedPoint")
-                        .withNamedArgs({
-                            account: userAccount,
-                            providedAmountPoint: amt,
-                            value: amt,
-                            purchaseId: purchase.purchaseId,
-                        });
+                            .to.emit(ledgerContract, "SavedPurchase")
+                            .withArgs(
+                                purchase.purchaseId,
+                                purchase.timestamp,
+                                purchaseAmount,
+                                purchase.currency.toLowerCase(),
+                                shopData[purchase.shopIndex].shopId,
+                                purchase.method,
+                                userAccount,
+                                phoneHash
+                            )
+                            .emit(ledgerContract, "ProvidedPoint")
+                            .withNamedArgs({
+                                account: userAccount,
+                                providedAmountPoint: amt,
+                                value: amt,
+                                purchaseId: purchase.purchaseId,
+                            });
+                    } else {
+                        await expect(
+                            ledgerContract.connect(validatorWallets[0]).savePurchase({
+                                purchaseId: purchase.purchaseId,
+                                timestamp: purchase.timestamp,
+                                amount: purchaseAmount,
+                                currency: purchase.currency.toLowerCase(),
+                                shopId: shopData[purchase.shopIndex].shopId,
+                                method: purchase.method,
+                                userAccount,
+                                userPhone: phoneHash,
+                            })
+                        )
+                            .to.emit(ledgerContract, "SavedPurchase")
+                            .withArgs(
+                                purchase.purchaseId,
+                                purchase.timestamp,
+                                purchaseAmount,
+                                purchase.currency.toLowerCase(),
+                                shopData[purchase.shopIndex].shopId,
+                                purchase.method,
+                                userAccount,
+                                phoneHash
+                            )
+                            .emit(ledgerContract, "ProvidedUnPayablePoint")
+                            .withNamedArgs({
+                                phone: phoneHash,
+                                providedAmountPoint: amt,
+                                value: amt,
+                                purchaseId: purchase.purchaseId,
+                            });
+                    }
                 }
             });
 
@@ -474,7 +507,7 @@ describe("Test for Ledger", () => {
                         userAccount,
                         phoneHash
                     )
-                    .emit(ledgerContract, "ProvidedPoint")
+                    .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
                         providedAmountPoint: pointAmount,
@@ -549,7 +582,7 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: userWallets[3].address,
                         providedAmountPoint: pointAmount,
                         value: pointAmount,
                         purchaseId: purchase.purchaseId,
@@ -619,7 +652,7 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: userWallets[3].address,
                         providedAmountToken: tokenAmount,
                         value: pointAmount,
                         purchaseId: purchase.purchaseId,
@@ -685,7 +718,7 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: userAccount,
                         providedAmountPoint: pointAmount,
                         value: pointAmount,
                         purchaseId: purchase.purchaseId,
@@ -755,7 +788,7 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
-                        phone: phoneHash,
+                        account: userAccount,
                         providedAmountToken: tokenAmount,
                         value: pointAmount,
                         purchaseId: purchase.purchaseId,
@@ -1513,7 +1546,12 @@ describe("Test for Ledger", () => {
                         signature,
                     })
                 )
-                    .to.emit(ledgerContract, "ProvidedPointToShop")
+                    .to.emit(ledgerContract, "ProvidedTokenForSettlement")
+                    .withNamedArgs({
+                        account: foundation.address,
+                        shopId: shop.shopId,
+                        providedAmountPoint: Amount.make(200, 18).value,
+                    })
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
                         account: userWallets[purchase.userIndex].address,
