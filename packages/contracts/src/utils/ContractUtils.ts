@@ -74,17 +74,17 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static async getPaymentMessage(
-        signer: Signer,
+    public static getPaymentMessage(
+        address: string,
         purchaseId: string,
         amount: BigNumberish,
         currency: string,
         shopId: string,
         nonce: BigNumberish
-    ): Promise<Uint8Array> {
+    ): Uint8Array {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["string", "uint256", "string", "string", "address", "uint256"],
-            [purchaseId, amount, currency, shopId, await signer.getAddress(), nonce]
+            [purchaseId, amount, currency, shopId, address, nonce]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
@@ -97,7 +97,27 @@ export class ContractUtils {
         shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const message = await ContractUtils.getPaymentMessage(signer, purchaseId, amount, currency, shopId, nonce);
+        const message = ContractUtils.getPaymentMessage(
+            await signer.getAddress(),
+            purchaseId,
+            amount,
+            currency,
+            shopId,
+            nonce
+        );
+        return signer.signMessage(message);
+    }
+
+    public static getChangePayablePointMessage(phone: string, address: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "address", "uint256"],
+            [phone, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signChangePayablePoint(signer: Signer, phone: string, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getChangePayablePointMessage(phone, await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
 }

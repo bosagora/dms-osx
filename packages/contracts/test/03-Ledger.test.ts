@@ -599,6 +599,30 @@ describe("Test for Ledger", () => {
                 );
             });
 
+            it("Change to payable point", async () => {
+                const userIndex = 3;
+                const oldBalance = await ledgerContract.pointBalanceOf(userWallets[userIndex].address);
+                const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
+                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
+                const signature = ContractUtils.signChangePayablePoint(userWallets[userIndex], phoneHash, nonce);
+                const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                await expect(
+                    ledgerContract
+                        .connect(relay)
+                        .changeToPayablePoint(phoneHash, userWallets[userIndex].address, signature)
+                )
+                    .to.emit(ledgerContract, "ChangedToPayablePoint")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        account: userWallets[userIndex].address,
+                        changedAmountPoint: unPayableAmount,
+                    });
+                expect(await ledgerContract.pointBalanceOf(userWallets[userIndex].address)).to.equal(
+                    oldBalance.add(unPayableAmount)
+                );
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.equal(0);
+            });
+
             it("Change point type (user: 3)", async () => {
                 await ledgerContract.connect(userWallets[3]).setPointType(1);
             });
