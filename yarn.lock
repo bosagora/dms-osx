@@ -3207,10 +3207,10 @@ define-properties@^1.1.2, define-properties@^1.1.3, define-properties@^1.1.4, de
     has-property-descriptors "^1.0.0"
     object-keys "^1.1.1"
 
-del-osx-artifacts@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/del-osx-artifacts/-/del-osx-artifacts-1.1.0.tgz#3b55d806579fd1a6ddcac3f36c1824367f16b5bf"
-  integrity sha512-Yl9ya4N8XF1GTGJ4cN1oJ2dEexI/nIaloRt65HPJ8TapFQJKbS4bNrvBHmBvBNVhvrQt76FFm/4YDSNnWKWR+Q==
+del-osx-artifacts@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/del-osx-artifacts/-/del-osx-artifacts-1.1.1.tgz#957b1e60b4962ec7e593ed2a9086ad6782cd9010"
+  integrity sha512-Nu81E0ESTil0EpewX9qQDWaT4epjwhHCxNhLYnBGKu+lqDFQYsTfjw6EdY26yAv1zJPq5bTc+ZvZxy/arfsgDg==
 
 delay@^5.0.0:
   version "5.0.0"
