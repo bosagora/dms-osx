@@ -19,7 +19,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, foundation, settlements } = await getNamedAccounts();
+    const { deployer, foundation, settlements, validator1 } = await getNamedAccounts();
 
     const linkCollectionContractAddress = await getEmailLinkCollectionContractAddress("EmailLinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
@@ -80,7 +80,10 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             await tx8.wait();
 
             if (user.pointType === 1) {
-                const tx9 = await ledgerContract.connect(signer).setPointType(1);
+                const pointType = 1;
+                const nonce = await ledgerContract.nonceOf(user.address);
+                const signature = ContractUtils.signPointType(signer, pointType, nonce);
+                const tx9 = await ledgerContract.connect(validator1).setPointType(pointType, user.address, signature);
                 console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
                 await tx9.wait();
             }

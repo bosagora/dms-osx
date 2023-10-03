@@ -1,3 +1,12 @@
+type ChangedPointType @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  pointType: Int! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
 type ChangedToPayablePoint @entity(immutable: true) {
   id: Bytes!
   phone: Bytes! # bytes32

@@ -144,6 +144,8 @@ contract Ledger {
     event Deposited(address account, uint256 depositAmount, uint256 value, uint256 balanceToken);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
     event Withdrawn(address account, uint256 withdrawAmount, uint256 value, uint256 balanceToken);
+    /// @notice 구매 후 적립되는 포인트의 종류 (0: 포인트, 1: 토큰)
+    event ChangedPointType(address account, PointType pointType);
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
@@ -294,6 +296,8 @@ contract Ledger {
         uint256 value = amount;
         unPayablePointBalances[_phone] = 0;
         pointBalances[_account] += amount;
+
+        nonce[_account]++;
 
         emit ChangedToPayablePoint(_phone, _account, amount, value, pointBalances[_account]);
     }
@@ -491,9 +495,16 @@ contract Ledger {
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
-    /// @param _type 0: 포인트, 1: 토큰
-    function setPointType(PointType _type) public {
-        require(PointType.POINT <= _type && _type <= PointType.TOKEN);
-        pointTypes[msg.sender] = _type;
+    /// @param _pointType 0: 포인트, 1: 토큰
+    /// @param _account 지갑주소
+    /// @param _signature 서명
+    function setPointType(PointType _pointType, address _account, bytes calldata _signature) public {
+        require(PointType.POINT <= _pointType && _pointType <= PointType.TOKEN);
+        bytes32 dataHash = keccak256(abi.encode(_pointType, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+
+        pointTypes[_account] = _pointType;
+        nonce[_account]++;
+        emit ChangedPointType(_account, _pointType);
     }
 }

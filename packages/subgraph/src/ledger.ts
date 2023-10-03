@@ -1,4 +1,5 @@
 import {
+    ChangedPointType as ChangedPointTypeEvent,
     ChangedToPayablePoint as ChangedToPayablePointEvent,
     Deposited as DepositedEvent,
     PaidPoint as PaidPointEvent,
@@ -11,6 +12,7 @@ import {
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
 import {
+    ChangedPointType,
     ChangedToPayablePoint,
     Deposited,
     PaidPoint,
@@ -27,6 +29,18 @@ import {
 } from "../generated/schema";
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { AmountUnit, NullAccount } from "./utils";
+
+export function handleChangedPointType(event: ChangedPointTypeEvent): void {
+    let entity = new ChangedPointType(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.account = event.params.account;
+    entity.pointType = event.params.pointType;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+}
 
 export function handleChangedToPayablePoint(event: ChangedToPayablePointEvent): void {
     let entity = new ChangedToPayablePoint(event.transaction.hash.concatI32(event.logIndex.toI32()));
