@@ -139,4 +139,17 @@ export class ContractUtils {
         const message = ContractUtils.getChangePayablePointMessage(phone, await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
+
+    public static getPointTypeMessage(type: BigNumberish, address: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "address", "uint256"],
+            [type, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signPointType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getPointTypeMessage(type, await signer.getAddress(), nonce);
+        return signer.signMessage(message);
+    }
 }

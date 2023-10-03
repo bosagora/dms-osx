@@ -624,7 +624,15 @@ describe("Test for Ledger", () => {
             });
 
             it("Change point type (user: 3)", async () => {
-                await ledgerContract.connect(userWallets[3]).setPointType(1);
+                const userIndex = 3;
+                const pointType = 1;
+                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
+                const signature = ContractUtils.signPointType(userWallets[userIndex], pointType, nonce);
+                await expect(
+                    ledgerContract.connect(relay).setPointType(pointType, userWallets[userIndex].address, signature)
+                )
+                    .to.emit(ledgerContract, "ChangedPointType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, pointType });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 3, point type : 1)", async () => {
@@ -760,7 +768,15 @@ describe("Test for Ledger", () => {
             });
 
             it("Change point type (user: 1)", async () => {
-                await ledgerContract.connect(userWallets[1]).setPointType(1);
+                const userIndex = 1;
+                const pointType = 1;
+                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
+                const signature = ContractUtils.signPointType(userWallets[userIndex], pointType, nonce);
+                await expect(
+                    ledgerContract.connect(relay).setPointType(pointType, userWallets[userIndex].address, signature)
+                )
+                    .to.emit(ledgerContract, "ChangedPointType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, pointType });
             });
 
             it("Save Purchase Data - (user: 1, point type : 1)", async () => {

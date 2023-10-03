@@ -10,6 +10,28 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
+export class ChangedPointType extends ethereum.Event {
+  get params(): ChangedPointType__Params {
+    return new ChangedPointType__Params(this);
+  }
+}
+
+export class ChangedPointType__Params {
+  _event: ChangedPointType;
+
+  constructor(event: ChangedPointType) {
+    this._event = event;
+  }
+
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get pointType(): i32 {
+    return this._event.parameters[1].value.toI32();
+  }
+}
+
 export class ChangedToPayablePoint extends ethereum.Event {
   get params(): ChangedToPayablePoint__Params {
     return new ChangedToPayablePoint__Params(this);
@@ -1137,8 +1159,16 @@ export class SetPointTypeCall__Inputs {
     this._call = call;
   }
 
-  get _type(): i32 {
+  get _pointType(): i32 {
     return this._call.inputValues[0].value.toI32();
+  }
+
+  get _account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
   }
 }
 
