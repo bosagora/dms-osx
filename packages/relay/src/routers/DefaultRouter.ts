@@ -222,6 +222,21 @@ export class DefaultRouter {
             ],
             this.setPointType.bind(this)
         );
+
+        // 사용가능한 포인트로 전환
+        this.app.post(
+            "/changeToPayablePoint",
+            [
+                body("phone")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("account").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.changeToPayablePoint.bind(this)
+        );
     }
 
     private async getHealthStatus(req: express.Request, res: express.Response) {
@@ -342,6 +357,7 @@ export class DefaultRouter {
             this.releaseRelaySigner(signerItem);
         }
     }
+
     /**
      * 포인트의 종류를 선택한다.
      * POST /setPointType
@@ -378,6 +394,59 @@ export class DefaultRouter {
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
                 .setPointType(pointType, account, signature);
+
+            logger.http(`TxHash(setPointType): `, tx.hash);
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed change point type";
+            logger.error(`POST /setPointType :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 포인트의 종류를 선택한다.
+     * POST /changeToPayablePoint
+     * @private
+     */
+    private async changeToPayablePoint(req: express.Request, res: express.Response) {
+        logger.http(`POST /changeToPayablePoint`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const phone: string = String(req.body.phone);
+            const account: string = String(req.body.account); // 구매자의 주소
+            const signature: string = String(req.body.signature); // 서명
+
+            // 서명검증
+            const userNonce = await (await this.getLedgerContract()).nonceOf(account);
+            if (!ContractUtils.verifyChangePayablePoint(phone, account, userNonce, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
+
+            const tx = await (await this.getLedgerContract())
+                .connect(signerItem.signer)
+                .changeToPayablePoint(phone, account, signature);
 
             logger.http(`TxHash(setPointType): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));

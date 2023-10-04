@@ -19,7 +19,7 @@ import * as path from "path";
 import { URL } from "url";
 
 import * as assert from "assert";
-import { BigNumber } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
@@ -207,6 +207,7 @@ describe("Test of Server", function () {
 
     interface IUserData {
         phone: string;
+        wallet: Wallet;
         address: string;
         privateKey: string;
     }
@@ -214,16 +215,19 @@ describe("Test of Server", function () {
     const userData: IUserData[] = [
         {
             phone: "08201012341001",
+            wallet: users[0],
             address: users[0].address,
             privateKey: users[0].privateKey,
         },
         {
             phone: "08201012341002",
+            wallet: users[1],
             address: users[1].address,
             privateKey: users[1].privateKey,
         },
         {
             phone: "08201012341003",
+            wallet: users[2],
             address: users[2].address,
             privateKey: users[2].privateKey,
         },
@@ -563,6 +567,162 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
+            });
+        });
+    });
+
+    context("Test token & point relay endpoints - using phone", () => {
+        before("Deploy", async () => {
+            await deployAllContract();
+        });
+
+        before("Prepare Token", async () => {
+            for (const elem of users) {
+                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
+            }
+        });
+
+        before("Create Config", async () => {
+            config = new Config();
+            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+            config.contracts.tokenAddress = tokenContract.address;
+            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.ledgerAddress = ledgerContract.address;
+
+            config.relay.managerKeys = [
+                relay1.privateKey,
+                relay2.privateKey,
+                relay3.privateKey,
+                relay4.privateKey,
+                relay5.privateKey,
+            ];
+        });
+
+        before("Create TestServer", async () => {
+            serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
+            server = new TestServer(config);
+        });
+
+        before("Start TestServer", async () => {
+            await server.start();
+        });
+
+        after("Stop TestServer", async () => {
+            await server.stop();
+        });
+
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
+                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
+                    await expect(
+                        shopCollection
+                            .connect(validator1)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
+                    )
+                        .to.emit(shopCollection, "AddedShop")
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
+                }
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+            });
+        });
+
+        context("Save Purchase Data", () => {
+            const userIndex = 0;
+            const purchase: IPurchaseData = {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex,
+            };
+
+            it("Save Purchase Data", async () => {
+                const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
+                const userAccount = AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+                await expect(
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withNamedArgs({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
+                    .emit(ledgerContract, "ProvidedUnPayablePoint")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        providedAmountPoint: pointAmount,
+                        value: pointAmount,
+                        balancePoint: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
+                    });
+            });
+
+            it("Link phone and wallet address", async () => {
+                const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
+                const nonce = await linkCollectionContract.nonceOf(userData[userIndex].address);
+                const signature = await ContractUtils.signRequestHash(userData[userIndex].wallet, phoneHash, nonce);
+                const requestId = ContractUtils.getRequestId(phoneHash, userData[userIndex].address, nonce);
+                await expect(
+                    linkCollectionContract
+                        .connect(relay1)
+                        .addRequest(requestId, phoneHash, userData[userIndex].address, signature)
+                )
+                    .to.emit(linkCollectionContract, "AddedRequestItem")
+                    .withArgs(requestId, phoneHash, userData[userIndex].address);
+                await linkCollectionContract.connect(linkValidators[0]).voteRequest(requestId);
+                await linkCollectionContract.connect(linkValidators[0]).countVote(requestId);
+            });
+
+            it("Change to payable point", async () => {
+                const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
+                const payableBalance = await ledgerContract.pointBalanceOf(userData[userIndex].address);
+                const unPayableBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+
+                const nonce = await ledgerContract.nonceOf(userData[userIndex].address);
+                const signature = await ContractUtils.signChangePayablePoint(
+                    userData[userIndex].wallet,
+                    phoneHash,
+                    nonce
+                );
+
+                const uri = URI(serverURL).directory("changeToPayablePoint");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    phone: phoneHash,
+                    account: users[userIndex].address,
+                    signature,
+                });
+
+                expect(response.data.code).to.equal(200);
+                expect(response.data.data).to.not.equal(undefined);
+                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
+
+                expect(await ledgerContract.pointBalanceOf(userData[userIndex].address)).to.equal(
+                    payableBalance.add(unPayableBalance)
+                );
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.equal(0);
             });
         });
     });

@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import { BigNumberish, ethers, Signer } from "ethers";
+import { BigNumberish, BytesLike, ethers, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
@@ -85,13 +85,28 @@ export class ContractUtils {
         return hre.ethers.utils.keccak256(encodedResult);
     }
 
-    public static async sign(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
-        const encodedResult = ethers.utils.defaultAbiCoder.encode(
+    public static getRequestHash(hash: string, address: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256"],
-            [hash, await signer.getAddress(), nonce]
+            [hash, address, nonce]
         );
-        const message = arrayify(ethers.utils.keccak256(encodedResult));
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signRequestHash(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getRequestHash(hash, await signer.getAddress(), nonce);
         return signer.signMessage(message);
+    }
+
+    public static verifyRequestHash(address: string, hash: string, nonce: BigNumberish, signature: string): boolean {
+        const message = ContractUtils.getRequestHash(hash, address, nonce);
+        let res: string;
+        try {
+            res = hre.ethers.utils.verifyMessage(message, signature);
+        } catch (error) {
+            return false;
+        }
+        return res.toLowerCase() === address.toLowerCase();
     }
 
     public static getPaymentMessage(
@@ -135,7 +150,7 @@ export class ContractUtils {
         shopId: string,
         account: string,
         nonce: BigNumberish,
-        signature: string
+        signature: BytesLike
     ): boolean {
         const message = ContractUtils.getPaymentMessage(account, purchaseId, amount, currency, shopId, nonce);
         let res: string;
@@ -167,6 +182,35 @@ export class ContractUtils {
         signature: string
     ): boolean {
         const message = ContractUtils.getPointTypeMessage(type, account, nonce);
+        let res: string;
+        try {
+            res = ethers.utils.verifyMessage(message, signature);
+        } catch (error) {
+            return false;
+        }
+        return res.toLowerCase() === account.toLowerCase();
+    }
+
+    public static getChangePayablePointMessage(phone: BytesLike, address: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "address", "uint256"],
+            [phone, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signChangePayablePoint(signer: Signer, phone: BytesLike, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getChangePayablePointMessage(phone, await signer.getAddress(), nonce);
+        return signer.signMessage(message);
+    }
+
+    public static verifyChangePayablePoint(
+        phone: BytesLike,
+        account: string,
+        nonce: BigNumberish,
+        signature: BytesLike
+    ): boolean {
+        const message = ContractUtils.getChangePayablePointMessage(phone, account, nonce);
         let res: string;
         try {
             res = ethers.utils.verifyMessage(message, signature);
