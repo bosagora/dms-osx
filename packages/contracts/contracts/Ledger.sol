@@ -250,8 +250,8 @@ contract Ledger {
     function providePoint(
         address _account,
         uint256 _amount,
-        string memory _purchaseId,
-        string memory _shopId
+        string calldata _purchaseId,
+        string calldata _shopId
     ) internal {
         pointBalances[_account] += _amount;
         emit ProvidedPoint(_account, _amount, _amount, pointBalances[_account], _purchaseId, _shopId);
@@ -266,8 +266,8 @@ contract Ledger {
     function provideUnPayablePoint(
         bytes32 _phone,
         uint256 _amount,
-        string memory _purchaseId,
-        string memory _shopId
+        string calldata _purchaseId,
+        string calldata _shopId
     ) internal {
         unPayablePointBalances[_phone] += _amount;
         emit ProvidedUnPayablePoint(_phone, _amount, _amount, unPayablePointBalances[_phone], _purchaseId, _shopId);
@@ -282,8 +282,8 @@ contract Ledger {
     function provideToken(
         address _account,
         uint256 _amount,
-        string memory _purchaseId,
-        string memory _shopId
+        string calldata _purchaseId,
+        string calldata _shopId
     ) internal {
         uint256 amountToken = convertPointToToken(_amount);
 
@@ -504,7 +504,7 @@ contract Ledger {
 
     /// @notice 구매 데이터를 리턴한다
     /// @param _purchaseId 구매 아이디
-    function purchaseOf(string memory _purchaseId) public view returns (PurchaseData memory) {
+    function purchaseOf(string calldata _purchaseId) public view returns (PurchaseData memory) {
         return purchases[_purchaseId];
     }
 
