@@ -940,6 +940,7 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
+                const feeAmount = purchaseAmount.mul(await ledgerContract.fee()).div(100);
                 await expect(
                     ledgerContract.connect(relay).payPoint({
                         purchaseId: purchase.purchaseId,
@@ -955,6 +956,8 @@ describe("Test for Ledger", () => {
                         account: userWallets[purchase.userIndex].address,
                         paidAmountPoint: purchaseAmount,
                         value: purchaseAmount,
+                        fee: feeAmount,
+                        feeValue: feeAmount,
                         purchaseId: purchase.purchaseId,
                         purchaseAmount,
                         shopId: shop.shopId,
@@ -1055,6 +1058,8 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
+                const feeAmount = purchaseAmount.mul(await ledgerContract.fee()).div(100);
+                const feeToken = feeAmount.mul(multiple).div(price);
 
                 await expect(
                     ledgerContract.connect(relay).payToken({
@@ -1071,6 +1076,8 @@ describe("Test for Ledger", () => {
                         account: userWallets[purchase.userIndex].address,
                         paidAmountToken: tokenAmount,
                         value: purchaseAmount,
+                        fee: feeToken,
+                        feeValue: feeAmount,
                         purchaseId: purchase.purchaseId,
                         purchaseAmount,
                         shopId: shop.shopId,
