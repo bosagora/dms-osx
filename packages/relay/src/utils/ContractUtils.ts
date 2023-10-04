@@ -26,6 +26,16 @@ export class ContractUtils {
         return Buffer.from(hex.substring(start), "hex");
     }
 
+    public static getTimeStamp(): number {
+        return Math.floor(new Date().getTime() / 1000);
+    }
+
+    public static delay(interval: number): Promise<void> {
+        return new Promise<void>((resolve, _) => {
+            setTimeout(resolve, interval);
+        });
+    }
+
     public static getPhoneHash(phone: string): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["string", "string"],
@@ -123,27 +133,46 @@ export class ContractUtils {
         amount: BigNumberish,
         currency: string,
         shopId: string,
-        signerAddress: string,
+        account: string,
         nonce: BigNumberish,
         signature: string
     ): boolean {
-        const message = ContractUtils.getPaymentMessage(signerAddress, purchaseId, amount, currency, shopId, nonce);
+        const message = ContractUtils.getPaymentMessage(account, purchaseId, amount, currency, shopId, nonce);
         let res: string;
         try {
             res = ethers.utils.verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
-        return res.toLowerCase() === signerAddress.toLowerCase();
+        return res.toLowerCase() === account.toLowerCase();
     }
 
-    public static getTimeStamp(): number {
-        return Math.floor(new Date().getTime() / 1000);
+    public static getPointTypeMessage(type: BigNumberish, account: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "address", "uint256"],
+            [type, account, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static delay(interval: number): Promise<void> {
-        return new Promise<void>((resolve, _) => {
-            setTimeout(resolve, interval);
-        });
+    public static async signPointType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getPointTypeMessage(type, await signer.getAddress(), nonce);
+        return signer.signMessage(message);
+    }
+
+    public static verifyPointType(
+        type: BigNumberish,
+        account: string,
+        nonce: BigNumberish,
+        signature: string
+    ): boolean {
+        const message = ContractUtils.getPointTypeMessage(type, account, nonce);
+        let res: string;
+        try {
+            res = ethers.utils.verifyMessage(message, signature);
+        } catch (error) {
+            return false;
+        }
+        return res.toLowerCase() === account.toLowerCase();
     }
 }
