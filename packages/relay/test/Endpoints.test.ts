@@ -349,6 +349,38 @@ describe("Test of Server", function () {
             });
         });
 
+        context("Change point type", () => {
+            it("Check point type - before", async () => {
+                const userIndex = 0;
+                const pointType = await ledgerContract.pointTypeOf(users[userIndex].address);
+                expect(pointType).to.equal(0);
+            });
+
+            it("Send point type", async () => {
+                const pointType = 1;
+                const userIndex = 0;
+                const nonce = await ledgerContract.nonceOf(users[userIndex].address);
+                const signature = await ContractUtils.signPointType(users[userIndex], pointType, nonce);
+                const uri = URI(serverURL).directory("setPointType");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    pointType,
+                    account: users[userIndex].address,
+                    signature,
+                });
+
+                expect(response.data.code).to.equal(200);
+                expect(response.data.data).to.not.equal(undefined);
+                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
+            });
+
+            it("Check point type - after", async () => {
+                const userIndex = 0;
+                const pointType = await ledgerContract.pointTypeOf(users[userIndex].address);
+                expect(pointType).to.equal(1);
+            });
+        });
+
         context("payPoint & payToken", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
@@ -391,7 +423,7 @@ describe("Test of Server", function () {
                     amount: over_purchaseAmount.toString(),
                     currency: purchase.currency,
                     shopId: shop.shopId,
-                    signer: users[purchase.userIndex].address,
+                    account: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -417,7 +449,7 @@ describe("Test of Server", function () {
                     amount: purchaseAmount.toString(),
                     currency: purchase.currency,
                     shopId: shop.shopId,
-                    signer: users[purchase.userIndex].address,
+                    account: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -443,7 +475,7 @@ describe("Test of Server", function () {
                     amount: purchaseAmount.toString(),
                     currency: purchase.currency,
                     shopId: shop.shopId,
-                    signer: users[purchase.userIndex].address,
+                    account: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -472,7 +504,7 @@ describe("Test of Server", function () {
                     amount: over_purchaseAmount.toString(),
                     currency: purchase.currency,
                     shopId: shop.shopId,
-                    signer: users[purchase.userIndex].address,
+                    account: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -498,7 +530,7 @@ describe("Test of Server", function () {
                     amount: purchaseAmount.toString(),
                     currency: purchase.currency,
                     shopId: shop.shopId,
-                    signer: users[purchase.userIndex].address,
+                    account: users[purchase.userIndex].address,
                     signature,
                 });
 
@@ -524,7 +556,7 @@ describe("Test of Server", function () {
                     amount: purchaseAmount.toString(),
                     currency: purchase.currency,
                     shopId: shop.shopId,
-                    signer: users[purchase.userIndex].address,
+                    account: users[purchase.userIndex].address,
                     signature,
                 });
 

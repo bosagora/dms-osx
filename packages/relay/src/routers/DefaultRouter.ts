@@ -186,7 +186,7 @@ export class DefaultRouter {
                 body("amount").custom(Validation.isAmount),
                 body("currency").exists(),
                 body("shopId").exists(),
-                body("signer").exists().isEthereumAddress(),
+                body("account").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
@@ -202,12 +202,25 @@ export class DefaultRouter {
                 body("amount").custom(Validation.isAmount),
                 body("currency").exists(),
                 body("shopId").exists(),
-                body("signer").exists().isEthereumAddress(),
+                body("account").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.payToken.bind(this)
+        );
+
+        // 포인트의 종류를 선택하는 기능
+        this.app.post(
+            "/setPointType",
+            [
+                body("pointType").exists().isIn(["0", "1"]),
+                body("account").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.setPointType.bind(this)
         );
     }
 
@@ -239,14 +252,14 @@ export class DefaultRouter {
             const amount: string = String(req.body.amount); // 구매 금액
             const currency: string = String(req.body.currency).toLowerCase(); // 구매한 금액 통화코드
             const shopId: string = String(req.body.shopId); // 구매한 가맹점 아이디
-            const signer: string = String(req.body.signer); // 구매자의 주소
+            const account: string = String(req.body.account); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
 
             // TODO amount > 0 조건 검사
 
             // 서명검증
-            const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
-            if (!ContractUtils.verifyPayment(purchaseId, amount, currency, shopId, signer, userNonce, signature))
+            const userNonce = await (await this.getLedgerContract()).nonceOf(account);
+            if (!ContractUtils.verifyPayment(purchaseId, amount, currency, shopId, account, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -255,7 +268,7 @@ export class DefaultRouter {
 
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .payPoint({ purchaseId, amount, currency, shopId, account: signer, signature });
+                .payPoint({ purchaseId, amount, currency, shopId, account, signature });
 
             logger.http(`TxHash(payPoint): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
@@ -297,13 +310,13 @@ export class DefaultRouter {
             const amount: string = String(req.body.amount); // 구매 금액
             const currency: string = String(req.body.currency).toLowerCase(); // 구매한 금액 통화코드
             const shopId: string = String(req.body.shopId); // 구매한 가맹점 아이디
-            const signer: string = String(req.body.signer); // 구매자의 주소
+            const account: string = String(req.body.account); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
 
             // TODO amount > 0 조건 검사
             // 서명검증
-            const userNonce = await (await this.getLedgerContract()).nonceOf(signer);
-            if (!ContractUtils.verifyPayment(purchaseId, amount, currency, shopId, signer, userNonce, signature))
+            const userNonce = await (await this.getLedgerContract()).nonceOf(account);
+            if (!ContractUtils.verifyPayment(purchaseId, amount, currency, shopId, account, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -312,7 +325,7 @@ export class DefaultRouter {
 
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .payToken({ purchaseId, amount, currency, shopId, account: signer, signature });
+                .payToken({ purchaseId, amount, currency, shopId, account, signature });
 
             logger.http(`TxHash(payToken): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
@@ -320,6 +333,58 @@ export class DefaultRouter {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed pay token";
             logger.error(`POST /payToken :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+    /**
+     * 포인트의 종류를 선택한다.
+     * POST /setPointType
+     * @private
+     */
+    private async setPointType(req: express.Request, res: express.Response) {
+        logger.http(`POST /setPointType`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const pointType: number = Number(req.body.pointType);
+            const account: string = String(req.body.account); // 구매자의 주소
+            const signature: string = String(req.body.signature); // 서명
+
+            // 서명검증
+            const userNonce = await (await this.getLedgerContract()).nonceOf(account);
+            if (!ContractUtils.verifyPointType(pointType, account, userNonce, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
+
+            const tx = await (await this.getLedgerContract())
+                .connect(signerItem.signer)
+                .setPointType(pointType, account, signature);
+
+            logger.http(`TxHash(setPointType): `, tx.hash);
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed change point type";
+            logger.error(`POST /setPointType :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
