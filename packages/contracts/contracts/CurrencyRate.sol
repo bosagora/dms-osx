@@ -31,7 +31,7 @@ contract CurrencyRate {
     /// @notice 통화에 대한 가격을 저장한다.
     /// @param _currency 통화명
     /// @param _price 토큰의 가격
-    function set(string memory _currency, uint256 _price) public onlyValidator(msg.sender) {
+    function set(string calldata _currency, uint256 _price) public onlyValidator(msg.sender) {
         prices[_currency] = _price;
 
         emit SetPrice(_currency, _price);
@@ -39,7 +39,7 @@ contract CurrencyRate {
 
     /// @notice 통화에 대한 가격을 제공한다.
     /// @param _currency 통화명
-    function get(string memory _currency) public view returns (uint256) {
+    function get(string calldata _currency) public view returns (uint256) {
         return prices[_currency];
     }
 }

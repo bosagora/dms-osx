@@ -107,7 +107,7 @@ contract ShopCollection {
     /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
     /// @param _providePercent 구매금액에 대한 포인트 지급량
     function add(
-        string memory _shopId,
+        string calldata _shopId,
         uint256 _provideWaitTime,
         uint256 _providePercent,
         bytes32 _phone
@@ -115,7 +115,7 @@ contract ShopCollection {
         _add(_shopId, _provideWaitTime, _providePercent, _phone);
     }
 
-    function _add(string memory _shopId, uint256 _provideWaitTime, uint256 _providePercent, bytes32 _phone) internal {
+    function _add(string calldata _shopId, uint256 _provideWaitTime, uint256 _providePercent, bytes32 _phone) internal {
         require(_phone != NULL, "Invalid phone");
 
         if (shops[_shopId].status == ShopStatus.INVALID) {
@@ -150,7 +150,7 @@ contract ShopCollection {
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
-    function addProvidedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
+    function addProvidedPoint(string calldata _shopId, uint256 _amount, string calldata _purchaseId) public onlyLedger {
         if (shops[_shopId].status != ShopStatus.INVALID) {
             shops[_shopId].providedPoint += _amount;
             emit IncreasedProvidedPoint(_shopId, _amount, shops[_shopId].providedPoint, _purchaseId);
@@ -158,7 +158,7 @@ contract ShopCollection {
     }
 
     /// @notice 사용된 총 마일지리를 누적한다
-    function addUsedPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
+    function addUsedPoint(string calldata _shopId, uint256 _amount, string calldata _purchaseId) public onlyLedger {
         if (shops[_shopId].status != ShopStatus.INVALID) {
             shops[_shopId].usedPoint += _amount;
             emit IncreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId);
@@ -166,7 +166,7 @@ contract ShopCollection {
     }
 
     /// @notice 정산된 총 마일지리를 누적한다
-    function addSettledPoint(string memory _shopId, uint256 _amount, string memory _purchaseId) public onlyLedger {
+    function addSettledPoint(string calldata _shopId, uint256 _amount, string calldata _purchaseId) public onlyLedger {
         if (shops[_shopId].status != ShopStatus.INVALID) {
             shops[_shopId].settledPoint += _amount;
             emit IncreasedSettledPoint(_shopId, _amount, shops[_shopId].settledPoint, _purchaseId);
@@ -174,7 +174,7 @@ contract ShopCollection {
     }
 
     /// @notice 정산되어야 할 마일지리의 량을 리턴합니다.
-    function getSettlementPoint(string memory _shopId) public view returns (uint256) {
+    function getSettlementPoint(string calldata _shopId) public view returns (uint256) {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             ShopData memory data = shops[_shopId];
             if (data.providedPoint + data.settledPoint < data.usedPoint) {
@@ -189,7 +189,7 @@ contract ShopCollection {
 
     /// @notice 상점 데이터를 리턴한다
     /// @param _shopId 상점의 아이디
-    function shopOf(string memory _shopId) public view returns (ShopData memory) {
+    function shopOf(string calldata _shopId) public view returns (ShopData memory) {
         return shops[_shopId];
     }
 
@@ -212,7 +212,7 @@ contract ShopCollection {
 
     /// @notice 인출가능한 정산금액을 리턴한다.
     /// @param _shopId 상점의 아이디
-    function withdrawableOf(string memory _shopId) public view returns (uint256) {
+    function withdrawableOf(string calldata _shopId) public view returns (uint256) {
         ShopData memory shop = shops[_shopId];
         return shop.settledPoint - shop.withdrawnPoint;
     }
