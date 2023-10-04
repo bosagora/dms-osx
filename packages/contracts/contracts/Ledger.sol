@@ -52,6 +52,7 @@ contract Ledger {
 
     address public foundationAccount;
     address public settlementAccount;
+    address public feeAccount;
     address public tokenAddress;
     address public validatorAddress;
     address public linkCollectionAddress;
@@ -149,6 +150,8 @@ contract Ledger {
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
+    /// @param _settlementAccount 정산금 계정
+    /// @param _feeAccount 수수료 계정
     /// @param _tokenAddress 토큰 컨트랙트의 주소
     /// @param _validatorAddress 검증자 컬랙션 컨트랙트의 주소
     /// @param _linkCollectionAddress 전화번호-지갑주소 링크 컨트랙트의 주소
@@ -157,6 +160,7 @@ contract Ledger {
     constructor(
         address _foundationAccount,
         address _settlementAccount,
+        address _feeAccount,
         address _tokenAddress,
         address _validatorAddress,
         address _linkCollectionAddress,
@@ -165,6 +169,7 @@ contract Ledger {
     ) {
         foundationAccount = _foundationAccount;
         settlementAccount = _settlementAccount;
+        feeAccount = _feeAccount;
         tokenAddress = _tokenAddress;
         validatorAddress = _validatorAddress;
         linkCollectionAddress = _linkCollectionAddress;

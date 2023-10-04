@@ -122,6 +122,13 @@ function getAccounts() {
         accounts.push(process.env.SETTLEMENTS);
     }
 
+    if (process.env.FEE !== undefined && process.env.FEE.trim() !== "" && reg_bytes64.test(process.env.FEE)) {
+        accounts.push(process.env.FEE);
+    } else {
+        process.env.FEE = Wallet.createRandom().privateKey;
+        accounts.push(process.env.FEE);
+    }
+
     if (
         process.env.LINK_VALIDATOR1 !== undefined &&
         process.env.LINK_VALIDATOR1.trim() !== "" &&
@@ -249,14 +256,17 @@ const config = {
         settlements: {
             default: 8,
         },
-        linkValidator1: {
+        fee: {
             default: 9,
         },
-        linkValidator2: {
+        linkValidator1: {
             default: 10,
         },
-        linkValidator3: {
+        linkValidator2: {
             default: 11,
+        },
+        linkValidator3: {
+            default: 12,
         },
     },
     gasReporter: {
