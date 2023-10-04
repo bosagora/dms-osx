@@ -52,6 +52,8 @@ describe("Test for Ledger", () => {
     const [
         deployer,
         foundation,
+        settlements,
+        fee,
         validator1,
         validator2,
         validator3,
@@ -159,7 +161,8 @@ describe("Test for Ledger", () => {
             .connect(deployer)
             .deploy(
                 foundation.address,
-                foundation.address,
+                settlements.address,
+                fee.address,
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
@@ -1588,7 +1591,7 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(ledgerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
-                        account: foundation.address,
+                        account: settlements.address,
                         shopId: shop.shopId,
                         providedAmountPoint: Amount.make(200, 18).value,
                     })
@@ -1650,6 +1653,7 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
+
                 await expect(
                     ledgerContract.connect(relay).payToken({
                         purchaseId: purchase.purchaseId,
@@ -1669,13 +1673,15 @@ describe("Test for Ledger", () => {
                         purchaseAmount,
                         shopId: shop.shopId,
                     });
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
-                    oldFoundationTokenBalance.add(tokenAmount)
+                const shopInfo2 = await shopCollection.shopOf(shop.shopId);
+                expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo2.usedPoint).to.equal(Amount.make(500, 18).value);
+                expect(shopInfo2.settledPoint).to.equal(Amount.make(400, 18).value);
+
+                const settledToken = shopInfo2.settledPoint.mul(multiple).div(price);
+                expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
+                    oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
                 );
-                const shopInfo3 = await shopCollection.shopOf(shop.shopId);
-                expect(shopInfo3.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(shopInfo3.usedPoint).to.equal(Amount.make(500, 18).value);
-                expect(shopInfo3.settledPoint).to.equal(Amount.make(400, 18).value);
             });
         });
     });
