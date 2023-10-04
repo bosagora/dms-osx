@@ -15,6 +15,7 @@ contract Ledger {
     bytes32 public constant NULL = 0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c;
     bytes32 public constant BASE_CURRENCY = keccak256(bytes("krw"));
     bytes32 public constant NULL_CURRENCY = keccak256(bytes(""));
+    uint32 public constant MAX_FEE = 5;
 
     mapping(bytes32 => uint256) private unPayablePointBalances;
     mapping(address => uint256) private pointBalances;
@@ -58,6 +59,7 @@ contract Ledger {
     address public linkCollectionAddress;
     address public currencyRateAddress;
     address public shopCollectionAddress;
+    uint32 public fee;
 
     ERC20 private token;
     ValidatorCollection private validatorCollection;
@@ -126,6 +128,8 @@ contract Ledger {
         address account,
         uint256 paidAmountPoint,
         uint256 value,
+        uint256 fee,
+        uint256 feeValue,
         uint256 balancePoint,
         string purchaseId,
         uint256 purchaseAmount,
@@ -136,6 +140,8 @@ contract Ledger {
         address account,
         uint256 paidAmountToken,
         uint256 value,
+        uint256 fee,
+        uint256 feeValue,
         uint256 balanceToken,
         string purchaseId,
         uint256 purchaseAmount,
@@ -181,6 +187,7 @@ contract Ledger {
         linkCollection = PhoneLinkCollection(_linkCollectionAddress);
         currencyRate = CurrencyRate(_currencyRateAddress);
         shopCollection = ShopCollection(_shopCollectionAddress);
+        fee = MAX_FEE;
     }
 
     modifier onlyValidator(address _account) {
@@ -309,7 +316,8 @@ contract Ledger {
 
     /// @notice 포인트를 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    function payPoint(PaymentData calldata data) public {
+    function payPoint(PaymentData calldata _data) public {
+        PaymentData memory data = _data;
         bytes32 dataHash = keccak256(
             abi.encode(data.purchaseId, data.amount, data.currency, data.shopId, data.account, nonce[data.account])
         );
@@ -319,10 +327,18 @@ contract Ledger {
         );
 
         uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 feeAmount = convertCurrencyToPoint(data.amount * fee / 100, data.currency);
+        uint256 feeToken = convertPointToToken(feeAmount);
 
-        require(pointBalances[data.account] >= purchaseAmount, "Insufficient balance");
+        require(pointBalances[data.account] >= purchaseAmount + feeAmount, "Insufficient balance");
+        require(tokenBalances[foundationAccount] >= feeToken, "Insufficient foundation balance");
 
-        pointBalances[data.account] -= purchaseAmount;
+        pointBalances[data.account] -= (purchaseAmount + feeAmount);
+
+        // 재단의 토큰으로 교환해 지급한다.
+        tokenBalances[foundationAccount] -= feeToken;
+        tokenBalances[feeAccount] += feeToken;
+
         shopCollection.addUsedPoint(data.shopId, purchaseAmount, data.purchaseId);
 
         uint256 settlementAmount = shopCollection.getSettlementPoint(data.shopId);
@@ -350,6 +366,8 @@ contract Ledger {
             data.account,
             purchaseAmount,
             purchaseAmount,
+            feeAmount,
+            feeAmount,
             pointBalances[data.account],
             data.purchaseId,
             data.amount,
@@ -359,7 +377,8 @@ contract Ledger {
 
     /// @notice 토큰을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    function payToken(PaymentData calldata data) public {
+    function payToken(PaymentData calldata _data) public {
+        PaymentData memory data = _data;
         bytes32 dataHash = keccak256(
             abi.encode(data.purchaseId, data.amount, data.currency, data.shopId, data.account, nonce[data.account])
         );
@@ -369,11 +388,16 @@ contract Ledger {
         );
 
         uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 feeAmount = convertCurrencyToPoint(data.amount * fee / 100, data.currency);
         uint256 amountToken = convertPointToToken(purchaseAmount);
-        require(tokenBalances[data.account] >= amountToken, "Insufficient balance");
+        uint256 feeToken = convertPointToToken(feeAmount);
 
-        tokenBalances[data.account] -= amountToken;
+        require(tokenBalances[data.account] >= amountToken + feeToken, "Insufficient balance");
+
+        tokenBalances[data.account] -= (amountToken + feeToken);
         tokenBalances[foundationAccount] += amountToken;
+        tokenBalances[feeAccount] += feeToken;
+
         shopCollection.addUsedPoint(data.shopId, purchaseAmount, data.purchaseId);
 
         uint256 settlementAmount = shopCollection.getSettlementPoint(data.shopId);
@@ -401,6 +425,8 @@ contract Ledger {
             data.account,
             amountToken,
             purchaseAmount,
+            feeToken,
+            feeAmount,
             tokenBalances[data.account],
             data.purchaseId,
             data.amount,
@@ -504,12 +530,20 @@ contract Ledger {
     /// @param _account 지갑주소
     /// @param _signature 서명
     function setPointType(PointType _pointType, address _account, bytes calldata _signature) public {
-        require(PointType.POINT <= _pointType && _pointType <= PointType.TOKEN);
+        require(PointType.POINT <= _pointType && _pointType <= PointType.TOKEN, "Invalid value");
         bytes32 dataHash = keccak256(abi.encode(_pointType, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
         pointTypes[_account] = _pointType;
         nonce[_account]++;
         emit ChangedPointType(_account, _pointType);
+    }
+
+    /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.
+    /// @param _fee % 단위 입니다.
+    function setFee(uint32 _fee) public {
+        require(_fee <= MAX_FEE, "Invalid value");
+        require(msg.sender == feeAccount, "Invalid sender");
+        fee = _fee;
     }
 }
