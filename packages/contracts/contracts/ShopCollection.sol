@@ -2,12 +2,26 @@
 
 pragma solidity ^0.8.0;
 
+import "del-osx-artifacts/contracts/PhoneLinkCollection.sol";
 import "./ValidatorCollection.sol";
 
 /// @notice 상점컬랙션
 contract ShopCollection {
     /// @notice Hash value of a blank string
     bytes32 public constant NULL = 0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c;
+
+    /// @notice 검증자의 상태코드
+    enum WithdrawStatus {
+        CLOSE,
+        OPEN
+    }
+
+    struct WithdrawData {
+        uint256 amount;
+        address account;
+        WithdrawStatus status;
+    }
+
     /// @notice 검증자의 상태코드
     enum ShopStatus {
         INVALID,
@@ -23,7 +37,9 @@ contract ShopCollection {
         uint256 providedPoint; // 제공된 포인트 총량
         uint256 usedPoint; // 사용된 포인트 총량
         uint256 settledPoint; // 정산된 포인트 총량
+        uint256 withdrawnPoint; // 정산된 포인트 총량
         ShopStatus status;
+        WithdrawData withdrawData;
     }
 
     mapping(string => ShopData) private shops;
@@ -32,7 +48,10 @@ contract ShopCollection {
     string[] private items;
 
     address public validatorAddress;
+    address public linkCollectionAddress;
+
     ValidatorCollection private validatorCollection;
+    PhoneLinkCollection private linkCollection;
 
     /// @notice 상점이 추가될 때 발생되는 이벤트
     event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent, bytes32 phone);
@@ -45,15 +64,21 @@ contract ShopCollection {
     /// @notice 정산된 마일리가 증가할 때 발생되는 이벤트
     event IncreasedSettledPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
 
+    event OpenedWithdrawal(string shopId, uint256 amount, address account);
+    event ClosedWithdrawal(string shopId, uint256 amount, address account);
+
     address public ledgerAddress;
     address public deployer;
 
     /// @notice 생성자
     /// @param _validatorAddress 검증자컬랙션의 주소
-    constructor(address _validatorAddress) {
+    constructor(address _validatorAddress, address _linkCollectionAddress) {
         validatorAddress = _validatorAddress;
+        linkCollectionAddress = _linkCollectionAddress;
 
         validatorCollection = ValidatorCollection(_validatorAddress);
+        linkCollection = PhoneLinkCollection(_linkCollectionAddress);
+
         ledgerAddress = address(0x00);
         deployer = msg.sender;
     }
@@ -102,7 +127,9 @@ contract ShopCollection {
                 providedPoint: 0,
                 usedPoint: 0,
                 settledPoint: 0,
-                status: ShopStatus.ACTIVE
+                withdrawnPoint: 0,
+                status: ShopStatus.ACTIVE,
+                withdrawData: WithdrawData({ amount: 0, account: address(0x0), status: WithdrawStatus.CLOSE })
             });
             items.push(_shopId);
             shops[_shopId] = data;
@@ -181,5 +208,51 @@ contract ShopCollection {
     /// @notice 상점의 갯수를 리턴한다
     function shopsLength() public view returns (uint256) {
         return items.length;
+    }
+
+    /// @notice 인출가능한 정산금액을 리턴한다.
+    /// @param _shopId 상점의 아이디
+    function withdrawableOf(string memory _shopId) public view returns (uint256) {
+        ShopData memory shop = shops[_shopId];
+        return shop.settledPoint - shop.withdrawnPoint;
+    }
+
+    /// @notice 정산금의 인출을 요청한다. 상점주인만이 실행가능
+    /// @param _shopId 상점아이디
+    /// @param _amount 인출금
+    function openWithdrawal(string calldata _shopId, uint256 _amount) public {
+        ShopData memory shop = shops[_shopId];
+
+        bytes32 phone = linkCollection.toPhone(msg.sender);
+        require(phone != bytes32(0x00), "Unregistered phone-address");
+        require(shop.phone == phone, "Invalid address");
+
+        require(_amount <= shop.settledPoint - shop.withdrawnPoint, "Insufficient withdrawal amount");
+        require(shop.withdrawData.status == WithdrawStatus.CLOSE, "Already opened");
+
+        shops[_shopId].withdrawData.account = msg.sender;
+        shops[_shopId].withdrawData.amount = _amount;
+        shops[_shopId].withdrawData.status = WithdrawStatus.OPEN;
+
+        emit OpenedWithdrawal(_shopId, _amount, msg.sender);
+    }
+
+    /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
+    /// @param _shopId 상점아이디
+    /// @param _amount 인출금
+    function closeWithdrawal(string calldata _shopId, uint256 _amount) public {
+        ShopData memory shop = shops[_shopId];
+
+        bytes32 phone = linkCollection.toPhone(msg.sender);
+        require(phone != bytes32(0x00), "Unregistered phone-address");
+        require(shop.phone == phone, "Invalid address");
+
+        require(shop.withdrawData.status == WithdrawStatus.OPEN, "Not opened");
+        require(shop.withdrawData.amount == _amount, "Inconsistent amount");
+
+        shops[_shopId].withdrawData.status = WithdrawStatus.CLOSE;
+        shops[_shopId].withdrawnPoint += shop.withdrawData.amount;
+
+        emit ClosedWithdrawal(_shopId, _amount, msg.sender);
     }
 }
