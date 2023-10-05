@@ -2,14 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "del-osx-artifacts/contracts/PhoneLinkCollection.sol";
 import "./ValidatorCollection.sol";
 
 /// @notice 상점컬랙션
 contract ShopCollection {
-    /// @notice Hash value of a blank string
-    bytes32 public constant NULL = 0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c;
-
     /// @notice 검증자의 상태코드
     enum WithdrawStatus {
         CLOSE,
@@ -33,7 +29,7 @@ contract ShopCollection {
         string shopId; // 상점 아이디
         uint256 provideWaitTime; // 제품구매 후 포인트 지급시간
         uint256 providePercent; // 구매금액에 대한 포인트 지급량
-        bytes32 phone; // 상점주의 전화번호
+        address account; // 상점주의 지갑주소
         uint256 providedPoint; // 제공된 포인트 총량
         uint256 usedPoint; // 사용된 포인트 총량
         uint256 settledPoint; // 정산된 포인트 총량
@@ -43,20 +39,15 @@ contract ShopCollection {
     }
 
     mapping(string => ShopData) private shops;
-    mapping(bytes32 => ShopData) private shopsByPhone;
 
     string[] private items;
 
     address public validatorAddress;
-    address public linkCollectionAddress;
 
     ValidatorCollection private validatorCollection;
-    PhoneLinkCollection private linkCollection;
 
     /// @notice 상점이 추가될 때 발생되는 이벤트
-    event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent, bytes32 phone);
-    /// @notice 상점의 정보가 업데이트 때 발생되는 이벤트
-    event UpdatedShop(string shopId, uint256 provideWaitTime, uint256 providePercent, bytes32 phone);
+    event AddedShop(string shopId, uint256 provideWaitTime, uint256 providePercent, address account);
     /// @notice 상점의 포인트가 증가할 때 발생되는 이벤트
     event IncreasedProvidedPoint(string shopId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
@@ -72,12 +63,10 @@ contract ShopCollection {
 
     /// @notice 생성자
     /// @param _validatorAddress 검증자컬랙션의 주소
-    constructor(address _validatorAddress, address _linkCollectionAddress) {
+    constructor(address _validatorAddress) {
         validatorAddress = _validatorAddress;
-        linkCollectionAddress = _linkCollectionAddress;
 
         validatorCollection = ValidatorCollection(_validatorAddress);
-        linkCollection = PhoneLinkCollection(_linkCollectionAddress);
 
         ledgerAddress = address(0x00);
         deployer = msg.sender;
@@ -110,43 +99,35 @@ contract ShopCollection {
         string calldata _shopId,
         uint256 _provideWaitTime,
         uint256 _providePercent,
-        bytes32 _phone
+        address _account
     ) public onlyValidator(msg.sender) {
-        _add(_shopId, _provideWaitTime, _providePercent, _phone);
+        _add(_shopId, _provideWaitTime, _providePercent, _account);
     }
 
-    function _add(string calldata _shopId, uint256 _provideWaitTime, uint256 _providePercent, bytes32 _phone) internal {
-        require(_phone != NULL, "Invalid phone");
+    function _add(
+        string calldata _shopId,
+        uint256 _provideWaitTime,
+        uint256 _providePercent,
+        address _account
+    ) internal {
+        require(_account != address(0x0), "Invalid address");
+        require(shops[_shopId].status == ShopStatus.INVALID, "Invalid shopId");
 
-        if (shops[_shopId].status == ShopStatus.INVALID) {
-            ShopData memory data = ShopData({
-                shopId: _shopId,
-                provideWaitTime: _provideWaitTime,
-                providePercent: _providePercent,
-                phone: _phone,
-                providedPoint: 0,
-                usedPoint: 0,
-                settledPoint: 0,
-                withdrawnPoint: 0,
-                status: ShopStatus.ACTIVE,
-                withdrawData: WithdrawData({ amount: 0, account: address(0x0), status: WithdrawStatus.CLOSE })
-            });
-            items.push(_shopId);
-            shops[_shopId] = data;
-            shopsByPhone[_phone] = data;
-            emit AddedShop(_shopId, _provideWaitTime, _providePercent, _phone);
-        } else {
-            shops[_shopId].provideWaitTime = _provideWaitTime;
-            shops[_shopId].providePercent = _providePercent;
-            if (shops[_shopId].phone != _phone) {
-                shops[_shopId].phone = _phone;
-                ShopData memory data = shops[_shopId];
-                bytes32 oldPhone = shops[_shopId].phone;
-                delete shopsByPhone[oldPhone];
-                shopsByPhone[_phone] = data;
-            }
-            emit UpdatedShop(_shopId, _provideWaitTime, _providePercent, _phone);
-        }
+        ShopData memory data = ShopData({
+            shopId: _shopId,
+            provideWaitTime: _provideWaitTime,
+            providePercent: _providePercent,
+            account: _account,
+            providedPoint: 0,
+            usedPoint: 0,
+            settledPoint: 0,
+            withdrawnPoint: 0,
+            status: ShopStatus.ACTIVE,
+            withdrawData: WithdrawData({ amount: 0, account: address(0x0), status: WithdrawStatus.CLOSE })
+        });
+        items.push(_shopId);
+        shops[_shopId] = data;
+        emit AddedShop(_shopId, _provideWaitTime, _providePercent, _account);
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
@@ -193,12 +174,6 @@ contract ShopCollection {
         return shops[_shopId];
     }
 
-    /// @notice 상점 데이터를 리턴한다
-    /// @param _phone 상점의 전화번호
-    function shopByPhoneOf(bytes32 _phone) public view returns (ShopData memory) {
-        return shopsByPhone[_phone];
-    }
-
     /// @notice 상점의 아이디를 리턴한다
     /// @param _idx 배열의 순번
     function shopIdOf(uint256 _idx) public view returns (string memory) {
@@ -223,9 +198,7 @@ contract ShopCollection {
     function openWithdrawal(string calldata _shopId, uint256 _amount) public {
         ShopData memory shop = shops[_shopId];
 
-        bytes32 phone = linkCollection.toPhone(msg.sender);
-        require(phone != bytes32(0x00), "Unregistered phone-address");
-        require(shop.phone == phone, "Invalid address");
+        require(shop.account == msg.sender, "Invalid address");
 
         require(_amount <= shop.settledPoint - shop.withdrawnPoint, "Insufficient withdrawal amount");
         require(shop.withdrawData.status == WithdrawStatus.CLOSE, "Already opened");
@@ -239,20 +212,16 @@ contract ShopCollection {
 
     /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
     /// @param _shopId 상점아이디
-    /// @param _amount 인출금
-    function closeWithdrawal(string calldata _shopId, uint256 _amount) public {
+    function closeWithdrawal(string calldata _shopId) public {
         ShopData memory shop = shops[_shopId];
 
-        bytes32 phone = linkCollection.toPhone(msg.sender);
-        require(phone != bytes32(0x00), "Unregistered phone-address");
-        require(shop.phone == phone, "Invalid address");
+        require(shop.account == msg.sender, "Invalid address");
 
         require(shop.withdrawData.status == WithdrawStatus.OPEN, "Not opened");
-        require(shop.withdrawData.amount == _amount, "Inconsistent amount");
 
         shops[_shopId].withdrawData.status = WithdrawStatus.CLOSE;
         shops[_shopId].withdrawnPoint += shop.withdrawData.amount;
 
-        emit ClosedWithdrawal(_shopId, _amount, msg.sender);
+        emit ClosedWithdrawal(_shopId, shops[_shopId].withdrawData.amount, msg.sender);
     }
 }
