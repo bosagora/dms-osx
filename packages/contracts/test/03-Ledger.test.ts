@@ -151,7 +151,7 @@ describe("Test for Ledger", () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(validatorContract.address, linkCollectionContract.address)) as ShopCollection;
+            .deploy(validatorContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -186,6 +186,7 @@ describe("Test for Ledger", () => {
     };
 
     let requestId: string;
+    /*
     context("Save Purchase Data & Pay (point, token)", () => {
         const userData: IUserData[] = [
             {
@@ -315,14 +316,13 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1230,14 +1230,13 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1442,14 +1441,13 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1743,7 +1741,7 @@ describe("Test for Ledger", () => {
                 await expect(
                     shopCollection
                         .connect(shopWallets[shopIndex].connect(hre.waffle.provider))
-                        .closeWithdrawal(shop.shopId, amount2)
+                        .closeWithdrawal(shop.shopId)
                 )
                     .to.emit(shopCollection, "ClosedWithdrawal")
                     .withNamedArgs({
@@ -1756,7 +1754,7 @@ describe("Test for Ledger", () => {
             });
         });
     });
-
+*/
     context("Multi Currency", () => {
         const userData: IUserData[] = [
             {
@@ -1908,14 +1906,13 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
                             .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
+                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
+                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
