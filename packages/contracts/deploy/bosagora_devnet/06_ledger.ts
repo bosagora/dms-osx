@@ -6,8 +6,12 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Amount } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import { Ledger, ShopCollection, Token } from "../../typechain-types";
-import { getContractAddress, getEmailLinkCollectionContractAddress } from "../helpers";
+import { Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
+import {
+    getContractAddress,
+    getEmailLinkCollectionContractAddress,
+    getPhoneLinkCollectionContractAddress,
+} from "../helpers";
 
 import { Wallet } from "ethers";
 
@@ -19,7 +23,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, foundation, settlements, validator1 } = await getNamedAccounts();
+    const { deployer, foundation, settlements, fee, validator1, linkValidator1, linkValidator2, linkValidator3 } =
+        await getNamedAccounts();
 
     const linkCollectionContractAddress = await getEmailLinkCollectionContractAddress("EmailLinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
@@ -32,6 +37,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         args: [
             foundation,
             settlements,
+            fee,
             tokenContractAddress,
             validatorContractAddress,
             linkCollectionContractAddress,
@@ -65,27 +71,76 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         console.log(`Deposit foundation's amount (tx: ${tx3.hash})...`);
         await tx3.wait();
 
+        const linkCollectionContract = (await ethers.getContractAt(
+            "PhoneLinkCollection",
+            linkCollectionContractAddress
+        )) as PhoneLinkCollection;
+
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
+        let idx = 0;
+        for (const user of users) {
+            if (++idx % 2 === 1) continue;
+            const userAccount = ContractUtils.getPhoneHash(user.phone);
+            if ((await linkCollectionContract.toAddress(userAccount)) !== user.address) {
+                const userNonce = await linkCollectionContract.nonceOf(user.address);
+                const userSignature = await ContractUtils.signRequestHash(
+                    new Wallet(user.privateKey),
+                    userAccount,
+                    userNonce
+                );
+                const reqId2 = ContractUtils.getRequestId(userAccount, user.address, userNonce);
+                const tx4 = await linkCollectionContract
+                    .connect(await ethers.getSigner(linkValidator1))
+                    .addRequest(reqId2, userAccount, user.address, userSignature);
+                console.log(`Add phone-address of user (tx: ${tx4.hash})...`);
+                await tx4.wait();
+
+                const tx5 = await linkCollectionContract
+                    .connect(await ethers.getSigner(linkValidator1))
+                    .voteRequest(reqId2);
+                console.log(`Vote of validator1 (tx: ${tx5.hash})...`);
+                await tx5.wait();
+
+                const tx6 = await linkCollectionContract
+                    .connect(await ethers.getSigner(linkValidator2))
+                    .voteRequest(reqId2);
+                console.log(`Vote of validator2 (tx: ${tx6.hash})...`);
+                await tx6.wait();
+
+                const tx7 = await linkCollectionContract
+                    .connect(await ethers.getSigner(linkValidator1))
+                    .countVote(reqId2);
+                console.log(`Count of vote (tx: ${tx7.hash})...`);
+                await tx7.wait();
+
+                if ((await linkCollectionContract.toAddress(userAccount)) === user.address) {
+                    console.log(`Success ${user.address}`);
+                } else {
+                    console.log(`Fail ${user.address}`);
+                }
+            }
+        }
+
         for (const user of users) {
             const balance = await tokenContract.balanceOf(user.address);
 
             const depositAmount = balance.div(2);
             const signer = new Wallet(user.privateKey).connect(ethers.provider);
-            const tx7 = await tokenContract.connect(signer).approve(ledgerContract.address, depositAmount);
-            console.log(`Approve user's amount (tx: ${tx7.hash})...`);
-            await tx7.wait();
-
-            const tx8 = await ledgerContract.connect(signer).deposit(depositAmount);
-            console.log(`Deposit user's amount (tx: ${tx8.hash})...`);
+            const tx8 = await tokenContract.connect(signer).approve(ledgerContract.address, depositAmount);
+            console.log(`Approve user's amount (tx: ${tx8.hash})...`);
             await tx8.wait();
+
+            const tx9 = await ledgerContract.connect(signer).deposit(depositAmount);
+            console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
+            await tx9.wait();
 
             if (user.pointType === 1) {
                 const pointType = 1;
                 const nonce = await ledgerContract.nonceOf(user.address);
                 const signature = ContractUtils.signPointType(signer, pointType, nonce);
-                const tx9 = await ledgerContract.connect(validator1).setPointType(pointType, user.address, signature);
-                console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
-                await tx9.wait();
+                const tx10 = await ledgerContract.connect(validator1).setPointType(pointType, user.address, signature);
+                console.log(`Deposit user's amount (tx: ${tx10.hash})...`);
+                await tx10.wait();
             }
         }
     }

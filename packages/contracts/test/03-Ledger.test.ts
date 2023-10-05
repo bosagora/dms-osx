@@ -16,7 +16,7 @@ import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
-import { BigNumber } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import * as hre from "hardhat";
 
 import { AddressZero } from "@ethersproject/constants";
@@ -35,10 +35,10 @@ interface IPurchaseData {
 
 interface IShopData {
     shopId: string;
+    name: string;
     provideWaitTime: number;
     providePercent: number;
-    phone: string;
-    account: string;
+    wallet: Wallet;
 }
 
 interface IUserData {
@@ -149,12 +149,11 @@ describe("Test for Ledger", () => {
 
     const deployShopCollection = async () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory
-            .connect(deployer)
-            .deploy(validatorContract.address)) as ShopCollection;
+        shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
+
     const deployLedger = async () => {
         const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
         ledgerContract = (await ledgerFactory
@@ -186,7 +185,6 @@ describe("Test for Ledger", () => {
     };
 
     let requestId: string;
-    /*
     context("Save Purchase Data & Pay (point, token)", () => {
         const userData: IUserData[] = [
             {
@@ -266,48 +264,54 @@ describe("Test for Ledger", () => {
 
         const shopData: IShopData[] = [
             {
-                shopId: "F000100",
+                shopId: "",
+                name: "Shop1",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201020001000",
-                account: shopWallets[0].address,
+                wallet: shopWallets[0],
             },
             {
-                shopId: "F000200",
+                shopId: "",
+                name: "Shop2",
                 provideWaitTime: 0,
                 providePercent: 6,
-                phone: "08201020001001",
-                account: shopWallets[1].address,
+                wallet: shopWallets[1],
             },
             {
-                shopId: "F000300",
+                shopId: "",
+                name: "Shop3",
                 provideWaitTime: 0,
                 providePercent: 7,
-                phone: "08201020001002",
-                account: shopWallets[2].address,
+                wallet: shopWallets[2],
             },
             {
-                shopId: "F000400",
+                shopId: "",
+                name: "Shop4",
                 provideWaitTime: 0,
                 providePercent: 8,
-                phone: "08201020001003",
-                account: shopWallets[3].address,
+                wallet: shopWallets[3],
             },
             {
-                shopId: "F000500",
+                shopId: "",
+                name: "Shop5",
                 provideWaitTime: 0,
                 providePercent: 9,
-                phone: "08201020001004",
-                account: shopWallets[4].address,
+                wallet: shopWallets[4],
             },
             {
-                shopId: "F000600",
+                shopId: "",
+                name: "Shop6",
                 provideWaitTime: 0,
                 providePercent: 10,
-                phone: "08201020001005",
-                account: shopWallets[5].address,
+                wallet: shopWallets[5],
             },
         ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
 
         before("Deploy", async () => {
             await deployAllContract();
@@ -318,11 +322,17 @@ describe("Test for Ledger", () => {
                 for (const elem of shopData) {
                     await expect(
                         shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .connect(elem.wallet)
+                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1174,48 +1184,54 @@ describe("Test for Ledger", () => {
 
         const shopData: IShopData[] = [
             {
-                shopId: "F000100",
+                shopId: "",
+                name: "Shop1",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201020001000",
-                account: shopWallets[0].address,
+                wallet: shopWallets[0],
             },
             {
-                shopId: "F000200",
+                shopId: "",
+                name: "Shop2",
                 provideWaitTime: 0,
                 providePercent: 6,
-                phone: "08201020001001",
-                account: shopWallets[1].address,
+                wallet: shopWallets[1],
             },
             {
-                shopId: "F000300",
+                shopId: "",
+                name: "Shop3",
                 provideWaitTime: 0,
                 providePercent: 7,
-                phone: "08201020001002",
-                account: shopWallets[2].address,
+                wallet: shopWallets[2],
             },
             {
-                shopId: "F000400",
+                shopId: "",
+                name: "Shop4",
                 provideWaitTime: 0,
                 providePercent: 8,
-                phone: "08201020001003",
-                account: shopWallets[3].address,
+                wallet: shopWallets[3],
             },
             {
-                shopId: "F000500",
+                shopId: "",
+                name: "Shop5",
                 provideWaitTime: 0,
                 providePercent: 9,
-                phone: "08201020001004",
-                account: shopWallets[4].address,
+                wallet: shopWallets[4],
             },
             {
-                shopId: "F000600",
+                shopId: "",
+                name: "Shop6",
                 provideWaitTime: 0,
                 providePercent: 10,
-                phone: "08201020001005",
-                account: shopWallets[5].address,
+                wallet: shopWallets[5],
             },
         ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
 
         before("Deploy", async () => {
             await deployAllContract();
@@ -1232,11 +1248,17 @@ describe("Test for Ledger", () => {
                 for (const elem of shopData) {
                     await expect(
                         shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .connect(elem.wallet)
+                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1386,47 +1408,53 @@ describe("Test for Ledger", () => {
         const shopData: IShopData[] = [
             {
                 shopId: "F000100",
+                name: "Shop1",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001000",
-                account: shopWallets[0].address,
+                wallet: shopWallets[0],
             },
             {
                 shopId: "F000200",
+                name: "Shop2",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001001",
-                account: shopWallets[1].address,
+                wallet: shopWallets[1],
             },
             {
                 shopId: "F000300",
+                name: "Shop3",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001002",
-                account: shopWallets[2].address,
+                wallet: shopWallets[2],
             },
             {
                 shopId: "F000400",
+                name: "Shop4",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001003",
-                account: shopWallets[3].address,
+                wallet: shopWallets[3],
             },
             {
                 shopId: "F000500",
+                name: "Shop5",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001004",
-                account: shopWallets[4].address,
+                wallet: shopWallets[4],
             },
             {
                 shopId: "F000600",
+                name: "Shop6",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001005",
-                account: shopWallets[5].address,
+                wallet: shopWallets[5],
             },
         ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
 
         before("Deploy", async () => {
             await deployAllContract();
@@ -1443,11 +1471,17 @@ describe("Test for Ledger", () => {
                 for (const elem of shopData) {
                     await expect(
                         shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .connect(elem.wallet)
+                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });
@@ -1705,26 +1739,10 @@ describe("Test for Ledger", () => {
                 expect(withdrawalAmount).to.equal(amount2);
             });
 
-            it("Link phone-wallet of the shop", async () => {
-                const nonce = await linkCollectionContract.nonceOf(shopWallets[shopIndex].address);
-                const phoneHash = ContractUtils.getPhoneHash(shop.phone);
-                const signature = await ContractUtils.signRequestHash(shopWallets[shopIndex], phoneHash, nonce);
-                requestId = ContractUtils.getRequestId(phoneHash, shopWallets[shopIndex].address, nonce);
-                await expect(
-                    linkCollectionContract
-                        .connect(relay)
-                        .addRequest(requestId, phoneHash, shopWallets[shopIndex].address, signature)
-                )
-                    .to.emit(linkCollectionContract, "AddedRequestItem")
-                    .withArgs(requestId, phoneHash, shopWallets[shopIndex].address);
-                await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                await linkCollectionContract.connect(validator1).countVote(requestId);
-            });
-
             it("Open Withdrawal", async () => {
                 await expect(
                     shopCollection
-                        .connect(shopWallets[shopIndex].connect(hre.waffle.provider))
+                        .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
                         .openWithdrawal(shop.shopId, amount2)
                 )
                     .to.emit(shopCollection, "OpenedWithdrawal")
@@ -1740,7 +1758,7 @@ describe("Test for Ledger", () => {
             it("Close Withdrawal", async () => {
                 await expect(
                     shopCollection
-                        .connect(shopWallets[shopIndex].connect(hre.waffle.provider))
+                        .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
                         .closeWithdrawal(shop.shopId)
                 )
                     .to.emit(shopCollection, "ClosedWithdrawal")
@@ -1754,7 +1772,7 @@ describe("Test for Ledger", () => {
             });
         });
     });
-*/
+
     context("Multi Currency", () => {
         const userData: IUserData[] = [
             {
@@ -1844,47 +1862,53 @@ describe("Test for Ledger", () => {
         const shopData: IShopData[] = [
             {
                 shopId: "F000100",
+                name: "Shop1",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001000",
-                account: shopWallets[0].address,
+                wallet: shopWallets[0],
             },
             {
                 shopId: "F000200",
+                name: "Shop2",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001001",
-                account: shopWallets[1].address,
+                wallet: shopWallets[1],
             },
             {
                 shopId: "F000300",
+                name: "Shop3",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001002",
-                account: shopWallets[2].address,
+                wallet: shopWallets[2],
             },
             {
                 shopId: "F000400",
+                name: "Shop4",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001003",
-                account: shopWallets[3].address,
+                wallet: shopWallets[3],
             },
             {
                 shopId: "F000500",
+                name: "Shop5",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001004",
-                account: shopWallets[4].address,
+                wallet: shopWallets[4],
             },
             {
                 shopId: "F000600",
+                name: "Shop6",
                 provideWaitTime: 0,
                 providePercent: 1,
-                phone: "08201020001005",
-                account: shopWallets[5].address,
+                wallet: shopWallets[5],
             },
         ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
 
         before("Deploy", async () => {
             await deployAllContract();
@@ -1908,33 +1932,19 @@ describe("Test for Ledger", () => {
                 for (const elem of shopData) {
                     await expect(
                         shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                            .connect(elem.wallet)
+                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-            });
-
-            it("Link phone-wallet of shops", async () => {
-                for (let idx = 0; idx < shopData.length; idx++) {
-                    const shop = shopData[idx];
-                    const wallet = shopWallets[idx];
-                    const nonce = await linkCollectionContract.nonceOf(wallet.address);
-                    const phoneHash = ContractUtils.getPhoneHash(shop.phone);
-                    const signature = await ContractUtils.signRequestHash(wallet, phoneHash, nonce);
-                    requestId = ContractUtils.getRequestId(phoneHash, wallet.address, nonce);
-                    await expect(
-                        linkCollectionContract
-                            .connect(relay)
-                            .addRequest(requestId, phoneHash, wallet.address, signature)
-                    )
-                        .to.emit(linkCollectionContract, "AddedRequestItem")
-                        .withArgs(requestId, phoneHash, wallet.address);
-                    await linkCollectionContract.connect(validator1).voteRequest(requestId);
-                    await linkCollectionContract.connect(validator1).countVote(requestId);
-                }
             });
         });
 

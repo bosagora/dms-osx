@@ -130,7 +130,6 @@ contract ValidatorCollection {
         return items.length;
     }
 
-
     function isActiveValidator(address _account) public view returns (bool) {
         ValidatorData memory item = validators[_account];
 

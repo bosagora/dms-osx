@@ -121,20 +121,28 @@ export class PaidPoint__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get balancePoint(): BigInt {
+  get fee(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get purchaseId(): string {
-    return this._event.parameters[4].value.toString();
+  get feeValue(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
   }
 
-  get purchaseAmount(): BigInt {
+  get balancePoint(): BigInt {
     return this._event.parameters[5].value.toBigInt();
   }
 
-  get shopId(): string {
+  get purchaseId(): string {
     return this._event.parameters[6].value.toString();
+  }
+
+  get purchaseAmount(): BigInt {
+    return this._event.parameters[7].value.toBigInt();
+  }
+
+  get shopId(): Bytes {
+    return this._event.parameters[8].value.toBytes();
   }
 }
 
@@ -163,20 +171,28 @@ export class PaidToken__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get balanceToken(): BigInt {
+  get fee(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get purchaseId(): string {
-    return this._event.parameters[4].value.toString();
+  get feeValue(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
   }
 
-  get purchaseAmount(): BigInt {
+  get balanceToken(): BigInt {
     return this._event.parameters[5].value.toBigInt();
   }
 
-  get shopId(): string {
+  get purchaseId(): string {
     return this._event.parameters[6].value.toString();
+  }
+
+  get purchaseAmount(): BigInt {
+    return this._event.parameters[7].value.toBigInt();
+  }
+
+  get shopId(): Bytes {
+    return this._event.parameters[8].value.toBytes();
   }
 }
 
@@ -213,8 +229,8 @@ export class ProvidedPoint__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get shopId(): string {
-    return this._event.parameters[5].value.toString();
+  get shopId(): Bytes {
+    return this._event.parameters[5].value.toBytes();
   }
 }
 
@@ -251,8 +267,8 @@ export class ProvidedToken__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get shopId(): string {
-    return this._event.parameters[5].value.toString();
+  get shopId(): Bytes {
+    return this._event.parameters[5].value.toBytes();
   }
 }
 
@@ -273,8 +289,8 @@ export class ProvidedTokenForSettlement__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get shopId(): string {
-    return this._event.parameters[1].value.toString();
+  get shopId(): Bytes {
+    return this._event.parameters[1].value.toBytes();
   }
 
   get providedAmountPoint(): BigInt {
@@ -331,8 +347,8 @@ export class ProvidedUnPayablePoint__Params {
     return this._event.parameters[4].value.toString();
   }
 
-  get shopId(): string {
-    return this._event.parameters[5].value.toString();
+  get shopId(): Bytes {
+    return this._event.parameters[5].value.toBytes();
   }
 }
 
@@ -365,8 +381,8 @@ export class SavedPurchase__Params {
     return this._event.parameters[3].value.toString();
   }
 
-  get shopId(): string {
-    return this._event.parameters[4].value.toString();
+  get shopId(): Bytes {
+    return this._event.parameters[4].value.toBytes();
   }
 
   get method(): BigInt {
@@ -429,8 +445,8 @@ export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
     return this[3].toString();
   }
 
-  get shopId(): string {
-    return this[4].toString();
+  get shopId(): Bytes {
+    return this[4].toBytes();
   }
 
   get method(): BigInt {
@@ -468,6 +484,21 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  MAX_FEE(): BigInt {
+    let result = super.call("MAX_FEE", "MAX_FEE():(uint32)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_MAX_FEE(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("MAX_FEE", "MAX_FEE():(uint32)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
   NULL(): Bytes {
@@ -520,6 +551,36 @@ export class Ledger extends ethereum.SmartContract {
       "currencyRateAddress():(address)",
       []
     );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  fee(): BigInt {
+    let result = super.call("fee", "fee():(uint32)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_fee(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("fee", "fee():(uint32)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  feeAccount(): Address {
+    let result = super.call("feeAccount", "feeAccount():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_feeAccount(): ethereum.CallResult<Address> {
+    let result = super.tryCall("feeAccount", "feeAccount():(address)", []);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -658,7 +719,7 @@ export class Ledger extends ethereum.SmartContract {
   purchaseOf(_purchaseId: string): Ledger__purchaseOfResultValue0Struct {
     let result = super.call(
       "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,string,string,uint32,address,bytes32))",
+      "purchaseOf(string):((string,uint256,uint256,string,bytes32,uint32,address,bytes32))",
       [ethereum.Value.fromString(_purchaseId)]
     );
 
@@ -672,7 +733,7 @@ export class Ledger extends ethereum.SmartContract {
   ): ethereum.CallResult<Ledger__purchaseOfResultValue0Struct> {
     let result = super.tryCall(
       "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,string,string,uint32,address,bytes32))",
+      "purchaseOf(string):((string,uint256,uint256,string,bytes32,uint32,address,bytes32))",
       [ethereum.Value.fromString(_purchaseId)]
     );
     if (result.reverted) {
@@ -863,24 +924,28 @@ export class ConstructorCall__Inputs {
     return this._call.inputValues[1].value.toAddress();
   }
 
-  get _tokenAddress(): Address {
+  get _feeAccount(): Address {
     return this._call.inputValues[2].value.toAddress();
   }
 
-  get _validatorAddress(): Address {
+  get _tokenAddress(): Address {
     return this._call.inputValues[3].value.toAddress();
   }
 
-  get _linkCollectionAddress(): Address {
+  get _validatorAddress(): Address {
     return this._call.inputValues[4].value.toAddress();
   }
 
-  get _currencyRateAddress(): Address {
+  get _linkCollectionAddress(): Address {
     return this._call.inputValues[5].value.toAddress();
   }
 
-  get _shopCollectionAddress(): Address {
+  get _currencyRateAddress(): Address {
     return this._call.inputValues[6].value.toAddress();
+  }
+
+  get _shopCollectionAddress(): Address {
+    return this._call.inputValues[7].value.toAddress();
   }
 }
 
@@ -977,8 +1042,8 @@ export class PayPointCall__Inputs {
     this._call = call;
   }
 
-  get data(): PayPointCallDataStruct {
-    return changetype<PayPointCallDataStruct>(
+  get _data(): PayPointCall_dataStruct {
+    return changetype<PayPointCall_dataStruct>(
       this._call.inputValues[0].value.toTuple()
     );
   }
@@ -992,7 +1057,7 @@ export class PayPointCall__Outputs {
   }
 }
 
-export class PayPointCallDataStruct extends ethereum.Tuple {
+export class PayPointCall_dataStruct extends ethereum.Tuple {
   get purchaseId(): string {
     return this[0].toString();
   }
@@ -1005,8 +1070,8 @@ export class PayPointCallDataStruct extends ethereum.Tuple {
     return this[2].toString();
   }
 
-  get shopId(): string {
-    return this[3].toString();
+  get shopId(): Bytes {
+    return this[3].toBytes();
   }
 
   get account(): Address {
@@ -1035,8 +1100,8 @@ export class PayTokenCall__Inputs {
     this._call = call;
   }
 
-  get data(): PayTokenCallDataStruct {
-    return changetype<PayTokenCallDataStruct>(
+  get _data(): PayTokenCall_dataStruct {
+    return changetype<PayTokenCall_dataStruct>(
       this._call.inputValues[0].value.toTuple()
     );
   }
@@ -1050,7 +1115,7 @@ export class PayTokenCall__Outputs {
   }
 }
 
-export class PayTokenCallDataStruct extends ethereum.Tuple {
+export class PayTokenCall_dataStruct extends ethereum.Tuple {
   get purchaseId(): string {
     return this[0].toString();
   }
@@ -1063,8 +1128,8 @@ export class PayTokenCallDataStruct extends ethereum.Tuple {
     return this[2].toString();
   }
 
-  get shopId(): string {
-    return this[3].toString();
+  get shopId(): Bytes {
+    return this[3].toBytes();
   }
 
   get account(): Address {
@@ -1125,8 +1190,8 @@ export class SavePurchaseCallDataStruct extends ethereum.Tuple {
     return this[3].toString();
   }
 
-  get shopId(): string {
-    return this[4].toString();
+  get shopId(): Bytes {
+    return this[4].toBytes();
   }
 
   get method(): BigInt {
@@ -1139,6 +1204,36 @@ export class SavePurchaseCallDataStruct extends ethereum.Tuple {
 
   get phone(): Bytes {
     return this[7].toBytes();
+  }
+}
+
+export class SetFeeCall extends ethereum.Call {
+  get inputs(): SetFeeCall__Inputs {
+    return new SetFeeCall__Inputs(this);
+  }
+
+  get outputs(): SetFeeCall__Outputs {
+    return new SetFeeCall__Outputs(this);
+  }
+}
+
+export class SetFeeCall__Inputs {
+  _call: SetFeeCall;
+
+  constructor(call: SetFeeCall) {
+    this._call = call;
+  }
+
+  get _fee(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class SetFeeCall__Outputs {
+  _call: SetFeeCall;
+
+  constructor(call: SetFeeCall) {
+    this._call = call;
   }
 }
 

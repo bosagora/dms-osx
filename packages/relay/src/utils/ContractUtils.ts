@@ -118,7 +118,7 @@ export class ContractUtils {
         nonce: BigNumberish
     ): Uint8Array {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "string", "string", "address", "uint256"],
+            ["string", "uint256", "string", "bytes32", "address", "uint256"],
             [purchaseId, amount, currency, shopId, address, nonce]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
@@ -218,5 +218,13 @@ export class ContractUtils {
             return false;
         }
         return res.toLowerCase() === account.toLowerCase();
+    }
+
+    public static getShopId(name: string, account: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "address", "bytes32"],
+            [name, account, crypto.randomBytes(32)]
+        );
+        return hre.ethers.utils.keccak256(encodedResult);
     }
 }

@@ -185,7 +185,9 @@ export class DefaultRouter {
                 body("purchaseId").exists(),
                 body("amount").custom(Validation.isAmount),
                 body("currency").exists(),
-                body("shopId").exists(),
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("account").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
@@ -201,7 +203,9 @@ export class DefaultRouter {
                 body("purchaseId").exists(),
                 body("amount").custom(Validation.isAmount),
                 body("currency").exists(),
-                body("shopId").exists(),
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("account").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
