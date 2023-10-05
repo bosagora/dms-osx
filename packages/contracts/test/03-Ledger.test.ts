@@ -151,7 +151,7 @@ describe("Test for Ledger", () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as ShopCollection;
+            .deploy(validatorContract.address, linkCollectionContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -1695,6 +1695,64 @@ describe("Test for Ledger", () => {
                 expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
                 );
+            });
+        });
+
+        context("Withdrawal of settlement", () => {
+            const shopIndex = 2;
+            const shop = shopData[shopIndex];
+            const amount2 = Amount.make(400, 18).value;
+            it("Check Settlement", async () => {
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(amount2);
+            });
+
+            it("Link phone-wallet of the shop", async () => {
+                const nonce = await linkCollectionContract.nonceOf(shopWallets[shopIndex].address);
+                const phoneHash = ContractUtils.getPhoneHash(shop.phone);
+                const signature = await ContractUtils.signRequestHash(shopWallets[shopIndex], phoneHash, nonce);
+                requestId = ContractUtils.getRequestId(phoneHash, shopWallets[shopIndex].address, nonce);
+                await expect(
+                    linkCollectionContract
+                        .connect(relay)
+                        .addRequest(requestId, phoneHash, shopWallets[shopIndex].address, signature)
+                )
+                    .to.emit(linkCollectionContract, "AddedRequestItem")
+                    .withArgs(requestId, phoneHash, shopWallets[shopIndex].address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
+                await linkCollectionContract.connect(validator1).countVote(requestId);
+            });
+
+            it("Open Withdrawal", async () => {
+                await expect(
+                    shopCollection
+                        .connect(shopWallets[shopIndex].connect(hre.waffle.provider))
+                        .openWithdrawal(shop.shopId, amount2)
+                )
+                    .to.emit(shopCollection, "OpenedWithdrawal")
+                    .withNamedArgs({
+                        shopId: shop.shopId,
+                        amount: amount2,
+                        account: shopWallets[shopIndex].address,
+                    });
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(amount2);
+            });
+
+            it("Close Withdrawal", async () => {
+                await expect(
+                    shopCollection
+                        .connect(shopWallets[shopIndex].connect(hre.waffle.provider))
+                        .closeWithdrawal(shop.shopId, amount2)
+                )
+                    .to.emit(shopCollection, "ClosedWithdrawal")
+                    .withNamedArgs({
+                        shopId: shop.shopId,
+                        amount: amount2,
+                        account: shopWallets[shopIndex].address,
+                    });
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(0);
             });
         });
     });

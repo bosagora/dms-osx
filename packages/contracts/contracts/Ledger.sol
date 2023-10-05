@@ -300,7 +300,7 @@ contract Ledger {
         bytes32 dataHash = keccak256(abi.encode(_phone, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
         address userAddress = linkCollection.toAddress(_phone);
-        require(userAddress != address(0x00), "Unregistered email-address");
+        require(userAddress != address(0x00), "Unregistered phone-address");
         require(userAddress == _account, "Invalid address");
         require(unPayablePointBalances[_phone] > 0, "Insufficient balance");
 
@@ -327,7 +327,7 @@ contract Ledger {
         );
 
         uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
-        uint256 feeAmount = convertCurrencyToPoint(data.amount * fee / 100, data.currency);
+        uint256 feeAmount = convertCurrencyToPoint((data.amount * fee) / 100, data.currency);
         uint256 feeToken = convertPointToToken(feeAmount);
 
         require(pointBalances[data.account] >= purchaseAmount + feeAmount, "Insufficient balance");
@@ -388,7 +388,7 @@ contract Ledger {
         );
 
         uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
-        uint256 feeAmount = convertCurrencyToPoint(data.amount * fee / 100, data.currency);
+        uint256 feeAmount = convertCurrencyToPoint((data.amount * fee) / 100, data.currency);
         uint256 amountToken = convertPointToToken(purchaseAmount);
         uint256 feeToken = convertPointToToken(feeAmount);
 

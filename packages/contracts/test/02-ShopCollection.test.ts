@@ -1,6 +1,6 @@
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { ShopCollection, Token, ValidatorCollection } from "../typechain-types";
+import { PhoneLinkCollection, ShopCollection, Token, ValidatorCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -19,7 +19,9 @@ describe("Test for ShopCollection", () => {
         provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
+    const linkValidators = [validator1];
     const shopWallets = [shop1, shop2, shop3, shop4, shop5];
+    let linkCollectionContract: PhoneLinkCollection;
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let shopCollection: ShopCollection;
@@ -27,6 +29,13 @@ describe("Test for ShopCollection", () => {
     const amount = Amount.make(20_000, 18);
 
     before(async () => {
+        const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
+        linkCollectionContract = (await linkCollectionFactory
+            .connect(deployer)
+            .deploy(linkValidators.map((m) => m.address))) as PhoneLinkCollection;
+        await linkCollectionContract.deployed();
+        await linkCollectionContract.deployTransaction.wait();
+
         const tokenFactory = await hre.ethers.getContractFactory("Token");
         tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
         await tokenContract.deployed();
@@ -57,7 +66,7 @@ describe("Test for ShopCollection", () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as ShopCollection;
+            .deploy(validatorContract.address, linkCollectionContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     });
