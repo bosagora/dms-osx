@@ -28,7 +28,7 @@ import {
     UserUnPayableTradeHistory,
 } from "../generated/schema";
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
-import { AmountUnit, NullAccount } from "./utils";
+import { AmountUnit, NullAccount, NullBytes32 } from "./utils";
 
 export function handleChangedPointType(event: ChangedPointTypeEvent): void {
     let entity = new ChangedPointType(event.transaction.hash.concatI32(event.logIndex.toI32()));
@@ -81,6 +81,8 @@ export function handlePaidPoint(event: PaidPointEvent): void {
     entity.account = event.params.account;
     entity.paidAmountPoint = event.params.paidAmountPoint.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
+    entity.fee = event.params.fee.div(AmountUnit);
+    entity.feeValue = event.params.feeValue.div(AmountUnit);
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.purchaseId = event.params.purchaseId;
     entity.purchaseAmount = event.params.purchaseAmount.div(AmountUnit);
@@ -100,6 +102,8 @@ export function handlePaidToken(event: PaidTokenEvent): void {
     entity.account = event.params.account;
     entity.paidAmountToken = event.params.paidAmountToken.div(AmountUnit);
     entity.value = event.params.value.div(AmountUnit);
+    entity.fee = event.params.fee.div(AmountUnit);
+    entity.feeValue = event.params.feeValue.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.purchaseId = event.params.purchaseId;
     entity.purchaseAmount = event.params.purchaseAmount.div(AmountUnit);
@@ -317,7 +321,7 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
-    entity.shopId = "";
+    entity.shopId = NullBytes32;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -343,7 +347,7 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
-    entity.shopId = "";
+    entity.shopId = NullBytes32;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -401,7 +405,7 @@ export function handleChangedPointForUnPayablePointHistory(event: ChangedToPayab
     entity.amount = event.params.changedAmountPoint.div(AmountUnit);
     entity.balance = BigInt.fromI32(0);
     entity.purchaseId = "";
-    entity.shopId = "";
+    entity.shopId = NullBytes32;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -427,7 +431,7 @@ export function handleChangedPointForHistory(event: ChangedToPayablePointEvent):
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = "";
-    entity.shopId = "";
+    entity.shopId = NullBytes32;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;

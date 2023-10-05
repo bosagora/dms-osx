@@ -35,6 +35,8 @@ describe("Test of Server", function () {
     const [
         deployer,
         foundation,
+        settlements,
+        fee,
         validator1,
         validator2,
         validator3,
@@ -46,17 +48,18 @@ describe("Test of Server", function () {
         relay3,
         relay4,
         relay5,
+        shop1,
+        shop2,
+        shop3,
+        shop4,
+        shop5,
     ] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
     const linkValidators = [validator1];
     const users = [user1, user2, user3];
-    const phoneHashes: string[] = [
-        ContractUtils.getPhoneHash("08201012341001"),
-        ContractUtils.getPhoneHash("08201012341002"),
-        ContractUtils.getPhoneHash("08201012341003"),
-        ContractUtils.getPhoneHash("08201012341004"),
-    ];
+    const shopWallets = [shop1, shop2, shop3, shop4, shop5];
+
     let validatorContract: ValidatorCollection;
     let tokenContract: Token;
     let ledgerContract: Ledger;
@@ -124,9 +127,7 @@ describe("Test of Server", function () {
 
     const deployShopCollection = async () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory
-            .connect(deployer)
-            .deploy(validatorContract.address)) as ShopCollection;
+        shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -138,6 +139,7 @@ describe("Test of Server", function () {
             .deploy(
                 foundation.address,
                 foundation.address,
+                fee.address,
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
@@ -167,41 +169,47 @@ describe("Test of Server", function () {
 
     interface IShopData {
         shopId: string;
+        name: string;
         provideWaitTime: number;
         providePercent: number;
-        phone: string;
+        wallet: Wallet;
     }
 
     const shopData: IShopData[] = [
         {
             shopId: "F000100",
+            name: "Shop1",
             provideWaitTime: 0,
-            providePercent: 1,
-            phone: "08201020001000",
+            providePercent: 10,
+            wallet: shopWallets[0],
         },
         {
             shopId: "F000200",
+            name: "Shop2",
             provideWaitTime: 0,
-            providePercent: 1,
-            phone: "08201020001001",
+            providePercent: 20,
+            wallet: shopWallets[1],
         },
         {
             shopId: "F000300",
+            name: "Shop3",
             provideWaitTime: 0,
-            providePercent: 1,
-            phone: "08201020001002",
+            providePercent: 20,
+            wallet: shopWallets[2],
         },
         {
             shopId: "F000400",
+            name: "Shop4",
             provideWaitTime: 0,
-            providePercent: 1,
-            phone: "08201020001003",
+            providePercent: 20,
+            wallet: shopWallets[3],
         },
         {
             shopId: "F000500",
+            name: "Shop5",
             provideWaitTime: 0,
-            providePercent: 1,
-            phone: "08201020001004",
+            providePercent: 20,
+            wallet: shopWallets[4],
         },
     ];
 
@@ -244,6 +252,12 @@ describe("Test of Server", function () {
     }
 
     context("Test token & point relay endpoints", () => {
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
+
         before("Deploy", async () => {
             await deployAllContract();
         });
@@ -286,16 +300,35 @@ describe("Test of Server", function () {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
+                            .connect(elem.wallet)
+                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+            });
+        });
+
+        context("Prepare foundation's asset", () => {
+            it("Deposit foundation's token", async () => {
+                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        account: foundation.address,
+                        depositAmount: assetAmount.value,
+                        balanceToken: assetAmount.value,
+                    });
             });
         });
 
@@ -614,14 +647,19 @@ describe("Test of Server", function () {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
-                    const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                     await expect(
                         shopCollection
-                            .connect(validator1)
-                            .add(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash)
+                            .connect(elem.wallet)
+                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
                     )
                         .to.emit(shopCollection, "AddedShop")
-                        .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, phoneHash);
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
                 }
                 expect(await shopCollection.shopsLength()).to.equal(shopData.length);
             });

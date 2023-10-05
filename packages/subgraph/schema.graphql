@@ -35,10 +35,12 @@ type PaidPoint @entity(immutable: true) {
   account: Bytes! # address
   paidAmountPoint: BigInt! # uint256
   value: BigInt! # uint256
+  fee: BigInt! # uint256
+  feeValue: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
   purchaseAmount: BigInt! # uint256
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -49,10 +51,12 @@ type PaidToken @entity(immutable: true) {
   account: Bytes! # address
   paidAmountToken: BigInt! # uint256
   value: BigInt! # uint256
+  fee: BigInt! # uint256
+  feeValue: BigInt! # uint256
   balanceToken: BigInt! # uint256
   purchaseId: String! # string
   purchaseAmount: BigInt! # uint256
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -65,7 +69,7 @@ type ProvidedPoint @entity(immutable: true) {
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -78,7 +82,7 @@ type ProvidedToken @entity(immutable: true) {
   value: BigInt! # uint256
   balanceToken: BigInt! # uint256
   purchaseId: String! # string
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -87,7 +91,7 @@ type ProvidedToken @entity(immutable: true) {
 type ProvidedTokenForSettlement @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   providedAmountPoint: BigInt! # uint256
   providedAmountToken: BigInt! # uint256
   value: BigInt! # uint256
@@ -105,7 +109,7 @@ type ProvidedUnPayablePoint @entity(immutable: true) {
   value: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -117,7 +121,7 @@ type SavedPurchase @entity(immutable: true) {
   timestamp: BigInt! # uint256
   amount: BigInt! # uint256
   currency: String! # string
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   method: BigInt! # uint32
   account: Bytes! # address
   phone: Bytes! # bytes32
@@ -166,7 +170,7 @@ type UserTradeHistory @entity(immutable: true) {
   balancePoint: BigInt!
   balanceToken: BigInt!
   purchaseId: String
-  shopId : String
+  shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -180,7 +184,7 @@ type UserUnPayableTradeHistory @entity(immutable: true) {
   amount: BigInt!
   balance: BigInt!
   purchaseId: String
-  shopId : String
+  shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -205,7 +209,7 @@ enum ShopAction {
 
 type ShopTradeHistory @entity(immutable: true) {
   id: Bytes!
-  shopId: String! # string
+  shopId: Bytes! # bytes32
   purchaseId: String
 
   action: ShopAction!
@@ -221,12 +225,20 @@ type ShopTradeHistory @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
+enum ShopDataAction {
+  Create,
+  Update,
+  Remove
+}
+
 type Shop @entity {
   id: ID! # shopId
 
+  name: String! # string
   provideWaitTime: BigInt! # uint256
   providePercent: BigInt! # uint256
-  phone: Bytes! # bytes32
+  account: Bytes! # address
+  action: ShopDataAction!
 
   providedPoint: BigInt!
   usedPoint: BigInt!

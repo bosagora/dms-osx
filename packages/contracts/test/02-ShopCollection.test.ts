@@ -1,6 +1,6 @@
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { ShopCollection, Token, ValidatorCollection } from "../typechain-types";
+import { ShopCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -11,6 +11,8 @@ import { solidity } from "ethereum-waffle";
 
 import * as hre from "hardhat";
 
+import { Wallet } from "ethers";
+
 chai.use(solidity);
 
 describe("Test for ShopCollection", () => {
@@ -18,46 +20,12 @@ describe("Test for ShopCollection", () => {
     const [deployer, validator1, validator2, validator3, user1, shop1, shop2, shop3, shop4, shop5] =
         provider.getWallets();
 
-    const validators = [validator1, validator2, validator3];
-    const shopWallets = [shop1, shop2, shop3, shop4, shop5];
-    let validatorContract: ValidatorCollection;
-    let tokenContract: Token;
+    const shopWallets: Wallet[] = [shop1, shop2, shop3, shop4, shop5];
     let shopCollection: ShopCollection;
 
-    const amount = Amount.make(20_000, 18);
-
     before(async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
-        for (const elem of validators) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-
-        const validatorFactory = await hre.ethers.getContractFactory("ValidatorCollection");
-        validatorContract = (await validatorFactory.connect(deployer).deploy(
-            tokenContract.address,
-            validators.map((m) => m.address)
-        )) as ValidatorCollection;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
-
-        for (const elem of validators) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
-            await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "DepositedForValidator")
-                .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validatorOf(elem.address);
-            assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
-            assert.deepStrictEqual(item.balance, amount.value);
-        }
-
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory
-            .connect(deployer)
-            .deploy(validatorContract.address)) as ShopCollection;
+        shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     });
@@ -65,75 +33,117 @@ describe("Test for ShopCollection", () => {
     context("Add", () => {
         interface IShopData {
             shopId: string;
+            name: string;
             provideWaitTime: number;
             providePercent: number;
-            phone: string;
-            account: string;
+            wallet: Wallet;
         }
 
         const shopData: IShopData[] = [
             {
-                shopId: "F000100",
+                shopId: "",
+                name: "Shop 1-1",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201020001000",
-                account: shopWallets[0].address,
+                wallet: shopWallets[0],
             },
             {
-                shopId: "F000200",
+                shopId: "",
+                name: "Shop 1-2",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201020001001",
-                account: shopWallets[1].address,
+                wallet: shopWallets[0],
             },
             {
-                shopId: "F000300",
+                shopId: "",
+                name: "Shop 2-1",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201020001002",
-                account: shopWallets[2].address,
+                wallet: shopWallets[1],
             },
             {
-                shopId: "F000400",
+                shopId: "",
+                name: "Shop 2-2",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201020001003",
-                account: shopWallets[3].address,
+                wallet: shopWallets[1],
             },
             {
-                shopId: "F000500",
+                shopId: "",
+                name: "Shop 3",
                 provideWaitTime: 0,
                 providePercent: 5,
-                phone: "08201020001004",
-                account: shopWallets[4].address,
+                wallet: shopWallets[2],
+            },
+            {
+                shopId: "",
+                name: "Shop 4",
+                provideWaitTime: 0,
+                providePercent: 5,
+                wallet: shopWallets[3],
+            },
+            {
+                shopId: "",
+                name: "Shop 5",
+                provideWaitTime: 0,
+                providePercent: 5,
+                wallet: shopWallets[4],
             },
         ];
 
-        it("Not validator", async () => {
-            await expect(
-                shopCollection
-                    .connect(user1)
-                    .add(
-                        shopData[0].shopId,
-                        shopData[0].provideWaitTime,
-                        shopData[0].providePercent,
-                        shopData[0].account
-                    )
-            ).to.revertedWith("Not validator");
-        });
+        for (const elem of shopData) {
+            elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+        }
 
         it("Success", async () => {
             for (const elem of shopData) {
-                const phoneHash = ContractUtils.getPhoneHash(elem.phone);
                 await expect(
                     shopCollection
-                        .connect(validator1)
-                        .add(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account)
+                        .connect(elem.wallet)
+                        .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
                 )
                     .to.emit(shopCollection, "AddedShop")
-                    .withArgs(elem.shopId, elem.provideWaitTime, elem.providePercent, elem.account);
+                    .withNamedArgs({
+                        shopId: elem.shopId,
+                        name: elem.name,
+                        provideWaitTime: elem.provideWaitTime,
+                        providePercent: elem.providePercent,
+                        account: elem.wallet.address,
+                    });
             }
             expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+        });
+
+        it("Check", async () => {
+            const ids = await shopCollection.shopsOf(shopWallets[0].address);
+            expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
+        });
+
+        it("Update", async () => {
+            const elem = shopData[0];
+            await expect(shopCollection.connect(elem.wallet).update(elem.shopId, "New Shop", 86400 * 7, 10))
+                .to.emit(shopCollection, "UpdatedShop")
+                .withNamedArgs({
+                    shopId: elem.shopId,
+                    name: "New Shop",
+                    provideWaitTime: 86400 * 7,
+                    providePercent: 10,
+                    account: elem.wallet.address,
+                });
+        });
+
+        it("Remove", async () => {
+            const elem = shopData[0];
+            await expect(shopCollection.connect(elem.wallet).remove(elem.shopId))
+                .to.emit(shopCollection, "RemovedShop")
+                .withNamedArgs({
+                    shopId: elem.shopId,
+                });
+        });
+
+        it("Check remove", async () => {
+            const ids = await shopCollection.shopsOf(shopWallets[0].address);
+            expect(ids).to.deep.equal([shopData[1].shopId]);
         });
     });
 });

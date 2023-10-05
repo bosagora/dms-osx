@@ -57,33 +57,45 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
+    public static getPaymentMessage(
+        address: string,
+        purchaseId: string,
+        amount: BigNumberish,
+        currency: string,
+        shopId: string,
+        nonce: BigNumberish
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "uint256", "string", "bytes32", "address", "uint256"],
+            [purchaseId, amount, currency, shopId, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
     public static async signPayment(
         signer: Signer,
         purchaseId: string,
         amount: BigNumberish,
-        userEmail: string,
+        currency: string,
         shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "bytes32", "string", "address", "uint256"],
-            [purchaseId, amount, userEmail, shopId, await signer.getAddress(), nonce]
+        const message = ContractUtils.getPaymentMessage(
+            await signer.getAddress(),
+            purchaseId,
+            amount,
+            currency,
+            shopId,
+            nonce
         );
-        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
         return signer.signMessage(message);
     }
 
-    public static async signExchange(
-        signer: Signer,
-        userEmail: string,
-        amount: BigNumberish,
-        nonce: BigNumberish
-    ): Promise<string> {
+    public static getShopId(name: string, account: string): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "uint256", "address", "uint256"],
-            [userEmail, amount, await signer.getAddress(), nonce]
+            ["string", "address", "bytes32"],
+            [name, account, crypto.randomBytes(32)]
         );
-        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
-        return signer.signMessage(message);
+        return hre.ethers.utils.keccak256(encodedResult);
     }
 }

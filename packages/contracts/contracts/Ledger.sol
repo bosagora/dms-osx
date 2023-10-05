@@ -33,7 +33,7 @@ contract Ledger {
         uint256 timestamp;
         uint256 amount;
         string currency;
-        string shopId;
+        bytes32 shopId;
         uint32 method;
         address account;
         bytes32 phone;
@@ -43,7 +43,7 @@ contract Ledger {
         string purchaseId;
         uint256 amount;
         string currency;
-        string shopId;
+        bytes32 shopId;
         address account;
         bytes signature;
     }
@@ -73,7 +73,7 @@ contract Ledger {
         uint256 timestamp,
         uint256 amount,
         string currency,
-        string shopId,
+        bytes32 shopId,
         uint32 method,
         address account,
         bytes32 phone
@@ -85,7 +85,7 @@ contract Ledger {
         uint256 value,
         uint256 balancePoint,
         string purchaseId,
-        string shopId
+        bytes32 shopId
     );
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedUnPayablePoint(
@@ -94,7 +94,7 @@ contract Ledger {
         uint256 value,
         uint256 balancePoint,
         string purchaseId,
-        string shopId
+        bytes32 shopId
     );
     /// @notice 사용가능한 포인트로 변환될 때 발생되는 이벤트
     event ChangedToPayablePoint(
@@ -107,7 +107,7 @@ contract Ledger {
     /// @notice 포인트가 정산될 때 발생되는 이벤트
     event ProvidedTokenForSettlement(
         address account,
-        string shopId,
+        bytes32 shopId,
         uint256 providedAmountPoint,
         uint256 providedAmountToken,
         uint256 value,
@@ -121,7 +121,7 @@ contract Ledger {
         uint256 value,
         uint256 balanceToken,
         string purchaseId,
-        string shopId
+        bytes32 shopId
     );
     /// @notice 포인트로 지불을 완료했을 때 발생하는 이벤트
     event PaidPoint(
@@ -133,7 +133,7 @@ contract Ledger {
         uint256 balancePoint,
         string purchaseId,
         uint256 purchaseAmount,
-        string shopId
+        bytes32 shopId
     );
     /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
     event PaidToken(
@@ -145,7 +145,7 @@ contract Ledger {
         uint256 balanceToken,
         string purchaseId,
         uint256 purchaseAmount,
-        string shopId
+        bytes32 shopId
     );
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(address account, uint256 depositAmount, uint256 value, uint256 balanceToken);
@@ -247,12 +247,7 @@ contract Ledger {
     /// @param _amount 지급할 포인트
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
-    function providePoint(
-        address _account,
-        uint256 _amount,
-        string calldata _purchaseId,
-        string calldata _shopId
-    ) internal {
+    function providePoint(address _account, uint256 _amount, string calldata _purchaseId, bytes32 _shopId) internal {
         pointBalances[_account] += _amount;
         emit ProvidedPoint(_account, _amount, _amount, pointBalances[_account], _purchaseId, _shopId);
     }
@@ -267,7 +262,7 @@ contract Ledger {
         bytes32 _phone,
         uint256 _amount,
         string calldata _purchaseId,
-        string calldata _shopId
+        bytes32 _shopId
     ) internal {
         unPayablePointBalances[_phone] += _amount;
         emit ProvidedUnPayablePoint(_phone, _amount, _amount, unPayablePointBalances[_phone], _purchaseId, _shopId);
@@ -279,12 +274,7 @@ contract Ledger {
     /// @param _amount 지급할 토큰
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
-    function provideToken(
-        address _account,
-        uint256 _amount,
-        string calldata _purchaseId,
-        string calldata _shopId
-    ) internal {
+    function provideToken(address _account, uint256 _amount, string calldata _purchaseId, bytes32 _shopId) internal {
         uint256 amountToken = convertPointToToken(_amount);
 
         require(tokenBalances[foundationAccount] >= amountToken, "Insufficient foundation balance");

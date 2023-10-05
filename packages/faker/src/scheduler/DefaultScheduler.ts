@@ -8,7 +8,7 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Scheduler } from "./Scheduler";
 
-import { Ledger, PhoneLinkCollection, Token } from "../../typechain-types";
+import { Ledger, Token } from "../../typechain-types";
 
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
@@ -39,12 +39,6 @@ export class DefaultScheduler extends Scheduler {
      * @private
      */
     private _ledgerContract: Ledger | undefined;
-
-    /**
-     * 이메일 지갑주소 링크 컨트랙트
-     * @private
-     */
-    private _phoneLinkerContract: PhoneLinkCollection | undefined;
 
     private _purchaseIdx: number = 0;
 
@@ -110,21 +104,6 @@ export class DefaultScheduler extends Scheduler {
             this._ledgerContract = ledgerFactory.attach(this._config.contracts.ledgerAddress) as Ledger;
         }
         return this._ledgerContract;
-    }
-
-    /**
-     * 이메일 지갑주소 링크 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getPhoneLinkerContract(): Promise<PhoneLinkCollection> {
-        if (this._phoneLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
-            this._phoneLinkerContract = linkCollectionFactory.attach(
-                this._config.contracts.phoneLinkerAddress
-            ) as PhoneLinkCollection;
-        }
-        return this._phoneLinkerContract;
     }
 
     /***

@@ -3,6 +3,7 @@ import {
     IncreasedSettledPoint as IncreasedSettledPointEvent,
     IncreasedProvidedPoint as IncreasedProvidedPointEvent,
     IncreasedUsedPoint as IncreasedUsedPointEvent,
+    RemovedShop as RemovedShopEvent,
     UpdatedShop as UpdatedShopEvent,
 } from "../generated/ShopCollection/ShopCollection";
 import { Shop, ShopTradeHistory } from "../generated/schema";
@@ -10,11 +11,13 @@ import { BigInt } from "@graphprotocol/graph-ts";
 import { AmountUnit } from "./utils";
 
 export function handleAddedShop(event: AddedShopEvent): void {
-    let entity = new Shop(event.params.shopId);
+    let entity = new Shop(event.params.shopId.toString());
 
+    entity.name = event.params.name;
     entity.provideWaitTime = event.params.provideWaitTime;
     entity.providePercent = event.params.providePercent;
-    entity.phone = event.params.phone;
+    entity.account = event.params.account;
+    entity.action = "Create";
 
     entity.providedPoint = BigInt.fromI32(0);
     entity.usedPoint = BigInt.fromI32(0);
@@ -27,12 +30,25 @@ export function handleAddedShop(event: AddedShopEvent): void {
     entity.save();
 }
 
-export function handleUpdatedShop(event: UpdatedShopEvent): void {
-    let shopEntity = Shop.load(event.params.shopId);
+export function handleRemovedShop(event: RemovedShopEvent): void {
+    let shopEntity = Shop.load(event.params.shopId.toString());
     if (shopEntity !== null) {
-        shopEntity.phone = event.params.phone;
+        shopEntity.action = "Remove";
+
+        shopEntity.blockNumber = event.block.number;
+        shopEntity.blockTimestamp = event.block.timestamp;
+        shopEntity.transactionHash = event.transaction.hash;
+        shopEntity.save();
+    }
+}
+
+export function handleUpdatedShop(event: UpdatedShopEvent): void {
+    let shopEntity = Shop.load(event.params.shopId.toString());
+    if (shopEntity !== null) {
+        shopEntity.name = event.params.name;
         shopEntity.provideWaitTime = event.params.provideWaitTime;
         shopEntity.providePercent = event.params.providePercent;
+        shopEntity.action = "Update";
 
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
@@ -49,7 +65,7 @@ export function handleIncreasedSettledPoint(event: IncreasedSettledPointEvent): 
     entity.increase = event.params.increase.div(AmountUnit);
     entity.settledPoint = event.params.total.div(AmountUnit);
 
-    let shopEntity = Shop.load(event.params.shopId);
+    let shopEntity = Shop.load(event.params.shopId.toString());
     if (shopEntity !== null) {
         entity.providedPoint = shopEntity.providedPoint;
         entity.usedPoint = shopEntity.usedPoint;
@@ -78,7 +94,7 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
     entity.increase = event.params.increase.div(AmountUnit);
     entity.providedPoint = event.params.total.div(AmountUnit);
 
-    let shopEntity = Shop.load(event.params.shopId);
+    let shopEntity = Shop.load(event.params.shopId.toString());
     if (shopEntity !== null) {
         entity.usedPoint = shopEntity.usedPoint;
         entity.settledPoint = shopEntity.settledPoint;
@@ -107,7 +123,7 @@ export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
     entity.increase = event.params.increase.div(AmountUnit);
     entity.usedPoint = event.params.total.div(AmountUnit);
 
-    let shopEntity = Shop.load(event.params.shopId);
+    let shopEntity = Shop.load(event.params.shopId.toString());
     if (shopEntity !== null) {
         entity.providedPoint = shopEntity.providedPoint;
         entity.settledPoint = shopEntity.settledPoint;
