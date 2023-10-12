@@ -204,7 +204,9 @@ type UserBalance @entity {
 enum ShopAction {
   ProvidedPoint,
   UsedPoint,
-  SettledPoint
+  SettledPoint,
+  OpenWithdrawnPoint,
+  CloseWithdrawnPoint,
 }
 
 type ShopTradeHistory @entity(immutable: true) {
@@ -219,6 +221,7 @@ type ShopTradeHistory @entity(immutable: true) {
   providedPoint: BigInt!
   usedPoint: BigInt!
   settledPoint: BigInt!
+  withdrawnPoint: BigInt!
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -232,7 +235,7 @@ enum ShopDataAction {
 }
 
 type Shop @entity {
-  id: ID! # shopId
+  id: Bytes! # shopId
 
   name: String! # string
   provideWaitTime: BigInt! # uint256
@@ -243,6 +246,7 @@ type Shop @entity {
   providedPoint: BigInt!
   usedPoint: BigInt!
   settledPoint: BigInt!
+  withdrawnPoint: BigInt!
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!

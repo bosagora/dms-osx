@@ -5,13 +5,15 @@ import {
     IncreasedUsedPoint as IncreasedUsedPointEvent,
     RemovedShop as RemovedShopEvent,
     UpdatedShop as UpdatedShopEvent,
+    ClosedWithdrawal as ClosedWithdrawalEvent,
+    OpenedWithdrawal as OpenedWithdrawalEvent,
 } from "../generated/ShopCollection/ShopCollection";
 import { Shop, ShopTradeHistory } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { AmountUnit } from "./utils";
 
 export function handleAddedShop(event: AddedShopEvent): void {
-    let entity = new Shop(event.params.shopId.toString());
+    let entity = new Shop(event.params.shopId);
 
     entity.name = event.params.name;
     entity.provideWaitTime = event.params.provideWaitTime;
@@ -22,6 +24,7 @@ export function handleAddedShop(event: AddedShopEvent): void {
     entity.providedPoint = BigInt.fromI32(0);
     entity.usedPoint = BigInt.fromI32(0);
     entity.settledPoint = BigInt.fromI32(0);
+    entity.withdrawnPoint = BigInt.fromI32(0);
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -31,7 +34,7 @@ export function handleAddedShop(event: AddedShopEvent): void {
 }
 
 export function handleRemovedShop(event: RemovedShopEvent): void {
-    let shopEntity = Shop.load(event.params.shopId.toString());
+    let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         shopEntity.action = "Remove";
 
@@ -43,7 +46,7 @@ export function handleRemovedShop(event: RemovedShopEvent): void {
 }
 
 export function handleUpdatedShop(event: UpdatedShopEvent): void {
-    let shopEntity = Shop.load(event.params.shopId.toString());
+    let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         shopEntity.name = event.params.name;
         shopEntity.provideWaitTime = event.params.provideWaitTime;
@@ -65,10 +68,11 @@ export function handleIncreasedSettledPoint(event: IncreasedSettledPointEvent): 
     entity.increase = event.params.increase.div(AmountUnit);
     entity.settledPoint = event.params.total.div(AmountUnit);
 
-    let shopEntity = Shop.load(event.params.shopId.toString());
+    let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         entity.providedPoint = shopEntity.providedPoint;
         entity.usedPoint = shopEntity.usedPoint;
+        entity.withdrawnPoint = shopEntity.withdrawnPoint;
         shopEntity.settledPoint = entity.settledPoint;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
@@ -77,6 +81,7 @@ export function handleIncreasedSettledPoint(event: IncreasedSettledPointEvent): 
     } else {
         entity.providedPoint = BigInt.fromI32(0);
         entity.usedPoint = BigInt.fromI32(0);
+        entity.withdrawnPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -94,10 +99,11 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
     entity.increase = event.params.increase.div(AmountUnit);
     entity.providedPoint = event.params.total.div(AmountUnit);
 
-    let shopEntity = Shop.load(event.params.shopId.toString());
+    let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         entity.usedPoint = shopEntity.usedPoint;
         entity.settledPoint = shopEntity.settledPoint;
+        entity.withdrawnPoint = shopEntity.withdrawnPoint;
         shopEntity.providedPoint = entity.providedPoint;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
@@ -106,6 +112,7 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
     } else {
         entity.usedPoint = BigInt.fromI32(0);
         entity.settledPoint = BigInt.fromI32(0);
+        entity.withdrawnPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -123,10 +130,11 @@ export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
     entity.increase = event.params.increase.div(AmountUnit);
     entity.usedPoint = event.params.total.div(AmountUnit);
 
-    let shopEntity = Shop.load(event.params.shopId.toString());
+    let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         entity.providedPoint = shopEntity.providedPoint;
         entity.settledPoint = shopEntity.settledPoint;
+        entity.withdrawnPoint = shopEntity.withdrawnPoint;
         shopEntity.usedPoint = entity.usedPoint;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
@@ -135,6 +143,69 @@ export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
     } else {
         entity.providedPoint = BigInt.fromI32(0);
         entity.settledPoint = BigInt.fromI32(0);
+        entity.withdrawnPoint = BigInt.fromI32(0);
+    }
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+}
+
+export function handleOpenedWithdrawal(event: OpenedWithdrawalEvent): void {
+    let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.action = "OpenWithdrawnPoint";
+    entity.shopId = event.params.shopId;
+    entity.purchaseId = "";
+    entity.increase = event.params.amount.div(AmountUnit);
+
+    let shopEntity = Shop.load(event.params.shopId);
+    if (shopEntity !== null) {
+        entity.providedPoint = shopEntity.providedPoint;
+        entity.usedPoint = shopEntity.usedPoint;
+        entity.settledPoint = shopEntity.settledPoint;
+        entity.withdrawnPoint = shopEntity.withdrawnPoint;
+        shopEntity.blockNumber = event.block.number;
+        shopEntity.blockTimestamp = event.block.timestamp;
+        shopEntity.transactionHash = event.transaction.hash;
+        shopEntity.save();
+    } else {
+        entity.providedPoint = BigInt.fromI32(0);
+        entity.settledPoint = BigInt.fromI32(0);
+        entity.usedPoint = BigInt.fromI32(0);
+        entity.withdrawnPoint = BigInt.fromI32(0);
+    }
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+}
+
+export function handleClosedWithdrawal(event: ClosedWithdrawalEvent): void {
+    let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.action = "CloseWithdrawnPoint";
+    entity.shopId = event.params.shopId;
+    entity.purchaseId = "";
+    entity.increase = event.params.amount.div(AmountUnit);
+    entity.withdrawnPoint = event.params.total.div(AmountUnit);
+
+    let shopEntity = Shop.load(event.params.shopId);
+    if (shopEntity !== null) {
+        entity.providedPoint = shopEntity.providedPoint;
+        entity.settledPoint = shopEntity.settledPoint;
+        entity.usedPoint = shopEntity.usedPoint;
+        shopEntity.withdrawnPoint = entity.withdrawnPoint;
+        shopEntity.blockNumber = event.block.number;
+        shopEntity.blockTimestamp = event.block.timestamp;
+        shopEntity.transactionHash = event.transaction.hash;
+        shopEntity.save();
+    } else {
+        entity.providedPoint = BigInt.fromI32(0);
+        entity.settledPoint = BigInt.fromI32(0);
+        entity.usedPoint = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
