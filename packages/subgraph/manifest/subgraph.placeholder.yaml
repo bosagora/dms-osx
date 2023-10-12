@@ -81,7 +81,7 @@ dataSources:
       eventHandlers:
         - event: AddedShop(bytes32,string,uint256,uint256,address)
           handler: handleAddedShop
-        - event: ClosedWithdrawal(bytes32,uint256,address)
+        - event: ClosedWithdrawal(bytes32,uint256,uint256,address)
           handler: handleClosedWithdrawal
         - event: IncreasedProvidedPoint(bytes32,uint256,uint256,string)
           handler: handleIncreasedProvidedPoint

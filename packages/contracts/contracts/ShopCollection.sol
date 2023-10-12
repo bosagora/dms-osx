@@ -57,7 +57,7 @@ contract ShopCollection {
     event IncreasedSettledPoint(bytes32 shopId, uint256 increase, uint256 total, string purchaseId);
 
     event OpenedWithdrawal(bytes32 shopId, uint256 amount, address account);
-    event ClosedWithdrawal(bytes32 shopId, uint256 amount, address account);
+    event ClosedWithdrawal(bytes32 shopId, uint256 amount, uint256 total, address account);
 
     address public ledgerAddress;
     address public deployer;
@@ -248,6 +248,6 @@ contract ShopCollection {
         shops[_shopId].withdrawData.status = WithdrawStatus.CLOSE;
         shops[_shopId].withdrawnPoint += shop.withdrawData.amount;
 
-        emit ClosedWithdrawal(_shopId, shops[_shopId].withdrawData.amount, msg.sender);
+        emit ClosedWithdrawal(_shopId, shops[_shopId].withdrawData.amount, shops[_shopId].withdrawnPoint, msg.sender);
     }
 }
