@@ -46,6 +46,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         tx1 = await currencyRateContract.connect(await ethers.getSigner(validators[0])).set("jpy", price);
         console.log(`Set token price (tx: ${tx1.hash})...`);
         await tx1.wait();
+
+        price = BigNumber.from(1).mul(multiple);
+        tx1 = await currencyRateContract.connect(await ethers.getSigner(validators[0])).set("krw", price);
+        console.log(`Set token price (tx: ${tx1.hash})...`);
+        await tx1.wait();
+
+        price = BigNumber.from(1).mul(multiple);
+        tx1 = await currencyRateContract.connect(await ethers.getSigner(validators[0])).set("point", price);
+        console.log(`Set token price (tx: ${tx1.hash})...`);
+        await tx1.wait();
     }
 };
 export default func;
