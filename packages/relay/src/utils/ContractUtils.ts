@@ -162,7 +162,7 @@ export class ContractUtils {
         return res.toLowerCase() === account.toLowerCase();
     }
 
-    public static getPointTypeMessage(type: BigNumberish, account: string, nonce: BigNumberish): Uint8Array {
+    public static getRoyaltyTypeMessage(type: BigNumberish, account: string, nonce: BigNumberish): Uint8Array {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["uint256", "address", "uint256"],
             [type, account, nonce]
@@ -170,18 +170,18 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signPointType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
-        const message = ContractUtils.getPointTypeMessage(type, await signer.getAddress(), nonce);
+    public static async signRoyaltyType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getRoyaltyTypeMessage(type, await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
 
-    public static verifyPointType(
+    public static verifyRoyaltyType(
         type: BigNumberish,
         account: string,
         nonce: BigNumberish,
         signature: string
     ): boolean {
-        const message = ContractUtils.getPointTypeMessage(type, account, nonce);
+        const message = ContractUtils.getRoyaltyTypeMessage(type, account, nonce);
         let res: string;
         try {
             res = ethers.utils.verifyMessage(message, signature);

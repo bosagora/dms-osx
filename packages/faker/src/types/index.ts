@@ -25,5 +25,5 @@ export interface IUserData {
     phone: string;
     address: string;
     privateKey: string;
-    pointType: number;
+    royaltyType: number;
 }
