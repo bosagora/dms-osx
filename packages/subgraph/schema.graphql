@@ -1,7 +1,7 @@
-type ChangedPointType @entity(immutable: true) {
+type ChangedRoyaltyType @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  pointType: Int! # uint256
+  royaltyType: Int! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -11,8 +11,8 @@ type ChangedToPayablePoint @entity(immutable: true) {
   id: Bytes!
   phone: Bytes! # bytes32
   account: Bytes! # address
-  changedAmountPoint: BigInt! # uint256
-  value: BigInt! # uint256
+  changedPoint: BigInt! # uint256
+  changedValue: BigInt! # uint256
   balancePoint: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -22,8 +22,8 @@ type ChangedToPayablePoint @entity(immutable: true) {
 type Deposited @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  depositAmount: BigInt! # uint256
-  value: BigInt! # uint256
+  depositedToken: BigInt! # uint256
+  depositedValue: BigInt! # uint256
   balanceToken: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -33,13 +33,12 @@ type Deposited @entity(immutable: true) {
 type PaidPoint @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  paidAmountPoint: BigInt! # uint256
-  value: BigInt! # uint256
-  fee: BigInt! # uint256
+  paidPoint: BigInt! # uint256
+  paidValue: BigInt! # uint256
+  feePoint: BigInt! # uint256
   feeValue: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
-  purchaseAmount: BigInt! # uint256
   shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -49,13 +48,12 @@ type PaidPoint @entity(immutable: true) {
 type PaidToken @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  paidAmountToken: BigInt! # uint256
-  value: BigInt! # uint256
-  fee: BigInt! # uint256
+  paidToken: BigInt! # uint256
+  paidValue: BigInt! # uint256
+  feeToken: BigInt! # uint256
   feeValue: BigInt! # uint256
   balanceToken: BigInt! # uint256
   purchaseId: String! # string
-  purchaseAmount: BigInt! # uint256
   shopId: Bytes! # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
@@ -65,8 +63,8 @@ type PaidToken @entity(immutable: true) {
 type ProvidedPoint @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  providedAmountPoint: BigInt! # uint256
-  value: BigInt! # uint256
+  providedPoint: BigInt! # uint256
+  providedValue: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
   shopId: Bytes! # bytes32
@@ -78,8 +76,8 @@ type ProvidedPoint @entity(immutable: true) {
 type ProvidedToken @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  providedAmountToken: BigInt! # uint256
-  value: BigInt! # uint256
+  providedToken: BigInt! # uint256
+  providedValue: BigInt! # uint256
   balanceToken: BigInt! # uint256
   purchaseId: String! # string
   shopId: Bytes! # bytes32
@@ -92,9 +90,8 @@ type ProvidedTokenForSettlement @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
   shopId: Bytes! # bytes32
-  providedAmountPoint: BigInt! # uint256
-  providedAmountToken: BigInt! # uint256
-  value: BigInt! # uint256
+  providedPoint: BigInt! # uint256
+  providedToken: BigInt! # uint256
   balanceToken: BigInt! # uint256
   purchaseId: String! # string
   blockNumber: BigInt!
@@ -105,8 +102,8 @@ type ProvidedTokenForSettlement @entity(immutable: true) {
 type ProvidedUnPayablePoint @entity(immutable: true) {
   id: Bytes!
   phone: Bytes! # bytes32
-  providedAmountPoint: BigInt! # uint256
-  value: BigInt! # uint256
+  providedPoint: BigInt! # uint256
+  providedValue: BigInt! # uint256
   balancePoint: BigInt! # uint256
   purchaseId: String! # string
   shopId: Bytes! # bytes32
@@ -133,8 +130,8 @@ type SavedPurchase @entity(immutable: true) {
 type Withdrawn @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  withdrawAmount: BigInt! # uint256
-  value: BigInt! # uint256
+  withdrawnToken: BigInt! # uint256
+  withdrawnValue: BigInt! # uint256
   balanceToken: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!

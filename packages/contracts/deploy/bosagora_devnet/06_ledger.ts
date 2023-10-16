@@ -120,21 +120,23 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         for (const user of users) {
             const balance = await tokenContract.balanceOf(user.address);
 
-            const depositAmount = balance.div(2);
+            const depositedToken = balance.div(2);
             const signer = new Wallet(user.privateKey).connect(ethers.provider);
-            const tx8 = await tokenContract.connect(signer).approve(ledgerContract.address, depositAmount);
+            const tx8 = await tokenContract.connect(signer).approve(ledgerContract.address, depositedToken);
             console.log(`Approve user's amount (tx: ${tx8.hash})...`);
             await tx8.wait();
 
-            const tx9 = await ledgerContract.connect(signer).deposit(depositAmount);
+            const tx9 = await ledgerContract.connect(signer).deposit(depositedToken);
             console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
             await tx9.wait();
 
-            if (user.pointType === 1) {
-                const pointType = 1;
+            if (user.royaltyType === 1) {
+                const royaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(user.address);
-                const signature = ContractUtils.signPointType(signer, pointType, nonce);
-                const tx10 = await ledgerContract.connect(validator1).setPointType(pointType, user.address, signature);
+                const signature = ContractUtils.signRoyaltyType(signer, royaltyType, nonce);
+                const tx10 = await ledgerContract
+                    .connect(validator1)
+                    .setRoyaltyType(royaltyType, user.address, signature);
                 console.log(`Deposit user's amount (tx: ${tx10.hash})...`);
                 await tx10.wait();
             }

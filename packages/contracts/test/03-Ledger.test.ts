@@ -346,7 +346,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
                         account: foundation.address,
-                        depositAmount: assetAmount.value,
+                        depositedToken: assetAmount.value,
                         balanceToken: assetAmount.value,
                     });
             });
@@ -413,8 +413,8 @@ describe("Test for Ledger", () => {
                             .emit(ledgerContract, "ProvidedPoint")
                             .withNamedArgs({
                                 account: userAccount,
-                                providedAmountPoint: amt,
-                                value: amt,
+                                providedPoint: amt,
+                                providedValue: amt,
                                 purchaseId: purchase.purchaseId,
                             });
                     } else {
@@ -444,8 +444,8 @@ describe("Test for Ledger", () => {
                             .emit(ledgerContract, "ProvidedUnPayablePoint")
                             .withNamedArgs({
                                 phone: phoneHash,
-                                providedAmountPoint: amt,
-                                value: amt,
+                                providedPoint: amt,
+                                providedValue: amt,
                                 purchaseId: purchase.purchaseId,
                             });
                     }
@@ -523,8 +523,8 @@ describe("Test for Ledger", () => {
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
-                        providedAmountPoint: pointAmount,
-                        value: pointAmount,
+                        providedPoint: pointAmount,
+                        providedValue: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(
@@ -596,8 +596,8 @@ describe("Test for Ledger", () => {
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         account: userWallets[3].address,
-                        providedAmountPoint: pointAmount,
-                        value: pointAmount,
+                        providedPoint: pointAmount,
+                        providedValue: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
@@ -628,7 +628,7 @@ describe("Test for Ledger", () => {
                     .withNamedArgs({
                         phone: phoneHash,
                         account: userWallets[userIndex].address,
-                        changedAmountPoint: unPayableAmount,
+                        changedPoint: unPayableAmount,
                     });
                 expect(await ledgerContract.pointBalanceOf(userWallets[userIndex].address)).to.equal(
                     oldBalance.add(unPayableAmount)
@@ -638,14 +638,14 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 3)", async () => {
                 const userIndex = 3;
-                const pointType = 1;
+                const royaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signPointType(userWallets[userIndex], pointType, nonce);
+                const signature = ContractUtils.signRoyaltyType(userWallets[userIndex], royaltyType, nonce);
                 await expect(
-                    ledgerContract.connect(relay).setPointType(pointType, userWallets[userIndex].address, signature)
+                    ledgerContract.connect(relay).setRoyaltyType(royaltyType, userWallets[userIndex].address, signature)
                 )
-                    .to.emit(ledgerContract, "ChangedPointType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, pointType });
+                    .to.emit(ledgerContract, "ChangedRoyaltyType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, royaltyType });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 3, point type : 1)", async () => {
@@ -698,8 +698,8 @@ describe("Test for Ledger", () => {
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
                         account: userWallets[3].address,
-                        providedAmountToken: tokenAmount,
-                        value: pointAmount,
+                        providedToken: tokenAmount,
+                        providedValue: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
@@ -764,8 +764,8 @@ describe("Test for Ledger", () => {
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         account: userAccount,
-                        providedAmountPoint: pointAmount,
-                        value: pointAmount,
+                        providedPoint: pointAmount,
+                        providedValue: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
@@ -782,14 +782,14 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 1)", async () => {
                 const userIndex = 1;
-                const pointType = 1;
+                const royaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signPointType(userWallets[userIndex], pointType, nonce);
+                const signature = ContractUtils.signRoyaltyType(userWallets[userIndex], royaltyType, nonce);
                 await expect(
-                    ledgerContract.connect(relay).setPointType(pointType, userWallets[userIndex].address, signature)
+                    ledgerContract.connect(relay).setRoyaltyType(royaltyType, userWallets[userIndex].address, signature)
                 )
-                    .to.emit(ledgerContract, "ChangedPointType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, pointType });
+                    .to.emit(ledgerContract, "ChangedRoyaltyType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, royaltyType });
             });
 
             it("Save Purchase Data - (user: 1, point type : 1)", async () => {
@@ -842,8 +842,8 @@ describe("Test for Ledger", () => {
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
                         account: userAccount,
-                        providedAmountToken: tokenAmount,
-                        value: pointAmount,
+                        providedToken: tokenAmount,
+                        providedValue: pointAmount,
                         purchaseId: purchase.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
@@ -966,12 +966,11 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
                         account: userWallets[purchase.userIndex].address,
-                        paidAmountPoint: purchaseAmount,
-                        value: purchaseAmount,
-                        fee: feeAmount,
+                        paidPoint: purchaseAmount,
+                        paidValue: purchaseAmount,
+                        feePoint: feeAmount,
                         feeValue: feeAmount,
                         purchaseId: purchase.purchaseId,
-                        purchaseAmount,
                         shopId: shop.shopId,
                     });
                 const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
@@ -1088,12 +1087,11 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
                         account: userWallets[purchase.userIndex].address,
-                        paidAmountToken: tokenAmount,
-                        value: purchaseAmount,
-                        fee: feeToken,
+                        paidToken: tokenAmount,
+                        paidValue: purchaseAmount,
+                        feeToken: feeToken,
                         feeValue: feeAmount,
                         purchaseId: purchase.purchaseId,
-                        purchaseAmount,
                         shopId: shop.shopId,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
@@ -1272,7 +1270,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
                         account: foundation.address,
-                        depositAmount: assetAmount.value,
+                        depositedToken: assetAmount.value,
                         balanceToken: assetAmount.value,
                     });
             });
@@ -1286,7 +1284,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
                         account: userWallets[0].address,
-                        depositAmount: amount.value,
+                        depositedToken: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
                     });
                 expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
@@ -1309,7 +1307,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "Withdrawn")
                     .withNamedArgs({
                         account: userWallets[0].address,
-                        withdrawAmount: amount.value,
+                        withdrawnToken: amount.value,
                         balanceToken: oldTokenBalance.sub(amount.value),
                     });
                 expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
@@ -1495,7 +1493,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
                         account: foundation.address,
-                        depositAmount: assetAmount.value,
+                        depositedToken: assetAmount.value,
                         balanceToken: assetAmount.value,
                     });
             });
@@ -1538,8 +1536,8 @@ describe("Test for Ledger", () => {
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             account: userAccount,
-                            providedAmountPoint: amt,
-                            value: amt,
+                            providedPoint: amt,
+                            providedValue: amt,
                             purchaseId: purchase.purchaseId,
                         });
                 }
@@ -1638,15 +1636,14 @@ describe("Test for Ledger", () => {
                     .withNamedArgs({
                         account: settlements.address,
                         shopId: shop.shopId,
-                        providedAmountPoint: Amount.make(200, 18).value,
+                        providedPoint: Amount.make(200, 18).value,
                     })
                     .to.emit(ledgerContract, "PaidPoint")
                     .withNamedArgs({
                         account: userWallets[purchase.userIndex].address,
-                        paidAmountPoint: purchaseAmount,
-                        value: purchaseAmount,
+                        paidPoint: purchaseAmount,
+                        paidValue: purchaseAmount,
                         purchaseId: purchase.purchaseId,
-                        purchaseAmount,
                         shopId: shop.shopId,
                     });
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
@@ -1664,7 +1661,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
                         account: userWallets[0].address,
-                        depositAmount: amount.value,
+                        depositedToken: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
                     });
                 expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
@@ -1712,10 +1709,9 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "PaidToken")
                     .withNamedArgs({
                         account: userWallets[purchase.userIndex].address,
-                        paidAmountToken: tokenAmount,
-                        value: purchaseAmount,
+                        paidToken: tokenAmount,
+                        paidValue: purchaseAmount,
                         purchaseId: purchase.purchaseId,
-                        purchaseAmount,
                         shopId: shop.shopId,
                     });
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
@@ -1956,7 +1952,7 @@ describe("Test for Ledger", () => {
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
                         account: foundation.address,
-                        depositAmount: assetAmount.value,
+                        depositedToken: assetAmount.value,
                         balanceToken: assetAmount.value,
                     });
             });
@@ -1974,7 +1970,8 @@ describe("Test for Ledger", () => {
                             : AddressZero;
                     const currency = purchase.currency.toLowerCase();
                     const rate = await currencyRateContract.get(currency);
-                    const amt = purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100);
+                    const royaltyPoint = purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100);
+                    const royaltyValue = purchaseAmount.mul(shop.providePercent).div(100);
                     await expect(
                         ledgerContract.connect(validatorWallets[0]).savePurchase({
                             purchaseId: purchase.purchaseId,
@@ -2001,8 +1998,8 @@ describe("Test for Ledger", () => {
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             account: userAccount,
-                            providedAmountPoint: amt,
-                            value: amt,
+                            providedPoint: royaltyPoint,
+                            providedValue: royaltyValue,
                             purchaseId: purchase.purchaseId,
                         });
                 }

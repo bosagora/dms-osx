@@ -10,16 +10,16 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
-export class ChangedPointType extends ethereum.Event {
-  get params(): ChangedPointType__Params {
-    return new ChangedPointType__Params(this);
+export class ChangedRoyaltyType extends ethereum.Event {
+  get params(): ChangedRoyaltyType__Params {
+    return new ChangedRoyaltyType__Params(this);
   }
 }
 
-export class ChangedPointType__Params {
-  _event: ChangedPointType;
+export class ChangedRoyaltyType__Params {
+  _event: ChangedRoyaltyType;
 
-  constructor(event: ChangedPointType) {
+  constructor(event: ChangedRoyaltyType) {
     this._event = event;
   }
 
@@ -27,7 +27,7 @@ export class ChangedPointType__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get pointType(): i32 {
+  get royaltyType(): i32 {
     return this._event.parameters[1].value.toI32();
   }
 }
@@ -53,11 +53,11 @@ export class ChangedToPayablePoint__Params {
     return this._event.parameters[1].value.toAddress();
   }
 
-  get changedAmountPoint(): BigInt {
+  get changedPoint(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get changedValue(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -83,11 +83,11 @@ export class Deposited__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get depositAmount(): BigInt {
+  get depositedToken(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get depositedValue(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
@@ -113,15 +113,15 @@ export class PaidPoint__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get paidAmountPoint(): BigInt {
+  get paidPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get paidValue(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get fee(): BigInt {
+  get feePoint(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -137,12 +137,8 @@ export class PaidPoint__Params {
     return this._event.parameters[6].value.toString();
   }
 
-  get purchaseAmount(): BigInt {
-    return this._event.parameters[7].value.toBigInt();
-  }
-
   get shopId(): Bytes {
-    return this._event.parameters[8].value.toBytes();
+    return this._event.parameters[7].value.toBytes();
   }
 }
 
@@ -163,15 +159,15 @@ export class PaidToken__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get paidAmountToken(): BigInt {
+  get paidToken(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get paidValue(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get fee(): BigInt {
+  get feeToken(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
@@ -187,12 +183,8 @@ export class PaidToken__Params {
     return this._event.parameters[6].value.toString();
   }
 
-  get purchaseAmount(): BigInt {
-    return this._event.parameters[7].value.toBigInt();
-  }
-
   get shopId(): Bytes {
-    return this._event.parameters[8].value.toBytes();
+    return this._event.parameters[7].value.toBytes();
   }
 }
 
@@ -213,11 +205,11 @@ export class ProvidedPoint__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get providedAmountPoint(): BigInt {
+  get providedPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get providedValue(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
@@ -251,11 +243,11 @@ export class ProvidedToken__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get providedAmountToken(): BigInt {
+  get providedToken(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get providedValue(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
@@ -293,24 +285,20 @@ export class ProvidedTokenForSettlement__Params {
     return this._event.parameters[1].value.toBytes();
   }
 
-  get providedAmountPoint(): BigInt {
+  get providedPoint(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
-  get providedAmountToken(): BigInt {
+  get providedToken(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get balanceToken(): BigInt {
     return this._event.parameters[4].value.toBigInt();
   }
 
-  get balanceToken(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
-  }
-
   get purchaseId(): string {
-    return this._event.parameters[6].value.toString();
+    return this._event.parameters[5].value.toString();
   }
 }
 
@@ -331,11 +319,11 @@ export class ProvidedUnPayablePoint__Params {
     return this._event.parameters[0].value.toBytes();
   }
 
-  get providedAmountPoint(): BigInt {
+  get providedPoint(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get providedValue(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
@@ -415,11 +403,11 @@ export class Withdrawn__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get withdrawAmount(): BigInt {
+  get withdrawnToken(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get value(): BigInt {
+  get withdrawnValue(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
@@ -676,25 +664,6 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  pointTypeOf(_account: Address): i32 {
-    let result = super.call("pointTypeOf", "pointTypeOf(address):(uint8)", [
-      ethereum.Value.fromAddress(_account)
-    ]);
-
-    return result[0].toI32();
-  }
-
-  try_pointTypeOf(_account: Address): ethereum.CallResult<i32> {
-    let result = super.tryCall("pointTypeOf", "pointTypeOf(address):(uint8)", [
-      ethereum.Value.fromAddress(_account)
-    ]);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toI32());
-  }
-
   purchaseIdOf(_idx: BigInt): string {
     let result = super.call("purchaseIdOf", "purchaseIdOf(uint256):(string)", [
       ethereum.Value.fromUnsignedBigInt(_idx)
@@ -766,6 +735,27 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  royaltyTypeOf(_account: Address): i32 {
+    let result = super.call("royaltyTypeOf", "royaltyTypeOf(address):(uint8)", [
+      ethereum.Value.fromAddress(_account)
+    ]);
+
+    return result[0].toI32();
+  }
+
+  try_royaltyTypeOf(_account: Address): ethereum.CallResult<i32> {
+    let result = super.tryCall(
+      "royaltyTypeOf",
+      "royaltyTypeOf(address):(uint8)",
+      [ethereum.Value.fromAddress(_account)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toI32());
   }
 
   settlementAccount(): Address {
@@ -1237,24 +1227,24 @@ export class SetFeeCall__Outputs {
   }
 }
 
-export class SetPointTypeCall extends ethereum.Call {
-  get inputs(): SetPointTypeCall__Inputs {
-    return new SetPointTypeCall__Inputs(this);
+export class SetRoyaltyTypeCall extends ethereum.Call {
+  get inputs(): SetRoyaltyTypeCall__Inputs {
+    return new SetRoyaltyTypeCall__Inputs(this);
   }
 
-  get outputs(): SetPointTypeCall__Outputs {
-    return new SetPointTypeCall__Outputs(this);
+  get outputs(): SetRoyaltyTypeCall__Outputs {
+    return new SetRoyaltyTypeCall__Outputs(this);
   }
 }
 
-export class SetPointTypeCall__Inputs {
-  _call: SetPointTypeCall;
+export class SetRoyaltyTypeCall__Inputs {
+  _call: SetRoyaltyTypeCall;
 
-  constructor(call: SetPointTypeCall) {
+  constructor(call: SetRoyaltyTypeCall) {
     this._call = call;
   }
 
-  get _pointType(): i32 {
+  get _royaltyType(): i32 {
     return this._call.inputValues[0].value.toI32();
   }
 
@@ -1267,10 +1257,10 @@ export class SetPointTypeCall__Inputs {
   }
 }
 
-export class SetPointTypeCall__Outputs {
-  _call: SetPointTypeCall;
+export class SetRoyaltyTypeCall__Outputs {
+  _call: SetRoyaltyTypeCall;
 
-  constructor(call: SetPointTypeCall) {
+  constructor(call: SetRoyaltyTypeCall) {
     this._call = call;
   }
 }

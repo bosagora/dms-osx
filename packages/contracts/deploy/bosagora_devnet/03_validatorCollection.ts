@@ -32,7 +32,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             validatorContractAddress
         )) as ValidatorCollection;
         const amount = Amount.make(100_000, 18);
-        const depositAmount = Amount.make(20_000, 18);
+        const depositedToken = Amount.make(20_000, 18);
 
         for (const elem of validators) {
             await tokenContract.connect(await ethers.getSigner(owner)).transfer(elem, amount.value);
@@ -41,11 +41,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         for (const elem of validators) {
             const tx1 = await tokenContract
                 .connect(await ethers.getSigner(elem))
-                .approve(validatorContractAddress, depositAmount.value);
+                .approve(validatorContractAddress, depositedToken.value);
             console.log(`Approve validator's amount (tx: ${tx1.hash})...`);
             await tx1.wait();
 
-            const tx2 = await validatorContract.connect(await ethers.getSigner(elem)).deposit(depositAmount.value);
+            const tx2 = await validatorContract.connect(await ethers.getSigner(elem)).deposit(depositedToken.value);
             console.log(`Deposit validator's amount (tx: ${tx2.hash})...`);
             await tx2.wait();
         }

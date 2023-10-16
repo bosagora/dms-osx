@@ -22,11 +22,11 @@ contract Ledger {
     mapping(address => uint256) private tokenBalances;
     mapping(address => uint256) private nonce;
 
-    enum PointType {
+    enum RoyaltyType {
         POINT,
         TOKEN
     }
-    mapping(address => PointType) private pointTypes;
+    mapping(address => RoyaltyType) private royaltyTypes;
 
     struct PurchaseData {
         string purchaseId;
@@ -81,8 +81,8 @@ contract Ledger {
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedPoint(
         address account,
-        uint256 providedAmountPoint,
-        uint256 value,
+        uint256 providedPoint,
+        uint256 providedValue,
         uint256 balancePoint,
         string purchaseId,
         bytes32 shopId
@@ -90,8 +90,8 @@ contract Ledger {
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedUnPayablePoint(
         bytes32 phone,
-        uint256 providedAmountPoint,
-        uint256 value,
+        uint256 providedPoint,
+        uint256 providedValue,
         uint256 balancePoint,
         string purchaseId,
         bytes32 shopId
@@ -100,25 +100,24 @@ contract Ledger {
     event ChangedToPayablePoint(
         bytes32 phone,
         address account,
-        uint256 changedAmountPoint,
-        uint256 value,
+        uint256 changedPoint,
+        uint256 changedValue,
         uint256 balancePoint
     );
     /// @notice 포인트가 정산될 때 발생되는 이벤트
     event ProvidedTokenForSettlement(
         address account,
         bytes32 shopId,
-        uint256 providedAmountPoint,
-        uint256 providedAmountToken,
-        uint256 value,
+        uint256 providedPoint,
+        uint256 providedToken,
         uint256 balanceToken,
         string purchaseId
     );
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(
         address account,
-        uint256 providedAmountToken,
-        uint256 value,
+        uint256 providedToken,
+        uint256 providedValue,
         uint256 balanceToken,
         string purchaseId,
         bytes32 shopId
@@ -126,33 +125,31 @@ contract Ledger {
     /// @notice 포인트로 지불을 완료했을 때 발생하는 이벤트
     event PaidPoint(
         address account,
-        uint256 paidAmountPoint,
-        uint256 value,
-        uint256 fee,
+        uint256 paidPoint,
+        uint256 paidValue,
+        uint256 feePoint,
         uint256 feeValue,
         uint256 balancePoint,
         string purchaseId,
-        uint256 purchaseAmount,
         bytes32 shopId
     );
     /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
     event PaidToken(
         address account,
-        uint256 paidAmountToken,
-        uint256 value,
-        uint256 fee,
+        uint256 paidToken,
+        uint256 paidValue,
+        uint256 feeToken,
         uint256 feeValue,
         uint256 balanceToken,
         string purchaseId,
-        uint256 purchaseAmount,
         bytes32 shopId
     );
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
-    event Deposited(address account, uint256 depositAmount, uint256 value, uint256 balanceToken);
+    event Deposited(address account, uint256 depositedToken, uint256 depositedValue, uint256 balanceToken);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
-    event Withdrawn(address account, uint256 withdrawAmount, uint256 value, uint256 balanceToken);
+    event Withdrawn(address account, uint256 withdrawnToken, uint256 withdrawnValue, uint256 balanceToken);
     /// @notice 구매 후 적립되는 포인트의 종류 (0: 포인트, 1: 토큰)
-    event ChangedPointType(address account, PointType pointType);
+    event ChangedRoyaltyType(address account, RoyaltyType royaltyType);
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
@@ -205,26 +202,28 @@ contract Ledger {
             ShopCollection.ShopData memory shop = shopCollection.shopOf(data.shopId);
             if (shop.status == ShopCollection.ShopStatus.ACTIVE) {
                 if (data.account != address(0x0)) {
-                    uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
-                    if (pointTypes[data.account] == PointType.POINT) {
-                        providePoint(data.account, point, data.purchaseId, data.shopId);
+                    uint256 royaltyValue = (data.amount * shop.providePercent) / 100;
+                    uint256 royaltyPoint = convertCurrencyToPoint(royaltyValue, data.currency);
+                    if (royaltyTypes[data.account] == RoyaltyType.POINT) {
+                        providePoint(data.account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
                     } else {
-                        provideToken(data.account, point, data.purchaseId, data.shopId);
+                        provideToken(data.account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
                     }
-                    shopCollection.addProvidedPoint(data.shopId, point, data.purchaseId);
+                    shopCollection.addProvidedPoint(data.shopId, royaltyPoint, data.purchaseId);
                 } else if (data.phone != NULL) {
-                    uint256 point = (convertCurrencyToPoint(data.amount, data.currency) * shop.providePercent) / 100;
+                    uint256 royaltyValue = (data.amount * shop.providePercent) / 100;
+                    uint256 royaltyPoint = convertCurrencyToPoint(royaltyValue, data.currency);
                     address account = linkCollection.toAddress(data.phone);
                     if (account == address(0x00)) {
-                        provideUnPayablePoint(data.phone, point, data.purchaseId, data.shopId);
+                        provideUnPayablePoint(data.phone, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
                     } else {
-                        if (pointTypes[account] == PointType.POINT) {
-                            providePoint(account, point, data.purchaseId, data.shopId);
+                        if (royaltyTypes[account] == RoyaltyType.POINT) {
+                            providePoint(account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
                         } else {
-                            provideToken(account, point, data.purchaseId, data.shopId);
+                            provideToken(account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
                         }
                     }
-                    shopCollection.addProvidedPoint(data.shopId, point, data.purchaseId);
+                    shopCollection.addProvidedPoint(data.shopId, royaltyPoint, data.purchaseId);
                 }
             }
         }
@@ -244,44 +243,67 @@ contract Ledger {
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
-    /// @param _amount 지급할 포인트
+    /// @param _royaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _royaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
-    function providePoint(address _account, uint256 _amount, string calldata _purchaseId, bytes32 _shopId) internal {
-        pointBalances[_account] += _amount;
-        emit ProvidedPoint(_account, _amount, _amount, pointBalances[_account], _purchaseId, _shopId);
+    function providePoint(
+        address _account,
+        uint256 _royaltyPoint,
+        uint256 _royaltyValue,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal {
+        pointBalances[_account] += _royaltyPoint;
+        emit ProvidedPoint(_account, _royaltyPoint, _royaltyValue, pointBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _phone 전화번호 해시
-    /// @param _amount 지급할 포인트
+    /// @param _royaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _royaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function provideUnPayablePoint(
         bytes32 _phone,
-        uint256 _amount,
+        uint256 _royaltyPoint,
+        uint256 _royaltyValue,
         string calldata _purchaseId,
         bytes32 _shopId
     ) internal {
-        unPayablePointBalances[_phone] += _amount;
-        emit ProvidedUnPayablePoint(_phone, _amount, _amount, unPayablePointBalances[_phone], _purchaseId, _shopId);
+        unPayablePointBalances[_phone] += _royaltyPoint;
+        emit ProvidedUnPayablePoint(
+            _phone,
+            _royaltyPoint,
+            _royaltyValue,
+            unPayablePointBalances[_phone],
+            _purchaseId,
+            _shopId
+        );
     }
 
     /// @notice 토큰을 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
-    /// @param _amount 지급할 토큰
+    /// @param _royaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _royaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
-    function provideToken(address _account, uint256 _amount, string calldata _purchaseId, bytes32 _shopId) internal {
-        uint256 amountToken = convertPointToToken(_amount);
+    function provideToken(
+        address _account,
+        uint256 _royaltyPoint,
+        uint256 _royaltyValue,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal {
+        uint256 amountToken = convertPointToToken(_royaltyPoint);
 
         require(tokenBalances[foundationAccount] >= amountToken, "Insufficient foundation balance");
         tokenBalances[_account] += amountToken;
         tokenBalances[foundationAccount] -= amountToken;
 
-        emit ProvidedToken(_account, amountToken, _amount, tokenBalances[_account], _purchaseId, _shopId);
+        emit ProvidedToken(_account, amountToken, _royaltyValue, tokenBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 사용가능한 포인트로 전환합니다.
@@ -316,34 +338,34 @@ contract Ledger {
             "Invalid signature"
         );
 
-        uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
-        uint256 feeAmount = convertCurrencyToPoint((data.amount * fee) / 100, data.currency);
-        uint256 feeToken = convertPointToToken(feeAmount);
+        uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 feeValue = (data.amount * fee) / 100;
+        uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
+        uint256 feeToken = convertPointToToken(feePoint);
 
-        require(pointBalances[data.account] >= purchaseAmount + feeAmount, "Insufficient balance");
+        require(pointBalances[data.account] >= purchasePoint + feePoint, "Insufficient balance");
         require(tokenBalances[foundationAccount] >= feeToken, "Insufficient foundation balance");
 
-        pointBalances[data.account] -= (purchaseAmount + feeAmount);
+        pointBalances[data.account] -= (purchasePoint + feePoint);
 
         // 재단의 토큰으로 교환해 지급한다.
         tokenBalances[foundationAccount] -= feeToken;
         tokenBalances[feeAccount] += feeToken;
 
-        shopCollection.addUsedPoint(data.shopId, purchaseAmount, data.purchaseId);
+        shopCollection.addUsedPoint(data.shopId, purchasePoint, data.purchaseId);
 
-        uint256 settlementAmount = shopCollection.getSettlementPoint(data.shopId);
-        if (settlementAmount > 0) {
-            uint256 settlementToken = convertPointToToken(settlementAmount);
+        uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
+        if (settlementPoint > 0) {
+            uint256 settlementToken = convertPointToToken(settlementPoint);
             if (tokenBalances[foundationAccount] >= settlementToken) {
                 tokenBalances[settlementAccount] += settlementToken;
                 tokenBalances[foundationAccount] -= settlementToken;
-                shopCollection.addSettledPoint(data.shopId, settlementAmount, data.purchaseId);
+                shopCollection.addSettledPoint(data.shopId, settlementPoint, data.purchaseId);
                 emit ProvidedTokenForSettlement(
                     settlementAccount,
                     data.shopId,
-                    settlementAmount,
+                    settlementPoint,
                     settlementToken,
-                    settlementAmount,
                     tokenBalances[settlementAccount],
                     data.purchaseId
                 );
@@ -354,13 +376,12 @@ contract Ledger {
 
         emit PaidPoint(
             data.account,
-            purchaseAmount,
-            purchaseAmount,
-            feeAmount,
-            feeAmount,
+            purchasePoint,
+            data.amount,
+            feePoint,
+            feeValue,
             pointBalances[data.account],
             data.purchaseId,
-            data.amount,
             data.shopId
         );
     }
@@ -377,32 +398,32 @@ contract Ledger {
             "Invalid signature"
         );
 
-        uint256 purchaseAmount = convertCurrencyToPoint(data.amount, data.currency);
-        uint256 feeAmount = convertCurrencyToPoint((data.amount * fee) / 100, data.currency);
-        uint256 amountToken = convertPointToToken(purchaseAmount);
-        uint256 feeToken = convertPointToToken(feeAmount);
+        uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 purchaseToken = convertPointToToken(purchasePoint);
+        uint256 feeValue = (data.amount * fee) / 100;
+        uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
+        uint256 feeToken = convertPointToToken(feePoint);
 
-        require(tokenBalances[data.account] >= amountToken + feeToken, "Insufficient balance");
+        require(tokenBalances[data.account] >= purchaseToken + feeToken, "Insufficient balance");
 
-        tokenBalances[data.account] -= (amountToken + feeToken);
-        tokenBalances[foundationAccount] += amountToken;
+        tokenBalances[data.account] -= (purchaseToken + feeToken);
+        tokenBalances[foundationAccount] += purchaseToken;
         tokenBalances[feeAccount] += feeToken;
 
-        shopCollection.addUsedPoint(data.shopId, purchaseAmount, data.purchaseId);
+        shopCollection.addUsedPoint(data.shopId, purchasePoint, data.purchaseId);
 
-        uint256 settlementAmount = shopCollection.getSettlementPoint(data.shopId);
-        if (settlementAmount > 0) {
-            uint256 settlementToken = convertPointToToken(settlementAmount);
+        uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
+        if (settlementPoint > 0) {
+            uint256 settlementToken = convertPointToToken(settlementPoint);
             if (tokenBalances[foundationAccount] >= settlementToken) {
                 tokenBalances[settlementAccount] += settlementToken;
                 tokenBalances[foundationAccount] -= settlementToken;
-                shopCollection.addSettledPoint(data.shopId, settlementAmount, data.purchaseId);
+                shopCollection.addSettledPoint(data.shopId, settlementPoint, data.purchaseId);
                 emit ProvidedTokenForSettlement(
                     settlementAccount,
                     data.shopId,
-                    settlementAmount,
+                    settlementPoint,
                     settlementToken,
-                    settlementAmount,
                     tokenBalances[settlementAccount],
                     data.purchaseId
                 );
@@ -413,13 +434,12 @@ contract Ledger {
 
         emit PaidToken(
             data.account,
-            amountToken,
-            purchaseAmount,
+            purchaseToken,
+            data.amount,
             feeToken,
-            feeAmount,
+            feeValue,
             tokenBalances[data.account],
             data.purchaseId,
-            data.amount,
             data.shopId
         );
     }
@@ -511,22 +531,22 @@ contract Ledger {
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
     /// @param _account 지갑주소
-    function pointTypeOf(address _account) public view returns (PointType) {
-        return pointTypes[_account];
+    function royaltyTypeOf(address _account) public view returns (RoyaltyType) {
+        return royaltyTypes[_account];
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
-    /// @param _pointType 0: 포인트, 1: 토큰
+    /// @param _royaltyType 0: 포인트, 1: 토큰
     /// @param _account 지갑주소
     /// @param _signature 서명
-    function setPointType(PointType _pointType, address _account, bytes calldata _signature) public {
-        require(PointType.POINT <= _pointType && _pointType <= PointType.TOKEN, "Invalid value");
-        bytes32 dataHash = keccak256(abi.encode(_pointType, _account, nonce[_account]));
+    function setRoyaltyType(RoyaltyType _royaltyType, address _account, bytes calldata _signature) public {
+        require(RoyaltyType.POINT <= _royaltyType && _royaltyType <= RoyaltyType.TOKEN, "Invalid value");
+        bytes32 dataHash = keccak256(abi.encode(_royaltyType, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
-        pointTypes[_account] = _pointType;
+        royaltyTypes[_account] = _royaltyType;
         nonce[_account]++;
-        emit ChangedPointType(_account, _pointType);
+        emit ChangedRoyaltyType(_account, _royaltyType);
     }
 
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.

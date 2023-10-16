@@ -326,7 +326,7 @@ describe("Test of Server", function () {
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
                         account: foundation.address,
-                        depositAmount: assetAmount.value,
+                        depositedToken: assetAmount.value,
                         balanceToken: assetAmount.value,
                     });
             });
@@ -378,30 +378,30 @@ describe("Test of Server", function () {
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         account: userAccount,
-                        providedAmountPoint: pointAmount,
-                        value: pointAmount,
+                        providedPoint: pointAmount,
+                        providedValue: pointAmount,
                         purchaseId: purchase.purchaseId,
                         shopId: shop.shopId,
                     });
             });
         });
 
-        context("Change point type", () => {
-            it("Check point type - before", async () => {
+        context("Change royalty type", () => {
+            it("Check royalty type - before", async () => {
                 const userIndex = 0;
-                const pointType = await ledgerContract.pointTypeOf(users[userIndex].address);
-                expect(pointType).to.equal(0);
+                const royaltyType = await ledgerContract.royaltyTypeOf(users[userIndex].address);
+                expect(royaltyType).to.equal(0);
             });
 
-            it("Send point type", async () => {
-                const pointType = 1;
+            it("Send royalty type", async () => {
+                const royaltyType = 1;
                 const userIndex = 0;
                 const nonce = await ledgerContract.nonceOf(users[userIndex].address);
-                const signature = await ContractUtils.signPointType(users[userIndex], pointType, nonce);
-                const uri = URI(serverURL).directory("setPointType");
+                const signature = await ContractUtils.signRoyaltyType(users[userIndex], royaltyType, nonce);
+                const uri = URI(serverURL).directory("changeRoyaltyType");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    pointType,
+                    royaltyType,
                     account: users[userIndex].address,
                     signature,
                 });
@@ -413,8 +413,8 @@ describe("Test of Server", function () {
 
             it("Check point type - after", async () => {
                 const userIndex = 0;
-                const pointType = await ledgerContract.pointTypeOf(users[userIndex].address);
-                expect(pointType).to.equal(1);
+                const royaltyType = await ledgerContract.royaltyTypeOf(users[userIndex].address);
+                expect(royaltyType).to.equal(1);
             });
         });
 
@@ -709,8 +709,8 @@ describe("Test of Server", function () {
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
-                        providedAmountPoint: pointAmount,
-                        value: pointAmount,
+                        providedPoint: pointAmount,
+                        providedValue: pointAmount,
                         balancePoint: pointAmount,
                         purchaseId: purchase.purchaseId,
                         shopId: shop.shopId,
