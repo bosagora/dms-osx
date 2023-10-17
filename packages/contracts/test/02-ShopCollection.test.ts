@@ -17,7 +17,7 @@ chai.use(solidity);
 
 describe("Test for ShopCollection", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, user1, shop1, shop2, shop3, shop4, shop5] =
+    const [deployer, validator1, validator2, validator3, user1, shop1, shop2, shop3, shop4, shop5, relay] =
         provider.getWallets();
 
     const shopWallets: Wallet[] = [shop1, shop2, shop3, shop4, shop5];
@@ -97,10 +97,26 @@ describe("Test for ShopCollection", () => {
 
         it("Success", async () => {
             for (const elem of shopData) {
+                const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                const signature = ContractUtils.signShop(
+                    elem.wallet,
+                    elem.shopId,
+                    elem.name,
+                    elem.provideWaitTime,
+                    elem.providePercent,
+                    nonce
+                );
                 await expect(
                     shopCollection
-                        .connect(elem.wallet)
-                        .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                        .connect(relay)
+                        .add(
+                            elem.shopId,
+                            elem.name,
+                            elem.provideWaitTime,
+                            elem.providePercent,
+                            elem.wallet.address,
+                            signature
+                        )
                 )
                     .to.emit(shopCollection, "AddedShop")
                     .withNamedArgs({
@@ -121,20 +137,45 @@ describe("Test for ShopCollection", () => {
 
         it("Update", async () => {
             const elem = shopData[0];
-            await expect(shopCollection.connect(elem.wallet).update(elem.shopId, "New Shop", 86400 * 7, 10))
+            const nonce = await shopCollection.nonceOf(elem.wallet.address);
+            elem.name = "New Shop";
+            elem.provideWaitTime = 86400 * 7;
+            elem.providePercent = 10;
+            const signature = ContractUtils.signShop(
+                elem.wallet,
+                elem.shopId,
+                elem.name,
+                elem.provideWaitTime,
+                elem.providePercent,
+                nonce
+            );
+            await expect(
+                shopCollection
+                    .connect(relay)
+                    .update(
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        elem.wallet.address,
+                        signature
+                    )
+            )
                 .to.emit(shopCollection, "UpdatedShop")
                 .withNamedArgs({
                     shopId: elem.shopId,
-                    name: "New Shop",
-                    provideWaitTime: 86400 * 7,
-                    providePercent: 10,
+                    name: elem.name,
+                    provideWaitTime: elem.provideWaitTime,
+                    providePercent: elem.providePercent,
                     account: elem.wallet.address,
                 });
         });
 
         it("Remove", async () => {
             const elem = shopData[0];
-            await expect(shopCollection.connect(elem.wallet).remove(elem.shopId))
+            const nonce = await shopCollection.nonceOf(elem.wallet.address);
+            const signature = ContractUtils.signShopId(elem.wallet, elem.shopId, nonce);
+            await expect(shopCollection.connect(elem.wallet).remove(elem.shopId, elem.wallet.address, signature))
                 .to.emit(shopCollection, "RemovedShop")
                 .withNamedArgs({
                     shopId: elem.shopId,

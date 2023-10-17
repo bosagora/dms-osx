@@ -9,6 +9,7 @@ import { ShopCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 
 import { Wallet } from "ethers";
+import { ContractUtils } from "../../src/utils/ContractUtils";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     console.log(`\nDeploying ShopCollection.`);
@@ -37,9 +38,18 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const contract = (await ethers.getContractAt("ShopCollection", contractAddress)) as ShopCollection;
 
         for (const shop of shopData) {
+            const nonce = await contract.nonceOf(shop.address);
+            const signature = ContractUtils.signShop(
+                new Wallet(shop.privateKey, ethers.provider),
+                shop.shopId,
+                shop.name,
+                shop.provideWaitTime,
+                shop.providePercent,
+                nonce
+            );
             const tx = await contract
                 .connect(new Wallet(shop.privateKey, ethers.provider))
-                .add(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent);
+                .add(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.address, signature);
             console.log(`Add shop data (tx: ${tx.hash})...`);
             await tx.wait();
         }

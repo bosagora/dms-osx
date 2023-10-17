@@ -320,10 +320,26 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                    const signature = ContractUtils.signShop(
+                        elem.wallet,
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        nonce
+                    );
                     await expect(
                         shopCollection
-                            .connect(elem.wallet)
-                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                            .connect(relay)
+                            .add(
+                                elem.shopId,
+                                elem.name,
+                                elem.provideWaitTime,
+                                elem.providePercent,
+                                elem.wallet.address,
+                                signature
+                            )
                     )
                         .to.emit(shopCollection, "AddedShop")
                         .withNamedArgs({
@@ -1244,10 +1260,26 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                    const signature = ContractUtils.signShop(
+                        elem.wallet,
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        nonce
+                    );
                     await expect(
                         shopCollection
                             .connect(elem.wallet)
-                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                            .add(
+                                elem.shopId,
+                                elem.name,
+                                elem.provideWaitTime,
+                                elem.providePercent,
+                                elem.wallet.address,
+                                signature
+                            )
                     )
                         .to.emit(shopCollection, "AddedShop")
                         .withNamedArgs({
@@ -1467,10 +1499,26 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                    const signature = ContractUtils.signShop(
+                        elem.wallet,
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        nonce
+                    );
                     await expect(
                         shopCollection
                             .connect(elem.wallet)
-                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                            .add(
+                                elem.shopId,
+                                elem.name,
+                                elem.provideWaitTime,
+                                elem.providePercent,
+                                elem.wallet.address,
+                                signature
+                            )
                     )
                         .to.emit(shopCollection, "AddedShop")
                         .withNamedArgs({
@@ -1736,10 +1784,16 @@ describe("Test for Ledger", () => {
             });
 
             it("Open Withdrawal", async () => {
+                const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
+                const signature = ContractUtils.signShopId(
+                    shopData[shopIndex].wallet,
+                    shopData[shopIndex].shopId,
+                    nonce
+                );
                 await expect(
                     shopCollection
                         .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
-                        .openWithdrawal(shop.shopId, amount2)
+                        .openWithdrawal(shop.shopId, amount2, shopData[shopIndex].wallet.address, signature)
                 )
                     .to.emit(shopCollection, "OpenedWithdrawal")
                     .withNamedArgs({
@@ -1752,10 +1806,16 @@ describe("Test for Ledger", () => {
             });
 
             it("Close Withdrawal", async () => {
+                const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
+                const signature = ContractUtils.signShopId(
+                    shopData[shopIndex].wallet,
+                    shopData[shopIndex].shopId,
+                    nonce
+                );
                 await expect(
                     shopCollection
                         .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
-                        .closeWithdrawal(shop.shopId)
+                        .closeWithdrawal(shop.shopId, shopData[shopIndex].wallet.address, signature)
                 )
                     .to.emit(shopCollection, "ClosedWithdrawal")
                     .withNamedArgs({
@@ -1926,10 +1986,26 @@ describe("Test for Ledger", () => {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                    const signature = ContractUtils.signShop(
+                        elem.wallet,
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        nonce
+                    );
                     await expect(
                         shopCollection
                             .connect(elem.wallet)
-                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                            .add(
+                                elem.shopId,
+                                elem.name,
+                                elem.provideWaitTime,
+                                elem.providePercent,
+                                elem.wallet.address,
+                                signature
+                            )
                     )
                         .to.emit(shopCollection, "AddedShop")
                         .withNamedArgs({

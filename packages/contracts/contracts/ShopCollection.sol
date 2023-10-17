@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
 /// @notice 상점컬랙션
 contract ShopCollection {
     /// @notice 검증자의 상태코드
@@ -61,6 +63,7 @@ contract ShopCollection {
 
     address public ledgerAddress;
     address public deployer;
+    mapping(address => uint256) private nonce;
 
     /// @notice 생성자
     constructor() {
@@ -93,7 +96,18 @@ contract ShopCollection {
     /// @param _name 상점이름
     /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
     /// @param _providePercent 구매금액에 대한 포인트 지급량
-    function add(bytes32 _shopId, string calldata _name, uint256 _provideWaitTime, uint256 _providePercent) public {
+    function add(
+        bytes32 _shopId,
+        string calldata _name,
+        uint256 _provideWaitTime,
+        uint256 _providePercent,
+        address _account,
+        bytes calldata _signature
+    ) public {
+        bytes32 dataHash = keccak256(
+            abi.encode(_shopId, _name, _provideWaitTime, _providePercent, _account, nonce[_account])
+        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
         require(shops[_shopId].status == ShopStatus.INVALID, "Invalid shopId");
 
         ShopData memory data = ShopData({
@@ -101,7 +115,7 @@ contract ShopCollection {
             name: _name,
             provideWaitTime: _provideWaitTime,
             providePercent: _providePercent,
-            account: msg.sender,
+            account: _account,
             providedPoint: 0,
             usedPoint: 0,
             settledPoint: 0,
@@ -109,27 +123,48 @@ contract ShopCollection {
             status: ShopStatus.ACTIVE,
             withdrawData: WithdrawData({ amount: 0, status: WithdrawStatus.CLOSE }),
             itemIndex: items.length,
-            accountIndex: shopIdByAddress[msg.sender].length
+            accountIndex: shopIdByAddress[_account].length
         });
         items.push(_shopId);
         shops[_shopId] = data;
-        shopIdByAddress[msg.sender].push(_shopId);
-        emit AddedShop(_shopId, _name, _provideWaitTime, _providePercent, msg.sender);
+        shopIdByAddress[_account].push(_shopId);
+
+        nonce[_account]++;
+
+        emit AddedShop(_shopId, _name, _provideWaitTime, _providePercent, _account);
     }
 
-    function update(bytes32 _shopId, string calldata _name, uint256 _provideWaitTime, uint256 _providePercent) public {
+    function update(
+        bytes32 _shopId,
+        string calldata _name,
+        uint256 _provideWaitTime,
+        uint256 _providePercent,
+        address _account,
+        bytes calldata _signature
+    ) public {
+        bytes32 dataHash = keccak256(
+            abi.encode(_shopId, _name, _provideWaitTime, _providePercent, _account, nonce[_account])
+        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+
         require(shops[_shopId].status != ShopStatus.INVALID, "Not exist shopId");
-        require(shops[_shopId].account == msg.sender, "Not owner");
+        require(shops[_shopId].account == _account, "Not owner");
 
         shops[_shopId].name = _name;
         shops[_shopId].provideWaitTime = _provideWaitTime;
         shops[_shopId].providePercent = _providePercent;
-        emit UpdatedShop(_shopId, _name, _provideWaitTime, _providePercent, msg.sender);
+
+        nonce[_account]++;
+
+        emit UpdatedShop(_shopId, _name, _provideWaitTime, _providePercent, _account);
     }
 
-    function remove(bytes32 _shopId) public {
+    function remove(bytes32 _shopId, address _account, bytes calldata _signature) public {
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+
         require(shops[_shopId].status != ShopStatus.INVALID, "Not exist shopId");
-        require(shops[_shopId].account == msg.sender, "Not owner");
+        require(shops[_shopId].account == _account, "Not owner");
 
         uint256 index = shops[_shopId].itemIndex;
         uint256 last = items.length - 1;
@@ -140,14 +175,17 @@ contract ShopCollection {
         }
 
         index = shops[_shopId].accountIndex;
-        last = shopIdByAddress[msg.sender].length - 1;
+        last = shopIdByAddress[_account].length - 1;
         if (index != last) {
-            shopIdByAddress[msg.sender][index] = shopIdByAddress[msg.sender][last];
-            shops[shopIdByAddress[msg.sender][index]].accountIndex = index;
-            shopIdByAddress[msg.sender].pop();
+            shopIdByAddress[_account][index] = shopIdByAddress[_account][last];
+            shops[shopIdByAddress[_account][index]].accountIndex = index;
+            shopIdByAddress[_account].pop();
         }
 
         delete shops[_shopId];
+
+        nonce[_account]++;
+
         emit RemovedShop(_shopId);
     }
 
@@ -222,10 +260,13 @@ contract ShopCollection {
     /// @notice 정산금의 인출을 요청한다. 상점주인만이 실행가능
     /// @param _shopId 상점아이디
     /// @param _amount 인출금
-    function openWithdrawal(bytes32 _shopId, uint256 _amount) public {
+    function openWithdrawal(bytes32 _shopId, uint256 _amount, address _account, bytes calldata _signature) public {
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+
         ShopData memory shop = shops[_shopId];
 
-        require(shop.account == msg.sender, "Invalid address");
+        require(shop.account == _account, "Invalid address");
 
         require(_amount <= shop.settledPoint - shop.withdrawnPoint, "Insufficient withdrawal amount");
         require(shop.withdrawData.status == WithdrawStatus.CLOSE, "Already opened");
@@ -233,21 +274,34 @@ contract ShopCollection {
         shops[_shopId].withdrawData.amount = _amount;
         shops[_shopId].withdrawData.status = WithdrawStatus.OPEN;
 
-        emit OpenedWithdrawal(_shopId, _amount, msg.sender);
+        nonce[_account]++;
+
+        emit OpenedWithdrawal(_shopId, _amount, _account);
     }
 
     /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
     /// @param _shopId 상점아이디
-    function closeWithdrawal(bytes32 _shopId) public {
+    function closeWithdrawal(bytes32 _shopId, address _account, bytes calldata _signature) public {
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+
         ShopData memory shop = shops[_shopId];
 
-        require(shop.account == msg.sender, "Invalid address");
+        require(shop.account == _account, "Invalid address");
 
         require(shop.withdrawData.status == WithdrawStatus.OPEN, "Not opened");
 
         shops[_shopId].withdrawData.status = WithdrawStatus.CLOSE;
         shops[_shopId].withdrawnPoint += shop.withdrawData.amount;
 
-        emit ClosedWithdrawal(_shopId, shops[_shopId].withdrawData.amount, shops[_shopId].withdrawnPoint, msg.sender);
+        nonce[_account]++;
+
+        emit ClosedWithdrawal(_shopId, shops[_shopId].withdrawData.amount, shops[_shopId].withdrawnPoint, _account);
+    }
+
+    /// @notice nonce를  리턴한다
+    /// @param _account 지갑주소
+    function nonceOf(address _account) public view returns (uint256) {
+        return nonce[_account];
     }
 }
