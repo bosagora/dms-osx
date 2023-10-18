@@ -48,6 +48,13 @@ contract Ledger {
         bytes signature;
     }
 
+    struct PaymentDirectData {
+        string purchaseId;
+        uint256 amount;
+        string currency;
+        bytes32 shopId;
+    }
+
     mapping(string => PurchaseData) private purchases;
     string[] private purchaseIds;
 
@@ -311,6 +318,18 @@ contract Ledger {
     function changeToPayablePoint(bytes32 _phone, address _account, bytes calldata _signature) public {
         bytes32 dataHash = keccak256(abi.encode(_phone, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+
+        _changeToPayablePoint(_phone, _account);
+    }
+
+    /// @notice 사용가능한 포인트로 전환합니다.
+    /// @dev 사용자에 의해 직접 호출됩니다.
+    function changeToPayablePointDirect(bytes32 _phone) public {
+        _changeToPayablePoint(_phone, msg.sender);
+    }
+
+    /// @notice 사용가능한 포인트로 전환합니다.
+    function _changeToPayablePoint(bytes32 _phone, address _account) internal {
         address userAddress = linkCollection.toAddress(_phone);
         require(userAddress != address(0x00), "Unregistered phone-address");
         require(userAddress == _account, "Invalid address");
@@ -338,15 +357,34 @@ contract Ledger {
             "Invalid signature"
         );
 
+        PaymentDirectData memory directData = PaymentDirectData({
+            purchaseId: data.purchaseId,
+            amount: data.amount,
+            currency: data.currency,
+            shopId: data.shopId
+        });
+
+        _payPoint(directData, data.account);
+    }
+
+    /// @notice 포인트를 구매에 사용하는 함수
+    /// @dev 사용자에 의해 직접 호출됩니다.
+    function payPointDirect(PaymentDirectData calldata _data) public {
+        _payPoint(_data, msg.sender);
+    }
+
+    /// @notice 포인트를 구매에 사용하는 함수
+    function _payPoint(PaymentDirectData memory _data, address _account) internal {
+        PaymentDirectData memory data = _data;
         uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
         uint256 feeValue = (data.amount * fee) / 100;
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
 
-        require(pointBalances[data.account] >= purchasePoint + feePoint, "Insufficient balance");
+        require(pointBalances[_account] >= purchasePoint + feePoint, "Insufficient balance");
         require(tokenBalances[foundationAccount] >= feeToken, "Insufficient foundation balance");
 
-        pointBalances[data.account] -= (purchasePoint + feePoint);
+        pointBalances[_account] -= (purchasePoint + feePoint);
 
         // 재단의 토큰으로 교환해 지급한다.
         tokenBalances[foundationAccount] -= feeToken;
@@ -372,15 +410,15 @@ contract Ledger {
             }
         }
 
-        nonce[data.account]++;
+        nonce[_account]++;
 
         emit PaidPoint(
-            data.account,
+            _account,
             purchasePoint,
             data.amount,
             feePoint,
             feeValue,
-            pointBalances[data.account],
+            pointBalances[_account],
             data.purchaseId,
             data.shopId
         );
@@ -398,15 +436,35 @@ contract Ledger {
             "Invalid signature"
         );
 
+        PaymentDirectData memory directData = PaymentDirectData({
+            purchaseId: data.purchaseId,
+            amount: data.amount,
+            currency: data.currency,
+            shopId: data.shopId
+        });
+
+        _payToken(directData, data.account);
+    }
+
+    /// @notice 토큰을 구매에 사용하는 함수
+    /// @dev 사용자에 의해 직접 호출됩니다.
+    function payTokenDirect(PaymentDirectData calldata _data) public {
+        _payToken(_data, msg.sender);
+    }
+
+    /// @notice 토큰을 구매에 사용하는 함수
+    function _payToken(PaymentDirectData memory _data, address _account) public {
+        PaymentDirectData memory data = _data;
+
         uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
         uint256 purchaseToken = convertPointToToken(purchasePoint);
         uint256 feeValue = (data.amount * fee) / 100;
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
 
-        require(tokenBalances[data.account] >= purchaseToken + feeToken, "Insufficient balance");
+        require(tokenBalances[_account] >= purchaseToken + feeToken, "Insufficient balance");
 
-        tokenBalances[data.account] -= (purchaseToken + feeToken);
+        tokenBalances[_account] -= (purchaseToken + feeToken);
         tokenBalances[foundationAccount] += purchaseToken;
         tokenBalances[feeAccount] += feeToken;
 
@@ -430,15 +488,15 @@ contract Ledger {
             }
         }
 
-        nonce[data.account]++;
+        nonce[_account]++;
 
         emit PaidToken(
-            data.account,
+            _account,
             purchaseToken,
             data.amount,
             feeToken,
             feeValue,
-            tokenBalances[data.account],
+            tokenBalances[_account],
             data.purchaseId,
             data.shopId
         );
@@ -536,17 +594,32 @@ contract Ledger {
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
-    /// @param _royaltyType 0: 포인트, 1: 토큰
+    /// @param _type 0: 포인트, 1: 토큰
     /// @param _account 지갑주소
     /// @param _signature 서명
-    function setRoyaltyType(RoyaltyType _royaltyType, address _account, bytes calldata _signature) public {
-        require(RoyaltyType.POINT <= _royaltyType && _royaltyType <= RoyaltyType.TOKEN, "Invalid value");
-        bytes32 dataHash = keccak256(abi.encode(_royaltyType, _account, nonce[_account]));
+    /// @dev 중계서버를 통해서 호출됩니다.
+    function setRoyaltyType(RoyaltyType _type, address _account, bytes calldata _signature) public {
+        bytes32 dataHash = keccak256(abi.encode(_type, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
-        royaltyTypes[_account] = _royaltyType;
+        _setRoyaltyType(_type, _account);
+    }
+
+    /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
+    /// @param _type 0: 포인트, 1: 토큰
+    /// @dev 사용자에 의해 직접 호출됩니다.
+    function setRoyaltyTypeDirect(RoyaltyType _type) public {
+        _setRoyaltyType(_type, msg.sender);
+    }
+
+    function _setRoyaltyType(RoyaltyType _type, address _account) internal {
+        require(RoyaltyType.POINT <= _type && _type <= RoyaltyType.TOKEN, "Invalid value");
+
+        royaltyTypes[_account] = _type;
+
         nonce[_account]++;
-        emit ChangedRoyaltyType(_account, _royaltyType);
+
+        emit ChangedRoyaltyType(_account, _type);
     }
 
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.
