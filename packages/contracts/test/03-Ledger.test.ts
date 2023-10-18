@@ -20,6 +20,7 @@ import { BigNumber, Wallet } from "ethers";
 import * as hre from "hardhat";
 
 import { AddressZero } from "@ethersproject/constants";
+import { waffle } from "hardhat";
 
 chai.use(solidity);
 
@@ -493,7 +494,7 @@ describe("Test for Ledger", () => {
                 }
             });
 
-            it("Save Purchase Data - phone and address are not registered", async () => {
+            it("Save Purchase Data (user: 3, point type : 0) - phone and address are not registered", async () => {
                 const purchase: IPurchaseData = {
                     purchaseId: "P000005",
                     timestamp: 1683212400,
@@ -548,7 +549,7 @@ describe("Test for Ledger", () => {
                 );
             });
 
-            it("Link phone-address", async () => {
+            it("Link phone-address (user: 3, point type : 0)", async () => {
                 const nonce = await linkCollectionContract.nonceOf(userWallets[3].address);
                 const hash = phoneHashes[3];
                 const signature = await ContractUtils.signRequestHash(userWallets[3], hash, nonce);
@@ -562,7 +563,7 @@ describe("Test for Ledger", () => {
                 await linkCollectionContract.connect(validator1).countVote(requestId);
             });
 
-            it("Save Purchase Data - phone and address are registered (user: 3, point type : 0)", async () => {
+            it("Save Purchase Data (user: 3, point type : 0) - phone and address are registered (user: 3, point type : 0)", async () => {
                 const purchase: IPurchaseData = {
                     purchaseId: "P000005",
                     timestamp: 1683212400,
@@ -628,7 +629,7 @@ describe("Test for Ledger", () => {
                 );
             });
 
-            it("Change to payable point", async () => {
+            it("Change to payable point (user: 3, point type : 0)", async () => {
                 const userIndex = 3;
                 const oldBalance = await ledgerContract.pointBalanceOf(userWallets[userIndex].address);
                 const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
@@ -652,13 +653,15 @@ describe("Test for Ledger", () => {
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.equal(0);
             });
 
-            it("Change point type (user: 3)", async () => {
+            it("Change point type (user: 3, point type : 0)", async () => {
                 const userIndex = 3;
                 const royaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
                 const signature = ContractUtils.signRoyaltyType(userWallets[userIndex], royaltyType, nonce);
                 await expect(
-                    ledgerContract.connect(relay).setRoyaltyType(royaltyType, userWallets[userIndex].address, signature)
+                    ledgerContract
+                        .connect(userWallets[userIndex].connect(hre.waffle.provider))
+                        .setRoyaltyTypeDirect(royaltyType)
                 )
                     .to.emit(ledgerContract, "ChangedRoyaltyType")
                     .withNamedArgs({ account: userWallets[userIndex].address, royaltyType });
@@ -858,6 +861,245 @@ describe("Test for Ledger", () => {
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
                         account: userAccount,
+                        providedToken: tokenAmount,
+                        providedValue: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                    });
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
+                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
+                    oldPointBalance
+                );
+                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
+                    oldTokenBalance.add(tokenAmount)
+                );
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                    oldFoundationTokenBalance.sub(tokenAmount)
+                );
+            });
+
+            it("Save Purchase Data (user: 4, point type : 0) - phone and address are not registered", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
+                    amount: 10000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 4,
+                };
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                await expect(
+                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
+                        purchase.method,
+                        userAccount,
+                        phoneHash
+                    )
+                    .emit(ledgerContract, "ProvidedUnPayablePoint")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        providedPoint: pointAmount,
+                        providedValue: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                    });
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(
+                    oldUnPayablePointBalance.add(pointAmount)
+                );
+            });
+
+            it("Link phone-address (user: 4, point type : 0)", async () => {
+                const nonce = await linkCollectionContract.nonceOf(userWallets[4].address);
+                const hash = phoneHashes[4];
+                const signature = await ContractUtils.signRequestHash(userWallets[4], hash, nonce);
+                requestId = ContractUtils.getRequestId(hash, userWallets[3].address, nonce);
+                await expect(
+                    linkCollectionContract.connect(relay).addRequest(requestId, hash, userWallets[4].address, signature)
+                )
+                    .to.emit(linkCollectionContract, "AddedRequestItem")
+                    .withArgs(requestId, hash, userWallets[4].address);
+                await linkCollectionContract.connect(validator1).voteRequest(requestId);
+                await linkCollectionContract.connect(validator1).countVote(requestId);
+            });
+
+            it("Save Purchase Data (user: 4, point type : 0) - phone and address are registered (user: 4, point type : 0)", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
+                    amount: 10000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 4,
+                };
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                await expect(
+                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
+                        purchase.method,
+                        userAccount,
+                        phoneHash
+                    )
+                    .emit(ledgerContract, "ProvidedPoint")
+                    .withNamedArgs({
+                        account: userWallets[4].address,
+                        providedPoint: pointAmount,
+                        providedValue: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                    });
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
+                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
+                    oldPointBalance.add(pointAmount)
+                );
+                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
+                    oldTokenBalance
+                );
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                    oldFoundationTokenBalance
+                );
+            });
+
+            it("Change to payable point (user: 4, point type : 0)", async () => {
+                const userIndex = 4;
+                const oldBalance = await ledgerContract.pointBalanceOf(userWallets[userIndex].address);
+                const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
+                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
+                const signature = ContractUtils.signChangePayablePoint(userWallets[userIndex], phoneHash, nonce);
+                const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                await expect(
+                    ledgerContract
+                        .connect(userWallets[userIndex].connect(hre.waffle.provider))
+                        .changeToPayablePointDirect(phoneHash)
+                )
+                    .to.emit(ledgerContract, "ChangedToPayablePoint")
+                    .withNamedArgs({
+                        phone: phoneHash,
+                        account: userWallets[userIndex].address,
+                        changedPoint: unPayableAmount,
+                    });
+                expect(await ledgerContract.pointBalanceOf(userWallets[userIndex].address)).to.equal(
+                    oldBalance.add(unPayableAmount)
+                );
+                expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.equal(0);
+            });
+
+            it("Change point type (user: 4, point type : 0)", async () => {
+                const userIndex = 4;
+                const royaltyType = 1;
+                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
+                const signature = ContractUtils.signRoyaltyType(userWallets[userIndex], royaltyType, nonce);
+                await expect(
+                    ledgerContract
+                        .connect(userWallets[userIndex].connect(hre.waffle.provider))
+                        .setRoyaltyTypeDirect(royaltyType)
+                )
+                    .to.emit(ledgerContract, "ChangedRoyaltyType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, royaltyType });
+            });
+
+            it("Save Purchase Data - phone and address are registered (user: 4, point type : 1)", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000005",
+                    timestamp: 1683212400,
+                    amount: 10000,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 4,
+                };
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
+
+                const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                await expect(
+                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withArgs(
+                        purchase.purchaseId,
+                        purchase.timestamp,
+                        purchaseAmount,
+                        purchase.currency.toLowerCase(),
+                        shopData[purchase.shopIndex].shopId,
+                        purchase.method,
+                        userAccount,
+                        phoneHash
+                    )
+                    .emit(ledgerContract, "ProvidedToken")
+                    .withNamedArgs({
+                        account: userWallets[4].address,
                         providedToken: tokenAmount,
                         providedValue: pointAmount,
                         purchaseId: purchase.purchaseId,
@@ -1105,7 +1347,7 @@ describe("Test for Ledger", () => {
                         account: userWallets[purchase.userIndex].address,
                         paidToken: tokenAmount,
                         paidValue: purchaseAmount,
-                        feeToken: feeToken,
+                        feeToken,
                         feeValue: feeAmount,
                         purchaseId: purchase.purchaseId,
                         shopId: shop.shopId,
@@ -1816,6 +2058,445 @@ describe("Test for Ledger", () => {
                     shopCollection
                         .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
                         .closeWithdrawal(shop.shopId, shopData[shopIndex].wallet.address, signature)
+                )
+                    .to.emit(shopCollection, "ClosedWithdrawal")
+                    .withNamedArgs({
+                        shopId: shop.shopId,
+                        amount: amount2,
+                        account: shopWallets[shopIndex].address,
+                    });
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(0);
+            });
+        });
+    });
+
+    context("Clearing for shops [Direct]", () => {
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: userWallets[0].address,
+                privateKey: userWallets[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: userWallets[1].address,
+                privateKey: userWallets[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: userWallets[2].address,
+                privateKey: userWallets[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: userWallets[3].address,
+                privateKey: userWallets[3].privateKey,
+            },
+            {
+                phone: "08201012341005",
+                address: userWallets[4].address,
+                privateKey: userWallets[4].privateKey,
+            },
+        ];
+
+        const purchaseData: IPurchaseData[] = [
+            {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000002",
+                timestamp: 1675522800,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000003",
+                timestamp: 1677942000,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000004",
+                timestamp: 1680620400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000005",
+                timestamp: 1683212400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 2,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000005",
+                timestamp: 1683212400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 3,
+                userIndex: 0,
+            },
+        ];
+
+        const shopData: IShopData[] = [
+            {
+                shopId: "F000100",
+                name: "Shop1",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[0],
+            },
+            {
+                shopId: "F000200",
+                name: "Shop2",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[1],
+            },
+            {
+                shopId: "F000300",
+                name: "Shop3",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[2],
+            },
+            {
+                shopId: "F000400",
+                name: "Shop4",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[3],
+            },
+            {
+                shopId: "F000500",
+                name: "Shop5",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[4],
+            },
+            {
+                shopId: "F000600",
+                name: "Shop6",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[5],
+            },
+        ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
+
+        before("Deploy", async () => {
+            await deployAllContract();
+        });
+
+        before("Prepare Token", async () => {
+            for (const elem of userWallets) {
+                await tokenContract.connect(deployer).transfer(elem.address, amount.value);
+            }
+        });
+
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
+                    await expect(
+                        shopCollection
+                            .connect(elem.wallet)
+                            .addDirect(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                    )
+                        .to.emit(shopCollection, "AddedShop")
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
+                }
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+            });
+        });
+
+        context("Prepare foundation's asset", () => {
+            it("Deposit foundation's token", async () => {
+                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        account: foundation.address,
+                        depositedToken: assetAmount.value,
+                        balanceToken: assetAmount.value,
+                    });
+            });
+        });
+
+        context("Save Purchase Data", () => {
+            it("Save Purchase Data", async () => {
+                for (const purchase of purchaseData) {
+                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const shop = shopData[purchase.shopIndex];
+                    const amt = purchaseAmount.mul(shop.providePercent).div(100);
+                    const userAccount =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : AddressZero;
+                    await expect(
+                        ledgerContract.connect(validatorWallets[0]).savePurchase({
+                            purchaseId: purchase.purchaseId,
+                            timestamp: purchase.timestamp,
+                            amount: purchaseAmount,
+                            currency: purchase.currency.toLowerCase(),
+                            shopId: shopData[purchase.shopIndex].shopId,
+                            method: purchase.method,
+                            account: userAccount,
+                            phone: phoneHash,
+                        })
+                    )
+                        .to.emit(ledgerContract, "SavedPurchase")
+                        .withArgs(
+                            purchase.purchaseId,
+                            purchase.timestamp,
+                            purchaseAmount,
+                            purchase.currency.toLowerCase(),
+                            shopData[purchase.shopIndex].shopId,
+                            purchase.method,
+                            userAccount,
+                            phoneHash
+                        )
+                        .emit(ledgerContract, "ProvidedPoint")
+                        .withNamedArgs({
+                            account: userAccount,
+                            providedPoint: amt,
+                            providedValue: amt,
+                            purchaseId: purchase.purchaseId,
+                        });
+                }
+            });
+
+            it("Check balances", async () => {
+                const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
+                for (const purchase of purchaseData) {
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const key =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
+                    const oldValue = expected.get(key);
+
+                    const shop = shopData[purchase.shopIndex];
+                    const point = purchaseAmount.mul(shop.providePercent).div(100);
+
+                    if (oldValue !== undefined) expected.set(key, oldValue.add(point));
+                    else expected.set(key, point);
+                }
+                for (const key of expected.keys()) {
+                    if (key.match(/^0x[A-Fa-f0-9]{64}$/i)) {
+                        expect(await ledgerContract.unPayablePointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    } else {
+                        expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    }
+                }
+            });
+
+            it("Check shop data", async () => {
+                const shopInfo1 = await shopCollection.shopOf(shopData[0].shopId);
+                expect(shopInfo1.providedPoint).to.equal(
+                    Amount.make(10000 * 3, 18)
+                        .value.mul(shopData[0].providePercent)
+                        .div(100)
+                );
+
+                const shopInfo2 = await shopCollection.shopOf(shopData[1].shopId);
+                expect(shopInfo2.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[1].providePercent)
+                        .div(100)
+                );
+                const shopInfo3 = await shopCollection.shopOf(shopData[2].shopId);
+                expect(shopInfo3.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[2].providePercent)
+                        .div(100)
+                );
+                const shopInfo4 = await shopCollection.shopOf(shopData[3].shopId);
+                expect(shopInfo4.providedPoint).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(shopData[3].providePercent)
+                        .div(100)
+                );
+            });
+        });
+
+        context("Pay point", () => {
+            it("Pay point - Success", async () => {
+                const purchase = {
+                    purchaseId: "P000100",
+                    timestamp: 1672849000,
+                    amount: 300,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
+                };
+
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const amt = purchaseAmount.mul(shop.providePercent).div(100);
+                await expect(
+                    ledgerContract
+                        .connect(userWallets[purchase.userIndex].connect(hre.waffle.provider))
+                        .payPointDirect({
+                            purchaseId: purchase.purchaseId,
+                            amount: purchaseAmount,
+                            currency: purchase.currency.toLowerCase(),
+                            shopId: shop.shopId,
+                        })
+                )
+                    .to.emit(ledgerContract, "ProvidedTokenForSettlement")
+                    .withNamedArgs({
+                        account: settlements.address,
+                        shopId: shop.shopId,
+                        providedPoint: Amount.make(200, 18).value,
+                    })
+                    .to.emit(ledgerContract, "PaidPoint")
+                    .withNamedArgs({
+                        account: userWallets[purchase.userIndex].address,
+                        paidPoint: purchaseAmount,
+                        paidValue: purchaseAmount,
+                        purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
+                    });
+                const shopInfo = await shopCollection.shopOf(shop.shopId);
+                expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo.usedPoint).to.equal(Amount.make(300, 18).value);
+                expect(shopInfo.settledPoint).to.equal(Amount.make(200, 18).value);
+            });
+        });
+
+        context("Deposit token", () => {
+            it("Deposit token - Success", async () => {
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
+                await tokenContract.connect(userWallets[0]).approve(ledgerContract.address, amount.value);
+                await expect(ledgerContract.connect(userWallets[0]).deposit(amount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        account: userWallets[0].address,
+                        depositedToken: amount.value,
+                        balanceToken: oldTokenBalance.add(amount.value),
+                    });
+                expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
+                    oldTokenBalance.add(amount.value)
+                );
+            });
+        });
+
+        context("Pay token", () => {
+            it("Pay token - Success", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000200",
+                    timestamp: 1672849000,
+                    amount: 500,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 2,
+                    userIndex: 0,
+                };
+
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const tokenAmount = purchaseAmount.mul(multiple).div(price);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const shop = shopData[purchase.shopIndex];
+
+                await expect(
+                    ledgerContract
+                        .connect(userWallets[purchase.userIndex].connect(hre.waffle.provider))
+                        .payTokenDirect({
+                            purchaseId: purchase.purchaseId,
+                            amount: purchaseAmount,
+                            currency: purchase.currency.toLowerCase(),
+                            shopId: shop.shopId,
+                        })
+                )
+                    .to.emit(ledgerContract, "PaidToken")
+                    .withNamedArgs({
+                        account: userWallets[purchase.userIndex].address,
+                        paidToken: tokenAmount,
+                        paidValue: purchaseAmount,
+                        purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
+                    });
+                const shopInfo2 = await shopCollection.shopOf(shop.shopId);
+                expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo2.usedPoint).to.equal(Amount.make(500, 18).value);
+                expect(shopInfo2.settledPoint).to.equal(Amount.make(400, 18).value);
+
+                const settledToken = shopInfo2.settledPoint.mul(multiple).div(price);
+                expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
+                    oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
+                );
+            });
+        });
+
+        context("Withdrawal of settlement", () => {
+            const shopIndex = 2;
+            const shop = shopData[shopIndex];
+            const amount2 = Amount.make(400, 18).value;
+            it("Check Settlement", async () => {
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(amount2);
+            });
+
+            it("Open Withdrawal", async () => {
+                await expect(
+                    shopCollection
+                        .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
+                        .openWithdrawalDirect(shop.shopId, amount2)
+                )
+                    .to.emit(shopCollection, "OpenedWithdrawal")
+                    .withNamedArgs({
+                        shopId: shop.shopId,
+                        amount: amount2,
+                        account: shopWallets[shopIndex].address,
+                    });
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(amount2);
+            });
+
+            it("Close Withdrawal", async () => {
+                const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
+                const signature = await ContractUtils.signShopId(
+                    shopData[shopIndex].wallet,
+                    shopData[shopIndex].shopId,
+                    nonce
+                );
+                await expect(
+                    shopCollection
+                        .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
+                        .closeWithdrawalDirect(shop.shopId)
                 )
                     .to.emit(shopCollection, "ClosedWithdrawal")
                     .withNamedArgs({

@@ -96,6 +96,7 @@ contract ShopCollection {
     /// @param _name 상점이름
     /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
     /// @param _providePercent 구매금액에 대한 포인트 지급량
+    /// @dev 중계서버를 통해서 호출됩니다.
     function add(
         bytes32 _shopId,
         string calldata _name,
@@ -108,6 +109,37 @@ contract ShopCollection {
             abi.encode(_shopId, _name, _provideWaitTime, _providePercent, _account, nonce[_account])
         );
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+
+        _add(_shopId, _name, _provideWaitTime, _providePercent, _account);
+    }
+
+    /// @notice 상점을 추가한다
+    /// @param _shopId 상점 아이디
+    /// @param _name 상점이름
+    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
+    /// @param _providePercent 구매금액에 대한 포인트 지급량
+    /// @dev 상점주에 의해 직접 호출됩니다.
+    function addDirect(
+        bytes32 _shopId,
+        string calldata _name,
+        uint256 _provideWaitTime,
+        uint256 _providePercent
+    ) public {
+        _add(_shopId, _name, _provideWaitTime, _providePercent, msg.sender);
+    }
+
+    /// @notice 상점을 추가한다
+    /// @param _shopId 상점 아이디
+    /// @param _name 상점이름
+    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
+    /// @param _providePercent 구매금액에 대한 포인트 지급량
+    function _add(
+        bytes32 _shopId,
+        string calldata _name,
+        uint256 _provideWaitTime,
+        uint256 _providePercent,
+        address _account
+    ) internal {
         require(shops[_shopId].status == ShopStatus.INVALID, "Invalid shopId");
 
         ShopData memory data = ShopData({
@@ -134,6 +166,12 @@ contract ShopCollection {
         emit AddedShop(_shopId, _name, _provideWaitTime, _providePercent, _account);
     }
 
+    /// @notice 상점정보를 수정합니다
+    /// @param _shopId 상점 아이디
+    /// @param _name 상점이름
+    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
+    /// @param _providePercent 구매금액에 대한 포인트 지급량
+    /// @dev 중계서버를 통해서 호출됩니다.
     function update(
         bytes32 _shopId,
         string calldata _name,
@@ -147,6 +185,31 @@ contract ShopCollection {
         );
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
+        _update(_shopId, _name, _provideWaitTime, _providePercent, _account);
+    }
+
+    /// @notice 상점정보를 수정합니다
+    /// @param _shopId 상점 아이디
+    /// @param _name 상점이름
+    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
+    /// @param _providePercent 구매금액에 대한 포인트 지급량
+    /// @dev 상점주에 의해 직접 호출됩니다.
+    function updateDirect(
+        bytes32 _shopId,
+        string calldata _name,
+        uint256 _provideWaitTime,
+        uint256 _providePercent
+    ) public {
+        _update(_shopId, _name, _provideWaitTime, _providePercent, msg.sender);
+    }
+
+    function _update(
+        bytes32 _shopId,
+        string calldata _name,
+        uint256 _provideWaitTime,
+        uint256 _providePercent,
+        address _account
+    ) internal {
         require(shops[_shopId].status != ShopStatus.INVALID, "Not exist shopId");
         require(shops[_shopId].account == _account, "Not owner");
 
@@ -159,10 +222,24 @@ contract ShopCollection {
         emit UpdatedShop(_shopId, _name, _provideWaitTime, _providePercent, _account);
     }
 
+    /// @notice 상점정보를 삭제합니다
+    /// @param _shopId 상점 아이디
+    /// @dev 중계서버를 통해서 호출됩니다.
     function remove(bytes32 _shopId, address _account, bytes calldata _signature) public {
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
+        _remove(_shopId, _account);
+    }
+
+    /// @notice 상점정보를 삭제합니다
+    /// @param _shopId 상점 아이디
+    /// @dev 상점주에 의해 직접 호출됩니다.
+    function removeDirect(bytes32 _shopId) public {
+        _remove(_shopId, msg.sender);
+    }
+
+    function _remove(bytes32 _shopId, address _account) internal {
         require(shops[_shopId].status != ShopStatus.INVALID, "Not exist shopId");
         require(shops[_shopId].account == _account, "Not owner");
 
@@ -257,13 +334,26 @@ contract ShopCollection {
         return shop.settledPoint - shop.withdrawnPoint;
     }
 
-    /// @notice 정산금의 인출을 요청한다. 상점주인만이 실행가능
+    /// @notice 정산금의 인출을 요청한다.
     /// @param _shopId 상점아이디
     /// @param _amount 인출금
+    /// @dev 중계서버를 통해서 상점주의 서명을 가지고 호출됩니다.
     function openWithdrawal(bytes32 _shopId, uint256 _amount, address _account, bytes calldata _signature) public {
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
+        _openWithdrawal(_shopId, _amount, _account);
+    }
+
+    /// @notice 정산금의 인출을 요청한다.
+    /// @param _shopId 상점아이디
+    /// @param _amount 인출금
+    /// @dev 상점주에 의해 직접 호출됩니다.
+    function openWithdrawalDirect(bytes32 _shopId, uint256 _amount) public {
+        _openWithdrawal(_shopId, _amount, msg.sender);
+    }
+
+    function _openWithdrawal(bytes32 _shopId, uint256 _amount, address _account) internal {
         ShopData memory shop = shops[_shopId];
 
         require(shop.account == _account, "Invalid address");
@@ -285,6 +375,16 @@ contract ShopCollection {
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
+        _closeWithdrawal(_shopId, _account);
+    }
+
+    /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
+    /// @param _shopId 상점아이디
+    function closeWithdrawalDirect(bytes32 _shopId) public {
+        _closeWithdrawal(_shopId, msg.sender);
+    }
+
+    function _closeWithdrawal(bytes32 _shopId, address _account) internal {
         ShopData memory shop = shops[_shopId];
 
         require(shop.account == _account, "Invalid address");

@@ -23,77 +23,79 @@ describe("Test for ShopCollection", () => {
     const shopWallets: Wallet[] = [shop1, shop2, shop3, shop4, shop5];
     let shopCollection: ShopCollection;
 
-    before(async () => {
-        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
-        await shopCollection.deployed();
-        await shopCollection.deployTransaction.wait();
-    });
+    interface IShopData {
+        shopId: string;
+        name: string;
+        provideWaitTime: number;
+        providePercent: number;
+        wallet: Wallet;
+    }
 
-    context("Add", () => {
-        interface IShopData {
-            shopId: string;
-            name: string;
-            provideWaitTime: number;
-            providePercent: number;
-            wallet: Wallet;
-        }
+    const shopData: IShopData[] = [
+        {
+            shopId: "",
+            name: "Shop 1-1",
+            provideWaitTime: 0,
+            providePercent: 5,
+            wallet: shopWallets[0],
+        },
+        {
+            shopId: "",
+            name: "Shop 1-2",
+            provideWaitTime: 0,
+            providePercent: 5,
+            wallet: shopWallets[0],
+        },
+        {
+            shopId: "",
+            name: "Shop 2-1",
+            provideWaitTime: 0,
+            providePercent: 5,
+            wallet: shopWallets[1],
+        },
+        {
+            shopId: "",
+            name: "Shop 2-2",
+            provideWaitTime: 0,
+            providePercent: 5,
+            wallet: shopWallets[1],
+        },
+        {
+            shopId: "",
+            name: "Shop 3",
+            provideWaitTime: 0,
+            providePercent: 5,
+            wallet: shopWallets[2],
+        },
+        {
+            shopId: "",
+            name: "Shop 4",
+            provideWaitTime: 0,
+            providePercent: 5,
+            wallet: shopWallets[3],
+        },
+        {
+            shopId: "",
+            name: "Shop 5",
+            provideWaitTime: 0,
+            providePercent: 5,
+            wallet: shopWallets[4],
+        },
+    ];
 
-        const shopData: IShopData[] = [
-            {
-                shopId: "",
-                name: "Shop 1-1",
-                provideWaitTime: 0,
-                providePercent: 5,
-                wallet: shopWallets[0],
-            },
-            {
-                shopId: "",
-                name: "Shop 1-2",
-                provideWaitTime: 0,
-                providePercent: 5,
-                wallet: shopWallets[0],
-            },
-            {
-                shopId: "",
-                name: "Shop 2-1",
-                provideWaitTime: 0,
-                providePercent: 5,
-                wallet: shopWallets[1],
-            },
-            {
-                shopId: "",
-                name: "Shop 2-2",
-                provideWaitTime: 0,
-                providePercent: 5,
-                wallet: shopWallets[1],
-            },
-            {
-                shopId: "",
-                name: "Shop 3",
-                provideWaitTime: 0,
-                providePercent: 5,
-                wallet: shopWallets[2],
-            },
-            {
-                shopId: "",
-                name: "Shop 4",
-                provideWaitTime: 0,
-                providePercent: 5,
-                wallet: shopWallets[3],
-            },
-            {
-                shopId: "",
-                name: "Shop 5",
-                provideWaitTime: 0,
-                providePercent: 5,
-                wallet: shopWallets[4],
-            },
-        ];
+    context("Using Relay", () => {
+        before(async () => {
+            const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+            shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
+            await shopCollection.deployed();
+            await shopCollection.deployTransaction.wait();
+        });
 
-        for (const elem of shopData) {
-            elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
-        }
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
 
         it("Success", async () => {
             for (const elem of shopData) {
@@ -176,6 +178,76 @@ describe("Test for ShopCollection", () => {
             const nonce = await shopCollection.nonceOf(elem.wallet.address);
             const signature = ContractUtils.signShopId(elem.wallet, elem.shopId, nonce);
             await expect(shopCollection.connect(elem.wallet).remove(elem.shopId, elem.wallet.address, signature))
+                .to.emit(shopCollection, "RemovedShop")
+                .withNamedArgs({
+                    shopId: elem.shopId,
+                });
+        });
+
+        it("Check remove", async () => {
+            const ids = await shopCollection.shopsOf(shopWallets[0].address);
+            expect(ids).to.deep.equal([shopData[1].shopId]);
+        });
+    });
+
+    context("Using Direct", () => {
+        before(async () => {
+            const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+            shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
+            await shopCollection.deployed();
+            await shopCollection.deployTransaction.wait();
+        });
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+            }
+        });
+
+        it("Success", async () => {
+            for (const elem of shopData) {
+                await expect(
+                    shopCollection
+                        .connect(elem.wallet)
+                        .addDirect(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                )
+                    .to.emit(shopCollection, "AddedShop")
+                    .withNamedArgs({
+                        shopId: elem.shopId,
+                        name: elem.name,
+                        provideWaitTime: elem.provideWaitTime,
+                        providePercent: elem.providePercent,
+                        account: elem.wallet.address,
+                    });
+            }
+            expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+        });
+
+        it("Check", async () => {
+            const ids = await shopCollection.shopsOf(shopWallets[0].address);
+            expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
+        });
+
+        it("Update", async () => {
+            const elem = shopData[0];
+            await expect(
+                shopCollection
+                    .connect(elem.wallet)
+                    .updateDirect(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+            )
+                .to.emit(shopCollection, "UpdatedShop")
+                .withNamedArgs({
+                    shopId: elem.shopId,
+                    name: elem.name,
+                    provideWaitTime: elem.provideWaitTime,
+                    providePercent: elem.providePercent,
+                    account: elem.wallet.address,
+                });
+        });
+
+        it("Remove", async () => {
+            const elem = shopData[0];
+            await expect(shopCollection.connect(elem.wallet).removeDirect(elem.shopId))
                 .to.emit(shopCollection, "RemovedShop")
                 .withNamedArgs({
                     shopId: elem.shopId,
