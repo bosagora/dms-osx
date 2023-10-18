@@ -199,6 +199,7 @@ export class ContractsConfig implements IContractsConfig {
     public tokenAddress: string;
     public ledgerAddress: string;
     public phoneLinkerAddress: string;
+    public shopAddress: string;
 
     /**
      * Constructor
@@ -209,6 +210,7 @@ export class ContractsConfig implements IContractsConfig {
         this.tokenAddress = defaults.tokenAddress;
         this.ledgerAddress = defaults.ledgerAddress;
         this.phoneLinkerAddress = defaults.phoneLinkerAddress;
+        this.shopAddress = defaults.shopAddress;
     }
 
     /**
@@ -219,6 +221,7 @@ export class ContractsConfig implements IContractsConfig {
             tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
             ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
             phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
+            shopAddress: process.env.SHOP_CONTRACT_ADDRESS || "",
         };
     }
 
@@ -230,6 +233,7 @@ export class ContractsConfig implements IContractsConfig {
         if (config.tokenAddress !== undefined) this.tokenAddress = config.tokenAddress;
         if (config.ledgerAddress !== undefined) this.ledgerAddress = config.ledgerAddress;
         if (config.phoneLinkerAddress !== undefined) this.phoneLinkerAddress = config.phoneLinkerAddress;
+        if (config.shopAddress !== undefined) this.shopAddress = config.shopAddress;
     }
 }
 
@@ -327,6 +331,7 @@ export interface IContractsConfig {
     tokenAddress: string;
     ledgerAddress: string;
     phoneLinkerAddress: string;
+    shopAddress: string;
 }
 /**
  * The interface of main config

@@ -321,7 +321,7 @@ describe("Test for Ledger", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
+                    const signature = await ContractUtils.signShop(
                         elem.wallet,
                         elem.shopId,
                         elem.name,
@@ -1261,7 +1261,7 @@ describe("Test for Ledger", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
+                    const signature = await ContractUtils.signShop(
                         elem.wallet,
                         elem.shopId,
                         elem.name,
@@ -1500,7 +1500,7 @@ describe("Test for Ledger", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
+                    const signature = await ContractUtils.signShop(
                         elem.wallet,
                         elem.shopId,
                         elem.name,
@@ -1785,7 +1785,7 @@ describe("Test for Ledger", () => {
 
             it("Open Withdrawal", async () => {
                 const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = ContractUtils.signShopId(
+                const signature = await ContractUtils.signShopId(
                     shopData[shopIndex].wallet,
                     shopData[shopIndex].shopId,
                     nonce
@@ -1807,7 +1807,7 @@ describe("Test for Ledger", () => {
 
             it("Close Withdrawal", async () => {
                 const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = ContractUtils.signShopId(
+                const signature = await ContractUtils.signShopId(
                     shopData[shopIndex].wallet,
                     shopData[shopIndex].shopId,
                     nonce
@@ -1987,7 +1987,7 @@ describe("Test for Ledger", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
                     const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
+                    const signature = await ContractUtils.signShop(
                         elem.wallet,
                         elem.shopId,
                         elem.name,

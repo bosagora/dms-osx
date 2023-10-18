@@ -18,7 +18,9 @@
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write",
         "debug:Endpoints": "NODE_ENV=test hardhat test test/Endpoints.test.ts",
-        "debug:Config": "NODE_ENV=test hardhat test test/Config.test.ts"
+        "debug:Config": "NODE_ENV=test hardhat test test/Config.test.ts",
+        "debug:Shop": "NODE_ENV=test hardhat test test/Shop.test.ts",
+        "debug:ShopWithdraw": "NODE_ENV=test hardhat test test/ShopWithdraw.test.ts"
     },
     "repository": {
         "type": "git",
@@ -56,7 +58,7 @@
         "chai": "^4.3.7",
         "chai-http": "^4.3.7",
         "cors": "^2.8.5",
-        "dms-osx-artifacts": "^1.1.3",
+        "dms-osx-artifacts": "^1.1.4",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
         "ethers": "^5.7.0",
