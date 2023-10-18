@@ -274,6 +274,7 @@ describe("Test of Server", function () {
             config.contracts.tokenAddress = tokenContract.address;
             config.contracts.phoneLinkerAddress = linkCollectionContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
+            config.contracts.shopAddress = shopCollection.address;
 
             config.relay.managerKeys = [
                 relay1.privateKey,
@@ -300,10 +301,26 @@ describe("Test of Server", function () {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                    const signature = ContractUtils.signShop(
+                        elem.wallet,
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        nonce
+                    );
                     await expect(
                         shopCollection
                             .connect(elem.wallet)
-                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                            .add(
+                                elem.shopId,
+                                elem.name,
+                                elem.provideWaitTime,
+                                elem.providePercent,
+                                elem.wallet.address,
+                                signature
+                            )
                     )
                         .to.emit(shopCollection, "AddedShop")
                         .withNamedArgs({
@@ -401,7 +418,7 @@ describe("Test of Server", function () {
                 const uri = URI(serverURL).directory("changeRoyaltyType");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    royaltyType,
+                    type: royaltyType,
                     account: users[userIndex].address,
                     signature,
                 });
@@ -647,10 +664,26 @@ describe("Test of Server", function () {
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
+                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                    const signature = ContractUtils.signShop(
+                        elem.wallet,
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        nonce
+                    );
                     await expect(
                         shopCollection
                             .connect(elem.wallet)
-                            .add(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
+                            .add(
+                                elem.shopId,
+                                elem.name,
+                                elem.provideWaitTime,
+                                elem.providePercent,
+                                elem.wallet.address,
+                                signature
+                            )
                     )
                         .to.emit(shopCollection, "AddedShop")
                         .withNamedArgs({

@@ -1,4 +1,4 @@
-import { Ledger, PhoneLinkCollection, Token } from "../../typechain-types";
+import { Ledger, ShopCollection, PhoneLinkCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
@@ -45,6 +45,12 @@ export class DefaultRouter {
      * @private
      */
     private _ledgerContract: Ledger | undefined;
+
+    /**
+     * 사용자의 원장 컨트랙트
+     * @private
+     */
+    private _shopContract: ShopCollection | undefined;
 
     /**
      * 이메일 지갑주소 링크 컨트랙트
@@ -146,6 +152,14 @@ export class DefaultRouter {
         return this._ledgerContract;
     }
 
+    private async getShopContract(): Promise<ShopCollection> {
+        if (this._shopContract === undefined) {
+            const shopFactory = await hre.ethers.getContractFactory("ShopCollection");
+            this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
+        }
+        return this._shopContract;
+    }
+
     /**
      * 이메일 지갑주소 링크 컨트랙트를 리턴한다.
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
@@ -183,7 +197,7 @@ export class DefaultRouter {
             "/payPoint",
             [
                 body("purchaseId").exists(),
-                body("amount").custom(Validation.isAmount),
+                body("amount").exists().custom(Validation.isAmount),
                 body("currency").exists(),
                 body("shopId")
                     .exists()
@@ -201,7 +215,7 @@ export class DefaultRouter {
             "/payToken",
             [
                 body("purchaseId").exists(),
-                body("amount").custom(Validation.isAmount),
+                body("amount").exists().custom(Validation.isAmount),
                 body("currency").exists(),
                 body("shopId")
                     .exists()
@@ -218,7 +232,7 @@ export class DefaultRouter {
         this.app.post(
             "/changeRoyaltyType",
             [
-                body("royaltyType").exists().isIn(["0", "1"]),
+                body("type").exists().isIn(["0", "1"]),
                 body("account").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
@@ -240,6 +254,79 @@ export class DefaultRouter {
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.changeToPayablePoint.bind(this)
+        );
+
+        this.app.post(
+            "/shop/add",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("name").exists(),
+                body("provideWaitTime").exists().custom(Validation.isAmount),
+                body("providePercent").exists().custom(Validation.isAmount),
+                body("account").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_add.bind(this)
+        );
+        this.app.post(
+            "/shop/update",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("name").exists(),
+                body("provideWaitTime").exists().custom(Validation.isAmount),
+                body("providePercent").exists().custom(Validation.isAmount),
+                body("account").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_update.bind(this)
+        );
+        this.app.post(
+            "/shop/remove",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("account").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_remove.bind(this)
+        );
+        this.app.post(
+            "/shop/openWithdrawal",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("amount").exists().custom(Validation.isAmount),
+                body("account").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_openWithdrawal.bind(this)
+        );
+        this.app.post(
+            "/shop/closeWithdrawal",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("account").exists().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_closeWithdrawal.bind(this)
         );
     }
 
@@ -382,13 +469,13 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const royaltyType: number = Number(req.body.royaltyType);
+            const type: number = Number(req.body.type);
             const account: string = String(req.body.account); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
 
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(account);
-            if (!ContractUtils.verifyRoyaltyType(royaltyType, account, userNonce, signature))
+            if (!ContractUtils.verifyRoyaltyType(type, account, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -397,7 +484,7 @@ export class DefaultRouter {
 
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .setRoyaltyType(royaltyType, account, signature);
+                .setRoyaltyType(type, account, signature);
 
             logger.http(`TxHash(changeRoyaltyType): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
@@ -458,6 +545,278 @@ export class DefaultRouter {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed change point type";
             logger.error(`POST /setRoyaltyType :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 상점을 추가한다.
+     * POST /shop/add
+     * @private
+     */
+    private async shop_add(req: express.Request, res: express.Response) {
+        logger.http(`POST /shop/add`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const shopId: string = String(req.body.shopId);
+            const name: string = String(req.body.name);
+            const provideWaitTime: number = Number(req.body.provideWaitTime);
+            const providePercent: number = Number(req.body.providePercent);
+            const account: string = String(req.body.account);
+            const signature: string = String(req.body.signature); // 서명
+
+            // 서명검증
+            const nonce = await (await this.getShopContract()).nonceOf(account);
+            if (!ContractUtils.verifyShop(shopId, name, provideWaitTime, providePercent, nonce, account, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
+
+            const tx = await (await this.getShopContract())
+                .connect(signerItem.signer)
+                .add(shopId, name, provideWaitTime, providePercent, account, signature);
+
+            logger.http(`TxHash(/shop/add): `, tx.hash);
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /shop/add";
+            logger.error(`POST /shop/add :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 상점정보를 수정한다.
+     * POST /shop/update
+     * @private
+     */
+    private async shop_update(req: express.Request, res: express.Response) {
+        logger.http(`POST /shop/update`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const shopId: string = String(req.body.shopId);
+            const name: string = String(req.body.name);
+            const provideWaitTime: number = Number(req.body.provideWaitTime);
+            const providePercent: number = Number(req.body.providePercent);
+            const account: string = String(req.body.account);
+            const signature: string = String(req.body.signature); // 서명
+
+            // 서명검증
+            const nonce = await (await this.getShopContract()).nonceOf(account);
+            if (!ContractUtils.verifyShop(shopId, name, provideWaitTime, providePercent, nonce, account, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
+
+            const tx = await (await this.getShopContract())
+                .connect(signerItem.signer)
+                .update(shopId, name, provideWaitTime, providePercent, account, signature);
+
+            logger.http(`TxHash(/shop/update): `, tx.hash);
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /shop/update";
+            logger.error(`POST /shop/update :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 상점정보를 삭제한다.
+     * POST /shop/remove
+     * @private
+     */
+    private async shop_remove(req: express.Request, res: express.Response) {
+        logger.http(`POST /shop/remove`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const shopId: string = String(req.body.shopId);
+            const account: string = String(req.body.account);
+            const signature: string = String(req.body.signature); // 서명
+
+            // 서명검증
+            const nonce = await (await this.getShopContract()).nonceOf(account);
+            if (!ContractUtils.verifyShopId(shopId, nonce, account, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
+
+            const tx = await (await this.getShopContract())
+                .connect(signerItem.signer)
+                .remove(shopId, account, signature);
+
+            logger.http(`TxHash(/shop/remove): `, tx.hash);
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /shop/remove";
+            logger.error(`POST /shop/remove :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 상점 정산금을 인출 신청한다.
+     * POST /shop/openWithdrawal
+     * @private
+     */
+    private async shop_openWithdrawal(req: express.Request, res: express.Response) {
+        logger.http(`POST /shop/openWithdrawal`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const shopId: string = String(req.body.shopId);
+            const amount: string = String(req.body.amount); // 구매 금액
+            const account: string = String(req.body.account);
+            const signature: string = String(req.body.signature); // 서명
+
+            // 서명검증
+            const nonce = await (await this.getShopContract()).nonceOf(account);
+            if (!ContractUtils.verifyShopId(shopId, nonce, account, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
+
+            const tx = await (await this.getShopContract())
+                .connect(signerItem.signer)
+                .openWithdrawal(shopId, amount, account, signature);
+
+            logger.http(`TxHash(/shop/openWithdrawal): `, tx.hash);
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /shop/openWithdrawal";
+            logger.error(`POST /shop/openWithdrawal :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 상점 정산금을 인출을 받은것을 확인한다.
+     * POST /shop/closeWithdrawal
+     * @private
+     */
+    private async shop_closeWithdrawal(req: express.Request, res: express.Response) {
+        logger.http(`POST /shop/closeWithdrawal`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const shopId: string = String(req.body.shopId);
+            const account: string = String(req.body.account);
+            const signature: string = String(req.body.signature); // 서명
+
+            // 서명검증
+            const nonce = await (await this.getShopContract()).nonceOf(account);
+            if (!ContractUtils.verifyShopId(shopId, nonce, account, signature))
+                return res.status(200).json(
+                    this.makeResponseData(500, undefined, {
+                        message: "Signature is not valid.",
+                    })
+                );
+
+            const tx = await (await this.getShopContract())
+                .connect(signerItem.signer)
+                .closeWithdrawal(shopId, account, signature);
+
+            logger.http(`TxHash(/shop/closeWithdrawal): `, tx.hash);
+            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /shop/closeWithdrawal";
+            logger.error(`POST /shop/closeWithdrawal :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
