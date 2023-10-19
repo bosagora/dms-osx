@@ -226,7 +226,7 @@ describe("Test for ShopCollection", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
             }
         });
 

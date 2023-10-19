@@ -153,10 +153,10 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static getShopId(name: string, account: string): string {
+    public static getShopId(account: string): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "address", "bytes32"],
-            [name, account, crypto.randomBytes(32)]
+            ["address", "bytes32"],
+            [account, crypto.randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }

@@ -20,7 +20,6 @@ import { BigNumber, Wallet } from "ethers";
 import * as hre from "hardhat";
 
 import { AddressZero } from "@ethersproject/constants";
-import { waffle } from "hardhat";
 
 chai.use(solidity);
 
@@ -310,7 +309,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
             }
         });
 
@@ -1485,7 +1484,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
             }
         });
 
@@ -1724,7 +1723,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
             }
         });
 
@@ -2204,7 +2203,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
             }
         });
 
@@ -2643,7 +2642,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.name, elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
             }
         });
 
