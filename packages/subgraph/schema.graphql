@@ -1,7 +1,7 @@
-type ChangedRoyaltyType @entity(immutable: true) {
+type ChangedLoyaltyType @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  royaltyType: Int! # uint8
+  loyaltyType: Int! # uint8
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!

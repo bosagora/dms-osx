@@ -403,22 +403,22 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Change royalty type", () => {
-            it("Check royalty type - before", async () => {
+        context("Change loyalty type", () => {
+            it("Check loyalty type - before", async () => {
                 const userIndex = 0;
-                const royaltyType = await ledgerContract.royaltyTypeOf(users[userIndex].address);
-                expect(royaltyType).to.equal(0);
+                const loyaltyType = await ledgerContract.loyaltyTypeOf(users[userIndex].address);
+                expect(loyaltyType).to.equal(0);
             });
 
-            it("Send royalty type", async () => {
-                const royaltyType = 1;
+            it("Send loyalty type", async () => {
+                const loyaltyType = 1;
                 const userIndex = 0;
                 const nonce = await ledgerContract.nonceOf(users[userIndex].address);
-                const signature = await ContractUtils.signRoyaltyType(users[userIndex], royaltyType, nonce);
-                const uri = URI(serverURL).directory("changeRoyaltyType");
+                const signature = await ContractUtils.signLoyaltyType(users[userIndex], loyaltyType, nonce);
+                const uri = URI(serverURL).directory("changeLoyaltyType");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    type: royaltyType,
+                    type: loyaltyType,
                     account: users[userIndex].address,
                     signature,
                 });
@@ -430,8 +430,8 @@ describe("Test of Server", function () {
 
             it("Check point type - after", async () => {
                 const userIndex = 0;
-                const royaltyType = await ledgerContract.royaltyTypeOf(users[userIndex].address);
-                expect(royaltyType).to.equal(1);
+                const loyaltyType = await ledgerContract.loyaltyTypeOf(users[userIndex].address);
+                expect(loyaltyType).to.equal(1);
             });
         });
 

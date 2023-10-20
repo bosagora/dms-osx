@@ -391,6 +391,25 @@ export class ShopCollection extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  nonceOf(_account: Address): BigInt {
+    let result = super.call("nonceOf", "nonceOf(address):(uint256)", [
+      ethereum.Value.fromAddress(_account)
+    ]);
+
+    return result[0].toBigInt();
+  }
+
+  try_nonceOf(_account: Address): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("nonceOf", "nonceOf(address):(uint256)", [
+      ethereum.Value.fromAddress(_account)
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   shopIdOf(_idx: BigInt): Bytes {
     let result = super.call("shopIdOf", "shopIdOf(uint256):(bytes32)", [
       ethereum.Value.fromUnsignedBigInt(_idx)
@@ -555,12 +574,62 @@ export class AddCall__Inputs {
   get _providePercent(): BigInt {
     return this._call.inputValues[3].value.toBigInt();
   }
+
+  get _account(): Address {
+    return this._call.inputValues[4].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[5].value.toBytes();
+  }
 }
 
 export class AddCall__Outputs {
   _call: AddCall;
 
   constructor(call: AddCall) {
+    this._call = call;
+  }
+}
+
+export class AddDirectCall extends ethereum.Call {
+  get inputs(): AddDirectCall__Inputs {
+    return new AddDirectCall__Inputs(this);
+  }
+
+  get outputs(): AddDirectCall__Outputs {
+    return new AddDirectCall__Outputs(this);
+  }
+}
+
+export class AddDirectCall__Inputs {
+  _call: AddDirectCall;
+
+  constructor(call: AddDirectCall) {
+    this._call = call;
+  }
+
+  get _shopId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _name(): string {
+    return this._call.inputValues[1].value.toString();
+  }
+
+  get _provideWaitTime(): BigInt {
+    return this._call.inputValues[2].value.toBigInt();
+  }
+
+  get _providePercent(): BigInt {
+    return this._call.inputValues[3].value.toBigInt();
+  }
+}
+
+export class AddDirectCall__Outputs {
+  _call: AddDirectCall;
+
+  constructor(call: AddDirectCall) {
     this._call = call;
   }
 }
@@ -699,12 +768,50 @@ export class CloseWithdrawalCall__Inputs {
   get _shopId(): Bytes {
     return this._call.inputValues[0].value.toBytes();
   }
+
+  get _account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
+  }
 }
 
 export class CloseWithdrawalCall__Outputs {
   _call: CloseWithdrawalCall;
 
   constructor(call: CloseWithdrawalCall) {
+    this._call = call;
+  }
+}
+
+export class CloseWithdrawalDirectCall extends ethereum.Call {
+  get inputs(): CloseWithdrawalDirectCall__Inputs {
+    return new CloseWithdrawalDirectCall__Inputs(this);
+  }
+
+  get outputs(): CloseWithdrawalDirectCall__Outputs {
+    return new CloseWithdrawalDirectCall__Outputs(this);
+  }
+}
+
+export class CloseWithdrawalDirectCall__Inputs {
+  _call: CloseWithdrawalDirectCall;
+
+  constructor(call: CloseWithdrawalDirectCall) {
+    this._call = call;
+  }
+
+  get _shopId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+}
+
+export class CloseWithdrawalDirectCall__Outputs {
+  _call: CloseWithdrawalDirectCall;
+
+  constructor(call: CloseWithdrawalDirectCall) {
     this._call = call;
   }
 }
@@ -733,12 +840,54 @@ export class OpenWithdrawalCall__Inputs {
   get _amount(): BigInt {
     return this._call.inputValues[1].value.toBigInt();
   }
+
+  get _account(): Address {
+    return this._call.inputValues[2].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[3].value.toBytes();
+  }
 }
 
 export class OpenWithdrawalCall__Outputs {
   _call: OpenWithdrawalCall;
 
   constructor(call: OpenWithdrawalCall) {
+    this._call = call;
+  }
+}
+
+export class OpenWithdrawalDirectCall extends ethereum.Call {
+  get inputs(): OpenWithdrawalDirectCall__Inputs {
+    return new OpenWithdrawalDirectCall__Inputs(this);
+  }
+
+  get outputs(): OpenWithdrawalDirectCall__Outputs {
+    return new OpenWithdrawalDirectCall__Outputs(this);
+  }
+}
+
+export class OpenWithdrawalDirectCall__Inputs {
+  _call: OpenWithdrawalDirectCall;
+
+  constructor(call: OpenWithdrawalDirectCall) {
+    this._call = call;
+  }
+
+  get _shopId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class OpenWithdrawalDirectCall__Outputs {
+  _call: OpenWithdrawalDirectCall;
+
+  constructor(call: OpenWithdrawalDirectCall) {
     this._call = call;
   }
 }
@@ -763,12 +912,50 @@ export class RemoveCall__Inputs {
   get _shopId(): Bytes {
     return this._call.inputValues[0].value.toBytes();
   }
+
+  get _account(): Address {
+    return this._call.inputValues[1].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
+  }
 }
 
 export class RemoveCall__Outputs {
   _call: RemoveCall;
 
   constructor(call: RemoveCall) {
+    this._call = call;
+  }
+}
+
+export class RemoveDirectCall extends ethereum.Call {
+  get inputs(): RemoveDirectCall__Inputs {
+    return new RemoveDirectCall__Inputs(this);
+  }
+
+  get outputs(): RemoveDirectCall__Outputs {
+    return new RemoveDirectCall__Outputs(this);
+  }
+}
+
+export class RemoveDirectCall__Inputs {
+  _call: RemoveDirectCall;
+
+  constructor(call: RemoveDirectCall) {
+    this._call = call;
+  }
+
+  get _shopId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+}
+
+export class RemoveDirectCall__Outputs {
+  _call: RemoveDirectCall;
+
+  constructor(call: RemoveDirectCall) {
     this._call = call;
   }
 }
@@ -835,12 +1022,62 @@ export class UpdateCall__Inputs {
   get _providePercent(): BigInt {
     return this._call.inputValues[3].value.toBigInt();
   }
+
+  get _account(): Address {
+    return this._call.inputValues[4].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[5].value.toBytes();
+  }
 }
 
 export class UpdateCall__Outputs {
   _call: UpdateCall;
 
   constructor(call: UpdateCall) {
+    this._call = call;
+  }
+}
+
+export class UpdateDirectCall extends ethereum.Call {
+  get inputs(): UpdateDirectCall__Inputs {
+    return new UpdateDirectCall__Inputs(this);
+  }
+
+  get outputs(): UpdateDirectCall__Outputs {
+    return new UpdateDirectCall__Outputs(this);
+  }
+}
+
+export class UpdateDirectCall__Inputs {
+  _call: UpdateDirectCall;
+
+  constructor(call: UpdateDirectCall) {
+    this._call = call;
+  }
+
+  get _shopId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _name(): string {
+    return this._call.inputValues[1].value.toString();
+  }
+
+  get _provideWaitTime(): BigInt {
+    return this._call.inputValues[2].value.toBigInt();
+  }
+
+  get _providePercent(): BigInt {
+    return this._call.inputValues[3].value.toBigInt();
+  }
+}
+
+export class UpdateDirectCall__Outputs {
+  _call: UpdateDirectCall;
+
+  constructor(call: UpdateDirectCall) {
     this._call = call;
   }
 }

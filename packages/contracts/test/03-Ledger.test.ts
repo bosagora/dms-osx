@@ -654,16 +654,16 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 3, point type : 0)", async () => {
                 const userIndex = 3;
-                const royaltyType = 1;
+                const loyaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signRoyaltyType(userWallets[userIndex], royaltyType, nonce);
+                const signature = ContractUtils.signLoyaltyType(userWallets[userIndex], loyaltyType, nonce);
                 await expect(
                     ledgerContract
                         .connect(userWallets[userIndex].connect(hre.waffle.provider))
-                        .setRoyaltyTypeDirect(royaltyType)
+                        .setLoyaltyTypeDirect(loyaltyType)
                 )
-                    .to.emit(ledgerContract, "ChangedRoyaltyType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, royaltyType });
+                    .to.emit(ledgerContract, "ChangedLoyaltyType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, loyaltyType });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 3, point type : 1)", async () => {
@@ -800,14 +800,14 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 1)", async () => {
                 const userIndex = 1;
-                const royaltyType = 1;
+                const loyaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signRoyaltyType(userWallets[userIndex], royaltyType, nonce);
+                const signature = ContractUtils.signLoyaltyType(userWallets[userIndex], loyaltyType, nonce);
                 await expect(
-                    ledgerContract.connect(relay).setRoyaltyType(royaltyType, userWallets[userIndex].address, signature)
+                    ledgerContract.connect(relay).setLoyaltyType(loyaltyType, userWallets[userIndex].address, signature)
                 )
-                    .to.emit(ledgerContract, "ChangedRoyaltyType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, royaltyType });
+                    .to.emit(ledgerContract, "ChangedLoyaltyType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, loyaltyType });
             });
 
             it("Save Purchase Data - (user: 1, point type : 1)", async () => {
@@ -1037,16 +1037,16 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 4, point type : 0)", async () => {
                 const userIndex = 4;
-                const royaltyType = 1;
+                const loyaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signRoyaltyType(userWallets[userIndex], royaltyType, nonce);
+                const signature = ContractUtils.signLoyaltyType(userWallets[userIndex], loyaltyType, nonce);
                 await expect(
                     ledgerContract
                         .connect(userWallets[userIndex].connect(hre.waffle.provider))
-                        .setRoyaltyTypeDirect(royaltyType)
+                        .setLoyaltyTypeDirect(loyaltyType)
                 )
-                    .to.emit(ledgerContract, "ChangedRoyaltyType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, royaltyType });
+                    .to.emit(ledgerContract, "ChangedLoyaltyType")
+                    .withNamedArgs({ account: userWallets[userIndex].address, loyaltyType });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 4, point type : 1)", async () => {
@@ -2726,8 +2726,8 @@ describe("Test for Ledger", () => {
                             : AddressZero;
                     const currency = purchase.currency.toLowerCase();
                     const rate = await currencyRateContract.get(currency);
-                    const royaltyPoint = purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100);
-                    const royaltyValue = purchaseAmount.mul(shop.providePercent).div(100);
+                    const loyaltyPoint = purchaseAmount.mul(rate).div(multiple).mul(shop.providePercent).div(100);
+                    const loyaltyValue = purchaseAmount.mul(shop.providePercent).div(100);
                     await expect(
                         ledgerContract.connect(validatorWallets[0]).savePurchase({
                             purchaseId: purchase.purchaseId,
@@ -2754,8 +2754,8 @@ describe("Test for Ledger", () => {
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             account: userAccount,
-                            providedPoint: royaltyPoint,
-                            providedValue: royaltyValue,
+                            providedPoint: loyaltyPoint,
+                            providedValue: loyaltyValue,
                             purchaseId: purchase.purchaseId,
                         });
                 }

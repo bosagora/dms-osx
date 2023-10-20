@@ -230,7 +230,7 @@ export class DefaultRouter {
 
         // 포인트의 종류를 선택하는 기능
         this.app.post(
-            "/changeRoyaltyType",
+            "/changeLoyaltyType",
             [
                 body("type").exists().isIn(["0", "1"]),
                 body("account").exists().isEthereumAddress(),
@@ -238,7 +238,7 @@ export class DefaultRouter {
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.changeRoyaltyType.bind(this)
+            this.changeLoyaltyType.bind(this)
         );
 
         // 사용가능한 포인트로 전환
@@ -451,11 +451,11 @@ export class DefaultRouter {
 
     /**
      * 포인트의 종류를 선택한다.
-     * POST /changeRoyaltyType
+     * POST /changeLoyaltyType
      * @private
      */
-    private async changeRoyaltyType(req: express.Request, res: express.Response) {
-        logger.http(`POST /changeRoyaltyType`);
+    private async changeLoyaltyType(req: express.Request, res: express.Response) {
+        logger.http(`POST /changeLoyaltyType`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -475,7 +475,7 @@ export class DefaultRouter {
 
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(account);
-            if (!ContractUtils.verifyRoyaltyType(type, account, userNonce, signature))
+            if (!ContractUtils.verifyLoyaltyType(type, account, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -484,14 +484,14 @@ export class DefaultRouter {
 
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .setRoyaltyType(type, account, signature);
+                .setLoyaltyType(type, account, signature);
 
-            logger.http(`TxHash(changeRoyaltyType): `, tx.hash);
+            logger.http(`TxHash(changeLoyaltyType): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed change point type";
-            logger.error(`POST /changeRoyaltyType :`, message);
+            logger.error(`POST /changeLoyaltyType :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -539,12 +539,12 @@ export class DefaultRouter {
                 .connect(signerItem.signer)
                 .changeToPayablePoint(phone, account, signature);
 
-            logger.http(`TxHash(setRoyaltyType): `, tx.hash);
+            logger.http(`TxHash(setLoyaltyType): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed change point type";
-            logger.error(`POST /setRoyaltyType :`, message);
+            logger.error(`POST /setLoyaltyType :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
