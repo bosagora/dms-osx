@@ -22,11 +22,11 @@ contract Ledger {
     mapping(address => uint256) private tokenBalances;
     mapping(address => uint256) private nonce;
 
-    enum RoyaltyType {
+    enum LoyaltyType {
         POINT,
         TOKEN
     }
-    mapping(address => RoyaltyType) private royaltyTypes;
+    mapping(address => LoyaltyType) private loyaltyTypes;
 
     struct PurchaseData {
         string purchaseId;
@@ -156,7 +156,7 @@ contract Ledger {
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
     event Withdrawn(address account, uint256 withdrawnToken, uint256 withdrawnValue, uint256 balanceToken);
     /// @notice 구매 후 적립되는 포인트의 종류 (0: 포인트, 1: 토큰)
-    event ChangedRoyaltyType(address account, RoyaltyType royaltyType);
+    event ChangedLoyaltyType(address account, LoyaltyType loyaltyType);
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
@@ -209,28 +209,28 @@ contract Ledger {
             ShopCollection.ShopData memory shop = shopCollection.shopOf(data.shopId);
             if (shop.status == ShopCollection.ShopStatus.ACTIVE) {
                 if (data.account != address(0x0)) {
-                    uint256 royaltyValue = (data.amount * shop.providePercent) / 100;
-                    uint256 royaltyPoint = convertCurrencyToPoint(royaltyValue, data.currency);
-                    if (royaltyTypes[data.account] == RoyaltyType.POINT) {
-                        providePoint(data.account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
+                    uint256 loyaltyValue = (data.amount * shop.providePercent) / 100;
+                    uint256 loyaltyPoint = convertCurrencyToPoint(loyaltyValue, data.currency);
+                    if (loyaltyTypes[data.account] == LoyaltyType.POINT) {
+                        providePoint(data.account, loyaltyPoint, loyaltyValue, data.purchaseId, data.shopId);
                     } else {
-                        provideToken(data.account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
+                        provideToken(data.account, loyaltyPoint, loyaltyValue, data.purchaseId, data.shopId);
                     }
-                    shopCollection.addProvidedPoint(data.shopId, royaltyPoint, data.purchaseId);
+                    shopCollection.addProvidedPoint(data.shopId, loyaltyPoint, data.purchaseId);
                 } else if (data.phone != NULL) {
-                    uint256 royaltyValue = (data.amount * shop.providePercent) / 100;
-                    uint256 royaltyPoint = convertCurrencyToPoint(royaltyValue, data.currency);
+                    uint256 loyaltyValue = (data.amount * shop.providePercent) / 100;
+                    uint256 loyaltyPoint = convertCurrencyToPoint(loyaltyValue, data.currency);
                     address account = linkCollection.toAddress(data.phone);
                     if (account == address(0x00)) {
-                        provideUnPayablePoint(data.phone, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
+                        provideUnPayablePoint(data.phone, loyaltyPoint, loyaltyValue, data.purchaseId, data.shopId);
                     } else {
-                        if (royaltyTypes[account] == RoyaltyType.POINT) {
-                            providePoint(account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
+                        if (loyaltyTypes[account] == LoyaltyType.POINT) {
+                            providePoint(account, loyaltyPoint, loyaltyValue, data.purchaseId, data.shopId);
                         } else {
-                            provideToken(account, royaltyPoint, royaltyValue, data.purchaseId, data.shopId);
+                            provideToken(account, loyaltyPoint, loyaltyValue, data.purchaseId, data.shopId);
                         }
                     }
-                    shopCollection.addProvidedPoint(data.shopId, royaltyPoint, data.purchaseId);
+                    shopCollection.addProvidedPoint(data.shopId, loyaltyPoint, data.purchaseId);
                 }
             }
         }
@@ -250,40 +250,40 @@ contract Ledger {
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
-    /// @param _royaltyPoint 지급할 포인트(단위:포인트)
-    /// @param _royaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
+    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function providePoint(
         address _account,
-        uint256 _royaltyPoint,
-        uint256 _royaltyValue,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
         string calldata _purchaseId,
         bytes32 _shopId
     ) internal {
-        pointBalances[_account] += _royaltyPoint;
-        emit ProvidedPoint(_account, _royaltyPoint, _royaltyValue, pointBalances[_account], _purchaseId, _shopId);
+        pointBalances[_account] += _loyaltyPoint;
+        emit ProvidedPoint(_account, _loyaltyPoint, _loyaltyValue, pointBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _phone 전화번호 해시
-    /// @param _royaltyPoint 지급할 포인트(단위:포인트)
-    /// @param _royaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
+    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function provideUnPayablePoint(
         bytes32 _phone,
-        uint256 _royaltyPoint,
-        uint256 _royaltyValue,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
         string calldata _purchaseId,
         bytes32 _shopId
     ) internal {
-        unPayablePointBalances[_phone] += _royaltyPoint;
+        unPayablePointBalances[_phone] += _loyaltyPoint;
         emit ProvidedUnPayablePoint(
             _phone,
-            _royaltyPoint,
-            _royaltyValue,
+            _loyaltyPoint,
+            _loyaltyValue,
             unPayablePointBalances[_phone],
             _purchaseId,
             _shopId
@@ -293,24 +293,24 @@ contract Ledger {
     /// @notice 토큰을 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _account 사용자의 지갑주소
-    /// @param _royaltyPoint 지급할 포인트(단위:포인트)
-    /// @param _royaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
+    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
     /// @param _purchaseId 구매 아이디
     /// @param _shopId 구매한 가맹점 아이디
     function provideToken(
         address _account,
-        uint256 _royaltyPoint,
-        uint256 _royaltyValue,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
         string calldata _purchaseId,
         bytes32 _shopId
     ) internal {
-        uint256 amountToken = convertPointToToken(_royaltyPoint);
+        uint256 amountToken = convertPointToToken(_loyaltyPoint);
 
         require(tokenBalances[foundationAccount] >= amountToken, "Insufficient foundation balance");
         tokenBalances[_account] += amountToken;
         tokenBalances[foundationAccount] -= amountToken;
 
-        emit ProvidedToken(_account, amountToken, _royaltyValue, tokenBalances[_account], _purchaseId, _shopId);
+        emit ProvidedToken(_account, amountToken, _loyaltyValue, tokenBalances[_account], _purchaseId, _shopId);
     }
 
     /// @notice 사용가능한 포인트로 전환합니다.
@@ -589,8 +589,8 @@ contract Ledger {
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
     /// @param _account 지갑주소
-    function royaltyTypeOf(address _account) public view returns (RoyaltyType) {
-        return royaltyTypes[_account];
+    function loyaltyTypeOf(address _account) public view returns (LoyaltyType) {
+        return loyaltyTypes[_account];
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
@@ -598,28 +598,28 @@ contract Ledger {
     /// @param _account 지갑주소
     /// @param _signature 서명
     /// @dev 중계서버를 통해서 호출됩니다.
-    function setRoyaltyType(RoyaltyType _type, address _account, bytes calldata _signature) public {
+    function setLoyaltyType(LoyaltyType _type, address _account, bytes calldata _signature) public {
         bytes32 dataHash = keccak256(abi.encode(_type, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
-        _setRoyaltyType(_type, _account);
+        _setLoyaltyType(_type, _account);
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
     /// @param _type 0: 포인트, 1: 토큰
     /// @dev 사용자에 의해 직접 호출됩니다.
-    function setRoyaltyTypeDirect(RoyaltyType _type) public {
-        _setRoyaltyType(_type, msg.sender);
+    function setLoyaltyTypeDirect(LoyaltyType _type) public {
+        _setLoyaltyType(_type, msg.sender);
     }
 
-    function _setRoyaltyType(RoyaltyType _type, address _account) internal {
-        require(RoyaltyType.POINT <= _type && _type <= RoyaltyType.TOKEN, "Invalid value");
+    function _setLoyaltyType(LoyaltyType _type, address _account) internal {
+        require(LoyaltyType.POINT <= _type && _type <= LoyaltyType.TOKEN, "Invalid value");
 
-        royaltyTypes[_account] = _type;
+        loyaltyTypes[_account] = _type;
 
         nonce[_account]++;
 
-        emit ChangedRoyaltyType(_account, _type);
+        emit ChangedLoyaltyType(_account, _type);
     }
 
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.

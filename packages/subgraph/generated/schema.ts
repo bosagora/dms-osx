@@ -11,7 +11,7 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
-export class ChangedRoyaltyType extends Entity {
+export class ChangedLoyaltyType extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -19,25 +19,25 @@ export class ChangedRoyaltyType extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save ChangedRoyaltyType entity without an ID");
+    assert(id != null, "Cannot save ChangedLoyaltyType entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type ChangedRoyaltyType must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ChangedLoyaltyType must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("ChangedRoyaltyType", id.toBytes().toHexString(), this);
+      store.set("ChangedLoyaltyType", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): ChangedRoyaltyType | null {
-    return changetype<ChangedRoyaltyType | null>(
-      store.get_in_block("ChangedRoyaltyType", id.toHexString())
+  static loadInBlock(id: Bytes): ChangedLoyaltyType | null {
+    return changetype<ChangedLoyaltyType | null>(
+      store.get_in_block("ChangedLoyaltyType", id.toHexString())
     );
   }
 
-  static load(id: Bytes): ChangedRoyaltyType | null {
-    return changetype<ChangedRoyaltyType | null>(
-      store.get("ChangedRoyaltyType", id.toHexString())
+  static load(id: Bytes): ChangedLoyaltyType | null {
+    return changetype<ChangedLoyaltyType | null>(
+      store.get("ChangedLoyaltyType", id.toHexString())
     );
   }
 
@@ -67,8 +67,8 @@ export class ChangedRoyaltyType extends Entity {
     this.set("account", Value.fromBytes(value));
   }
 
-  get royaltyType(): i32 {
-    let value = this.get("royaltyType");
+  get loyaltyType(): i32 {
+    let value = this.get("loyaltyType");
     if (!value || value.kind == ValueKind.NULL) {
       return 0;
     } else {
@@ -76,8 +76,8 @@ export class ChangedRoyaltyType extends Entity {
     }
   }
 
-  set royaltyType(value: i32) {
-    this.set("royaltyType", Value.fromI32(value));
+  set loyaltyType(value: i32) {
+    this.set("loyaltyType", Value.fromI32(value));
   }
 
   get blockNumber(): BigInt {

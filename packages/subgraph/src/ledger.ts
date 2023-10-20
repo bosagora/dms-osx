@@ -1,5 +1,5 @@
 import {
-    ChangedRoyaltyType as ChangedRoyaltyTypeEvent,
+    ChangedLoyaltyType as ChangedLoyaltyTypeEvent,
     ChangedToPayablePoint as ChangedToPayablePointEvent,
     Deposited as DepositedEvent,
     PaidPoint as PaidPointEvent,
@@ -12,7 +12,7 @@ import {
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
 import {
-    ChangedRoyaltyType,
+    ChangedLoyaltyType,
     ChangedToPayablePoint,
     Deposited,
     PaidPoint,
@@ -30,10 +30,10 @@ import {
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { AmountUnit, NullAccount, NullBytes32 } from "./utils";
 
-export function handleChangedRoyaltyType(event: ChangedRoyaltyTypeEvent): void {
-    let entity = new ChangedRoyaltyType(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handleChangedLoyaltyType(event: ChangedLoyaltyTypeEvent): void {
+    let entity = new ChangedLoyaltyType(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.royaltyType = event.params.royaltyType;
+    entity.loyaltyType = event.params.loyaltyType;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;

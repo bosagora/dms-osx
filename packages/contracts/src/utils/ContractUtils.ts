@@ -140,7 +140,7 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static getRoyaltyTypeMessage(type: BigNumberish, address: string, nonce: BigNumberish): Uint8Array {
+    public static getLoyaltyTypeMessage(type: BigNumberish, address: string, nonce: BigNumberish): Uint8Array {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["uint256", "address", "uint256"],
             [type, address, nonce]
@@ -148,8 +148,8 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signRoyaltyType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
-        const message = ContractUtils.getRoyaltyTypeMessage(type, await signer.getAddress(), nonce);
+    public static async signLoyaltyType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getLoyaltyTypeMessage(type, await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
 
