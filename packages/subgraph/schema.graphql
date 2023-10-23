@@ -145,14 +145,14 @@ enum UserAction {
   PaidToken,
   DepositedToken,
   WithdrawnToken,
-  SettledPoint
+  SettlementToken
 }
 
 enum AssetFlow {
-  PointInput,
-  PointOutput,
-  TokenInput,
-  TokenOutput,
+  Save,
+  Use,
+  Deposit,
+  Withdraw,
   None
 }
 

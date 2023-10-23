@@ -285,7 +285,7 @@ export function handlePaidTokenForHistory(event: PaidTokenEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.action = "PaidToken";
-    entity.assetFlow = "TokenOutput";
+    entity.assetFlow = "Use";
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.paidToken.div(AmountUnit);
     entity.value = event.params.paidValue.div(AmountUnit);
@@ -311,7 +311,7 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.action = "DepositedToken";
-    entity.assetFlow = "TokenInput";
+    entity.assetFlow = "Deposit";
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.depositedToken.div(AmountUnit);
     entity.value = event.params.depositedValue.div(AmountUnit);
@@ -337,7 +337,7 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.action = "WithdrawnToken";
-    entity.assetFlow = "TokenOutput";
+    entity.assetFlow = "Withdraw";
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.withdrawnToken.div(AmountUnit);
     entity.value = event.params.withdrawnValue.div(AmountUnit);
@@ -362,8 +362,8 @@ export function handleSettlementForHistory(event: ProvidedTokenForSettlementEven
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.action = "WithdrawnToken";
-    entity.assetFlow = "TokenOutput";
+    entity.action = "SettlementToken";
+    entity.assetFlow = "None";
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = event.params.providedToken.div(AmountUnit);
     entity.value = event.params.providedPoint.div(AmountUnit);
@@ -382,7 +382,7 @@ export function handleProvidedForUnPayablePointHistory(event: ProvidedUnPayableP
     let entity = new UserUnPayableTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.phone = event.params.phone;
     entity.action = "ProvidedPoint";
-    entity.assetFlow = "PointInput";
+    entity.assetFlow = "Save";
     entity.amount = event.params.providedPoint.div(AmountUnit);
     entity.balance = event.params.balancePoint.div(AmountUnit);
     entity.purchaseId = event.params.purchaseId;
@@ -398,7 +398,7 @@ export function handleChangedPointForUnPayablePointHistory(event: ChangedToPayab
     let entity = new UserUnPayableTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.phone = event.params.phone;
     entity.action = "ChangedPoint";
-    entity.assetFlow = "PointOut";
+    entity.assetFlow = "Use";
     entity.amount = event.params.changedPoint.div(AmountUnit);
     entity.balance = BigInt.fromI32(0);
     entity.purchaseId = "";
@@ -421,7 +421,7 @@ export function handleChangedPointForHistory(event: ChangedToPayablePointEvent):
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.action = "ChangedPoint";
-    entity.assetFlow = "PointInput";
+    entity.assetFlow = "Save";
     entity.amountPoint = event.params.changedPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.changedValue.div(AmountUnit);
@@ -447,7 +447,7 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.action = "ProvidedPoint";
-    entity.assetFlow = "PointInput";
+    entity.assetFlow = "Save";
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.providedValue.div(AmountUnit);
@@ -473,7 +473,7 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.action = "ProvidedToken";
-    entity.assetFlow = "TokenInput";
+    entity.assetFlow = "Save";
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.providedToken.div(AmountUnit);
     entity.value = event.params.providedValue.div(AmountUnit);
@@ -499,7 +499,7 @@ export function handlePaidPointForHistory(event: PaidPointEvent): void {
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.action = "PaidPoint";
-    entity.assetFlow = "PointOutput";
+    entity.assetFlow = "Use";
     entity.amountPoint = event.params.paidPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.value = event.params.paidValue.div(AmountUnit);
