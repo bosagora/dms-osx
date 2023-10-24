@@ -654,16 +654,13 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 3, point type : 0)", async () => {
                 const userIndex = 3;
-                const loyaltyType = 1;
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signLoyaltyType(userWallets[userIndex], loyaltyType, nonce);
                 await expect(
                     ledgerContract
                         .connect(userWallets[userIndex].connect(hre.waffle.provider))
-                        .setLoyaltyTypeDirect(loyaltyType)
+                        .changeToLoyaltyTokenDirect()
                 )
-                    .to.emit(ledgerContract, "ChangedLoyaltyType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, loyaltyType });
+                    .to.emit(ledgerContract, "ChangedToLoyaltyToken")
+                    .withNamedArgs({ account: userWallets[userIndex].address });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 3, point type : 1)", async () => {
@@ -800,14 +797,13 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 1)", async () => {
                 const userIndex = 1;
-                const loyaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signLoyaltyType(userWallets[userIndex], loyaltyType, nonce);
+                const signature = ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
                 await expect(
-                    ledgerContract.connect(relay).setLoyaltyType(loyaltyType, userWallets[userIndex].address, signature)
+                    ledgerContract.connect(relay).changeToLoyaltyToken(userWallets[userIndex].address, signature)
                 )
-                    .to.emit(ledgerContract, "ChangedLoyaltyType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, loyaltyType });
+                    .to.emit(ledgerContract, "ChangedToLoyaltyToken")
+                    .withNamedArgs({ account: userWallets[userIndex].address });
             });
 
             it("Save Purchase Data - (user: 1, point type : 1)", async () => {
@@ -1037,16 +1033,13 @@ describe("Test for Ledger", () => {
 
             it("Change point type (user: 4, point type : 0)", async () => {
                 const userIndex = 4;
-                const loyaltyType = 1;
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = ContractUtils.signLoyaltyType(userWallets[userIndex], loyaltyType, nonce);
                 await expect(
                     ledgerContract
                         .connect(userWallets[userIndex].connect(hre.waffle.provider))
-                        .setLoyaltyTypeDirect(loyaltyType)
+                        .changeToLoyaltyTokenDirect()
                 )
-                    .to.emit(ledgerContract, "ChangedLoyaltyType")
-                    .withNamedArgs({ account: userWallets[userIndex].address, loyaltyType });
+                    .to.emit(ledgerContract, "ChangedToLoyaltyToken")
+                    .withNamedArgs({ account: userWallets[userIndex].address });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 4, point type : 1)", async () => {

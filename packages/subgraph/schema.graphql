@@ -1,7 +1,9 @@
-type ChangedLoyaltyType @entity(immutable: true) {
+type ChangedToLoyaltyToken @entity(immutable: true) {
   id: Bytes!
   account: Bytes! # address
-  loyaltyType: Int! # uint8
+  amountToken: BigInt! # uint256
+  amountPoint: BigInt! # uint256
+  balanceToken: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -145,7 +147,8 @@ enum UserAction {
   PaidToken,
   DepositedToken,
   WithdrawnToken,
-  SettlementToken
+  SettlementToken,
+  ChangedToToken
 }
 
 enum AssetFlow {

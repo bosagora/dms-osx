@@ -16,7 +16,7 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - ChangedLoyaltyType
+        - ChangedToLoyaltyToken
         - ChangedToPayablePoint
         - Deposited
         - PaidPoint
@@ -31,8 +31,8 @@ dataSources:
         - name: Ledger
           file: $DMS_OSX_MODULE/artifacts/contracts/Ledger.sol/Ledger.json
       eventHandlers:
-        - event: ChangedLoyaltyType(address,uint8)
-          handler: handleChangedLoyaltyType
+        - event: ChangedToLoyaltyToken(address,uint256,uint256,uint256)
+          handler: handleChangedToLoyaltyToken
         - event: ChangedToPayablePoint(bytes32,address,uint256,uint256,uint256)
           handler: handleChangedToPayablePoint
         - event: Deposited(address,uint256,uint256,uint256)

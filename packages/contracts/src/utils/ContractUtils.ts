@@ -140,16 +140,13 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static getLoyaltyTypeMessage(type: BigNumberish, address: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["uint256", "address", "uint256"],
-            [type, address, nonce]
-        );
+    public static getLoyaltyTypeMessage(address: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["address", "uint256"], [address, nonce]);
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signLoyaltyType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
-        const message = ContractUtils.getLoyaltyTypeMessage(type, await signer.getAddress(), nonce);
+    public static async signLoyaltyType(signer: Signer, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
 

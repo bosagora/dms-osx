@@ -1,5 +1,5 @@
 import {
-    ChangedLoyaltyType as ChangedLoyaltyTypeEvent,
+    ChangedToLoyaltyToken as ChangedToLoyaltyTokenEvent,
     ChangedToPayablePoint as ChangedToPayablePointEvent,
     Deposited as DepositedEvent,
     PaidPoint as PaidPointEvent,
@@ -12,7 +12,7 @@ import {
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
 import {
-    ChangedLoyaltyType,
+    ChangedToLoyaltyToken,
     ChangedToPayablePoint,
     Deposited,
     PaidPoint,
@@ -30,16 +30,20 @@ import {
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { AmountUnit, NullAccount, NullBytes32 } from "./utils";
 
-export function handleChangedLoyaltyType(event: ChangedLoyaltyTypeEvent): void {
-    let entity = new ChangedLoyaltyType(event.transaction.hash.concatI32(event.logIndex.toI32()));
+export function handleChangedToLoyaltyToken(event: ChangedToLoyaltyTokenEvent): void {
+    let entity = new ChangedToLoyaltyToken(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.loyaltyType = event.params.loyaltyType;
+    entity.amountToken = event.params.amountToken.div(AmountUnit);
+    entity.amountPoint = event.params.amountPoint.div(AmountUnit);
+    entity.balanceToken = event.params.balanceToken.div(AmountUnit);
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
     entity.transactionHash = event.transaction.hash;
 
     entity.save();
+
+    handleChangedToLoyaltyTokenForHistory(event);
 }
 
 export function handleChangedToPayablePoint(event: ChangedToPayablePointEvent): void {
@@ -507,6 +511,50 @@ export function handlePaidPointForHistory(event: PaidPointEvent): void {
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
     entity.shopId = event.params.shopId;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+    entity.save();
+}
+
+export function handleChangedToLoyaltyTokenForHistory(event: ChangedToLoyaltyTokenEvent): void {
+    let balanceEntity = handleChangedBalancePoint(
+        event.params.account,
+        BigInt.fromI32(0),
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
+
+    let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.account = event.params.account;
+    entity.action = "ChangedToToken";
+    entity.assetFlow = "Use";
+    entity.amountPoint = event.params.amountPoint.div(AmountUnit);
+    entity.amountToken = BigInt.fromI32(0);
+    entity.value = event.params.amountPoint.div(AmountUnit);
+    entity.balancePoint = BigInt.fromI32(0);
+    entity.balanceToken = balanceEntity.token;
+    entity.purchaseId = "";
+    entity.shopId = NullBytes32;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+    entity.save();
+
+    entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.account = event.params.account;
+    entity.action = "ChangedToToken";
+    entity.assetFlow = "Save";
+    entity.amountPoint = BigInt.fromI32(0);
+    entity.amountToken = event.params.amountToken.div(AmountUnit);
+    entity.value = event.params.amountPoint.div(AmountUnit);
+    entity.balancePoint = BigInt.fromI32(0);
+    entity.balanceToken = event.params.balanceToken.div(AmountUnit);
+    entity.purchaseId = "";
+    entity.shopId = NullBytes32;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;

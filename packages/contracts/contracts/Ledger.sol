@@ -155,8 +155,8 @@ contract Ledger {
     event Deposited(address account, uint256 depositedToken, uint256 depositedValue, uint256 balanceToken);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
     event Withdrawn(address account, uint256 withdrawnToken, uint256 withdrawnValue, uint256 balanceToken);
-    /// @notice 구매 후 적립되는 포인트의 종류 (0: 포인트, 1: 토큰)
-    event ChangedLoyaltyType(address account, LoyaltyType loyaltyType);
+    /// @notice 구매 후 적립되는 로열티를 토큰으로 변경했을 때 발생하는 이벤트
+    event ChangedToLoyaltyToken(address account, uint256 amountToken, uint256 amountPoint, uint256 balanceToken);
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
@@ -593,33 +593,42 @@ contract Ledger {
         return loyaltyTypes[_account];
     }
 
-    /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
-    /// @param _type 0: 포인트, 1: 토큰
+    /// @notice 사용자가 적립할 로열티를 토큰으로 변경한다.
     /// @param _account 지갑주소
     /// @param _signature 서명
     /// @dev 중계서버를 통해서 호출됩니다.
-    function setLoyaltyType(LoyaltyType _type, address _account, bytes calldata _signature) public {
-        bytes32 dataHash = keccak256(abi.encode(_type, _account, nonce[_account]));
+    function changeToLoyaltyToken(address _account, bytes calldata _signature) public {
+        bytes32 dataHash = keccak256(abi.encode(_account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
 
-        _setLoyaltyType(_type, _account);
+        _changeToLoyaltyToken(_account);
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
-    /// @param _type 0: 포인트, 1: 토큰
     /// @dev 사용자에 의해 직접 호출됩니다.
-    function setLoyaltyTypeDirect(LoyaltyType _type) public {
-        _setLoyaltyType(_type, msg.sender);
+    function changeToLoyaltyTokenDirect() public {
+        _changeToLoyaltyToken(msg.sender);
     }
 
-    function _setLoyaltyType(LoyaltyType _type, address _account) internal {
-        require(LoyaltyType.POINT <= _type && _type <= LoyaltyType.TOKEN, "Invalid value");
-
-        loyaltyTypes[_account] = _type;
-
-        nonce[_account]++;
-
-        emit ChangedLoyaltyType(_account, _type);
+    function _changeToLoyaltyToken(address _account) internal {
+        if (loyaltyTypes[_account] != LoyaltyType.TOKEN) {
+            loyaltyTypes[_account] = LoyaltyType.TOKEN;
+            uint256 amountPoint;
+            uint256 amountToken;
+            if (pointBalances[_account] > 0) {
+                amountPoint = pointBalances[_account];
+                amountToken = convertPointToToken(amountPoint);
+                require(tokenBalances[foundationAccount] >= amountToken, "Insufficient foundation balance");
+                tokenBalances[_account] += amountToken;
+                tokenBalances[foundationAccount] -= amountToken;
+                pointBalances[_account] = 0;
+            } else {
+                amountPoint = 0;
+                amountToken = 0;
+            }
+            nonce[_account]++;
+            emit ChangedToLoyaltyToken(_account, amountToken, amountPoint, tokenBalances[_account]);
+        }
     }
 
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.

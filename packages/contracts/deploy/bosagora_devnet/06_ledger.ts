@@ -131,17 +131,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             await tx9.wait();
 
             if (user.loyaltyType === 1) {
-                const loyaltyType = 1;
                 const nonce = await ledgerContract.nonceOf(user.address);
-                const signature = ContractUtils.signLoyaltyType(signer, loyaltyType, nonce);
-                const tx10 = await ledgerContract.connect(signer).setLoyaltyType(loyaltyType, user.address, signature);
+                const signature = ContractUtils.signLoyaltyType(signer, nonce);
+                const tx10 = await ledgerContract.connect(signer).changeToLoyaltyToken(user.address, signature);
                 console.log(`Deposit user's amount (tx: ${tx10.hash})...`);
                 await tx10.wait();
 
                 if ((await ledgerContract.connect(signer).loyaltyTypeOf(user.address)) === 1) {
-                    console.log(`Success setLoyaltyType...`);
+                    console.log(`Success changeToLoyaltyToken...`);
                 } else {
-                    console.error(`Fail setLoyaltyType...`);
+                    console.error(`Fail changeToLoyaltyToken...`);
                 }
             }
         }
