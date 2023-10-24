@@ -194,7 +194,7 @@ export class DefaultRouter {
 
         // 포인트를 이용하여 구매
         this.app.post(
-            "/payPoint",
+            "/ledger/payPoint",
             [
                 body("purchaseId").exists(),
                 body("amount").exists().custom(Validation.isAmount),
@@ -212,7 +212,7 @@ export class DefaultRouter {
 
         // 토큰을 이용하여 구매할 때
         this.app.post(
-            "/payToken",
+            "/ledger/payToken",
             [
                 body("purchaseId").exists(),
                 body("amount").exists().custom(Validation.isAmount),
@@ -230,7 +230,7 @@ export class DefaultRouter {
 
         // 포인트의 종류를 선택하는 기능
         this.app.post(
-            "/changeToLoyaltyToken",
+            "/ledger/changeToLoyaltyToken",
             [
                 body("account").exists().isEthereumAddress(),
                 body("signature")
@@ -242,7 +242,7 @@ export class DefaultRouter {
 
         // 사용가능한 포인트로 전환
         this.app.post(
-            "/changeToPayablePoint",
+            "/ledger/changeToPayablePoint",
             [
                 body("phone")
                     .exists()
@@ -335,11 +335,11 @@ export class DefaultRouter {
 
     /**
      * 사용자 포인트 지불
-     * POST /payPoint
+     * POST /ledger/payPoint
      * @private
      */
     private async payPoint(req: express.Request, res: express.Response) {
-        logger.http(`POST /payPoint`);
+        logger.http(`POST /ledger/payPoint`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -393,11 +393,11 @@ export class DefaultRouter {
 
     /**
      * 사용자 토큰 지불
-     * POST /payToken
+     * POST /ledger/payToken
      * @private
      */
     private async payToken(req: express.Request, res: express.Response) {
-        logger.http(`POST /payToken`);
+        logger.http(`POST /ledger/payToken`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -437,7 +437,7 @@ export class DefaultRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed pay token";
-            logger.error(`POST /payToken :`, message);
+            logger.error(`POST /ledger/payToken :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -450,11 +450,11 @@ export class DefaultRouter {
 
     /**
      * 포인트의 종류를 선택한다.
-     * POST /changeToLoyaltyToken
+     * POST /ledger/changeToLoyaltyToken
      * @private
      */
     private async changeToLoyaltyToken(req: express.Request, res: express.Response) {
-        logger.http(`POST /changeToLoyaltyToken`);
+        logger.http(`POST /ledger/changeToLoyaltyToken`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -488,8 +488,8 @@ export class DefaultRouter {
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed change point type";
-            logger.error(`POST /changeToLoyaltyToken :`, message);
+            if (message === "") message = "Failed change layalty type";
+            logger.error(`POST /ledger/changeToLoyaltyToken :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -502,11 +502,11 @@ export class DefaultRouter {
 
     /**
      * 포인트의 종류를 선택한다.
-     * POST /changeToPayablePoint
+     * POST /ledger/changeToPayablePoint
      * @private
      */
     private async changeToPayablePoint(req: express.Request, res: express.Response) {
-        logger.http(`POST /changeToPayablePoint`);
+        logger.http(`POST /ledger/changeToPayablePoint`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -537,12 +537,12 @@ export class DefaultRouter {
                 .connect(signerItem.signer)
                 .changeToPayablePoint(phone, account, signature);
 
-            logger.http(`TxHash(setLoyaltyType): `, tx.hash);
+            logger.http(`TxHash(changeToPayablePoint): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed change point type";
-            logger.error(`POST /setLoyaltyType :`, message);
+            if (message === "") message = "Failed change to payable point";
+            logger.error(`POST /ledger/changeToPayablePoint :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
