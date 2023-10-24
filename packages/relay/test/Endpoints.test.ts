@@ -427,7 +427,7 @@ describe("Test of Server", function () {
                 );
             });
 
-            it("Failure test of the path /payPoint 'Insufficient balance'", async () => {
+            it("Failure test of the path /ledger/payPoint 'Insufficient balance'", async () => {
                 const over_purchaseAmount = Amount.make(90_000_000, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signPayment(
@@ -438,7 +438,7 @@ describe("Test of Server", function () {
                     shop.shopId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payPoint");
+                const uri = URI(serverURL).directory("ledger/payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchase.purchaseId,
@@ -453,7 +453,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure test of the path /payPoint 'Invalid signature'", async () => {
+            it("Failure test of the path /ledger/payPoint 'Invalid signature'", async () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -464,7 +464,7 @@ describe("Test of Server", function () {
                     shop.shopId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payPoint");
+                const uri = URI(serverURL).directory("ledger/payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchase.purchaseId,
@@ -479,7 +479,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Success Test of the path /payPoint", async () => {
+            it("Success Test of the path /ledger/payPoint", async () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -490,7 +490,7 @@ describe("Test of Server", function () {
                     shop.shopId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payPoint");
+                const uri = URI(serverURL).directory("ledger/payPoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchase.purchaseId,
@@ -508,7 +508,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data.txHash !== undefined);
             });
 
-            it("Failure test of the path /payToken 'Insufficient balance'", async () => {
+            it("Failure test of the path /ledger/payToken 'Insufficient balance'", async () => {
                 const over_purchaseAmount = Amount.make(90_000_000, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -519,7 +519,7 @@ describe("Test of Server", function () {
                     shop.shopId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payToken");
+                const uri = URI(serverURL).directory("ledger/payToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchase.purchaseId,
@@ -534,7 +534,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Insufficient balance");
             });
 
-            it("Failure test of the path /payToken 'Invalid signature'", async () => {
+            it("Failure test of the path /ledger/payToken 'Invalid signature'", async () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -545,7 +545,7 @@ describe("Test of Server", function () {
                     shop.shopId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payToken");
+                const uri = URI(serverURL).directory("ledger/payToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchase.purchaseId,
@@ -560,7 +560,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.error.message === "Signature is not valid.");
             });
 
-            it("Success Test of the path /payToken", async () => {
+            it("Success Test of the path /ledger/payToken", async () => {
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const nonce = await ledgerContract.nonceOf(users[0].address);
                 const signature = await ContractUtils.signPayment(
@@ -571,7 +571,7 @@ describe("Test of Server", function () {
                     shop.shopId,
                     nonce
                 );
-                const uri = URI(serverURL).directory("payToken");
+                const uri = URI(serverURL).directory("ledger/payToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     purchaseId: purchase.purchaseId,
@@ -599,7 +599,7 @@ describe("Test of Server", function () {
                 const userIndex = 0;
                 const nonce = await ledgerContract.nonceOf(users[userIndex].address);
                 const signature = await ContractUtils.signLoyaltyType(users[userIndex], nonce);
-                const uri = URI(serverURL).directory("changeToLoyaltyToken");
+                const uri = URI(serverURL).directory("ledger/changeToLoyaltyToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     account: users[userIndex].address,
@@ -776,7 +776,7 @@ describe("Test of Server", function () {
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("changeToPayablePoint");
+                const uri = URI(serverURL).directory("ledger/changeToPayablePoint");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     phone: phoneHash,
