@@ -11,7 +11,7 @@ import {
   BigDecimal
 } from "@graphprotocol/graph-ts";
 
-export class ChangedLoyaltyType extends Entity {
+export class ChangedToLoyaltyToken extends Entity {
   constructor(id: Bytes) {
     super();
     this.set("id", Value.fromBytes(id));
@@ -19,25 +19,28 @@ export class ChangedLoyaltyType extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save ChangedLoyaltyType entity without an ID");
+    assert(
+      id != null,
+      "Cannot save ChangedToLoyaltyToken entity without an ID"
+    );
     if (id) {
       assert(
         id.kind == ValueKind.BYTES,
-        `Entities of type ChangedLoyaltyType must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type ChangedToLoyaltyToken must have an ID of type Bytes but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("ChangedLoyaltyType", id.toBytes().toHexString(), this);
+      store.set("ChangedToLoyaltyToken", id.toBytes().toHexString(), this);
     }
   }
 
-  static loadInBlock(id: Bytes): ChangedLoyaltyType | null {
-    return changetype<ChangedLoyaltyType | null>(
-      store.get_in_block("ChangedLoyaltyType", id.toHexString())
+  static loadInBlock(id: Bytes): ChangedToLoyaltyToken | null {
+    return changetype<ChangedToLoyaltyToken | null>(
+      store.get_in_block("ChangedToLoyaltyToken", id.toHexString())
     );
   }
 
-  static load(id: Bytes): ChangedLoyaltyType | null {
-    return changetype<ChangedLoyaltyType | null>(
-      store.get("ChangedLoyaltyType", id.toHexString())
+  static load(id: Bytes): ChangedToLoyaltyToken | null {
+    return changetype<ChangedToLoyaltyToken | null>(
+      store.get("ChangedToLoyaltyToken", id.toHexString())
     );
   }
 
@@ -67,17 +70,43 @@ export class ChangedLoyaltyType extends Entity {
     this.set("account", Value.fromBytes(value));
   }
 
-  get loyaltyType(): i32 {
-    let value = this.get("loyaltyType");
+  get amountToken(): BigInt {
+    let value = this.get("amountToken");
     if (!value || value.kind == ValueKind.NULL) {
-      return 0;
+      throw new Error("Cannot return null for a required field.");
     } else {
-      return value.toI32();
+      return value.toBigInt();
     }
   }
 
-  set loyaltyType(value: i32) {
-    this.set("loyaltyType", Value.fromI32(value));
+  set amountToken(value: BigInt) {
+    this.set("amountToken", Value.fromBigInt(value));
+  }
+
+  get amountPoint(): BigInt {
+    let value = this.get("amountPoint");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set amountPoint(value: BigInt) {
+    this.set("amountPoint", Value.fromBigInt(value));
+  }
+
+  get balanceToken(): BigInt {
+    let value = this.get("balanceToken");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set balanceToken(value: BigInt) {
+    this.set("balanceToken", Value.fromBigInt(value));
   }
 
   get blockNumber(): BigInt {

@@ -162,26 +162,18 @@ export class ContractUtils {
         return res.toLowerCase() === account.toLowerCase();
     }
 
-    public static getLoyaltyTypeMessage(type: BigNumberish, account: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["uint256", "address", "uint256"],
-            [type, account, nonce]
-        );
+    public static getLoyaltyTypeMessage(account: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["address", "uint256"], [account, nonce]);
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signLoyaltyType(signer: Signer, type: BigNumberish, nonce: BigNumberish): Promise<string> {
-        const message = ContractUtils.getLoyaltyTypeMessage(type, await signer.getAddress(), nonce);
+    public static async signLoyaltyType(signer: Signer, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
 
-    public static verifyLoyaltyType(
-        type: BigNumberish,
-        account: string,
-        nonce: BigNumberish,
-        signature: string
-    ): boolean {
-        const message = ContractUtils.getLoyaltyTypeMessage(type, account, nonce);
+    public static verifyLoyaltyType(account: string, nonce: BigNumberish, signature: string): boolean {
+        const message = ContractUtils.getLoyaltyTypeMessage(account, nonce);
         let res: string;
         try {
             res = ethers.utils.verifyMessage(message, signature);

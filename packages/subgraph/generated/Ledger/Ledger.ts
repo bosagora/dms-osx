@@ -10,16 +10,16 @@ import {
   BigInt
 } from "@graphprotocol/graph-ts";
 
-export class ChangedLoyaltyType extends ethereum.Event {
-  get params(): ChangedLoyaltyType__Params {
-    return new ChangedLoyaltyType__Params(this);
+export class ChangedToLoyaltyToken extends ethereum.Event {
+  get params(): ChangedToLoyaltyToken__Params {
+    return new ChangedToLoyaltyToken__Params(this);
   }
 }
 
-export class ChangedLoyaltyType__Params {
-  _event: ChangedLoyaltyType;
+export class ChangedToLoyaltyToken__Params {
+  _event: ChangedToLoyaltyToken;
 
-  constructor(event: ChangedLoyaltyType) {
+  constructor(event: ChangedToLoyaltyToken) {
     this._event = event;
   }
 
@@ -27,8 +27,16 @@ export class ChangedLoyaltyType__Params {
     return this._event.parameters[0].value.toAddress();
   }
 
-  get loyaltyType(): i32 {
-    return this._event.parameters[1].value.toI32();
+  get amountToken(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get amountPoint(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get balanceToken(): BigInt {
+    return this._event.parameters[3].value.toBigInt();
   }
 }
 
@@ -1001,6 +1009,66 @@ export class _payTokenCall_dataStruct extends ethereum.Tuple {
   }
 }
 
+export class ChangeToLoyaltyTokenCall extends ethereum.Call {
+  get inputs(): ChangeToLoyaltyTokenCall__Inputs {
+    return new ChangeToLoyaltyTokenCall__Inputs(this);
+  }
+
+  get outputs(): ChangeToLoyaltyTokenCall__Outputs {
+    return new ChangeToLoyaltyTokenCall__Outputs(this);
+  }
+}
+
+export class ChangeToLoyaltyTokenCall__Inputs {
+  _call: ChangeToLoyaltyTokenCall;
+
+  constructor(call: ChangeToLoyaltyTokenCall) {
+    this._call = call;
+  }
+
+  get _account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class ChangeToLoyaltyTokenCall__Outputs {
+  _call: ChangeToLoyaltyTokenCall;
+
+  constructor(call: ChangeToLoyaltyTokenCall) {
+    this._call = call;
+  }
+}
+
+export class ChangeToLoyaltyTokenDirectCall extends ethereum.Call {
+  get inputs(): ChangeToLoyaltyTokenDirectCall__Inputs {
+    return new ChangeToLoyaltyTokenDirectCall__Inputs(this);
+  }
+
+  get outputs(): ChangeToLoyaltyTokenDirectCall__Outputs {
+    return new ChangeToLoyaltyTokenDirectCall__Outputs(this);
+  }
+}
+
+export class ChangeToLoyaltyTokenDirectCall__Inputs {
+  _call: ChangeToLoyaltyTokenDirectCall;
+
+  constructor(call: ChangeToLoyaltyTokenDirectCall) {
+    this._call = call;
+  }
+}
+
+export class ChangeToLoyaltyTokenDirectCall__Outputs {
+  _call: ChangeToLoyaltyTokenDirectCall;
+
+  constructor(call: ChangeToLoyaltyTokenDirectCall) {
+    this._call = call;
+  }
+}
+
 export class ChangeToPayablePointCall extends ethereum.Call {
   get inputs(): ChangeToPayablePointCall__Inputs {
     return new ChangeToPayablePointCall__Inputs(this);
@@ -1407,74 +1475,6 @@ export class SetFeeCall__Outputs {
   _call: SetFeeCall;
 
   constructor(call: SetFeeCall) {
-    this._call = call;
-  }
-}
-
-export class SetLoyaltyTypeCall extends ethereum.Call {
-  get inputs(): SetLoyaltyTypeCall__Inputs {
-    return new SetLoyaltyTypeCall__Inputs(this);
-  }
-
-  get outputs(): SetLoyaltyTypeCall__Outputs {
-    return new SetLoyaltyTypeCall__Outputs(this);
-  }
-}
-
-export class SetLoyaltyTypeCall__Inputs {
-  _call: SetLoyaltyTypeCall;
-
-  constructor(call: SetLoyaltyTypeCall) {
-    this._call = call;
-  }
-
-  get _type(): i32 {
-    return this._call.inputValues[0].value.toI32();
-  }
-
-  get _account(): Address {
-    return this._call.inputValues[1].value.toAddress();
-  }
-
-  get _signature(): Bytes {
-    return this._call.inputValues[2].value.toBytes();
-  }
-}
-
-export class SetLoyaltyTypeCall__Outputs {
-  _call: SetLoyaltyTypeCall;
-
-  constructor(call: SetLoyaltyTypeCall) {
-    this._call = call;
-  }
-}
-
-export class SetLoyaltyTypeDirectCall extends ethereum.Call {
-  get inputs(): SetLoyaltyTypeDirectCall__Inputs {
-    return new SetLoyaltyTypeDirectCall__Inputs(this);
-  }
-
-  get outputs(): SetLoyaltyTypeDirectCall__Outputs {
-    return new SetLoyaltyTypeDirectCall__Outputs(this);
-  }
-}
-
-export class SetLoyaltyTypeDirectCall__Inputs {
-  _call: SetLoyaltyTypeDirectCall;
-
-  constructor(call: SetLoyaltyTypeDirectCall) {
-    this._call = call;
-  }
-
-  get _type(): i32 {
-    return this._call.inputValues[0].value.toI32();
-  }
-}
-
-export class SetLoyaltyTypeDirectCall__Outputs {
-  _call: SetLoyaltyTypeDirectCall;
-
-  constructor(call: SetLoyaltyTypeDirectCall) {
     this._call = call;
   }
 }

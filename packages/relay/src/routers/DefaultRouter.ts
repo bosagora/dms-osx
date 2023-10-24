@@ -1,4 +1,4 @@
-import { Ledger, ShopCollection, PhoneLinkCollection, Token } from "../../typechain-types";
+import { Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
@@ -230,15 +230,14 @@ export class DefaultRouter {
 
         // 포인트의 종류를 선택하는 기능
         this.app.post(
-            "/changeLoyaltyType",
+            "/changeToLoyaltyToken",
             [
-                body("type").exists().isIn(["0", "1"]),
                 body("account").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.changeLoyaltyType.bind(this)
+            this.changeToLoyaltyToken.bind(this)
         );
 
         // 사용가능한 포인트로 전환
@@ -451,11 +450,11 @@ export class DefaultRouter {
 
     /**
      * 포인트의 종류를 선택한다.
-     * POST /changeLoyaltyType
+     * POST /changeToLoyaltyToken
      * @private
      */
-    private async changeLoyaltyType(req: express.Request, res: express.Response) {
-        logger.http(`POST /changeLoyaltyType`);
+    private async changeToLoyaltyToken(req: express.Request, res: express.Response) {
+        logger.http(`POST /changeToLoyaltyToken`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -469,13 +468,12 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const type: number = Number(req.body.type);
             const account: string = String(req.body.account); // 구매자의 주소
             const signature: string = String(req.body.signature); // 서명
 
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(account);
-            if (!ContractUtils.verifyLoyaltyType(type, account, userNonce, signature))
+            if (!ContractUtils.verifyLoyaltyType(account, userNonce, signature))
                 return res.status(200).json(
                     this.makeResponseData(500, undefined, {
                         message: "Signature is not valid.",
@@ -484,14 +482,14 @@ export class DefaultRouter {
 
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
-                .setLoyaltyType(type, account, signature);
+                .changeToLoyaltyToken(account, signature);
 
-            logger.http(`TxHash(changeLoyaltyType): `, tx.hash);
+            logger.http(`TxHash(changeToLoyaltyToken): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed change point type";
-            logger.error(`POST /changeLoyaltyType :`, message);
+            logger.error(`POST /changeToLoyaltyToken :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,

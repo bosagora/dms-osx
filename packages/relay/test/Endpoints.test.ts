@@ -403,38 +403,6 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Change loyalty type", () => {
-            it("Check loyalty type - before", async () => {
-                const userIndex = 0;
-                const loyaltyType = await ledgerContract.loyaltyTypeOf(users[userIndex].address);
-                expect(loyaltyType).to.equal(0);
-            });
-
-            it("Send loyalty type", async () => {
-                const loyaltyType = 1;
-                const userIndex = 0;
-                const nonce = await ledgerContract.nonceOf(users[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(users[userIndex], loyaltyType, nonce);
-                const uri = URI(serverURL).directory("changeLoyaltyType");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    type: loyaltyType,
-                    account: users[userIndex].address,
-                    signature,
-                });
-
-                expect(response.data.code).to.equal(200);
-                expect(response.data.data).to.not.equal(undefined);
-                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-            });
-
-            it("Check point type - after", async () => {
-                const userIndex = 0;
-                const loyaltyType = await ledgerContract.loyaltyTypeOf(users[userIndex].address);
-                expect(loyaltyType).to.equal(1);
-            });
-        });
-
         context("payPoint & payToken", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
@@ -617,6 +585,36 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
+            });
+        });
+
+        context("Change loyalty type", () => {
+            it("Check loyalty type - before", async () => {
+                const userIndex = 0;
+                const loyaltyType = await ledgerContract.loyaltyTypeOf(users[userIndex].address);
+                expect(loyaltyType).to.equal(0);
+            });
+
+            it("Send loyalty type", async () => {
+                const userIndex = 0;
+                const nonce = await ledgerContract.nonceOf(users[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(users[userIndex], nonce);
+                const uri = URI(serverURL).directory("changeToLoyaltyToken");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    account: users[userIndex].address,
+                    signature,
+                });
+
+                expect(response.data.code).to.equal(200);
+                expect(response.data.data).to.not.equal(undefined);
+                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
+            });
+
+            it("Check point type - after", async () => {
+                const userIndex = 0;
+                const loyaltyType = await ledgerContract.loyaltyTypeOf(users[userIndex].address);
+                expect(loyaltyType).to.equal(1);
             });
         });
     });
