@@ -201,10 +201,12 @@ export class DefaultRouter {
                 body("currency").exists(),
                 body("shopId")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
-                body("account").exists().isEthereumAddress(),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.payPoint.bind(this)
@@ -215,14 +217,16 @@ export class DefaultRouter {
             "/ledger/payToken",
             [
                 body("purchaseId").exists(),
-                body("amount").exists().custom(Validation.isAmount),
+                body("amount").exists().trim().custom(Validation.isAmount),
                 body("currency").exists(),
                 body("shopId")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
-                body("account").exists().isEthereumAddress(),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.payToken.bind(this)
@@ -232,9 +236,10 @@ export class DefaultRouter {
         this.app.post(
             "/ledger/changeToLoyaltyToken",
             [
-                body("account").exists().isEthereumAddress(),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.changeToLoyaltyToken.bind(this)
@@ -247,9 +252,10 @@ export class DefaultRouter {
                 body("phone")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
-                body("account").exists().isEthereumAddress(),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.changeToPayablePoint.bind(this)
@@ -262,11 +268,12 @@ export class DefaultRouter {
                     .exists()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("name").exists(),
-                body("provideWaitTime").exists().custom(Validation.isAmount),
-                body("providePercent").exists().custom(Validation.isAmount),
-                body("account").exists().isEthereumAddress(),
+                body("provideWaitTime").exists().trim().custom(Validation.isAmount),
+                body("providePercent").exists().trim().custom(Validation.isAmount),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_add.bind(this)
@@ -276,13 +283,15 @@ export class DefaultRouter {
             [
                 body("shopId")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("name").exists(),
                 body("provideWaitTime").exists().custom(Validation.isAmount),
                 body("providePercent").exists().custom(Validation.isAmount),
-                body("account").exists().isEthereumAddress(),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_update.bind(this)
@@ -292,10 +301,12 @@ export class DefaultRouter {
             [
                 body("shopId")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("account").exists().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_remove.bind(this)
@@ -305,11 +316,13 @@ export class DefaultRouter {
             [
                 body("shopId")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("amount").exists().custom(Validation.isAmount),
-                body("account").exists().isEthereumAddress(),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_openWithdrawal.bind(this)
@@ -319,10 +332,12 @@ export class DefaultRouter {
             [
                 body("shopId")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
-                body("account").exists().isEthereumAddress(),
+                body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
+                    .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_closeWithdrawal.bind(this)
@@ -353,12 +368,12 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const purchaseId: string = String(req.body.purchaseId); // 구매 아이디
-            const amount: string = String(req.body.amount); // 구매 금액
-            const currency: string = String(req.body.currency).toLowerCase(); // 구매한 금액 통화코드
-            const shopId: string = String(req.body.shopId); // 구매한 가맹점 아이디
-            const account: string = String(req.body.account); // 구매자의 주소
-            const signature: string = String(req.body.signature); // 서명
+            const purchaseId: string = String(req.body.purchaseId).trim(); // 구매 아이디
+            const amount: string = String(req.body.amount).trim(); // 구매 금액
+            const currency: string = String(req.body.currency).toLowerCase().trim(); // 구매한 금액 통화코드
+            const shopId: string = String(req.body.shopId).trim(); // 구매한 가맹점 아이디
+            const account: string = String(req.body.account).trim(); // 구매자의 주소
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // TODO amount > 0 조건 검사
 
@@ -411,12 +426,12 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const purchaseId: string = String(req.body.purchaseId); // 구매 아이디
-            const amount: string = String(req.body.amount); // 구매 금액
-            const currency: string = String(req.body.currency).toLowerCase(); // 구매한 금액 통화코드
-            const shopId: string = String(req.body.shopId); // 구매한 가맹점 아이디
-            const account: string = String(req.body.account); // 구매자의 주소
-            const signature: string = String(req.body.signature); // 서명
+            const purchaseId: string = String(req.body.purchaseId).trim(); // 구매 아이디
+            const amount: string = String(req.body.amount).trim(); // 구매 금액
+            const currency: string = String(req.body.currency).toLowerCase().trim(); // 구매한 금액 통화코드
+            const shopId: string = String(req.body.shopId).trim(); // 구매한 가맹점 아이디
+            const account: string = String(req.body.account).trim(); // 구매자의 주소
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // TODO amount > 0 조건 검사
             // 서명검증
@@ -468,8 +483,8 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const account: string = String(req.body.account); // 구매자의 주소
-            const signature: string = String(req.body.signature); // 서명
+            const account: string = String(req.body.account).trim(); // 구매자의 주소
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(account);
@@ -520,9 +535,9 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const phone: string = String(req.body.phone);
-            const account: string = String(req.body.account); // 구매자의 주소
-            const signature: string = String(req.body.signature); // 서명
+            const phone: string = String(req.body.phone).trim();
+            const account: string = String(req.body.account).trim(); // 구매자의 주소
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(account);
@@ -573,12 +588,12 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const shopId: string = String(req.body.shopId);
-            const name: string = String(req.body.name);
+            const shopId: string = String(req.body.shopId).trim();
+            const name: string = String(req.body.name).trim();
             const provideWaitTime: number = Number(req.body.provideWaitTime);
             const providePercent: number = Number(req.body.providePercent);
-            const account: string = String(req.body.account);
-            const signature: string = String(req.body.signature); // 서명
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
             const nonce = await (await this.getShopContract()).nonceOf(account);
@@ -629,12 +644,12 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const shopId: string = String(req.body.shopId);
-            const name: string = String(req.body.name);
-            const provideWaitTime: number = Number(req.body.provideWaitTime);
-            const providePercent: number = Number(req.body.providePercent);
-            const account: string = String(req.body.account);
-            const signature: string = String(req.body.signature); // 서명
+            const shopId: string = String(req.body.shopId).trim();
+            const name: string = String(req.body.name).trim();
+            const provideWaitTime: number = Number(String(req.body.provideWaitTime).trim());
+            const providePercent: number = Number(String(req.body.providePercent).trim());
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
             const nonce = await (await this.getShopContract()).nonceOf(account);
@@ -685,9 +700,9 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const shopId: string = String(req.body.shopId);
-            const account: string = String(req.body.account);
-            const signature: string = String(req.body.signature); // 서명
+            const shopId: string = String(req.body.shopId).trim();
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
             const nonce = await (await this.getShopContract()).nonceOf(account);
@@ -738,10 +753,10 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const shopId: string = String(req.body.shopId);
-            const amount: string = String(req.body.amount); // 구매 금액
-            const account: string = String(req.body.account);
-            const signature: string = String(req.body.signature); // 서명
+            const shopId: string = String(req.body.shopId).trim();
+            const amount: string = String(req.body.amount).trim(); // 구매 금액
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
             const nonce = await (await this.getShopContract()).nonceOf(account);
@@ -792,9 +807,9 @@ export class DefaultRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const shopId: string = String(req.body.shopId);
-            const account: string = String(req.body.account);
-            const signature: string = String(req.body.signature); // 서명
+            const shopId: string = String(req.body.shopId).trim();
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
             const nonce = await (await this.getShopContract()).nonceOf(account);
