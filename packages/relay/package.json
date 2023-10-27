@@ -20,7 +20,8 @@
         "debug:Endpoints": "NODE_ENV=test hardhat test test/Endpoints.test.ts",
         "debug:Config": "NODE_ENV=test hardhat test test/Config.test.ts",
         "debug:Shop": "NODE_ENV=test hardhat test test/Shop.test.ts",
-        "debug:ShopWithdraw": "NODE_ENV=test hardhat test test/ShopWithdraw.test.ts"
+        "debug:ShopWithdraw": "NODE_ENV=test hardhat test test/ShopWithdraw.test.ts",
+        "debug:UserInfo": "NODE_ENV=test hardhat test test/UserInfo.test.ts"
     },
     "repository": {
         "type": "git",

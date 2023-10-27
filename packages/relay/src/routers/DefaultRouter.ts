@@ -8,7 +8,7 @@ import { Validation } from "../validation";
 
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
-import { body, validationResult } from "express-validator";
+import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
 import express from "express";
@@ -341,6 +341,12 @@ export class DefaultRouter {
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_closeWithdrawal.bind(this)
+        );
+
+        this.app.get(
+            "/user/balance",
+            [query("account").exists().trim().isEthereumAddress()],
+            this.user_balance.bind(this)
         );
     }
 
@@ -837,6 +843,46 @@ export class DefaultRouter {
             );
         } finally {
             this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
+     * GET /user/balance
+     * @private
+     */
+    private async user_balance(req: express.Request, res: express.Response) {
+        logger.http(`GET /user/balance`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const account: string = String(req.query.account).trim();
+            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+            const balance =
+                loyaltyType === 0
+                    ? await (await this.getLedgerContract()).pointBalanceOf(account)
+                    : await (await this.getLedgerContract()).tokenBalanceOf(account);
+            return res
+                .status(200)
+                .json(this.makeResponseData(200, { account, loyaltyType, balance: balance.toString() }));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /user/balance";
+            logger.error(`GET /user/balance :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
         }
     }
 }
