@@ -48,7 +48,7 @@ export class Amount {
     /**
      * If entered an amount that is BOA, save it as BigNumber considering the decimal point
      */
-    public static make(boa: string | number, decimal: number): Amount {
+    public static make(boa: string | number, decimal: number = 18): Amount {
         if (decimal < 0) throw new Error("Invalid decimal");
         const amount = boa.toString();
         if (amount === "") return new Amount(BigNumber.from("0"), decimal);

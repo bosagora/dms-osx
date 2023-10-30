@@ -23,6 +23,7 @@ import { BigNumber, Wallet } from "ethers";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+import { LoyaltyType } from "../src/types";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -123,6 +124,9 @@ describe("Test of Server", function () {
         await currencyRateContract.deployed();
         await currencyRateContract.deployTransaction.wait();
         await currencyRateContract.connect(validators[0]).set(await tokenContract.symbol(), price);
+        await currencyRateContract.connect(validators[0]).set("krw", multiple);
+        await currencyRateContract.connect(validators[0]).set("usd", BigNumber.from(1000).mul(multiple));
+        await currencyRateContract.connect(validators[0]).set("point", multiple);
     };
 
     const deployShopCollection = async () => {
@@ -275,6 +279,7 @@ describe("Test of Server", function () {
             config.contracts.phoneLinkerAddress = linkCollectionContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
             config.contracts.shopAddress = shopCollection.address;
+            config.contracts.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = [
                 relay1.privateKey,
@@ -412,8 +417,34 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, 0);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
+            });
+
+            it("Endpoint POST /payment/info", async () => {
+                const url = URI(serverURL).directory("payment").filename("info").toString();
+
+                const amount2 = Amount.make(1, 18).value;
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    account: users[purchase.userIndex].address,
+                    amount: amount2.toString(),
+                    currency: "USD",
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
+                assert.deepStrictEqual(response.data.data.purchaseAmount, Amount.make(1000).toString());
+                assert.deepStrictEqual(response.data.data.feeAmount, Amount.make(50).toString());
+                assert.deepStrictEqual(response.data.data.totalAmount, Amount.make(1050).toString());
+                assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
+                assert.deepStrictEqual(response.data.data.currency, "USD");
+                assert.deepStrictEqual(response.data.data.feeRate, 0.05);
             });
 
             it("Change loyalty type", async () => {
@@ -441,8 +472,38 @@ describe("Test of Server", function () {
                 const tokenAmount = pointAmount.mul(multiple).div(price);
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, 1);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
+            });
+
+            it("Endpoint POST /payment/info", async () => {
+                const url = URI(serverURL).directory("payment").filename("info").toString();
+
+                const amount2 = Amount.make(1, 18).value;
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    account: users[purchase.userIndex].address,
+                    amount: amount2.toString(),
+                    currency: "USD",
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+                console.log(response.data.data);
+                const tokenAmount = pointAmount.mul(multiple).div(price);
+                const purchaseAmount2 = amount2.mul(1000).mul(multiple).div(price);
+                const feeAmount2 = purchaseAmount2.mul(5).div(100);
+                const totalAmount2 = purchaseAmount2.add(feeAmount2);
+                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
+                assert.deepStrictEqual(response.data.data.purchaseAmount, purchaseAmount2.toString());
+                assert.deepStrictEqual(response.data.data.feeAmount, feeAmount2.toString());
+                assert.deepStrictEqual(response.data.data.totalAmount, totalAmount2.toString());
+                assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
+                assert.deepStrictEqual(response.data.data.currency, "USD");
+                assert.deepStrictEqual(response.data.data.feeRate, 0.05);
             });
         });
     });

@@ -158,6 +158,7 @@ export class RelayConfig implements IRelayConfig {
      * 계정의 비밀키 또는 키파일
      */
     public managerKeys: string[];
+    public accessKey: string;
 
     /**
      * Constructor
@@ -166,6 +167,7 @@ export class RelayConfig implements IRelayConfig {
         const defaults = RelayConfig.defaultValue();
 
         this.managerKeys = defaults.managerKeys;
+        this.accessKey = defaults.accessKey;
     }
 
     /**
@@ -180,6 +182,7 @@ export class RelayConfig implements IRelayConfig {
                 process.env.MANAGER_KEY4 || "",
                 process.env.MANAGER_KEY5 || "",
             ],
+            accessKey: process.env.ACCESS_SECRET || "",
         };
     }
 
@@ -189,6 +192,7 @@ export class RelayConfig implements IRelayConfig {
      */
     public readFromObject(config: IRelayConfig) {
         if (config.managerKeys !== undefined) this.managerKeys = config.managerKeys;
+        if (config.accessKey !== undefined) this.accessKey = config.accessKey;
     }
 }
 
@@ -200,6 +204,7 @@ export class ContractsConfig implements IContractsConfig {
     public ledgerAddress: string;
     public phoneLinkerAddress: string;
     public shopAddress: string;
+    public currencyRateAddress: string;
 
     /**
      * Constructor
@@ -211,6 +216,7 @@ export class ContractsConfig implements IContractsConfig {
         this.ledgerAddress = defaults.ledgerAddress;
         this.phoneLinkerAddress = defaults.phoneLinkerAddress;
         this.shopAddress = defaults.shopAddress;
+        this.currencyRateAddress = defaults.currencyRateAddress;
     }
 
     /**
@@ -222,6 +228,7 @@ export class ContractsConfig implements IContractsConfig {
             ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
             phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
             shopAddress: process.env.SHOP_CONTRACT_ADDRESS || "",
+            currencyRateAddress: process.env.CURRENCY_RATE_CONTRACT_ADDRESS || "",
         };
     }
 
@@ -325,6 +332,7 @@ export interface ILoggingConfig {
 
 export interface IRelayConfig {
     managerKeys: string[];
+    accessKey: string;
 }
 
 export interface IContractsConfig {
@@ -332,6 +340,7 @@ export interface IContractsConfig {
     ledgerAddress: string;
     phoneLinkerAddress: string;
     shopAddress: string;
+    currencyRateAddress: string;
 }
 /**
  * The interface of main config

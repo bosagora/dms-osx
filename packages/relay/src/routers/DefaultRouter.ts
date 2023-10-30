@@ -1,4 +1,4 @@
-import { Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
+import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
@@ -7,11 +7,12 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { Validation } from "../validation";
 
 import { NonceManager } from "@ethersproject/experimental";
-import { Signer, Wallet } from "ethers";
+import { BigNumber, Signer, Wallet } from "ethers";
 import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
 import express from "express";
+import { LoyaltyType } from "../types";
 
 interface ISignerItem {
     index: number;
@@ -57,6 +58,12 @@ export class DefaultRouter {
      * @private
      */
     private _phoneLinkerContract: PhoneLinkCollection | undefined;
+
+    /**
+     * 환률 컨트랙트
+     * @private
+     */
+    private _currencyRateContract: CurrencyRate | undefined;
 
     /**
      *
@@ -171,6 +178,19 @@ export class DefaultRouter {
             this._phoneLinkerContract = linkCollectionFactory.attach(this._config.contracts.phoneLinkerAddress);
         }
         return this._phoneLinkerContract;
+    }
+
+    /**
+     * 환률 컨트랙트를 리턴한다.
+     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
+     * @private
+     */
+    private async getCurrencyRateContract(): Promise<CurrencyRate> {
+        if (this._currencyRateContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("CurrencyRate");
+            this._currencyRateContract = factory.attach(this._config.contracts.currencyRateAddress);
+        }
+        return this._currencyRateContract;
     }
 
     /**
@@ -347,6 +367,15 @@ export class DefaultRouter {
             "/user/balance",
             [query("account").exists().trim().isEthereumAddress()],
             this.user_balance.bind(this)
+        );
+
+        this.app.post(
+            "/payment/info",
+            [body("accessKey").exists()],
+            [body("account").exists().trim().isEthereumAddress()],
+            [body("amount").exists().custom(Validation.isAmount)],
+            [body("currency").exists()],
+            this.payment_info.bind(this)
         );
     }
 
@@ -868,7 +897,7 @@ export class DefaultRouter {
             const account: string = String(req.query.account).trim();
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
             const balance =
-                loyaltyType === 0
+                loyaltyType === LoyaltyType.POINT
                     ? await (await this.getLedgerContract()).pointBalanceOf(account)
                     : await (await this.getLedgerContract()).tokenBalanceOf(account);
             return res
@@ -878,6 +907,87 @@ export class DefaultRouter {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /user/balance";
             logger.error(`GET /user/balance :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        }
+    }
+
+    /**
+     * 결제 / 결제정보를 제공한다
+     * GET /payment/info
+     * @private
+     */
+    private async payment_info(req: express.Request, res: express.Response) {
+        logger.http(`GET /payment/info`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const accessKey: string = String(req.body.accessKey).trim();
+            if (accessKey !== this._config.relay.accessKey) {
+                return res.json(
+                    this.makeResponseData(400, undefined, {
+                        message: "The access key entered is not valid.",
+                    })
+                );
+            }
+
+            const account: string = String(req.body.account).trim();
+            const amount: BigNumber = BigNumber.from(req.body.amount);
+            const currency: string = String(req.body.currency).trim();
+            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+
+            const feeRate = await (await this.getLedgerContract()).fee();
+            const rate = await (await this.getCurrencyRateContract()).get(currency.toLowerCase());
+            const multiple = await (await this.getCurrencyRateContract()).MULTIPLE();
+
+            let balance: BigNumber;
+            let purchaseAmount: BigNumber;
+            let feeAmount: BigNumber;
+            let totalAmount: BigNumber;
+
+            if (loyaltyType === LoyaltyType.POINT) {
+                balance = await (await this.getLedgerContract()).pointBalanceOf(account);
+                purchaseAmount = amount.mul(rate).div(multiple);
+                feeAmount = purchaseAmount.mul(feeRate).div(100);
+                totalAmount = purchaseAmount.add(feeAmount);
+            } else {
+                balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
+                const symbol = await (await this.getTokenContract()).symbol();
+                const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
+                purchaseAmount = amount.mul(rate).div(tokenRate);
+                feeAmount = purchaseAmount.mul(feeRate).div(100);
+                totalAmount = purchaseAmount.add(feeAmount);
+            }
+
+            return res.status(200).json(
+                this.makeResponseData(200, {
+                    account,
+                    loyaltyType,
+                    balance: balance.toString(),
+                    purchaseAmount: purchaseAmount.toString(),
+                    feeAmount: feeAmount.toString(),
+                    totalAmount: totalAmount.toString(),
+                    amount: amount.toString(),
+                    currency,
+                    feeRate: feeRate / 100,
+                })
+            );
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /payment/info";
+            logger.error(`GET /payment/info :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
