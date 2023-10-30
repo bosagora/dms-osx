@@ -410,7 +410,7 @@ describe("Test of Server", function () {
 
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
-                    .directory("user/balance")
+                    .directory("payment/balance")
                     .addQuery("account", users[purchase.userIndex].address)
                     .toString();
                 const response = await client.get(url);
@@ -464,7 +464,7 @@ describe("Test of Server", function () {
 
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
-                    .directory("user/balance")
+                    .directory("payment/balance")
                     .addQuery("account", users[purchase.userIndex].address)
                     .toString();
                 const response = await client.get(url);
@@ -490,7 +490,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
-                console.log(response.data.data);
+
                 const tokenAmount = pointAmount.mul(multiple).div(price);
                 const purchaseAmount2 = amount2.mul(1000).mul(multiple).div(price);
                 const feeAmount2 = purchaseAmount2.mul(5).div(100);

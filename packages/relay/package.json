@@ -17,11 +17,11 @@
         "start": "NODE_ENV=production hardhat run src/main.ts --network production_net",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write",
-        "debug:Endpoints": "NODE_ENV=test hardhat test test/Endpoints.test.ts",
-        "debug:Config": "NODE_ENV=test hardhat test test/Config.test.ts",
-        "debug:Shop": "NODE_ENV=test hardhat test test/Shop.test.ts",
-        "debug:ShopWithdraw": "NODE_ENV=test hardhat test test/ShopWithdraw.test.ts",
-        "debug:UserInfo": "NODE_ENV=test hardhat test test/UserInfo.test.ts"
+        "test:Endpoints": "NODE_ENV=test hardhat test test/Endpoints.test.ts",
+        "test:Config": "NODE_ENV=test hardhat test test/Config.test.ts",
+        "test:Shop": "NODE_ENV=test hardhat test test/Shop.test.ts",
+        "test:ShopWithdraw": "NODE_ENV=test hardhat test test/ShopWithdraw.test.ts",
+        "test:Payment": "NODE_ENV=test hardhat test test/Payment.test.ts"
     },
     "repository": {
         "type": "git",
