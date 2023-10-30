@@ -5,6 +5,9 @@ import { cors_options } from "./option/cors";
 import { DefaultRouter } from "./routers/DefaultRouter";
 import { WebService } from "./service/WebService";
 
+import { RelaySigners } from "./contract/Signers";
+import { PaymentRouter } from "./routers/PaymentRouter";
+
 export class DefaultServer extends WebService {
     /**
      * The configuration of the database
@@ -12,7 +15,9 @@ export class DefaultServer extends WebService {
      */
     private readonly config: Config;
 
-    public readonly wallet_router: DefaultRouter;
+    public readonly defaultRouter: DefaultRouter;
+    public readonly paymentRouter: PaymentRouter;
+    public readonly relaySigners: RelaySigners;
 
     /**
      * Constructor
@@ -22,7 +27,9 @@ export class DefaultServer extends WebService {
         super(config.server.port, config.server.address);
 
         this.config = config;
-        this.wallet_router = new DefaultRouter(this, this.config);
+        this.relaySigners = new RelaySigners(this.config);
+        this.defaultRouter = new DefaultRouter(this, this.config, this.relaySigners);
+        this.paymentRouter = new PaymentRouter(this, this.config, this.relaySigners);
     }
 
     /**
@@ -35,7 +42,8 @@ export class DefaultServer extends WebService {
         this.app.use(bodyParser.json({ limit: "1mb" }));
         this.app.use(cors(cors_options));
 
-        this.wallet_router.registerRoutes();
+        this.defaultRouter.registerRoutes();
+        this.paymentRouter.registerRoutes();
 
         return super.start();
     }

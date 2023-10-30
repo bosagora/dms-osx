@@ -1,24 +1,17 @@
 import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
-import { GasPriceManager } from "../contract/GasPriceManager";
 import { WebService } from "../service/WebService";
+import { LoyaltyType } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Validation } from "../validation";
 
-import { NonceManager } from "@ethersproject/experimental";
-import { BigNumber, Signer, Wallet } from "ethers";
+import { BigNumber } from "ethers";
 import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
 import express from "express";
-import { LoyaltyType } from "../types";
-
-interface ISignerItem {
-    index: number;
-    signer: Signer;
-    using: boolean;
-}
+import { ISignerItem, RelaySigners } from "../contract/Signers";
 
 export class DefaultRouter {
     /**
@@ -33,7 +26,7 @@ export class DefaultRouter {
      */
     private readonly _config: Config;
 
-    private readonly _signers: ISignerItem[];
+    private readonly _relaySigners: RelaySigners;
 
     /**
      * ERC20 토큰 컨트랙트
@@ -70,18 +63,11 @@ export class DefaultRouter {
      * @param service  WebService
      * @param config Configuration
      */
-    constructor(service: WebService, config: Config) {
+    constructor(service: WebService, config: Config, relaySigners: RelaySigners) {
         this._web_service = service;
         this._config = config;
 
-        let idx = 0;
-        this._signers = this._config.relay.managerKeys.map((m) => {
-            return {
-                index: idx++,
-                signer: new Wallet(m, hre.ethers.provider) as Signer,
-                using: false,
-            };
-        });
+        this._relaySigners = relaySigners;
     }
 
     private get app(): express.Application {
@@ -93,36 +79,7 @@ export class DefaultRouter {
      * @private
      */
     private async getRelaySigner(): Promise<ISignerItem> {
-        let signerItem: ISignerItem | undefined;
-        let done = false;
-
-        const startTime = ContractUtils.getTimeStamp();
-        while (done) {
-            for (signerItem of this._signers) {
-                if (!signerItem.using) {
-                    signerItem.using = true;
-                    done = true;
-                    break;
-                }
-            }
-            if (ContractUtils.getTimeStamp() - startTime > 10) break;
-            await ContractUtils.delay(1000);
-        }
-
-        if (signerItem !== undefined) {
-            signerItem.using = true;
-            signerItem.signer = new NonceManager(
-                new GasPriceManager(new Wallet(this._config.relay.managerKeys[signerItem.index], hre.ethers.provider))
-            );
-        } else {
-            signerItem = this._signers[0];
-            signerItem.using = true;
-            signerItem.signer = new NonceManager(
-                new GasPriceManager(new Wallet(this._config.relay.managerKeys[signerItem.index], hre.ethers.provider))
-            );
-        }
-
-        return signerItem;
+        return this._relaySigners.getSigner();
     }
 
     /***
@@ -361,21 +318,6 @@ export class DefaultRouter {
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_closeWithdrawal.bind(this)
-        );
-
-        this.app.get(
-            "/user/balance",
-            [query("account").exists().trim().isEthereumAddress()],
-            this.user_balance.bind(this)
-        );
-
-        this.app.post(
-            "/payment/info",
-            [body("accessKey").exists()],
-            [body("account").exists().trim().isEthereumAddress()],
-            [body("amount").exists().custom(Validation.isAmount)],
-            [body("currency").exists()],
-            this.payment_info.bind(this)
         );
     }
 
@@ -872,127 +814,6 @@ export class DefaultRouter {
             );
         } finally {
             this.releaseRelaySigner(signerItem);
-        }
-    }
-
-    /**
-     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
-     * GET /user/balance
-     * @private
-     */
-    private async user_balance(req: express.Request, res: express.Response) {
-        logger.http(`GET /user/balance`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
-        }
-
-        try {
-            const account: string = String(req.query.account).trim();
-            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
-            const balance =
-                loyaltyType === LoyaltyType.POINT
-                    ? await (await this.getLedgerContract()).pointBalanceOf(account)
-                    : await (await this.getLedgerContract()).tokenBalanceOf(account);
-            return res
-                .status(200)
-                .json(this.makeResponseData(200, { account, loyaltyType, balance: balance.toString() }));
-        } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /user/balance";
-            logger.error(`GET /user/balance :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
-        }
-    }
-
-    /**
-     * 결제 / 결제정보를 제공한다
-     * GET /payment/info
-     * @private
-     */
-    private async payment_info(req: express.Request, res: express.Response) {
-        logger.http(`GET /payment/info`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
-        }
-
-        try {
-            const accessKey: string = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
-                return res.json(
-                    this.makeResponseData(400, undefined, {
-                        message: "The access key entered is not valid.",
-                    })
-                );
-            }
-
-            const account: string = String(req.body.account).trim();
-            const amount: BigNumber = BigNumber.from(req.body.amount);
-            const currency: string = String(req.body.currency).trim();
-            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
-
-            const feeRate = await (await this.getLedgerContract()).fee();
-            const rate = await (await this.getCurrencyRateContract()).get(currency.toLowerCase());
-            const multiple = await (await this.getCurrencyRateContract()).MULTIPLE();
-
-            let balance: BigNumber;
-            let purchaseAmount: BigNumber;
-            let feeAmount: BigNumber;
-            let totalAmount: BigNumber;
-
-            if (loyaltyType === LoyaltyType.POINT) {
-                balance = await (await this.getLedgerContract()).pointBalanceOf(account);
-                purchaseAmount = amount.mul(rate).div(multiple);
-                feeAmount = purchaseAmount.mul(feeRate).div(100);
-                totalAmount = purchaseAmount.add(feeAmount);
-            } else {
-                balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
-                const symbol = await (await this.getTokenContract()).symbol();
-                const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
-                purchaseAmount = amount.mul(rate).div(tokenRate);
-                feeAmount = purchaseAmount.mul(feeRate).div(100);
-                totalAmount = purchaseAmount.add(feeAmount);
-            }
-
-            return res.status(200).json(
-                this.makeResponseData(200, {
-                    account,
-                    loyaltyType,
-                    balance: balance.toString(),
-                    purchaseAmount: purchaseAmount.toString(),
-                    feeAmount: feeAmount.toString(),
-                    totalAmount: totalAmount.toString(),
-                    amount: amount.toString(),
-                    currency,
-                    feeRate: feeRate / 100,
-                })
-            );
-        } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /payment/info";
-            logger.error(`GET /payment/info :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
         }
     }
 }
