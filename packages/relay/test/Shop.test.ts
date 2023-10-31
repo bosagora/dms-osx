@@ -270,7 +270,7 @@ describe("Test for ShopCollection", () => {
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("/shop").filename("add");
+                const uri = URI(serverURL).directory("/v1/shop").filename("add");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     shopId: elem.shopId,
@@ -307,7 +307,7 @@ describe("Test for ShopCollection", () => {
                 nonce
             );
 
-            const uri = URI(serverURL).directory("/shop").filename("update");
+            const uri = URI(serverURL).directory("/v1/shop").filename("update");
             const url = uri.toString();
             const response = await client.post(url, {
                 shopId: elem.shopId,
@@ -328,7 +328,7 @@ describe("Test for ShopCollection", () => {
             const nonce = await shopCollection.nonceOf(elem.wallet.address);
             const signature = await ContractUtils.signShopId(elem.wallet, elem.shopId, nonce);
 
-            const uri = URI(serverURL).directory("/shop").filename("remove");
+            const uri = URI(serverURL).directory("/v1/shop").filename("remove");
             const url = uri.toString();
             const response = await client.post(url, {
                 shopId: elem.shopId,
