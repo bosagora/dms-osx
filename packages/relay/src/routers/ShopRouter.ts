@@ -165,7 +165,7 @@ export class ShopRouter {
 
     public registerRoutes() {
         this.app.post(
-            "/shop/add",
+            "/v1/shop/add",
             [
                 body("shopId")
                     .exists()
@@ -182,7 +182,7 @@ export class ShopRouter {
             this.shop_add.bind(this)
         );
         this.app.post(
-            "/shop/update",
+            "/v1/shop/update",
             [
                 body("shopId")
                     .exists()
@@ -200,7 +200,7 @@ export class ShopRouter {
             this.shop_update.bind(this)
         );
         this.app.post(
-            "/shop/remove",
+            "/v1/shop/remove",
             [
                 body("shopId")
                     .exists()
@@ -215,7 +215,7 @@ export class ShopRouter {
             this.shop_remove.bind(this)
         );
         this.app.post(
-            "/shop/openWithdrawal",
+            "/v1/shop/openWithdrawal",
             [
                 body("shopId")
                     .exists()
@@ -231,7 +231,7 @@ export class ShopRouter {
             this.shop_openWithdrawal.bind(this)
         );
         this.app.post(
-            "/shop/closeWithdrawal",
+            "/v1/shop/closeWithdrawal",
             [
                 body("shopId")
                     .exists()

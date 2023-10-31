@@ -167,13 +167,13 @@ export class PaymentRouter {
 
     public registerRoutes() {
         this.app.get(
-            "/payment/balance",
+            "/v1/payment/balance",
             [query("account").exists().trim().isEthereumAddress()],
             this.user_balance.bind(this)
         );
 
         this.app.post(
-            "/payment/info",
+            "/v1/payment/info",
             [body("accessKey").exists()],
             [body("account").exists().trim().isEthereumAddress()],
             [body("amount").exists().custom(Validation.isAmount)],

@@ -354,7 +354,7 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Test endpoint /user/balance", () => {
+        context("Test endpoint /v1//user/balance", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
@@ -410,7 +410,7 @@ describe("Test of Server", function () {
 
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
-                    .directory("payment/balance")
+                    .directory("/v1/payment/balance")
                     .addQuery("account", users[purchase.userIndex].address)
                     .toString();
                 const response = await client.get(url);
@@ -421,8 +421,8 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
             });
 
-            it("Endpoint POST /payment/info", async () => {
-                const url = URI(serverURL).directory("payment").filename("info").toString();
+            it("Endpoint POST /v1/payment/info", async () => {
+                const url = URI(serverURL).directory("/v1/payment").filename("info").toString();
 
                 const amount2 = Amount.make(1, 18).value;
                 const params = {
@@ -450,8 +450,7 @@ describe("Test of Server", function () {
             it("Change loyalty type", async () => {
                 const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyType(users[purchase.userIndex], nonce);
-                const uri = URI(serverURL).directory("ledger/changeToLoyaltyToken");
-                const url = uri.toString();
+                const url = URI(serverURL).directory("v1/ledger").filename("changeToLoyaltyToken").toString();
                 const response = await client.post(url, {
                     account: users[purchase.userIndex].address,
                     signature,
@@ -464,7 +463,7 @@ describe("Test of Server", function () {
 
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
-                    .directory("payment/balance")
+                    .directory("/v1/payment/balance")
                     .addQuery("account", users[purchase.userIndex].address)
                     .toString();
                 const response = await client.get(url);
@@ -476,8 +475,8 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
             });
 
-            it("Endpoint POST /payment/info", async () => {
-                const url = URI(serverURL).directory("payment").filename("info").toString();
+            it("Endpoint POST /v1/payment/info", async () => {
+                const url = URI(serverURL).directory("/v1/payment").filename("info").toString();
 
                 const amount2 = Amount.make(1, 18).value;
                 const params = {

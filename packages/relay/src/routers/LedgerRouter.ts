@@ -166,7 +166,7 @@ export class LedgerRouter {
     public registerRoutes() {
         // 포인트를 이용하여 구매
         this.app.post(
-            "/ledger/payPoint",
+            "/v1/ledger/payPoint",
             [
                 body("purchaseId").exists(),
                 body("amount").exists().custom(Validation.isAmount),
@@ -186,7 +186,7 @@ export class LedgerRouter {
 
         // 토큰을 이용하여 구매할 때
         this.app.post(
-            "/ledger/payToken",
+            "/v1/ledger/payToken",
             [
                 body("purchaseId").exists(),
                 body("amount").exists().trim().custom(Validation.isAmount),
@@ -206,7 +206,7 @@ export class LedgerRouter {
 
         // 포인트의 종류를 선택하는 기능
         this.app.post(
-            "/ledger/changeToLoyaltyToken",
+            "/v1/ledger/changeToLoyaltyToken",
             [
                 body("account").exists().trim().isEthereumAddress(),
                 body("signature")
@@ -219,7 +219,7 @@ export class LedgerRouter {
 
         // 사용가능한 포인트로 전환
         this.app.post(
-            "/ledger/changeToPayablePoint",
+            "/v1/ledger/changeToPayablePoint",
             [
                 body("phone")
                     .exists()

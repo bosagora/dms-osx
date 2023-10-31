@@ -604,7 +604,7 @@ describe("Test for ShopCollection", () => {
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("/shop").filename("openWithdrawal");
+                const uri = URI(serverURL).directory("/v1/shop").filename("openWithdrawal");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     shopId: shopData[shopIndex].shopId,
@@ -629,7 +629,7 @@ describe("Test for ShopCollection", () => {
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("/shop").filename("closeWithdrawal");
+                const uri = URI(serverURL).directory("/v1/shop").filename("closeWithdrawal");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     shopId: shopData[shopIndex].shopId,
