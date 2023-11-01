@@ -167,7 +167,7 @@ export class PaymentRouter {
 
     public registerRoutes() {
         this.app.get(
-            "/v1/payment/balance",
+            "/v1/payment/user/balance",
             [query("account").exists().trim().isEthereumAddress()],
             this.user_balance.bind(this)
         );
@@ -208,11 +208,11 @@ export class PaymentRouter {
 
     /**
      * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
-     * GET /v1/payment/balance
+     * GET /v1/payment/user/balance
      * @private
      */
     private async user_balance(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/balance`);
+        logger.http(`GET /v1/payment/user/balance`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -405,8 +405,8 @@ export class PaymentRouter {
             );
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /payment/info";
-            logger.error(`GET /payment/info :`, message);
+            if (message === "") message = "Failed /v1/payment/info";
+            logger.error(`GET /v1/payment/info :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,

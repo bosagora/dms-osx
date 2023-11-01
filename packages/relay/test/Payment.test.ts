@@ -354,7 +354,7 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Test endpoint /v1//user/balance", () => {
+        context("Test endpoint /v1/payment/user/balance", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
@@ -410,7 +410,8 @@ describe("Test of Server", function () {
 
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
-                    .directory("/v1/payment/balance")
+                    .directory("/v1/payment/user")
+                    .filename("balance")
                     .addQuery("account", users[purchase.userIndex].address)
                     .toString();
                 const response = await client.get(url);
@@ -463,7 +464,8 @@ describe("Test of Server", function () {
 
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
-                    .directory("/v1/payment/balance")
+                    .directory("/v1/payment/user")
+                    .filename("balance")
                     .addQuery("account", users[purchase.userIndex].address)
                     .toString();
                 const response = await client.get(url);

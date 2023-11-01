@@ -249,11 +249,11 @@ export class ShopRouter {
 
     /**
      * 상점을 추가한다.
-     * POST /shop/add
+     * POST /v1/shop/add
      * @private
      */
     private async shop_add(req: express.Request, res: express.Response) {
-        logger.http(`POST /shop/add`);
+        logger.http(`POST /v1/shop/add`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -287,12 +287,12 @@ export class ShopRouter {
                 .connect(signerItem.signer)
                 .add(shopId, name, provideWaitTime, providePercent, account, signature);
 
-            logger.http(`TxHash(/shop/add): `, tx.hash);
+            logger.http(`TxHash(/v1/shop/add): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /shop/add";
-            logger.error(`POST /shop/add :`, message);
+            if (message === "") message = "Failed /v1/shop/add";
+            logger.error(`POST /v1/shop/add :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -305,11 +305,11 @@ export class ShopRouter {
 
     /**
      * 상점정보를 수정한다.
-     * POST /shop/update
+     * POST /v1/shop/update
      * @private
      */
     private async shop_update(req: express.Request, res: express.Response) {
-        logger.http(`POST /shop/update`);
+        logger.http(`POST /v1/shop/update`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -343,12 +343,12 @@ export class ShopRouter {
                 .connect(signerItem.signer)
                 .update(shopId, name, provideWaitTime, providePercent, account, signature);
 
-            logger.http(`TxHash(/shop/update): `, tx.hash);
+            logger.http(`TxHash(/v1/shop/update): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /shop/update";
-            logger.error(`POST /shop/update :`, message);
+            if (message === "") message = "Failed /v1/shop/update";
+            logger.error(`POST /v1/shop/update :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -361,11 +361,11 @@ export class ShopRouter {
 
     /**
      * 상점정보를 삭제한다.
-     * POST /shop/remove
+     * POST /v1/shop/remove
      * @private
      */
     private async shop_remove(req: express.Request, res: express.Response) {
-        logger.http(`POST /shop/remove`);
+        logger.http(`POST /v1/shop/remove`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -396,12 +396,12 @@ export class ShopRouter {
                 .connect(signerItem.signer)
                 .remove(shopId, account, signature);
 
-            logger.http(`TxHash(/shop/remove): `, tx.hash);
+            logger.http(`TxHash(/v1/shop/remove): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /shop/remove";
-            logger.error(`POST /shop/remove :`, message);
+            if (message === "") message = "Failed /v1/shop/remove";
+            logger.error(`POST /v1/shop/remove :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -414,11 +414,11 @@ export class ShopRouter {
 
     /**
      * 상점 정산금을 인출 신청한다.
-     * POST /shop/openWithdrawal
+     * POST /v1/shop/openWithdrawal
      * @private
      */
     private async shop_openWithdrawal(req: express.Request, res: express.Response) {
-        logger.http(`POST /shop/openWithdrawal`);
+        logger.http(`POST /v1/shop/openWithdrawal`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -450,12 +450,12 @@ export class ShopRouter {
                 .connect(signerItem.signer)
                 .openWithdrawal(shopId, amount, account, signature);
 
-            logger.http(`TxHash(/shop/openWithdrawal): `, tx.hash);
+            logger.http(`TxHash(/v1/shop/openWithdrawal): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /shop/openWithdrawal";
-            logger.error(`POST /shop/openWithdrawal :`, message);
+            if (message === "") message = "Failed /v1/shop/openWithdrawal";
+            logger.error(`POST /v1/shop/openWithdrawal :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -468,11 +468,11 @@ export class ShopRouter {
 
     /**
      * 상점 정산금을 인출을 받은것을 확인한다.
-     * POST /shop/closeWithdrawal
+     * POST /v1/shop/closeWithdrawal
      * @private
      */
     private async shop_closeWithdrawal(req: express.Request, res: express.Response) {
-        logger.http(`POST /shop/closeWithdrawal`);
+        logger.http(`POST /v1/shop/closeWithdrawal`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -503,12 +503,12 @@ export class ShopRouter {
                 .connect(signerItem.signer)
                 .closeWithdrawal(shopId, account, signature);
 
-            logger.http(`TxHash(/shop/closeWithdrawal): `, tx.hash);
+            logger.http(`TxHash(/v1/shop/closeWithdrawal): `, tx.hash);
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /shop/closeWithdrawal";
-            logger.error(`POST /shop/closeWithdrawal :`, message);
+            if (message === "") message = "Failed /v1/shop/closeWithdrawal";
+            logger.error(`POST /v1/shop/closeWithdrawal :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
