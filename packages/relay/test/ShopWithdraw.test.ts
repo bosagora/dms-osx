@@ -591,9 +591,31 @@ describe("Test for ShopCollection", () => {
             const shopIndex = 2;
             const shop = shopData[shopIndex];
             const amount2 = Amount.make(400, 18).value;
+
             it("Check Settlement", async () => {
                 const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(amount2);
+            });
+
+            it("Get info of shop", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/shop")
+                    .filename("info")
+                    .addQuery("shopId", shopData[shopIndex].shopId)
+                    .toString();
+                const response = await client.get(url);
+                expect(response.data.code).to.equal(200);
+                assert.deepStrictEqual(response.data.data, {
+                    shopId: shopData[shopIndex].shopId,
+                    name: "Shop3",
+                    provideWaitTime: "0",
+                    providePercent: "0",
+                    account: shopData[shopIndex].wallet.address,
+                    providedPoint: "100000000000000000000",
+                    usedPoint: "500000000000000000000",
+                    settledPoint: "400000000000000000000",
+                    withdrawnPoint: "0",
+                });
             });
 
             it("Open Withdrawal", async () => {
@@ -621,6 +643,21 @@ describe("Test for ShopCollection", () => {
                 expect(withdrawalAmount).to.equal(amount2);
             });
 
+            it("Get withdrawal of shop", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/shop")
+                    .filename("withdrawal")
+                    .addQuery("shopId", shopData[shopIndex].shopId)
+                    .toString();
+                const response = await client.get(url);
+                expect(response.data.code).to.equal(200);
+                assert.deepStrictEqual(response.data.data, {
+                    shopId: shopData[shopIndex].shopId,
+                    withdrawAmount: "400000000000000000000",
+                    withdrawStatus: "Opened",
+                });
+            });
+
             it("Close Withdrawal", async () => {
                 const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
                 const signature = await ContractUtils.signShopId(
@@ -643,6 +680,42 @@ describe("Test for ShopCollection", () => {
 
                 const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(0);
+            });
+
+            it("Get info of shop", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/shop")
+                    .filename("info")
+                    .addQuery("shopId", shopData[shopIndex].shopId)
+                    .toString();
+                const response = await client.get(url);
+                expect(response.data.code).to.equal(200);
+                assert.deepStrictEqual(response.data.data, {
+                    shopId: shopData[shopIndex].shopId,
+                    name: "Shop3",
+                    provideWaitTime: "0",
+                    providePercent: "0",
+                    account: shopData[shopIndex].wallet.address,
+                    providedPoint: "100000000000000000000",
+                    usedPoint: "500000000000000000000",
+                    settledPoint: "400000000000000000000",
+                    withdrawnPoint: "400000000000000000000",
+                });
+            });
+
+            it("Get withdrawal of shop", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/shop")
+                    .filename("withdrawal")
+                    .addQuery("shopId", shopData[shopIndex].shopId)
+                    .toString();
+                const response = await client.get(url);
+                expect(response.data.code).to.equal(200);
+                assert.deepStrictEqual(response.data.data, {
+                    shopId: shopData[shopIndex].shopId,
+                    withdrawAmount: "400000000000000000000",
+                    withdrawStatus: "Closed",
+                });
             });
         });
     });
