@@ -236,11 +236,11 @@ export class LedgerRouter {
 
     /**
      * 사용자 포인트 지불
-     * POST /ledger/payPoint
+     * POST /v1/ledger/payPoint
      * @private
      */
     private async payPoint(req: express.Request, res: express.Response) {
-        logger.http(`POST /ledger/payPoint`);
+        logger.http(`POST /v1/ledger/payPoint`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -281,7 +281,7 @@ export class LedgerRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed pay point";
-            logger.error(`POST /payPoint :`, message);
+            logger.error(`POST /v1/ledger/payPoint :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -294,11 +294,11 @@ export class LedgerRouter {
 
     /**
      * 사용자 토큰 지불
-     * POST /ledger/payToken
+     * POST /v1/ledger/payToken
      * @private
      */
     private async payToken(req: express.Request, res: express.Response) {
-        logger.http(`POST /ledger/payToken`);
+        logger.http(`POST /v1/ledger/payToken`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -338,7 +338,7 @@ export class LedgerRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed pay token";
-            logger.error(`POST /ledger/payToken :`, message);
+            logger.error(`POST /v1/ledger/payToken :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -351,11 +351,11 @@ export class LedgerRouter {
 
     /**
      * 포인트의 종류를 선택한다.
-     * POST /ledger/changeToLoyaltyToken
+     * POST /v1/ledger/changeToLoyaltyToken
      * @private
      */
     private async changeToLoyaltyToken(req: express.Request, res: express.Response) {
-        logger.http(`POST /ledger/changeToLoyaltyToken`);
+        logger.http(`POST /v1/ledger/changeToLoyaltyToken`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -389,8 +389,8 @@ export class LedgerRouter {
             return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed change layalty type";
-            logger.error(`POST /ledger/changeToLoyaltyToken :`, message);
+            if (message === "") message = "Failed change loyalty type";
+            logger.error(`POST /v1/ledger/changeToLoyaltyToken :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -403,11 +403,11 @@ export class LedgerRouter {
 
     /**
      * 포인트의 종류를 선택한다.
-     * POST /ledger/changeToPayablePoint
+     * POST /v1/ledger/changeToPayablePoint
      * @private
      */
     private async changeToPayablePoint(req: express.Request, res: express.Response) {
-        logger.http(`POST /ledger/changeToPayablePoint`);
+        logger.http(`POST /v1/ledger/changeToPayablePoint`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -443,7 +443,7 @@ export class LedgerRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed change to payable point";
-            logger.error(`POST /ledger/changeToPayablePoint :`, message);
+            logger.error(`POST /v1/ledger/changeToPayablePoint :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
