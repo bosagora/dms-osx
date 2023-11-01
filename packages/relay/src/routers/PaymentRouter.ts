@@ -2,7 +2,7 @@ import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
-import { LoyaltyType } from "../types";
+import { LoyaltyType, WithdrawStatus } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Validation } from "../validation";
 
@@ -172,23 +172,47 @@ export class PaymentRouter {
             this.user_balance.bind(this)
         );
 
+        this.app.get(
+            "/v1/payment/shop/info",
+            [
+                query("shopId")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.shop_info.bind(this)
+        );
+
+        this.app.get(
+            "/v1/payment/shop/withdrawal",
+            [
+                query("shopId")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.shop_withdrawal.bind(this)
+        );
+
         this.app.post(
             "/v1/payment/info",
-            [body("accessKey").exists()],
-            [body("account").exists().trim().isEthereumAddress()],
-            [body("amount").exists().custom(Validation.isAmount)],
-            [body("currency").exists()],
+            [
+                body("accessKey").exists(),
+                body("account").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
+                body("currency").exists(),
+            ],
             this.payment_info.bind(this)
         );
     }
 
     /**
      * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
-     * GET /payment/balance
+     * GET /v1/payment/balance
      * @private
      */
     private async user_balance(req: express.Request, res: express.Response) {
-        logger.http(`GET /payment/balance`);
+        logger.http(`GET /v1/payment/balance`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -223,12 +247,100 @@ export class PaymentRouter {
     }
 
     /**
+     * 상점 정보 / 상점의 기본적인 정보를 제공하는 엔드포인트
+     * GET /v1/payment/shop/info
+     * @private
+     */
+    private async shop_info(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/shop/info`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const shopId: string = String(req.query.shopId).trim();
+            const info = await (await this.getShopContract()).shopOf(shopId);
+
+            const shopInfo = {
+                shopId: info.shopId,
+                name: info.name,
+                provideWaitTime: info.provideWaitTime.toString(),
+                providePercent: info.provideWaitTime.toString(),
+                account: info.account,
+                providedPoint: info.providedPoint.toString(),
+                usedPoint: info.usedPoint.toString(),
+                settledPoint: info.settledPoint.toString(),
+                withdrawnPoint: info.withdrawnPoint.toString(),
+            };
+            return res.status(200).json(this.makeResponseData(200, shopInfo));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /v1/payment/shop/info";
+            logger.error(`GET /v1/payment/shop/info :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        }
+    }
+
+    /**
+     * 상점 정보 / 상점의 기봊적인 정보를 제공하는 엔드포인트
+     * GET /v1/payment/shop/withdrawal
+     * @private
+     */
+    private async shop_withdrawal(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/shop/withdrawal`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const shopId: string = String(req.query.shopId).trim();
+            const info = await (await this.getShopContract()).shopOf(shopId);
+
+            const status = info.withdrawData.status === WithdrawStatus.CLOSE ? "Closed" : "Opened";
+            const shopWithdrawalInfo = {
+                shopId: info.shopId,
+                withdrawAmount: info.withdrawData.amount.toString(),
+                withdrawStatus: status,
+            };
+
+            return res.status(200).json(this.makeResponseData(200, shopWithdrawalInfo));
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /v1/payment/shop/withdrawal";
+            logger.error(`GET /v1/payment/shop/withdrawal :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        }
+    }
+
+    /**
      * 결제 / 결제정보를 제공한다
-     * GET /payment/info
+     * GET /v1/payment/info
      * @private
      */
     private async payment_info(req: express.Request, res: express.Response) {
-        logger.http(`GET /payment/info`);
+        logger.http(`GET /v1/payment/info`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
