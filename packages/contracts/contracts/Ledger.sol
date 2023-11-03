@@ -38,6 +38,8 @@ contract Ledger {
         address account;
         bytes32 phone;
     }
+    mapping(string => PurchaseData) private purchases;
+    string[] private purchaseIds;
 
     struct PaymentData {
         string purchaseId;
@@ -55,8 +57,37 @@ contract Ledger {
         bytes32 shopId;
     }
 
-    mapping(string => PurchaseData) private purchases;
-    string[] private purchaseIds;
+    struct LoyaltyPaymentInputData {
+        bytes32 paymentId;
+        string purchaseId;
+        uint256 amount;
+        string currency;
+        bytes32 shopId;
+        address account;
+        bytes signature;
+    }
+
+    enum LoyaltyPaymentStatus {
+        INVALID,
+        PAID,
+        CANCELLED
+    }
+
+    struct LoyaltyPaymentData {
+        bytes32 paymentId;
+        string purchaseId;
+        uint256 amount;
+        string currency;
+        bytes32 shopId;
+        address account;
+        uint256 timestamp;
+        LoyaltyType loyaltyType;
+        uint256 amountLoyalty; // Amount to convert point or token
+        uint256 feeLoyalty; // Amount to convert point or token
+        LoyaltyPaymentStatus status;
+    }
+
+    mapping(bytes32 => LoyaltyPaymentData) private loyaltyPayments;
 
     address public foundationAccount;
     address public settlementAccount;
@@ -343,6 +374,173 @@ contract Ledger {
         nonce[_account]++;
 
         emit ChangedToPayablePoint(_phone, _account, amount, value, pointBalances[_account]);
+    }
+
+    /// @notice 이용할 수 있는 지불 아이디 인지 알려준다.
+    /// @param _paymentId 지불 아이디
+    function isAvailablePaymentId(bytes32 _paymentId) public view returns (bool) {
+        if (loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.INVALID) return true;
+        else return false;
+    }
+
+    /// @notice 로얄티(포인트/토큰)을 구매에 사용하는 함수
+    /// @dev 중계서버를 통해서 호출됩니다.
+    function payLoyalty(LoyaltyPaymentInputData calldata _data) public {
+        require(loyaltyPayments[_data.paymentId].status == LoyaltyPaymentStatus.INVALID, "Payment ID already in use");
+
+        LoyaltyPaymentInputData memory data = _data;
+        bytes32 dataHash = keccak256(
+            abi.encode(
+                data.paymentId,
+                data.purchaseId,
+                data.amount,
+                data.currency,
+                data.shopId,
+                data.account,
+                nonce[data.account]
+            )
+        );
+        require(
+            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account,
+            "Invalid signature"
+        );
+
+        if (loyaltyTypes[data.account] == LoyaltyType.POINT) {
+            _payLoyaltyPoint(data);
+        } else {
+            _payLoyaltyToken(data);
+        }
+    }
+
+    /// @notice 포인트를 구매에 사용하는 함수
+    function _payLoyaltyPoint(LoyaltyPaymentInputData memory _data) internal {
+        LoyaltyPaymentInputData memory data = _data;
+        uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 feeValue = (data.amount * fee) / 100;
+        uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
+        uint256 feeToken = convertPointToToken(feePoint);
+
+        require(pointBalances[data.account] >= purchasePoint + feePoint, "Insufficient balance");
+        require(tokenBalances[foundationAccount] >= feeToken, "Insufficient foundation balance");
+
+        pointBalances[data.account] -= (purchasePoint + feePoint);
+
+        // 재단의 토큰으로 교환해 지급한다.
+        tokenBalances[foundationAccount] -= feeToken;
+        tokenBalances[feeAccount] += feeToken;
+
+        shopCollection.addUsedPoint(data.shopId, purchasePoint, data.purchaseId);
+
+        uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
+        if (settlementPoint > 0) {
+            uint256 settlementToken = convertPointToToken(settlementPoint);
+            if (tokenBalances[foundationAccount] >= settlementToken) {
+                tokenBalances[settlementAccount] += settlementToken;
+                tokenBalances[foundationAccount] -= settlementToken;
+                shopCollection.addSettledPoint(data.shopId, settlementPoint, data.purchaseId);
+                emit ProvidedTokenForSettlement(
+                    settlementAccount,
+                    data.shopId,
+                    settlementPoint,
+                    settlementToken,
+                    tokenBalances[settlementAccount],
+                    data.purchaseId
+                );
+            }
+        }
+
+        nonce[data.account]++;
+
+        LoyaltyPaymentData memory payData = LoyaltyPaymentData({
+            paymentId: data.paymentId,
+            purchaseId: data.purchaseId,
+            amount: data.amount,
+            currency: data.currency,
+            shopId: data.shopId,
+            account: data.account,
+            timestamp: block.timestamp,
+            loyaltyType: LoyaltyType.POINT,
+            amountLoyalty: purchasePoint,
+            feeLoyalty: feePoint,
+            status: LoyaltyPaymentStatus.PAID
+        });
+        loyaltyPayments[payData.paymentId] = payData;
+
+        emit PaidPoint(
+            data.account,
+            purchasePoint,
+            data.amount,
+            feePoint,
+            feeValue,
+            pointBalances[data.account],
+            data.purchaseId,
+            data.shopId
+        );
+    }
+
+    /// @notice 토큰을 구매에 사용하는 함수
+    function _payLoyaltyToken(LoyaltyPaymentInputData memory _data) internal {
+        LoyaltyPaymentInputData memory data = _data;
+
+        uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 purchaseToken = convertPointToToken(purchasePoint);
+        uint256 feeValue = (data.amount * fee) / 100;
+        uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
+        uint256 feeToken = convertPointToToken(feePoint);
+
+        require(tokenBalances[data.account] >= purchaseToken + feeToken, "Insufficient balance");
+
+        tokenBalances[data.account] -= (purchaseToken + feeToken);
+        tokenBalances[foundationAccount] += purchaseToken;
+        tokenBalances[feeAccount] += feeToken;
+
+        shopCollection.addUsedPoint(data.shopId, purchasePoint, data.purchaseId);
+
+        uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
+        if (settlementPoint > 0) {
+            uint256 settlementToken = convertPointToToken(settlementPoint);
+            if (tokenBalances[foundationAccount] >= settlementToken) {
+                tokenBalances[settlementAccount] += settlementToken;
+                tokenBalances[foundationAccount] -= settlementToken;
+                shopCollection.addSettledPoint(data.shopId, settlementPoint, data.purchaseId);
+                emit ProvidedTokenForSettlement(
+                    settlementAccount,
+                    data.shopId,
+                    settlementPoint,
+                    settlementToken,
+                    tokenBalances[settlementAccount],
+                    data.purchaseId
+                );
+            }
+        }
+
+        nonce[data.account]++;
+
+        LoyaltyPaymentData memory payData = LoyaltyPaymentData({
+            paymentId: data.paymentId,
+            purchaseId: data.purchaseId,
+            amount: data.amount,
+            currency: data.currency,
+            shopId: data.shopId,
+            account: data.account,
+            timestamp: block.timestamp,
+            loyaltyType: LoyaltyType.TOKEN,
+            amountLoyalty: purchaseToken,
+            feeLoyalty: feeToken,
+            status: LoyaltyPaymentStatus.PAID
+        });
+        loyaltyPayments[payData.paymentId] = payData;
+
+        emit PaidToken(
+            data.account,
+            purchaseToken,
+            data.amount,
+            feeToken,
+            feeValue,
+            tokenBalances[data.account],
+            data.purchaseId,
+            data.shopId
+        );
     }
 
     /// @notice 포인트를 구매에 사용하는 함수
