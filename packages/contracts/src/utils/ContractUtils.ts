@@ -164,6 +164,34 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
+    public static getLoyaltyPaymentCancelMessage(
+        address: string,
+        paymentId: string,
+        purchaseId: string,
+        nonce: BigNumberish
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "string", "address", "uint256"],
+            [paymentId, purchaseId, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signLoyaltyPaymentCancel(
+        signer: Signer,
+        paymentId: string,
+        purchaseId: string,
+        nonce: BigNumberish
+    ): Promise<string> {
+        const message = ContractUtils.getLoyaltyPaymentCancelMessage(
+            await signer.getAddress(),
+            paymentId,
+            purchaseId,
+            nonce
+        );
+        return signer.signMessage(message);
+    }
+
     public static getChangePayablePointMessage(phone: string, address: string, nonce: BigNumberish): Uint8Array {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256"],
