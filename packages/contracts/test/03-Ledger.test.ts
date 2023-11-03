@@ -1226,6 +1226,58 @@ describe("Test for Ledger", () => {
                 const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 expect(newFeeBalance).to.deep.equal(oldFeeBalance.add(feeToken));
             });
+
+            it("Pay Loyalty Point - Success", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000100",
+                    timestamp: 1672849000,
+                    amount: 100,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 0,
+                };
+
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    userWallets[purchase.userIndex],
+                    paymentId,
+                    purchase.purchaseId,
+                    purchaseAmount,
+                    purchase.currency,
+                    shop.shopId,
+                    nonce
+                );
+                const feeAmount = purchaseAmount.mul(await ledgerContract.fee()).div(100);
+                const feeToken = feeAmount.mul(multiple).div(price);
+                const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                await expect(
+                    ledgerContract.connect(relay).payLoyalty({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
+                )
+                    .to.emit(ledgerContract, "PaidPoint")
+                    .withNamedArgs({
+                        account: userWallets[purchase.userIndex].address,
+                        paidPoint: purchaseAmount,
+                        paidValue: purchaseAmount,
+                        feePoint: feeAmount,
+                        feeValue: feeAmount,
+                        purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
+                    });
+                const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                expect(newFeeBalance.toString()).to.deep.equal(oldFeeBalance.add(feeToken).toString());
+            });
         });
 
         context("Pay token", () => {
@@ -1326,6 +1378,63 @@ describe("Test for Ledger", () => {
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 await expect(
                     ledgerContract.connect(relay).payToken({
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
+                )
+                    .to.emit(ledgerContract, "PaidToken")
+                    .withNamedArgs({
+                        account: userWallets[purchase.userIndex].address,
+                        paidToken: tokenAmount,
+                        paidValue: purchaseAmount,
+                        feeToken,
+                        feeValue: feeAmount,
+                        purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
+                    });
+                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                    oldFoundationTokenBalance.add(tokenAmount)
+                );
+                const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                expect(newFeeBalance).to.deep.equal(oldFeeBalance.add(feeToken));
+            });
+
+            it("Pay Loyalty Token - Success", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000000",
+                    timestamp: 1672849000,
+                    amount: 100,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 0,
+                    userIndex: 1,
+                };
+
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const tokenAmount = purchaseAmount.mul(multiple).div(price);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    userWallets[purchase.userIndex],
+                    paymentId,
+                    purchase.purchaseId,
+                    purchaseAmount,
+                    purchase.currency,
+                    shop.shopId,
+                    nonce
+                );
+                const feeAmount = purchaseAmount.mul(await ledgerContract.fee()).div(100);
+                const feeToken = feeAmount.mul(multiple).div(price);
+                const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                await expect(
+                    ledgerContract.connect(relay).payLoyalty({
+                        paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
