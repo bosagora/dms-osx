@@ -67,6 +67,14 @@ contract Ledger {
         bytes signature;
     }
 
+    struct LoyaltyCancelInputData {
+        bytes32 paymentId;
+        string purchaseId;
+        address account;
+        bytes signature;
+        bytes certifierSignature;
+    }
+
     enum LoyaltyPaymentStatus {
         INVALID,
         PAID,
@@ -76,14 +84,17 @@ contract Ledger {
     struct LoyaltyPaymentData {
         bytes32 paymentId;
         string purchaseId;
-        uint256 amount;
         string currency;
         bytes32 shopId;
         address account;
         uint256 timestamp;
         LoyaltyType loyaltyType;
-        uint256 amountLoyalty; // Amount to convert point or token
-        uint256 feeLoyalty; // Amount to convert point or token
+        uint256 amountPoint;
+        uint256 amountToken;
+        uint256 amountValue;
+        uint256 feePoint;
+        uint256 feeToken;
+        uint256 feeValue;
         LoyaltyPaymentStatus status;
     }
 
@@ -97,6 +108,7 @@ contract Ledger {
     address public linkCollectionAddress;
     address public currencyRateAddress;
     address public shopCollectionAddress;
+    address public certifierAddress;
     uint32 public fee;
 
     ERC20 private token;
@@ -171,8 +183,30 @@ contract Ledger {
         string purchaseId,
         bytes32 shopId
     );
+    /// @notice 포인트로 지불한 거래의 취소가 완료했을 때 발생하는 이벤트
+    event CancelledPoint(
+        address account,
+        uint256 paidPoint,
+        uint256 paidValue,
+        uint256 feePoint,
+        uint256 feeValue,
+        uint256 balancePoint,
+        string purchaseId,
+        bytes32 shopId
+    );
     /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
     event PaidToken(
+        address account,
+        uint256 paidToken,
+        uint256 paidValue,
+        uint256 feeToken,
+        uint256 feeValue,
+        uint256 balanceToken,
+        string purchaseId,
+        bytes32 shopId
+    );
+    /// @notice 토큰으로 지불한 거래의 취소가 완료했을 때 발생하는 이벤트
+    event CancelledToken(
         address account,
         uint256 paidToken,
         uint256 paidValue,
@@ -193,6 +227,7 @@ contract Ledger {
     /// @param _foundationAccount 재단의 계정
     /// @param _settlementAccount 정산금 계정
     /// @param _feeAccount 수수료 계정
+    /// @param _certifierAddress 거래 취소를 인증하는 계정
     /// @param _tokenAddress 토큰 컨트랙트의 주소
     /// @param _validatorAddress 검증자 컬랙션 컨트랙트의 주소
     /// @param _linkCollectionAddress 전화번호-지갑주소 링크 컨트랙트의 주소
@@ -202,6 +237,7 @@ contract Ledger {
         address _foundationAccount,
         address _settlementAccount,
         address _feeAccount,
+        address _certifierAddress,
         address _tokenAddress,
         address _validatorAddress,
         address _linkCollectionAddress,
@@ -216,6 +252,7 @@ contract Ledger {
         linkCollectionAddress = _linkCollectionAddress;
         currencyRateAddress = _currencyRateAddress;
         shopCollectionAddress = _shopCollectionAddress;
+        certifierAddress = _certifierAddress;
 
         token = ERC20(_tokenAddress);
         validatorCollection = ValidatorCollection(_validatorAddress);
@@ -416,6 +453,7 @@ contract Ledger {
     function _payLoyaltyPoint(LoyaltyPaymentInputData memory _data) internal {
         LoyaltyPaymentInputData memory data = _data;
         uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 purchaseToken = convertPointToToken(purchasePoint);
         uint256 feeValue = (data.amount * fee) / 100;
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
@@ -454,14 +492,17 @@ contract Ledger {
         LoyaltyPaymentData memory payData = LoyaltyPaymentData({
             paymentId: data.paymentId,
             purchaseId: data.purchaseId,
-            amount: data.amount,
             currency: data.currency,
             shopId: data.shopId,
             account: data.account,
             timestamp: block.timestamp,
             loyaltyType: LoyaltyType.POINT,
-            amountLoyalty: purchasePoint,
-            feeLoyalty: feePoint,
+            amountPoint: purchasePoint,
+            amountToken: purchaseToken,
+            amountValue: data.amount,
+            feePoint: feePoint,
+            feeToken: feeToken,
+            feeValue: feeValue,
             status: LoyaltyPaymentStatus.PAID
         });
         loyaltyPayments[payData.paymentId] = payData;
@@ -519,14 +560,17 @@ contract Ledger {
         LoyaltyPaymentData memory payData = LoyaltyPaymentData({
             paymentId: data.paymentId,
             purchaseId: data.purchaseId,
-            amount: data.amount,
             currency: data.currency,
             shopId: data.shopId,
             account: data.account,
             timestamp: block.timestamp,
             loyaltyType: LoyaltyType.TOKEN,
-            amountLoyalty: purchaseToken,
-            feeLoyalty: feeToken,
+            amountPoint: purchasePoint,
+            amountToken: purchaseToken,
+            amountValue: data.amount,
+            feePoint: feePoint,
+            feeToken: feeToken,
+            feeValue: feeValue,
             status: LoyaltyPaymentStatus.PAID
         });
         loyaltyPayments[payData.paymentId] = payData;
@@ -541,6 +585,77 @@ contract Ledger {
             data.purchaseId,
             data.shopId
         );
+    }
+
+    function cancelPayLoyalty(LoyaltyCancelInputData calldata _data) public {
+        require(loyaltyPayments[_data.paymentId].status != LoyaltyPaymentStatus.INVALID, "Payment ID does not exist");
+        require(
+            block.timestamp <= loyaltyPayments[_data.paymentId].timestamp + 86400 * 7,
+            "Cancellable period has elapsed."
+        );
+
+        LoyaltyCancelInputData memory data = _data;
+        bytes32 dataHash = keccak256(abi.encode(data.paymentId, data.purchaseId, data.account, nonce[data.account]));
+        require(
+            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account,
+            "Invalid signature"
+        );
+
+        bytes32 dataHash2 = keccak256(
+            abi.encode(data.paymentId, data.purchaseId, certifierAddress, nonce[certifierAddress])
+        );
+        require(
+            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), data.certifierSignature) == certifierAddress,
+            "Invalid signature"
+        );
+
+        LoyaltyPaymentData memory payData = loyaltyPayments[data.paymentId];
+        if (payData.loyaltyType == LoyaltyType.POINT) {
+            loyaltyPayments[payData.paymentId].status = LoyaltyPaymentStatus.CANCELLED;
+            if (tokenBalances[feeAccount] >= payData.feeToken) {
+                tokenBalances[foundationAccount] += payData.feeToken;
+                tokenBalances[feeAccount] -= payData.feeToken;
+                pointBalances[data.account] += (payData.amountPoint + payData.feePoint);
+                shopCollection.subUsedPoint(payData.shopId, payData.amountPoint, payData.purchaseId);
+                emit CancelledPoint(
+                    payData.account,
+                    payData.amountPoint,
+                    payData.amountValue,
+                    payData.feePoint,
+                    payData.feeValue,
+                    pointBalances[payData.account],
+                    payData.purchaseId,
+                    payData.shopId
+                );
+            } else {
+                revert("Not enough balance on account to provide the refund amount.");
+            }
+        } else {
+            if (
+                (tokenBalances[foundationAccount] >= payData.amountToken) &&
+                (tokenBalances[feeAccount] >= payData.feeToken)
+            ) {
+                tokenBalances[foundationAccount] -= payData.amountToken;
+                tokenBalances[feeAccount] -= payData.feeToken;
+                pointBalances[data.account] += (payData.amountToken + payData.feeToken);
+                shopCollection.subUsedPoint(payData.shopId, payData.amountPoint, payData.purchaseId);
+                emit CancelledToken(
+                    payData.account,
+                    payData.amountToken,
+                    payData.amountValue,
+                    payData.feeToken,
+                    payData.feeValue,
+                    tokenBalances[payData.account],
+                    payData.purchaseId,
+                    payData.shopId
+                );
+            } else {
+                revert("Not enough balance on account to provide the refund amount.");
+            }
+        }
+
+        nonce[data.account]++;
+        nonce[certifierAddress]++;
     }
 
     /// @notice 포인트를 구매에 사용하는 함수
