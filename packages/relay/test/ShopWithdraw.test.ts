@@ -472,11 +472,13 @@ describe("Test for ShopCollection", () => {
                     userIndex: 0,
                 };
 
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
-                const signature = await ContractUtils.signPayment(
+                const signature = await ContractUtils.signLoyaltyPayment(
                     userWallets[purchase.userIndex],
+                    paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
                     purchase.currency,
@@ -486,7 +488,8 @@ describe("Test for ShopCollection", () => {
 
                 const amt = purchaseAmount.mul(shop.providePercent).div(100);
                 await expect(
-                    ledgerContract.connect(relay).payPoint({
+                    ledgerContract.connect(relay).createLoyaltyPayment({
+                        paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
@@ -501,18 +504,50 @@ describe("Test for ShopCollection", () => {
                         shopId: shop.shopId,
                         providedPoint: Amount.make(200, 18).value,
                     })
-                    .to.emit(ledgerContract, "PaidPoint")
+                    .to.emit(ledgerContract, "CreatedLoyaltyPayment")
                     .withNamedArgs({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
                         account: userWallets[purchase.userIndex].address,
+                        shopId: shop.shopId,
+                        loyaltyType: 0,
                         paidPoint: purchaseAmount,
                         paidValue: purchaseAmount,
-                        purchaseId: purchase.purchaseId,
-                        shopId: shop.shopId,
                     });
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo.usedPoint).to.equal(Amount.make(300, 18).value);
                 expect(shopInfo.settledPoint).to.equal(Amount.make(200, 18).value);
+            });
+        });
+
+        context("Change loyalty type", () => {
+            it("Check loyalty type - before", async () => {
+                const userIndex = 0;
+                const loyaltyType = await ledgerContract.loyaltyTypeOf(userWallets[userIndex].address);
+                expect(loyaltyType).to.equal(0);
+            });
+
+            it("Send loyalty type", async () => {
+                const userIndex = 0;
+                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const uri = URI(serverURL).directory("/v1/ledger/changeToLoyaltyToken");
+                const url = uri.toString();
+                const response = await client.post(url, {
+                    account: userWallets[userIndex].address,
+                    signature,
+                });
+
+                expect(response.data.code).to.equal(200);
+                expect(response.data.data).to.not.equal(undefined);
+                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
+            });
+
+            it("Check point type - after", async () => {
+                const userIndex = 0;
+                const loyaltyType = await ledgerContract.loyaltyTypeOf(userWallets[userIndex].address);
+                expect(loyaltyType).to.equal(1);
             });
         });
 
@@ -545,13 +580,15 @@ describe("Test for ShopCollection", () => {
                     userIndex: 0,
                 };
 
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
-                const signature = await ContractUtils.signPayment(
+                const signature = await ContractUtils.signLoyaltyPayment(
                     userWallets[purchase.userIndex],
+                    paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
                     purchase.currency,
@@ -560,8 +597,9 @@ describe("Test for ShopCollection", () => {
                 );
 
                 await expect(
-                    ledgerContract.connect(relay).payToken({
+                    ledgerContract.connect(relay).createLoyaltyPayment({
                         purchaseId: purchase.purchaseId,
+                        paymentId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
@@ -569,13 +607,15 @@ describe("Test for ShopCollection", () => {
                         signature,
                     })
                 )
-                    .to.emit(ledgerContract, "PaidToken")
+                    .to.emit(ledgerContract, "CreatedLoyaltyPayment")
                     .withNamedArgs({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
                         account: userWallets[purchase.userIndex].address,
+                        shopId: shop.shopId,
+                        loyaltyType: 1,
                         paidToken: tokenAmount,
                         paidValue: purchaseAmount,
-                        purchaseId: purchase.purchaseId,
-                        shopId: shop.shopId,
                     });
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);

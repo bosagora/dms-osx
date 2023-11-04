@@ -296,4 +296,77 @@ export class ContractUtils {
         }
         return res.toLowerCase() === account.toLowerCase();
     }
+
+    public static getLoyaltyPaymentMessage(
+        address: string,
+        paymentId: string,
+        purchaseId: string,
+        amount: BigNumberish,
+        currency: string,
+        shopId: string,
+        nonce: BigNumberish
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "string", "uint256", "string", "bytes32", "address", "uint256"],
+            [paymentId, purchaseId, amount, currency, shopId, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signLoyaltyPayment(
+        signer: Signer,
+        paymentId: string,
+        purchaseId: string,
+        amount: BigNumberish,
+        currency: string,
+        shopId: string,
+        nonce: BigNumberish
+    ): Promise<string> {
+        const message = ContractUtils.getLoyaltyPaymentMessage(
+            await signer.getAddress(),
+            paymentId,
+            purchaseId,
+            amount,
+            currency,
+            shopId,
+            nonce
+        );
+        return signer.signMessage(message);
+    }
+
+    public static getLoyaltyPaymentCancelMessage(
+        address: string,
+        paymentId: string,
+        purchaseId: string,
+        nonce: BigNumberish
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "string", "address", "uint256"],
+            [paymentId, purchaseId, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signLoyaltyPaymentCancel(
+        signer: Signer,
+        paymentId: string,
+        purchaseId: string,
+        nonce: BigNumberish
+    ): Promise<string> {
+        const message = ContractUtils.getLoyaltyPaymentCancelMessage(
+            await signer.getAddress(),
+            paymentId,
+            purchaseId,
+            nonce
+        );
+        return signer.signMessage(message);
+    }
+
+    public static getPaymentId(account: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["address", "bytes32"],
+            [account, crypto.randomBytes(32)]
+        );
+        return hre.ethers.utils.keccak256(encodedResult);
+    }
 }
