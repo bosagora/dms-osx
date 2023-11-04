@@ -1264,7 +1264,7 @@ describe("Test for Ledger", () => {
                 );
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 await expect(
-                    ledgerContract.connect(relay).payLoyalty({
+                    ledgerContract.connect(relay).createPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1274,15 +1274,18 @@ describe("Test for Ledger", () => {
                         signature,
                     })
                 )
-                    .to.emit(ledgerContract, "PaidPoint")
+                    .to.emit(ledgerContract, "CreatedPayment")
                     .withNamedArgs({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
+                        currency: purchase.currency.toLowerCase(),
                         account: userWallets[purchase.userIndex].address,
+                        shopId: shop.shopId,
+                        loyaltyType: 0,
                         paidPoint: purchaseAmount,
                         paidValue: purchaseAmount,
                         feePoint: feeAmount,
                         feeValue: feeAmount,
-                        purchaseId: purchase.purchaseId,
-                        shopId: shop.shopId,
                     });
                 const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 expect(newFeeBalance.toString()).to.deep.equal(oldFeeBalance.add(feeToken).toString());
@@ -1304,7 +1307,7 @@ describe("Test for Ledger", () => {
                     certifierNonce
                 );
                 await expect(
-                    ledgerContract.connect(relay).cancelPayLoyalty({
+                    ledgerContract.connect(relay).cancelPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         account: userWallets[purchase.userIndex].address,
@@ -1312,15 +1315,18 @@ describe("Test for Ledger", () => {
                         certifierSignature,
                     })
                 )
-                    .to.emit(ledgerContract, "CancelledPoint")
+                    .to.emit(ledgerContract, "CancelledLoyalty")
                     .withNamedArgs({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
+                        currency: purchase.currency.toLowerCase(),
                         account: userWallets[purchase.userIndex].address,
+                        shopId: shop.shopId,
+                        loyaltyType: 0,
                         paidPoint: purchaseAmount,
                         paidValue: purchaseAmount,
                         feePoint: feeAmount,
                         feeValue: feeAmount,
-                        purchaseId: purchase.purchaseId,
-                        shopId: shop.shopId,
                     });
             });
         });
@@ -1485,7 +1491,7 @@ describe("Test for Ledger", () => {
                 );
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 await expect(
-                    ledgerContract.connect(relay).payLoyalty({
+                    ledgerContract.connect(relay).createPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1495,15 +1501,18 @@ describe("Test for Ledger", () => {
                         signature,
                     })
                 )
-                    .to.emit(ledgerContract, "PaidToken")
+                    .to.emit(ledgerContract, "CreatedPayment")
                     .withNamedArgs({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
+                        currency: purchase.currency.toLowerCase(),
                         account: userWallets[purchase.userIndex].address,
+                        shopId: shop.shopId,
+                        loyaltyType: 1,
                         paidToken: tokenAmount,
                         paidValue: purchaseAmount,
                         feeToken,
                         feeValue: feeAmount,
-                        purchaseId: purchase.purchaseId,
-                        shopId: shop.shopId,
                     });
                 expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
@@ -1528,7 +1537,7 @@ describe("Test for Ledger", () => {
                     certifierNonce
                 );
                 await expect(
-                    ledgerContract.connect(relay).cancelPayLoyalty({
+                    ledgerContract.connect(relay).cancelPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         account: userWallets[purchase.userIndex].address,
@@ -1536,15 +1545,18 @@ describe("Test for Ledger", () => {
                         certifierSignature,
                     })
                 )
-                    .to.emit(ledgerContract, "CancelledToken")
+                    .to.emit(ledgerContract, "CancelledLoyalty")
                     .withNamedArgs({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
+                        currency: purchase.currency.toLowerCase(),
                         account: userWallets[purchase.userIndex].address,
+                        shopId: shop.shopId,
+                        loyaltyType: 1,
                         paidToken: tokenAmount,
                         paidValue: purchaseAmount,
                         feeToken,
                         feeValue: feeAmount,
-                        purchaseId: purchase.purchaseId,
-                        shopId: shop.shopId,
                     });
             });
         });
