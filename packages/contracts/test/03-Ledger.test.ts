@@ -1776,6 +1776,13 @@ describe("Test for Ledger", () => {
         });
 
         context("Deposit token", () => {
+            it("Change Loyalty type of user", async () => {
+                const nonce = await ledgerContract.nonceOf(userWallets[0].address);
+                const signature = ContractUtils.signLoyaltyType(userWallets[0], nonce);
+
+                await ledgerContract.connect(relay).changeToLoyaltyToken(userWallets[0].address, signature);
+            });
+
             it("Deposit token - Success", async () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
                 await tokenContract.connect(userWallets[0]).approve(ledgerContract.address, amount.value);

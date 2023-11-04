@@ -234,6 +234,11 @@ contract Ledger {
         currencyRate = CurrencyRate(_currencyRateAddress);
         shopCollection = ShopCollection(_shopCollectionAddress);
         fee = MAX_FEE;
+
+        loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
+        loyaltyTypes[settlementAccount] = LoyaltyType.TOKEN;
+        loyaltyTypes[feeAccount] = LoyaltyType.TOKEN;
+        loyaltyTypes[certifierAddress] = LoyaltyType.TOKEN;
     }
 
     modifier onlyValidator(address _account) {
@@ -675,6 +680,7 @@ contract Ledger {
     /// @notice 토큰을 예치합니다.
     /// @param _amount 금액
     function deposit(uint256 _amount) public {
+        require(loyaltyTypes[msg.sender] == LoyaltyType.TOKEN, "Loyalty type is not TOKEN");
         require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
         token.transferFrom(msg.sender, address(this), _amount);
 
