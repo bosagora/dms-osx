@@ -334,6 +334,34 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
+    public static verifyLoyaltyPayment(
+        paymentId: string,
+        purchaseId: string,
+        amount: BigNumberish,
+        currency: string,
+        shopId: string,
+        nonce: BigNumberish,
+        account: string,
+        signature: BytesLike
+    ): boolean {
+        const message = ContractUtils.getLoyaltyPaymentMessage(
+            account,
+            paymentId,
+            purchaseId,
+            amount,
+            currency,
+            shopId,
+            nonce
+        );
+        let res: string;
+        try {
+            res = ethers.utils.verifyMessage(message, signature);
+        } catch (error) {
+            return false;
+        }
+        return res.toLowerCase() === account.toLowerCase();
+    }
+
     public static getLoyaltyPaymentCancelMessage(
         address: string,
         paymentId: string,
@@ -362,10 +390,10 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static getPaymentId(account: string): string {
+    public static getPaymentId(account: string, nonce: BigNumberish): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["address", "bytes32"],
-            [account, crypto.randomBytes(32)]
+            ["address", "uint256", "bytes32"],
+            [account, nonce, crypto.randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }
