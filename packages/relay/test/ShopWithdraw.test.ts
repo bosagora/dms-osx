@@ -472,10 +472,10 @@ describe("Test for ShopCollection", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address, nonce);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
                     userWallets[purchase.userIndex],
                     paymentId,
@@ -580,12 +580,12 @@ describe("Test for ShopCollection", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address, nonce);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
                     userWallets[purchase.userIndex],
                     paymentId,

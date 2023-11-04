@@ -23,7 +23,7 @@ import { BigNumber, Wallet } from "ethers";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
-import { LoyaltyType } from "../src/types";
+import { LoyaltyPaymentInputDataStatus, LoyaltyType } from "../src/types";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -257,7 +257,7 @@ describe("Test of Server", function () {
         shopIndex: number;
     }
 
-    context("Test token & point relay endpoints", () => {
+    context("Test point relay endpoints", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
                 elem.shopId = ContractUtils.getShopId(elem.wallet.address);
@@ -371,6 +371,8 @@ describe("Test of Server", function () {
             const shop = shopData[purchase.shopIndex];
             const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
 
+            const payAmount = Amount.make(10, 18).value;
+
             it("Save Purchase Data", async () => {
                 const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                 const userAccount =
@@ -450,6 +452,275 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
             });
 
+            let paymentId: string;
+            it("Endpoint POST /v1/payment/create", async () => {
+                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+
+                const purchase2: IPurchaseData = {
+                    purchaseId: "P000002",
+                    timestamp: 1672844500,
+                    amount: 10,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
+                };
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    purchaseId: purchase2.purchaseId,
+                    amount: payAmount.toString(),
+                    currency: "krw",
+                    shopId: shopData[purchase2.shopIndex].shopId,
+                    account: users[purchase2.userIndex].address,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+
+                paymentId = response.data.data.paymentId;
+            });
+
+            it("Endpoint POST /v1/payment/create/item", async () => {
+                const url = URI(serverURL).directory("/v1/payment/create").filename("item").toString();
+
+                const params = {
+                    paymentId,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.paymentId, paymentId);
+                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.purchaseAmount, payAmount.toString());
+            });
+
+            it("Endpoint POST /v1/payment/create/deny", async () => {
+                const url = URI(serverURL).directory("/v1/payment/create").filename("deny").toString();
+
+                const purchase2: IPurchaseData = {
+                    purchaseId: "P000002",
+                    timestamp: 1672844500,
+                    amount: 10,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
+                };
+                const amount2 = Amount.make(purchase2.amount, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[purchase2.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    users[purchase2.userIndex],
+                    paymentId,
+                    purchase2.purchaseId,
+                    amount2,
+                    purchase2.currency,
+                    shopData[purchase2.shopIndex].shopId,
+                    nonce
+                );
+
+                const params = {
+                    paymentId,
+                    signature,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED);
+            });
+
+            it("Endpoint POST /v1/payment/create", async () => {
+                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+
+                const purchase2: IPurchaseData = {
+                    purchaseId: "P000002",
+                    timestamp: 1672844500,
+                    amount: 10,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
+                };
+                const amount2 = Amount.make(purchase2.amount, 18).value;
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    purchaseId: purchase2.purchaseId,
+                    amount: amount2.toString(),
+                    currency: "krw",
+                    shopId: shopData[purchase2.shopIndex].shopId,
+                    account: users[purchase2.userIndex].address,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+
+                paymentId = response.data.data.paymentId;
+            });
+
+            it("Endpoint POST /v1/payment/create/confirm", async () => {
+                const url = URI(serverURL).directory("/v1/payment/create").filename("confirm").toString();
+
+                const purchase2: IPurchaseData = {
+                    purchaseId: "P000002",
+                    timestamp: 1672844500,
+                    amount: 10,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
+                };
+                const amount2 = Amount.make(purchase2.amount, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[purchase2.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    users[purchase2.userIndex],
+                    paymentId,
+                    purchase2.purchaseId,
+                    amount2,
+                    purchase2.currency,
+                    shopData[purchase2.shopIndex].shopId,
+                    nonce
+                );
+
+                const params = {
+                    paymentId,
+                    signature,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.txHash !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED);
+            });
+        });
+    });
+
+    context("Test token relay endpoints", () => {
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+            }
+        });
+
+        before("Deploy", async () => {
+            await deployAllContract();
+        });
+
+        before("Prepare Token", async () => {
+            for (const elem of users) {
+                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
+            }
+        });
+
+        before("Create Config", async () => {
+            config = new Config();
+            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+            config.contracts.tokenAddress = tokenContract.address;
+            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.ledgerAddress = ledgerContract.address;
+            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.currencyRateAddress = currencyRateContract.address;
+
+            config.relay.managerKeys = [
+                relay1.privateKey,
+                relay2.privateKey,
+                relay3.privateKey,
+                relay4.privateKey,
+                relay5.privateKey,
+            ];
+        });
+
+        before("Create TestServer", async () => {
+            serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
+            server = new TestServer(config);
+        });
+
+        before("Start TestServer", async () => {
+            await server.start();
+        });
+
+        after("Stop TestServer", async () => {
+            await server.stop();
+        });
+
+        context("Prepare shop data", () => {
+            it("Add Shop Data", async () => {
+                for (const elem of shopData) {
+                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                    const signature = ContractUtils.signShop(
+                        elem.wallet,
+                        elem.shopId,
+                        elem.name,
+                        elem.provideWaitTime,
+                        elem.providePercent,
+                        nonce
+                    );
+                    await expect(
+                        shopCollection
+                            .connect(elem.wallet)
+                            .add(
+                                elem.shopId,
+                                elem.name,
+                                elem.provideWaitTime,
+                                elem.providePercent,
+                                elem.wallet.address,
+                                signature
+                            )
+                    )
+                        .to.emit(shopCollection, "AddedShop")
+                        .withNamedArgs({
+                            shopId: elem.shopId,
+                            name: elem.name,
+                            provideWaitTime: elem.provideWaitTime,
+                            providePercent: elem.providePercent,
+                            account: elem.wallet.address,
+                        });
+                }
+                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+            });
+        });
+
+        context("Prepare foundation's asset", () => {
+            it("Deposit foundation's token", async () => {
+                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        account: foundation.address,
+                        depositedToken: assetAmount.value,
+                        balanceToken: assetAmount.value,
+                    });
+            });
+        });
+
+        context("Test endpoint /v1/payment/user/balance", () => {
+            const purchase: IPurchaseData = {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
+            };
+
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
+            const shop = shopData[purchase.shopIndex];
+            const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+            const tokenAmount = pointAmount.mul(multiple).div(price);
+
             it("Change loyalty type", async () => {
                 const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyType(users[purchase.userIndex], nonce);
@@ -464,6 +735,45 @@ describe("Test of Server", function () {
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
             });
 
+            it("Save Purchase Data", async () => {
+                const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                const userAccount =
+                    userData[purchase.userIndex].address.trim() !== ""
+                        ? userData[purchase.userIndex].address.trim()
+                        : AddressZero;
+                await expect(
+                    ledgerContract.connect(validators[0]).savePurchase({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
+                )
+                    .to.emit(ledgerContract, "SavedPurchase")
+                    .withNamedArgs({
+                        purchaseId: purchase.purchaseId,
+                        timestamp: purchase.timestamp,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        method: purchase.method,
+                        account: userAccount,
+                        phone: phoneHash,
+                    })
+                    .emit(ledgerContract, "ProvidedToken")
+                    .withNamedArgs({
+                        account: userAccount,
+                        providedToken: tokenAmount,
+                        providedValue: pointAmount,
+                        purchaseId: purchase.purchaseId,
+                        shopId: shop.shopId,
+                    });
+            });
+
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
                     .directory("/v1/payment/user")
@@ -472,7 +782,6 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                const tokenAmount = pointAmount.mul(multiple).div(price);
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
@@ -494,7 +803,6 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
 
-                const tokenAmount = pointAmount.mul(multiple).div(price);
                 const purchaseAmount2 = amount2.mul(1000).mul(multiple).div(price);
                 const feeAmount2 = purchaseAmount2.mul(5).div(100);
                 const totalAmount2 = purchaseAmount2.add(feeAmount2);
@@ -507,6 +815,90 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
                 assert.deepStrictEqual(response.data.data.currency, "USD");
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
+            });
+
+            let paymentId: string;
+            it("Endpoint POST /v1/payment/create", async () => {
+                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+
+                const purchase2: IPurchaseData = {
+                    purchaseId: "P000002",
+                    timestamp: 1672844500,
+                    amount: 10,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
+                };
+                const amount2 = Amount.make(purchase2.amount, 18).value;
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    purchaseId: purchase2.purchaseId,
+                    amount: amount2.toString(),
+                    currency: "krw",
+                    shopId: shopData[purchase2.shopIndex].shopId,
+                    account: users[purchase2.userIndex].address,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+
+                paymentId = response.data.data.paymentId;
+            });
+
+            it("Endpoint POST /v1/payment/create/item", async () => {
+                const url = URI(serverURL).directory("/v1/payment/create").filename("item").toString();
+
+                const params = {
+                    paymentId,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.paymentId, paymentId);
+                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+            });
+
+            it("Endpoint POST /v1/payment/create/confirm", async () => {
+                const url = URI(serverURL).directory("/v1/payment/create").filename("confirm").toString();
+
+                const purchase2: IPurchaseData = {
+                    purchaseId: "P000002",
+                    timestamp: 1672844500,
+                    amount: 10,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 1,
+                    userIndex: 0,
+                };
+                const amount2 = Amount.make(purchase2.amount, 18).value;
+                const nonce = await ledgerContract.nonceOf(users[purchase2.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    users[purchase2.userIndex],
+                    paymentId,
+                    purchase2.purchaseId,
+                    amount2,
+                    purchase2.currency,
+                    shopData[purchase2.shopIndex].shopId,
+                    nonce
+                );
+
+                const params = {
+                    paymentId,
+                    signature,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 200);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.txHash !== undefined);
             });
         });
     });
