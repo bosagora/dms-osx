@@ -183,17 +183,6 @@ contract Ledger {
         string purchaseId,
         bytes32 shopId
     );
-    /// @notice 포인트로 지불한 거래의 취소가 완료했을 때 발생하는 이벤트
-    event CancelledPoint(
-        address account,
-        uint256 paidPoint,
-        uint256 paidValue,
-        uint256 feePoint,
-        uint256 feeValue,
-        uint256 balancePoint,
-        string purchaseId,
-        bytes32 shopId
-    );
     /// @notice 토큰으로 지불을 완료했을 때 발생하는 이벤트
     event PaidToken(
         address account,
@@ -205,16 +194,39 @@ contract Ledger {
         string purchaseId,
         bytes32 shopId
     );
-    /// @notice 토큰으로 지불한 거래의 취소가 완료했을 때 발생하는 이벤트
-    event CancelledToken(
+
+    /// @notice 토큰/포인트로 지불을 완료했을 때 발생하는 이벤트
+    event CreatedPayment(
+        bytes32 paymentId,
+        string purchaseId,
+        string currency,
         address account,
+        bytes32 shopId,
+        LoyaltyType loyaltyType,
+        uint256 paidPoint,
         uint256 paidToken,
         uint256 paidValue,
+        uint256 feePoint,
         uint256 feeToken,
         uint256 feeValue,
-        uint256 balanceToken,
+        uint256 balance
+    );
+
+    /// @notice 토큰/포인트로 지불의 취소가 완료되었을 때 발생하는 이벤트
+    event CancelledLoyalty(
+        bytes32 paymentId,
         string purchaseId,
-        bytes32 shopId
+        string currency,
+        address account,
+        bytes32 shopId,
+        LoyaltyType loyaltyType,
+        uint256 paidPoint,
+        uint256 paidToken,
+        uint256 paidValue,
+        uint256 feePoint,
+        uint256 feeToken,
+        uint256 feeValue,
+        uint256 balance
     );
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(address account, uint256 depositedToken, uint256 depositedValue, uint256 balanceToken);
@@ -422,7 +434,7 @@ contract Ledger {
 
     /// @notice 로얄티(포인트/토큰)을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    function payLoyalty(LoyaltyPaymentInputData calldata _data) public {
+    function createPayment(LoyaltyPaymentInputData calldata _data) public {
         require(loyaltyPayments[_data.paymentId].status == LoyaltyPaymentStatus.INVALID, "Payment ID already in use");
 
         LoyaltyPaymentInputData memory data = _data;
@@ -443,14 +455,14 @@ contract Ledger {
         );
 
         if (loyaltyTypes[data.account] == LoyaltyType.POINT) {
-            _payLoyaltyPoint(data);
+            _createPaymentPoint(data);
         } else {
-            _payLoyaltyToken(data);
+            _createPaymentToken(data);
         }
     }
 
     /// @notice 포인트를 구매에 사용하는 함수
-    function _payLoyaltyPoint(LoyaltyPaymentInputData memory _data) internal {
+    function _createPaymentPoint(LoyaltyPaymentInputData memory _data) internal {
         LoyaltyPaymentInputData memory data = _data;
         uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
         uint256 purchaseToken = convertPointToToken(purchasePoint);
@@ -507,20 +519,25 @@ contract Ledger {
         });
         loyaltyPayments[payData.paymentId] = payData;
 
-        emit PaidPoint(
-            data.account,
-            purchasePoint,
-            data.amount,
-            feePoint,
-            feeValue,
-            pointBalances[data.account],
-            data.purchaseId,
-            data.shopId
+        emit CreatedPayment(
+            payData.paymentId,
+            payData.purchaseId,
+            payData.currency,
+            payData.account,
+            payData.shopId,
+            payData.loyaltyType,
+            payData.amountPoint,
+            payData.amountToken,
+            payData.amountValue,
+            payData.feePoint,
+            payData.feeToken,
+            payData.feeValue,
+            pointBalances[payData.account]
         );
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
-    function _payLoyaltyToken(LoyaltyPaymentInputData memory _data) internal {
+    function _createPaymentToken(LoyaltyPaymentInputData memory _data) internal {
         LoyaltyPaymentInputData memory data = _data;
 
         uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
@@ -575,19 +592,24 @@ contract Ledger {
         });
         loyaltyPayments[payData.paymentId] = payData;
 
-        emit PaidToken(
-            data.account,
-            purchaseToken,
-            data.amount,
-            feeToken,
-            feeValue,
-            tokenBalances[data.account],
-            data.purchaseId,
-            data.shopId
+        emit CreatedPayment(
+            payData.paymentId,
+            payData.purchaseId,
+            payData.currency,
+            payData.account,
+            payData.shopId,
+            payData.loyaltyType,
+            payData.amountPoint,
+            payData.amountToken,
+            payData.amountValue,
+            payData.feePoint,
+            payData.feeToken,
+            payData.feeValue,
+            tokenBalances[payData.account]
         );
     }
 
-    function cancelPayLoyalty(LoyaltyCancelInputData calldata _data) public {
+    function cancelPayment(LoyaltyCancelInputData calldata _data) public {
         require(loyaltyPayments[_data.paymentId].status != LoyaltyPaymentStatus.INVALID, "Payment ID does not exist");
         require(
             block.timestamp <= loyaltyPayments[_data.paymentId].timestamp + 86400 * 7,
@@ -617,15 +639,20 @@ contract Ledger {
                 tokenBalances[feeAccount] -= payData.feeToken;
                 pointBalances[data.account] += (payData.amountPoint + payData.feePoint);
                 shopCollection.subUsedPoint(payData.shopId, payData.amountPoint, payData.purchaseId);
-                emit CancelledPoint(
+                emit CancelledLoyalty(
+                    payData.paymentId,
+                    payData.purchaseId,
+                    payData.currency,
                     payData.account,
+                    payData.shopId,
+                    LoyaltyType.POINT,
                     payData.amountPoint,
+                    payData.amountToken,
                     payData.amountValue,
                     payData.feePoint,
+                    payData.feeToken,
                     payData.feeValue,
-                    pointBalances[payData.account],
-                    payData.purchaseId,
-                    payData.shopId
+                    pointBalances[payData.account]
                 );
             } else {
                 revert("Not enough balance on account to provide the refund amount.");
@@ -639,15 +666,20 @@ contract Ledger {
                 tokenBalances[feeAccount] -= payData.feeToken;
                 pointBalances[data.account] += (payData.amountToken + payData.feeToken);
                 shopCollection.subUsedPoint(payData.shopId, payData.amountPoint, payData.purchaseId);
-                emit CancelledToken(
+                emit CancelledLoyalty(
+                    payData.paymentId,
+                    payData.purchaseId,
+                    payData.currency,
                     payData.account,
+                    payData.shopId,
+                    LoyaltyType.TOKEN,
+                    payData.amountPoint,
                     payData.amountToken,
                     payData.amountValue,
+                    payData.feePoint,
                     payData.feeToken,
                     payData.feeValue,
-                    tokenBalances[payData.account],
-                    payData.purchaseId,
-                    payData.shopId
+                    tokenBalances[payData.account]
                 );
             } else {
                 revert("Not enough balance on account to provide the refund amount.");
