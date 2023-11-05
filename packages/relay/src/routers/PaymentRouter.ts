@@ -667,7 +667,7 @@ export class PaymentRouter {
             if (item === undefined) {
                 res.status(200).json(
                     this.makeResponseData(401, undefined, {
-                        message: "Payment ID is not exist ",
+                        message: "Payment ID is not exist.",
                     })
                 );
                 return;
@@ -675,7 +675,7 @@ export class PaymentRouter {
                 if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.NULL) {
                     res.status(200).json(
                         this.makeResponseData(402, undefined, {
-                            message: "The signature value entered is not valid.",
+                            message: "This payment has already been closed.",
                         })
                     );
                     return;
@@ -766,14 +766,14 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(
                     this.makeResponseData(401, undefined, {
-                        message: "Payment ID is not exist ",
+                        message: "Payment ID is not exist.",
                     })
                 );
             } else {
                 if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.NULL) {
                     res.status(200).json(
                         this.makeResponseData(402, undefined, {
-                            message: "The signature value entered is not valid.",
+                            message: "This payment has already been closed.",
                         })
                     );
                     return;

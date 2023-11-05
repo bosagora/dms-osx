@@ -356,7 +356,7 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Test endpoint /v1/payment/user/balance", () => {
+        context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
@@ -371,7 +371,16 @@ describe("Test of Server", function () {
             const shop = shopData[purchase.shopIndex];
             const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
 
-            const payAmount = Amount.make(10, 18).value;
+            const purchaseOfLoyalty: IPurchaseData = {
+                purchaseId: "P000002",
+                timestamp: 1672844500,
+                amount: 10,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
+            };
+            const amountOfLoyalty = Amount.make(purchaseOfLoyalty.amount, 18).value;
 
             it("Save Purchase Data", async () => {
                 const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
@@ -456,22 +465,13 @@ describe("Test of Server", function () {
             it("Endpoint POST /v1/payment/create", async () => {
                 const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
 
-                const purchase2: IPurchaseData = {
-                    purchaseId: "P000002",
-                    timestamp: 1672844500,
-                    amount: 10,
-                    method: 0,
-                    currency: "krw",
-                    shopIndex: 1,
-                    userIndex: 0,
-                };
                 const params = {
                     accessKey: config.relay.accessKey,
-                    purchaseId: purchase2.purchaseId,
-                    amount: payAmount.toString(),
+                    purchaseId: purchaseOfLoyalty.purchaseId,
+                    amount: amountOfLoyalty.toString(),
                     currency: "krw",
-                    shopId: shopData[purchase2.shopIndex].shopId,
-                    account: users[purchase2.userIndex].address,
+                    shopId: shopData[purchaseOfLoyalty.shopIndex].shopId,
+                    account: users[purchaseOfLoyalty.userIndex].address,
                 };
                 const response = await client.post(url, params);
 
@@ -498,64 +498,83 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.purchaseAmount, payAmount.toString());
+                assert.deepStrictEqual(response.data.data.purchaseAmount, amountOfLoyalty.toString());
             });
 
             it("Endpoint POST /v1/payment/create/deny", async () => {
-                const url = URI(serverURL).directory("/v1/payment/create").filename("deny").toString();
+                const responseItem = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
 
-                const purchase2: IPurchaseData = {
-                    purchaseId: "P000002",
-                    timestamp: 1672844500,
-                    amount: 10,
-                    method: 0,
-                    currency: "krw",
-                    shopIndex: 1,
-                    userIndex: 0,
-                };
-                const amount2 = Amount.make(purchase2.amount, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[purchase2.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
-                    users[purchase2.userIndex],
+                    users[purchaseOfLoyalty.userIndex],
                     paymentId,
-                    purchase2.purchaseId,
-                    amount2,
-                    purchase2.currency,
-                    shopData[purchase2.shopIndex].shopId,
+                    responseItem.data.data.purchaseId,
+                    responseItem.data.data.amount,
+                    responseItem.data.data.currency,
+                    responseItem.data.data.shopId,
                     nonce
                 );
 
-                const params = {
-                    paymentId,
-                    signature,
-                };
-                const response = await client.post(url, params);
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("deny").toString(),
+                    {
+                        paymentId,
+                        signature,
+                    }
+                );
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED);
             });
 
+            it("Endpoint POST /v1/payment/create/confirm", async () => {
+                const responseItem = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
+                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    users[purchaseOfLoyalty.userIndex],
+                    paymentId,
+                    responseItem.data.data.purchaseId,
+                    responseItem.data.data.amount,
+                    responseItem.data.data.currency,
+                    responseItem.data.data.shopId,
+                    nonce
+                );
+
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    {
+                        paymentId,
+                        signature,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 402);
+                assert.ok(response.data.data === undefined);
+                assert.ok(response.data.error !== undefined);
+                assert.ok(response.data.error.message === "This payment has already been closed.");
+            });
+
             it("Endpoint POST /v1/payment/create", async () => {
                 const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
 
-                const purchase2: IPurchaseData = {
-                    purchaseId: "P000002",
-                    timestamp: 1672844500,
-                    amount: 10,
-                    method: 0,
-                    currency: "krw",
-                    shopIndex: 1,
-                    userIndex: 0,
-                };
-                const amount2 = Amount.make(purchase2.amount, 18).value;
                 const params = {
                     accessKey: config.relay.accessKey,
-                    purchaseId: purchase2.purchaseId,
-                    amount: amount2.toString(),
+                    purchaseId: purchaseOfLoyalty.purchaseId,
+                    amount: amountOfLoyalty.toString(),
                     currency: "krw",
-                    shopId: shopData[purchase2.shopIndex].shopId,
-                    account: users[purchase2.userIndex].address,
+                    shopId: shopData[purchaseOfLoyalty.shopIndex].shopId,
+                    account: users[purchaseOfLoyalty.userIndex].address,
                 };
                 const response = await client.post(url, params);
 
@@ -568,40 +587,132 @@ describe("Test of Server", function () {
                 paymentId = response.data.data.paymentId;
             });
 
-            it("Endpoint POST /v1/payment/create/confirm", async () => {
-                const url = URI(serverURL).directory("/v1/payment/create").filename("confirm").toString();
-
-                const purchase2: IPurchaseData = {
-                    purchaseId: "P000002",
-                    timestamp: 1672844500,
-                    amount: 10,
-                    method: 0,
-                    currency: "krw",
-                    shopIndex: 1,
-                    userIndex: 0,
-                };
-                const amount2 = Amount.make(purchase2.amount, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[purchase2.userIndex].address);
+            it("Endpoint POST /v1/payment/create/confirm - wrong ID", async () => {
+                const responseItem = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
+                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                const wrongPaymentId = ContractUtils.getPaymentId(users[purchaseOfLoyalty.userIndex].address, nonce);
                 const signature = await ContractUtils.signLoyaltyPayment(
-                    users[purchase2.userIndex],
-                    paymentId,
-                    purchase2.purchaseId,
-                    amount2,
-                    purchase2.currency,
-                    shopData[purchase2.shopIndex].shopId,
+                    users[purchaseOfLoyalty.userIndex],
+                    wrongPaymentId,
+                    responseItem.data.data.purchaseId,
+                    responseItem.data.data.amount,
+                    responseItem.data.data.currency,
+                    responseItem.data.data.shopId,
                     nonce
                 );
 
-                const params = {
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    {
+                        paymentId: wrongPaymentId,
+                        signature,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 401);
+                assert.ok(response.data.data === undefined);
+                assert.ok(response.data.error !== undefined);
+                assert.ok(response.data.error.message === "Payment ID is not exist.");
+            });
+
+            it("Endpoint POST /v1/payment/create/confirm - Wrong signature", async () => {
+                const responseItem = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
+                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    users[purchaseOfLoyalty.userIndex + 1],
                     paymentId,
-                    signature,
-                };
-                const response = await client.post(url, params);
+                    responseItem.data.data.purchaseId,
+                    responseItem.data.data.amount,
+                    responseItem.data.data.currency,
+                    responseItem.data.data.shopId,
+                    nonce
+                );
+
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    {
+                        paymentId,
+                        signature,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 403);
+                assert.ok(response.data.data === undefined);
+                assert.ok(response.data.error !== undefined);
+                assert.ok(response.data.error.message === "The signature value entered is not valid.");
+            });
+
+            it("Endpoint POST /v1/payment/create/confirm", async () => {
+                const responseItem = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
+                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    users[purchaseOfLoyalty.userIndex],
+                    paymentId,
+                    responseItem.data.data.purchaseId,
+                    responseItem.data.data.amount,
+                    responseItem.data.data.currency,
+                    responseItem.data.data.shopId,
+                    nonce
+                );
+
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    {
+                        paymentId,
+                        signature,
+                    }
+                );
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED);
+            });
+
+            it("Endpoint POST /v1/payment/create/deny", async () => {
+                const responseItem = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
+                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyPayment(
+                    users[purchaseOfLoyalty.userIndex],
+                    paymentId,
+                    responseItem.data.data.purchaseId,
+                    responseItem.data.data.amount,
+                    responseItem.data.data.currency,
+                    responseItem.data.data.shopId,
+                    nonce
+                );
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("deny").toString(),
+                    {
+                        paymentId,
+                        signature,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 402);
+                assert.ok(response.data.data === undefined);
+                assert.ok(response.data.error !== undefined);
+                assert.ok(response.data.error.message === "This payment has already been closed.");
             });
         });
     });
@@ -705,7 +816,7 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Test endpoint /v1/payment/user/balance", () => {
+        context("Test of Loyalty Token", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
                 timestamp: 1672844400,
@@ -720,6 +831,17 @@ describe("Test of Server", function () {
             const shop = shopData[purchase.shopIndex];
             const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
             const tokenAmount = pointAmount.mul(multiple).div(price);
+
+            const purchaseOfLoyalty: IPurchaseData = {
+                purchaseId: "P000002",
+                timestamp: 1672844500,
+                amount: 10,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
+            };
+            const amountOfLoyalty = Amount.make(purchaseOfLoyalty.amount, 18).value;
 
             it("Change loyalty type", async () => {
                 const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
@@ -788,58 +910,19 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
             });
 
-            it("Endpoint POST /v1/payment/info", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("info").toString();
-
-                const amount2 = Amount.make(1, 18).value;
-                const params = {
-                    accessKey: config.relay.accessKey,
-                    account: users[purchase.userIndex].address,
-                    amount: amount2.toString(),
-                    currency: "USD",
-                };
-                const response = await client.post(url, params);
-
-                assert.deepStrictEqual(response.data.code, 200);
-                assert.ok(response.data.data !== undefined);
-
-                const purchaseAmount2 = amount2.mul(1000).mul(multiple).div(price);
-                const feeAmount2 = purchaseAmount2.mul(5).div(100);
-                const totalAmount2 = purchaseAmount2.add(feeAmount2);
-                assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
-                assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
-                assert.deepStrictEqual(response.data.data.purchaseAmount, purchaseAmount2.toString());
-                assert.deepStrictEqual(response.data.data.feeAmount, feeAmount2.toString());
-                assert.deepStrictEqual(response.data.data.totalAmount, totalAmount2.toString());
-                assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
-                assert.deepStrictEqual(response.data.data.currency, "USD");
-                assert.deepStrictEqual(response.data.data.feeRate, 0.05);
-            });
-
             let paymentId: string;
             it("Endpoint POST /v1/payment/create", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
-
-                const purchase2: IPurchaseData = {
-                    purchaseId: "P000002",
-                    timestamp: 1672844500,
-                    amount: 10,
-                    method: 0,
-                    currency: "krw",
-                    shopIndex: 1,
-                    userIndex: 0,
-                };
-                const amount2 = Amount.make(purchase2.amount, 18).value;
-                const params = {
-                    accessKey: config.relay.accessKey,
-                    purchaseId: purchase2.purchaseId,
-                    amount: amount2.toString(),
-                    currency: "krw",
-                    shopId: shopData[purchase2.shopIndex].shopId,
-                    account: users[purchase2.userIndex].address,
-                };
-                const response = await client.post(url, params);
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment").filename("create").toString(),
+                    {
+                        accessKey: config.relay.accessKey,
+                        purchaseId: purchaseOfLoyalty.purchaseId,
+                        amount: amountOfLoyalty.toString(),
+                        currency: "krw",
+                        shopId: shopData[purchaseOfLoyalty.shopIndex].shopId,
+                        account: users[purchaseOfLoyalty.userIndex].address,
+                    }
+                );
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
@@ -851,12 +934,12 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/item", async () => {
-                const url = URI(serverURL).directory("/v1/payment/create").filename("item").toString();
-
-                const params = {
-                    paymentId,
-                };
-                const response = await client.post(url, params);
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
@@ -867,34 +950,31 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm", async () => {
-                const url = URI(serverURL).directory("/v1/payment/create").filename("confirm").toString();
+                const responseItem = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
+                    {
+                        paymentId,
+                    }
+                );
 
-                const purchase2: IPurchaseData = {
-                    purchaseId: "P000002",
-                    timestamp: 1672844500,
-                    amount: 10,
-                    method: 0,
-                    currency: "krw",
-                    shopIndex: 1,
-                    userIndex: 0,
-                };
-                const amount2 = Amount.make(purchase2.amount, 18).value;
-                const nonce = await ledgerContract.nonceOf(users[purchase2.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
-                    users[purchase2.userIndex],
+                    users[purchaseOfLoyalty.userIndex],
                     paymentId,
-                    purchase2.purchaseId,
-                    amount2,
-                    purchase2.currency,
-                    shopData[purchase2.shopIndex].shopId,
+                    responseItem.data.data.purchaseId,
+                    responseItem.data.data.amount,
+                    responseItem.data.data.currency,
+                    responseItem.data.data.shopId,
                     nonce
                 );
 
-                const params = {
-                    paymentId,
-                    signature,
-                };
-                const response = await client.post(url, params);
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    {
+                        paymentId,
+                        signature,
+                    }
+                );
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
