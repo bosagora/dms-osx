@@ -5,17 +5,17 @@
     <insert id="postPayment">
         INSERT INTO payments
             (
-                paymentId       ,
-                purchaseId      ,
-                amount          ,
-                currency        ,
-                shopId          ,
-                account         ,
-                loyaltyType     ,
-                purchaseAmount  ,
-                feeAmount       ,
-                totalAmount     ,
-                paymentStatus
+                "paymentId"       ,
+                "purchaseId"      ,
+                "amount"           ,
+                "currency"         ,
+                "shopId"          ,
+                "account"          ,
+                "loyaltyType"     ,
+                "purchaseAmount"  ,
+                "feeAmount"       ,
+                "totalAmount"     ,
+                "paymentStatus"
             )
         VALUES
             (
@@ -31,27 +31,17 @@
                 #{totalAmount},
                 ${paymentStatus}
             )
-        ON DUPLICATE KEY UPDATE
-            purchaseId = VALUES(purchaseId),
-            amount = VALUES(amount),
-            currency = VALUES(currency),
-            shopId = VALUES(shopId),
-            account = VALUES(account),
-            loyaltyType = VALUES(loyaltyType),
-            purchaseAmount = VALUES(purchaseAmount),
-            feeAmount = VALUES(feeAmount),
-            totalAmount = VALUES(totalAmount),
-            paymentStatus = VALUES(paymentStatus);
+        ON CONFLICT ("paymentId")  DO NOTHING;
     </insert>
 
     <select id="getPayment">
-        SELECT * FROM payments WHERE paymentId = #{paymentId};
+        SELECT * FROM payments WHERE "paymentId" = #{paymentId};
     </select>
 
     <update id="updateStatus">
         UPDATE payments
         SET
-            paymentStatus = #{paymentStatus}
-        WHERE paymentId = #{paymentId}
+            "paymentStatus" = #{paymentStatus}
+        WHERE "paymentId" = #{paymentId}
     </update>
 </mapper>

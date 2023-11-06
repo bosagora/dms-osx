@@ -1,34 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="table">
-
-    paymentId: string;
-    purchaseId: string;
-    amount: BigNumber;
-    currency: string;
-    shopId: string;
-    account: string;
-    loyaltyType: LoyaltyType;
-    purchaseAmount: BigNumber;
-    feeAmount: BigNumber;
-    totalAmount: BigNumber;
-    paymentStatus: LoyaltyPaymentInputDataStatus;
     <sql id="payments">
         CREATE TABLE IF NOT EXISTS payments
         (
-            paymentId               VARCHAR(66) NOT NULL,
-            purchaseId              VARCHAR(66) NOT NULL,
-            amount                  VARCHAR(32) NOT NULL,
-            currency                VARCHAR(12) NOT NULL,
-            shopId                  VARCHAR(66) NOT NULL,
-            account                 VARCHAR(42) NOT NULL,
-            loyaltyType             INTEGER,
-            purchaseAmount          VARCHAR(32) NOT NULL,
-            feeAmount               VARCHAR(32) NOT NULL,
-            totalAmount             VARCHAR(32) NOT NULL,
-            paymentStatus           INTEGER,
-            PRIMARY KEY (paymentId)
-        ) ENGINE = InnoDB DEFAULT CHARSET = utf8;
+            "paymentId"             VARCHAR(66) NOT NULL,
+            "purchaseId"            VARCHAR(66) NOT NULL,
+            "amount"                VARCHAR(64) NOT NULL,
+            "currency"              VARCHAR(12) NOT NULL,
+            "shopId"                VARCHAR(66) NOT NULL,
+            "account"               VARCHAR(42) NOT NULL,
+            "loyaltyType"           INTEGER,
+            "purchaseAmount"        VARCHAR(64) NOT NULL,
+            "feeAmount"             VARCHAR(64) NOT NULL,
+            "totalAmount"           VARCHAR(64) NOT NULL,
+            "paymentStatus"         INTEGER,
+            PRIMARY KEY ("paymentId")
+        )
     </sql>
 
     <select id="create_table">

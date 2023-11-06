@@ -4,8 +4,7 @@ import { Storage } from "./Storage";
 
 import { BigNumber } from "ethers";
 import MybatisMapper from "mybatis-mapper";
-// tslint:disable-next-line:no-submodule-imports
-import * as mysql from "mysql2/promise";
+
 import path from "path";
 import { LoyaltyPaymentInputData, LoyaltyPaymentInputDataStatus, LoyaltyType } from "../types";
 
@@ -17,13 +16,15 @@ export class RelayStorage extends Storage {
         super(databaseConfig, callback);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/table.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/payment.xml")]);
+        this.createTables()
+            .then(() => {
+                if (callback != null) callback(null);
+            })
+            .catch((err: any) => {
+                if (callback != null) callback(err);
+            });
     }
 
-    /**
-     * Construct an instance of `Storage` using `Promise` API.
-     *
-     * @param databaseConfig
-     */
     public static make(databaseConfig: IDatabaseConfig): Promise<RelayStorage> {
         return new Promise<RelayStorage>((resolve, reject) => {
             const result = new RelayStorage(databaseConfig, (err: Error | null) => {
@@ -34,23 +35,15 @@ export class RelayStorage extends Storage {
         });
     }
 
-    /**
-     * Creates tables related to the ledger.
-     * @returns Returns the Promise. If it is finished successfully the `.then`
-     * of the returned Promise is called and if an error occurs the `.catch`
-     * is called with an error.
-     */
-    public createTables(): Promise<void> {
-        return this.exec(MybatisMapper.getStatement("table", "create_table"));
+    public createTables(): Promise<any> {
+        return this.queryForMapper("table", "create_table", {});
     }
 
-    /**
-     * Drop Database
-     * Use this only in the test code.
-     * @param database The name of database
-     */
-    public async dropTestDB(database: any): Promise<void> {
-        return this.exec(MybatisMapper.getStatement("table", "drop_table", { database }));
+    public async dropTestDB(database: any): Promise<any> {
+        await this.exec(
+            `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '${database}'`
+        );
+        await this.queryForMapper("table", "drop_table", { database });
     }
 
     public postPayment(
@@ -64,28 +57,22 @@ export class RelayStorage extends Storage {
         purchaseAmount: BigNumber,
         feeAmount: BigNumber,
         totalAmount: BigNumber,
-        paymentStatus: LoyaltyPaymentInputDataStatus,
-        conn?: mysql.PoolConnection
+        paymentStatus: LoyaltyPaymentInputDataStatus
     ): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
-            this.queryForMapper(
-                "payment",
-                "postPayment",
-                {
-                    paymentId,
-                    purchaseId,
-                    amount: amount.toString(),
-                    currency,
-                    shopId,
-                    account,
-                    loyaltyType,
-                    purchaseAmount: purchaseAmount.toString(),
-                    feeAmount: feeAmount.toString(),
-                    totalAmount: totalAmount.toString(),
-                    paymentStatus,
-                },
-                conn
-            )
+            this.queryForMapper("payment", "postPayment", {
+                paymentId,
+                purchaseId,
+                amount: amount.toString(),
+                currency,
+                shopId,
+                account,
+                loyaltyType,
+                purchaseAmount: purchaseAmount.toString(),
+                feeAmount: feeAmount.toString(),
+                totalAmount: totalAmount.toString(),
+                paymentStatus,
+            })
                 .then(() => {
                     return resolve();
                 })
@@ -96,23 +83,23 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getPayment(paymentId: string, conn?: mysql.PoolConnection): Promise<LoyaltyPaymentInputData | undefined> {
+    public getPayment(paymentId: string): Promise<LoyaltyPaymentInputData | undefined> {
         return new Promise<LoyaltyPaymentInputData | undefined>(async (resolve, reject) => {
-            this.queryForMapper("payment", "getPayment", { paymentId }, conn)
-                .then((rows: any[]) => {
-                    if (rows.length > 0) {
-                        const m = rows[0];
+            this.queryForMapper("payment", "getPayment", { paymentId })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        const m = result.rows[0];
                         return resolve({
                             paymentId: m.paymentId,
                             purchaseId: m.purchaseId,
-                            amount: m.amount,
+                            amount: BigNumber.from(m.amount),
                             currency: m.currency,
                             shopId: m.shopId,
                             account: m.account,
                             loyaltyType: m.loyaltyType,
-                            purchaseAmount: m.purchaseAmount,
-                            feeAmount: m.feeAmount,
-                            totalAmount: m.totalAmount,
+                            purchaseAmount: BigNumber.from(m.purchaseAmount),
+                            feeAmount: BigNumber.from(m.feeAmount),
+                            totalAmount: BigNumber.from(m.totalAmount),
                             paymentStatus: m.paymentStatus,
                         });
                     } else {
@@ -126,19 +113,19 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updatePaymentStatus(
-        paymentId: string,
-        paymentStatus: LoyaltyPaymentInputDataStatus,
-        conn?: mysql.PoolConnection
-    ): Promise<any[]> {
-        return this.queryForMapper(
-            "payment",
-            "updateStatus",
-            {
+    public updatePaymentStatus(paymentId: string, paymentStatus: LoyaltyPaymentInputDataStatus): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateStatus", {
                 paymentId,
                 paymentStatus,
-            },
-            conn
-        );
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
     }
 }
