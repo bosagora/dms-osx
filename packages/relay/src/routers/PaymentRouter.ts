@@ -12,20 +12,7 @@ import * as hre from "hardhat";
 
 import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
-
-export interface LoyaltyPaymentInputData {
-    paymentId: string;
-    purchaseId: string;
-    amount: BigNumber;
-    currency: string;
-    shopId: string;
-    account: string;
-    loyaltyType: LoyaltyType;
-    purchaseAmount: BigNumber;
-    feeAmount: BigNumber;
-    totalAmount: BigNumber;
-    paymentStatus: LoyaltyPaymentInputDataStatus;
-}
+import { RelayStorage } from "../storage/RelayStorage";
 
 export class PaymentRouter {
     /**
@@ -72,19 +59,19 @@ export class PaymentRouter {
      */
     private _currencyRateContract: CurrencyRate | undefined;
 
-    private payments: Map<string, LoyaltyPaymentInputData>;
+    private _storage: RelayStorage;
 
     /**
      *
      * @param service  WebService
      * @param config Configuration
      */
-    constructor(service: WebService, config: Config, relaySigners: RelaySigners) {
+    constructor(service: WebService, config: Config, storage: RelayStorage, relaySigners: RelaySigners) {
         this._web_service = service;
         this._config = config;
 
+        this._storage = storage;
         this._relaySigners = relaySigners;
-        this.payments = new Map<string, LoyaltyPaymentInputData>();
     }
 
     private get app(): express.Application {
@@ -585,7 +572,19 @@ export class PaymentRouter {
                 totalAmount,
                 paymentStatus: LoyaltyPaymentInputDataStatus.CREATED,
             };
-            this.payments.set(paymentId, item);
+            await this._storage.postPayment(
+                item.paymentId,
+                item.purchaseId,
+                item.amount,
+                item.currency,
+                item.shopId,
+                item.account,
+                item.loyaltyType,
+                item.purchaseAmount,
+                item.feeAmount,
+                item.totalAmount,
+                item.paymentStatus
+            );
 
             /// 사용자에게 푸쉬 메세지 발송 후 서명을 확인함
 
@@ -635,7 +634,7 @@ export class PaymentRouter {
 
         try {
             const paymentId: string = String(req.body.paymentId).trim();
-            const item = this.payments.get(paymentId);
+            const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(
                     this.makeResponseData(402, undefined, {
@@ -691,7 +690,7 @@ export class PaymentRouter {
         try {
             const paymentId: string = String(req.body.paymentId).trim();
             const signature: string = String(req.body.signature).trim();
-            const item = this.payments.get(paymentId);
+            const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
                 res.status(200).json(
                     this.makeResponseData(401, undefined, {
@@ -738,7 +737,9 @@ export class PaymentRouter {
                     account: item.account,
                     signature,
                 });
+
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED;
+                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -790,7 +791,7 @@ export class PaymentRouter {
         try {
             const paymentId: string = String(req.body.paymentId).trim();
             const signature: string = String(req.body.signature).trim();
-            const item = this.payments.get(paymentId);
+            const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(
                     this.makeResponseData(401, undefined, {
@@ -828,6 +829,7 @@ export class PaymentRouter {
                 }
 
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_DENIED;
+                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -885,7 +887,7 @@ export class PaymentRouter {
             }
 
             const paymentId: string = String(req.body.paymentId).trim();
-            const item = this.payments.get(paymentId);
+            const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(
                     this.makeResponseData(401, undefined, {
@@ -903,6 +905,7 @@ export class PaymentRouter {
                 }
 
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCELED;
+                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -952,7 +955,7 @@ export class PaymentRouter {
         try {
             const paymentId: string = String(req.body.paymentId).trim();
             const signature: string = String(req.body.signature).trim();
-            const item = this.payments.get(paymentId);
+            const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
                 res.status(200).json(
                     this.makeResponseData(401, undefined, {
@@ -1002,7 +1005,9 @@ export class PaymentRouter {
                     signature,
                     certifierSignature,
                 });
+
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED;
+                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -1054,7 +1059,7 @@ export class PaymentRouter {
         try {
             const paymentId: string = String(req.body.paymentId).trim();
             const signature: string = String(req.body.signature).trim();
-            const item = this.payments.get(paymentId);
+            const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(
                     this.makeResponseData(401, undefined, {
@@ -1089,6 +1094,7 @@ export class PaymentRouter {
                 }
 
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_DENIED;
+                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,

@@ -1,4 +1,5 @@
 import { Amount } from "../src/common/Amount";
+import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
@@ -162,6 +163,7 @@ describe("Test for ShopCollection", () => {
 
     const client = new TestClient();
     let server: TestServer;
+    let storage: RelayStorage;
     let serverURL: URL;
     let config: Config;
 
@@ -249,7 +251,8 @@ describe("Test for ShopCollection", () => {
 
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
-            server = new TestServer(config);
+            storage = await RelayStorage.make(config.database);
+            server = new TestServer(config, storage);
         });
 
         before("Start TestServer", async () => {
@@ -258,6 +261,7 @@ describe("Test for ShopCollection", () => {
 
         after("Stop TestServer", async () => {
             await server.stop();
+            await storage.dropTestDB(config.database.database);
         });
 
         it("Add", async () => {

@@ -20,6 +20,18 @@ jobs:
         with:
           cache: 'yarn'
           node-version: ${{ matrix.node-version }}
+
+      - name: Setup MySQL 8.0
+        uses: ankane/setup-mysql@v1
+        with:
+          mysql-version: 8.0
+          database: relay
+
+      - name: Config MySQL
+        run: |
+          mysqladmin -u root password '12345678'
+          exit;
+
       - name: Install dependencies
         run: yarn install --pure-lockfile
       - name: Check formatting of Contract

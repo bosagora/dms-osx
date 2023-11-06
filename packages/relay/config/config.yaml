@@ -3,9 +3,22 @@
 ################################################################################
 server:
   # Address to which we bind (default: 127.0.0.1)
-  address: ${HOST_IP}
+  address: "${HOST_IP}"
   # Port on which we bind (default: 3000)
-  port: ${HOST_PORT}
+  port: "${HOST_PORT}"
+
+################################################################################
+##                               Database options                             ##
+################################################################################
+database:
+  host: "${DATABASE_HOST}"
+  user: "${DATABASE_USER}"
+  database: "${DATABASE_NAME}"
+  password: "${DATABASE_PASSWORD}"
+  port: "${DATABASE_PORT}"
+  waitForConnections: true
+  connectionLimit: 30
+  queueLimit: 0
 
 ################################################################################
 ##                               Logging options                              ##
@@ -20,16 +33,16 @@ logging:
 
 relay:
   managerKeys:
-    - ${MANAGER_KEY1}
-    - ${MANAGER_KEY2}
-    - ${MANAGER_KEY3}
-    - ${MANAGER_KEY4}
-    - ${MANAGER_KEY5}
-  accessKey: ${ACCESS_KEY}
-  certifier: ${CERTIFIER_KEY}
+    - "${MANAGER_KEY1}"
+    - "${MANAGER_KEY2}"
+    - "${MANAGER_KEY3}"
+    - "${MANAGER_KEY4}"
+    - "${MANAGER_KEY5}"
+  accessKey: "${ACCESS_KEY}"
+  certifier: "${CERTIFIER_KEY}"
 
 contracts:
-  tokenAddress : ${TOKEN_CONTRACT_ADDRESS}
-  ledgerAddress : ${LEDGER_CONTRACT_ADDRESS}
-  phoneLinkerAddress : ${PHONE_LINKER_CONTRACT_ADDRESS}
-  shopAddress : ${SHOP_CONTRACT_ADDRESS}
+  tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"
+  ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
+  phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
+  shopAddress : "${SHOP_CONTRACT_ADDRESS}"

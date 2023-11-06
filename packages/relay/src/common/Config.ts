@@ -26,6 +26,11 @@ export class Config implements IConfig {
     public server: ServerConfig;
 
     /**
+     * Database config
+     */
+    public database: DatabaseConfig;
+
+    /**
      * Logging config
      */
     public logging: LoggingConfig;
@@ -39,6 +44,7 @@ export class Config implements IConfig {
      */
     constructor() {
         this.server = new ServerConfig();
+        this.database = new DatabaseConfig();
         this.logging = new LoggingConfig();
         this.relay = new RelayConfig();
         this.contracts = new ContractsConfig();
@@ -85,6 +91,7 @@ export class Config implements IConfig {
             return (process.env || {})[key];
         }) as IConfig;
         this.server.readFromObject(cfg.server);
+        this.database.readFromObject(cfg.database);
         this.logging.readFromObject(cfg.logging);
         this.relay.readFromObject(cfg.relay);
         this.contracts.readFromObject(cfg.contracts);
@@ -147,6 +154,149 @@ export class ServerConfig implements IServerConfig {
         }
         this.address = conf.address;
         this.port = conf.port;
+    }
+}
+
+/**
+ * Database config
+ */
+export class DatabaseConfig implements IDatabaseConfig {
+    /**
+     * The host of mysql
+     */
+    host: string;
+
+    /**
+     * The user of mysql
+     */
+    user: string;
+
+    /**
+     * The password of mysql
+     */
+    password: string;
+
+    /**
+     * The database name
+     */
+    database?: string;
+
+    /**
+     * The host database port
+     */
+    port: number;
+
+    /**
+     * multiple Statements exec config
+     */
+    multipleStatements: boolean;
+
+    /**
+     * Determines the pool's action when no connections are available
+     * and the limit has been reached.
+     * If true, the pool will queue the connection request and call
+     * it when one becomes available.
+     * If false, the pool will immediately call back with an error.
+     */
+    waitForConnections: boolean;
+
+    /**
+     * The maximum number of connections to create at once.
+     */
+    connectionLimit: number;
+
+    /**
+     * The maximum number of connection requests the pool
+     * will queue before returning an error from getConnection.
+     * If set to 0, there is no limit to the number of queued connection requests.
+     */
+    queueLimit: number;
+
+    /**
+     * Constructor
+     * @param host Mysql database host
+     * @param user Mysql database user
+     * @param password Mysql database password
+     * @param database Mysql database name
+     * @param port Mysql database port
+     * @param multipleStatements Mysql allow multiple statement to execute (true / false)
+     * @param waitForConnections Determines the pool's action when no connections are available
+     * and the limit has been reached.
+     * If true, the pool will queue the connection request and call
+     * it when one becomes available.
+     * If false, the pool will immediately call back with an error.
+     * @param connectionLimit The maximum number of connections to create at once.
+     * @param queueLimit The maximum number of connection requests the pool
+     * will queue before returning an error from getConnection.
+     * If set to 0, there is no limit to the number of queued connection requests.
+     */
+    constructor(
+        host?: string,
+        user?: string,
+        password?: string,
+        database?: string,
+        port?: number,
+        multipleStatements?: boolean,
+        waitForConnections?: boolean,
+        connectionLimit?: number,
+        queueLimit?: number
+    ) {
+        const conf = extend(true, {}, DatabaseConfig.defaultValue());
+        extend(true, conf, {
+            host,
+            user,
+            password,
+            database,
+            port,
+            multipleStatements,
+            waitForConnections,
+            connectionLimit,
+            queueLimit,
+        });
+        this.host = conf.host;
+        this.user = conf.user;
+        this.password = conf.password;
+        this.database = conf.database;
+        this.port = conf.port;
+        this.multipleStatements = conf.multipleStatements;
+        this.waitForConnections = conf.waitForConnections;
+        this.connectionLimit = conf.connectionLimit;
+        this.queueLimit = conf.queueLimit;
+    }
+
+    /**
+     * Returns default value
+     */
+    public static defaultValue(): IDatabaseConfig {
+        return {
+            host: "localhost",
+            user: "root",
+            password: "12345678",
+            database: "boascan",
+            port: 3306,
+            multipleStatements: true,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0,
+        };
+    }
+
+    /**
+     * Reads from Object
+     * @param config The object of IDatabaseConfig
+     */
+    public readFromObject(config: IDatabaseConfig) {
+        const conf = extend(true, {}, DatabaseConfig.defaultValue());
+        extend(true, conf, config);
+        this.host = conf.host;
+        this.user = conf.user;
+        this.password = conf.password;
+        this.database = conf.database;
+        this.port = conf.port;
+        this.multipleStatements = conf.multipleStatements;
+        this.waitForConnections = conf.waitForConnections;
+        this.connectionLimit = conf.connectionLimit;
+        this.queueLimit = conf.queueLimit;
     }
 }
 
@@ -315,6 +465,62 @@ export interface IServerConfig {
 }
 
 /**
+ * The interface of database config
+ */
+export interface IDatabaseConfig {
+    /**
+     * The host of mysql
+     */
+    host: string;
+
+    /**
+     * The user of mysql
+     */
+    user: string;
+
+    /**
+     * The password of mysql
+     */
+    password: string;
+
+    /**
+     * The database name
+     */
+    database?: string;
+
+    /**
+     * The host database port
+     */
+    port: number;
+
+    /**
+     * Multiple Statements execution statement Option
+     */
+    multipleStatements: boolean;
+
+    /**
+     * Determines the pool's action when no connections are available
+     * and the limit has been reached.
+     * If true, the pool will queue the connection request and call
+     * it when one becomes available.
+     * If false, the pool will immediately call back with an error.
+     */
+    waitForConnections: boolean;
+
+    /**
+     * The maximum number of connections to create at once.
+     */
+    connectionLimit: number;
+
+    /**
+     * The maximum number of connection requests the pool
+     * will queue before returning an error from getConnection.
+     * If set to 0, there is no limit to the number of queued connection requests.
+     */
+    queueLimit: number;
+}
+
+/**
  * The interface of logging config
  */
 export interface ILoggingConfig {
@@ -347,6 +553,7 @@ export interface IContractsConfig {
     shopAddress: string;
     currencyRateAddress: string;
 }
+
 /**
  * The interface of main config
  */
@@ -355,6 +562,11 @@ export interface IConfig {
      * Server config
      */
     server: IServerConfig;
+
+    /**
+     * Database config
+     */
+    database: IDatabaseConfig;
 
     /**
      * Logging config

@@ -1,6 +1,8 @@
 import { Config } from "./common/Config";
 import { logger, Logger } from "./common/Logger";
 import { DefaultServer } from "./DefaultServer";
+import { RelayStorage } from "./storage/RelayStorage";
+import { Storage } from "./storage/Storage";
 
 let server: DefaultServer;
 
@@ -32,21 +34,27 @@ async function main() {
     logger.info(`address: ${config.server.address}`);
     logger.info(`port: ${config.server.port}`);
 
-    server = new DefaultServer(config);
-    return server.start().catch((error: any) => {
-        // handle specific listen errors with friendly messages
-        switch (error.code) {
-            case "EACCES":
-                logger.error(`${config.server.port} requires elevated privileges`);
-                break;
-            case "EADDRINUSE":
-                logger.error(`Port ${config.server.port} is already in use`);
-                break;
-            default:
-                logger.error(`An error occurred while starting the server: ${error.stack}`);
-        }
-        process.exit(1);
-    });
+    Storage.waiteForConnection(config.database)
+        .then(() => {
+            return RelayStorage.make(config.database);
+        })
+        .then(async (storage) => {
+            server = new DefaultServer(config, storage);
+            return server.start().catch((error: any) => {
+                // handle specific listen errors with friendly messages
+                switch (error.code) {
+                    case "EACCES":
+                        logger.error(`${config.server.port} requires elevated privileges`);
+                        break;
+                    case "EADDRINUSE":
+                        logger.error(`Port ${config.server.port} is already in use`);
+                        break;
+                    default:
+                        logger.error(`An error occurred while starting the server: ${error.stack}`);
+                }
+                process.exit(1);
+            });
+        });
 }
 
 // We recommend this pattern to be able to use async/await everywhere
