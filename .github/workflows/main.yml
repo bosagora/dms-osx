@@ -7,6 +7,17 @@ jobs:
 
     runs-on: ${{ matrix.operating-system }}
 
+    services:
+      postgres:
+        image: postgres:12.0
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: 12345678
+          POSTGRES_DB: relay
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     strategy:
       fail-fast: false
       matrix:
@@ -20,17 +31,6 @@ jobs:
         with:
           cache: 'yarn'
           node-version: ${{ matrix.node-version }}
-
-      - name: Setup MySQL 8.0
-        uses: ankane/setup-mysql@v1
-        with:
-          mysql-version: 8.0
-          database: relay
-
-      - name: Config MySQL
-        run: |
-          mysqladmin -u root password '12345678'
-          exit;
 
       - name: Install dependencies
         run: yarn install --pure-lockfile
