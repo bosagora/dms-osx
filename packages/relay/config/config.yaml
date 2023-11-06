@@ -26,6 +26,7 @@ relay:
     - ${MANAGER_KEY4}
     - ${MANAGER_KEY5}
   accessKey: ${ACCESS_KEY}
+  certifier: ${CERTIFIER_KEY}
 
 contracts:
   tokenAddress : ${TOKEN_CONTRACT_ADDRESS}

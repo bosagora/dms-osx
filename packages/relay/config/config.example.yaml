@@ -22,6 +22,7 @@ relay:
   managerKeys:
     - ${MANAGER_KEY1}
   accessKey: ${ACCESS_KEY}
+  certifier: ${CERTIFIER_KEY}
 
 contracts:
   tokenAddress : ${TOKEN_CONTRACT_ADDRESS}

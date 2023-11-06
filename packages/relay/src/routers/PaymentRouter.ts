@@ -261,6 +261,34 @@ export class PaymentRouter {
             ],
             this.payment_create_deny.bind(this)
         );
+
+        this.app.post(
+            "/v1/payment/cancel",
+            [body("accessKey").exists(), body("paymentId").exists()],
+            this.payment_cancel.bind(this)
+        );
+
+        this.app.post(
+            "/v1/payment/cancel/confirm",
+            [
+                body("paymentId").exists(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.payment_cancel_confirm.bind(this)
+        );
+
+        this.app.post(
+            "/v1/payment/cancel/deny",
+            [
+                body("paymentId").exists(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.payment_cancel_deny.bind(this)
+        );
     }
 
     private async getPaymentId(account: string): Promise<string> {
@@ -555,7 +583,7 @@ export class PaymentRouter {
                 purchaseAmount,
                 feeAmount,
                 totalAmount,
-                paymentStatus: LoyaltyPaymentInputDataStatus.NULL,
+                paymentStatus: LoyaltyPaymentInputDataStatus.CREATED,
             };
             this.payments.set(paymentId, item);
 
@@ -672,7 +700,7 @@ export class PaymentRouter {
                 );
                 return;
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.NULL) {
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATED) {
                     res.status(200).json(
                         this.makeResponseData(402, undefined, {
                             message: "This payment has already been closed.",
@@ -710,7 +738,7 @@ export class PaymentRouter {
                     account: item.account,
                     signature,
                 });
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.CONFIRMED;
+                item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED;
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -770,7 +798,7 @@ export class PaymentRouter {
                     })
                 );
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.NULL) {
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATED) {
                     res.status(200).json(
                         this.makeResponseData(402, undefined, {
                             message: "This payment has already been closed.",
@@ -799,7 +827,7 @@ export class PaymentRouter {
                     return;
                 }
 
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.DENIED;
+                item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_DENIED;
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -820,6 +848,267 @@ export class PaymentRouter {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/create/deny";
             logger.error(`GET /v1/payment/create/deny :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        }
+    }
+
+    /**
+     * 결제 / 결제정보를 제공한다
+     * GET /v1/payment/cancel
+     * @private
+     */
+    private async payment_cancel(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/cancel`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const accessKey: string = String(req.body.accessKey).trim();
+            if (accessKey !== this._config.relay.accessKey) {
+                return res.json(
+                    this.makeResponseData(400, undefined, {
+                        message: "The access key entered is not valid.",
+                    })
+                );
+            }
+
+            const paymentId: string = String(req.body.paymentId).trim();
+            const item = this.payments.get(paymentId);
+            if (item === undefined) {
+                return res.status(200).json(
+                    this.makeResponseData(401, undefined, {
+                        message: "Payment ID is not exist.",
+                    })
+                );
+            } else {
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED) {
+                    res.status(200).json(
+                        this.makeResponseData(402, undefined, {
+                            message: "This payment has not been confirmed.",
+                        })
+                    );
+                    return;
+                }
+
+                item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCELED;
+                return res.status(200).json(
+                    this.makeResponseData(200, {
+                        paymentId: item.paymentId,
+                        purchaseId: item.purchaseId,
+                        amount: item.amount.toString(),
+                        currency: item.currency,
+                        shopId: item.shopId,
+                        account: item.account,
+                        loyaltyType: item.loyaltyType,
+                        purchaseAmount: item.purchaseAmount.toString(),
+                        feeAmount: item.feeAmount.toString(),
+                        totalAmount: item.totalAmount.toString(),
+                        paymentStatus: item.paymentStatus,
+                    })
+                );
+            }
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /v1/payment/cancel";
+            logger.error(`GET /v1/payment/cancel :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        }
+    }
+
+    /**
+     * GET /v1/payment/cancel/confirm
+     * @private
+     */
+    private async payment_cancel_confirm(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/create/confirm`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const paymentId: string = String(req.body.paymentId).trim();
+            const signature: string = String(req.body.signature).trim();
+            const item = this.payments.get(paymentId);
+            if (item === undefined) {
+                res.status(200).json(
+                    this.makeResponseData(401, undefined, {
+                        message: "Payment ID is not exist.",
+                    })
+                );
+                return;
+            } else {
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CANCELED) {
+                    res.status(200).json(
+                        this.makeResponseData(402, undefined, {
+                            message: "This payment is not in a cancellable state.",
+                        })
+                    );
+                    return;
+                }
+
+                if (
+                    !ContractUtils.verifyLoyaltyPaymentCancel(
+                        item.paymentId,
+                        item.purchaseId,
+                        await (await this.getLedgerContract()).nonceOf(item.account),
+                        item.account,
+                        signature
+                    )
+                ) {
+                    res.status(200).json(
+                        this.makeResponseData(403, undefined, {
+                            message: "The signature value entered is not valid.",
+                        })
+                    );
+                    return;
+                }
+
+                const wallet = new hre.ethers.Wallet(this._config.relay.certifierKey);
+                const certifierSignature = await ContractUtils.signLoyaltyPaymentCancel(
+                    wallet,
+                    item.paymentId,
+                    item.purchaseId,
+                    await (await this.getLedgerContract()).nonceOf(wallet.address)
+                );
+
+                const tx = await (await this.getLedgerContract()).connect(signerItem.signer).cancelLoyaltyPayment({
+                    paymentId: item.paymentId,
+                    purchaseId: item.purchaseId,
+                    account: item.account,
+                    signature,
+                    certifierSignature,
+                });
+                item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED;
+                return res.status(200).json(
+                    this.makeResponseData(200, {
+                        paymentId: item.paymentId,
+                        purchaseId: item.purchaseId,
+                        amount: item.amount.toString(),
+                        currency: item.currency,
+                        shopId: item.shopId,
+                        account: item.account,
+                        loyaltyType: item.loyaltyType,
+                        purchaseAmount: item.purchaseAmount.toString(),
+                        feeAmount: item.feeAmount.toString(),
+                        totalAmount: item.totalAmount.toString(),
+                        paymentStatus: item.paymentStatus,
+                        txHash: tx.hash,
+                    })
+                );
+            }
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /v1/payment/cancel/confirm";
+            logger.error(`GET /v1/payment/cancel/confirm :`, message);
+            return res.status(200).json(
+                this.makeResponseData(500, undefined, {
+                    message,
+                })
+            );
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * GET /v1/payment/cancel/deny
+     * @private
+     */
+    private async payment_cancel_deny(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/cancel/deny`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(
+                this.makeResponseData(501, undefined, {
+                    message: "Failed to check the validity of parameters.",
+                    validation: errors.array(),
+                })
+            );
+        }
+
+        try {
+            const paymentId: string = String(req.body.paymentId).trim();
+            const signature: string = String(req.body.signature).trim();
+            const item = this.payments.get(paymentId);
+            if (item === undefined) {
+                return res.status(200).json(
+                    this.makeResponseData(401, undefined, {
+                        message: "Payment ID is not exist.",
+                    })
+                );
+            } else {
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CANCELED) {
+                    res.status(200).json(
+                        this.makeResponseData(402, undefined, {
+                            message: "This payment is not in a cancellable state.",
+                        })
+                    );
+                    return;
+                }
+
+                if (
+                    !ContractUtils.verifyLoyaltyPaymentCancel(
+                        item.paymentId,
+                        item.purchaseId,
+                        await (await this.getLedgerContract()).nonceOf(item.account),
+                        item.account,
+                        signature
+                    )
+                ) {
+                    res.status(200).json(
+                        this.makeResponseData(403, undefined, {
+                            message: "The signature value entered is not valid.",
+                        })
+                    );
+                    return;
+                }
+
+                item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_DENIED;
+                return res.status(200).json(
+                    this.makeResponseData(200, {
+                        paymentId: item.paymentId,
+                        purchaseId: item.purchaseId,
+                        amount: item.amount.toString(),
+                        currency: item.currency,
+                        shopId: item.shopId,
+                        account: item.account,
+                        loyaltyType: item.loyaltyType,
+                        purchaseAmount: item.purchaseAmount.toString(),
+                        feeAmount: item.feeAmount.toString(),
+                        totalAmount: item.totalAmount.toString(),
+                        paymentStatus: item.paymentStatus,
+                    })
+                );
+            }
+        } catch (error: any) {
+            let message = ContractUtils.cacheEVMError(error as any);
+            if (message === "") message = "Failed /v1/payment/cancel/deny";
+            logger.error(`GET /v1/payment/cancel/deny :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
