@@ -9,6 +9,10 @@ export enum WithdrawStatus {
 
 export enum LoyaltyPaymentInputDataStatus {
     NULL,
-    CONFIRMED,
-    DENIED,
+    CREATED,
+    CREATE_CONFIRMED,
+    CREATE_DENIED,
+    CANCELED,
+    CANCEL_CONFIRMED,
+    CANCEL_DENIED,
 }

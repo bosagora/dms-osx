@@ -159,6 +159,7 @@ export class RelayConfig implements IRelayConfig {
      */
     public managerKeys: string[];
     public accessKey: string;
+    public certifierKey: string;
 
     /**
      * Constructor
@@ -168,6 +169,7 @@ export class RelayConfig implements IRelayConfig {
 
         this.managerKeys = defaults.managerKeys;
         this.accessKey = defaults.accessKey;
+        this.certifierKey = defaults.certifierKey;
     }
 
     /**
@@ -183,6 +185,7 @@ export class RelayConfig implements IRelayConfig {
                 process.env.MANAGER_KEY5 || "",
             ],
             accessKey: process.env.ACCESS_SECRET || "",
+            certifierKey: process.env.CERTIFIER_KEY || "",
         };
     }
 
@@ -193,6 +196,7 @@ export class RelayConfig implements IRelayConfig {
     public readFromObject(config: IRelayConfig) {
         if (config.managerKeys !== undefined) this.managerKeys = config.managerKeys;
         if (config.accessKey !== undefined) this.accessKey = config.accessKey;
+        if (config.certifierKey !== undefined) this.certifierKey = config.certifierKey;
     }
 }
 
@@ -333,6 +337,7 @@ export interface ILoggingConfig {
 export interface IRelayConfig {
     managerKeys: string[];
     accessKey: string;
+    certifierKey: string;
 }
 
 export interface IContractsConfig {

@@ -390,6 +390,23 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
+    public static verifyLoyaltyPaymentCancel(
+        paymentId: string,
+        purchaseId: string,
+        nonce: BigNumberish,
+        account: string,
+        signature: BytesLike
+    ): boolean {
+        const message = ContractUtils.getLoyaltyPaymentCancelMessage(account, paymentId, purchaseId, nonce);
+        let res: string;
+        try {
+            res = ethers.utils.verifyMessage(message, signature);
+        } catch (error) {
+            return false;
+        }
+        return res.toLowerCase() === account.toLowerCase();
+    }
+
     public static getPaymentId(account: string, nonce: BigNumberish): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["address", "uint256", "bytes32"],
