@@ -1,5 +1,6 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
+import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
@@ -10,7 +11,6 @@ import {
     ValidatorCollection,
 } from "../typechain-types";
 import { TestClient, TestServer } from "./helper/Utility";
-import { RelayStorage } from "../src/storage/RelayStorage";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
@@ -301,7 +301,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         context("Prepare shop data", () => {
@@ -425,7 +425,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         context("Prepare shop data", () => {

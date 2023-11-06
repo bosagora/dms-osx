@@ -1,5 +1,6 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
+import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
@@ -24,8 +25,6 @@ import { BigNumber, Wallet } from "ethers";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 import { LoyaltyPaymentInputDataStatus, LoyaltyType } from "../src/types";
-
-import { RelayStorage } from "../src/storage/RelayStorage";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -156,7 +155,6 @@ describe("Test of Server", function () {
             )) as Ledger;
         await ledgerContract.deployed();
         await ledgerContract.deployTransaction.wait();
-
         await shopCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
     };
 
@@ -308,7 +306,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         context("Prepare shop data", () => {
@@ -771,7 +769,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         context("Prepare shop data", () => {
@@ -1102,7 +1100,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         context("Prepare shop data", () => {
@@ -1416,7 +1414,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         context("Prepare shop data", () => {

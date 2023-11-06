@@ -261,7 +261,7 @@ describe("Test for ShopCollection", () => {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         it("Add", async () => {

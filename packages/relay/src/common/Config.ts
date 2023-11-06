@@ -187,48 +187,29 @@ export class DatabaseConfig implements IDatabaseConfig {
     port: number;
 
     /**
-     * multiple Statements exec config
+     * number of milliseconds to wait before timing out when connecting a new client
+     * by default this is 0 which means no timeout
      */
-    multipleStatements: boolean;
+    connectionTimeoutMillis: number;
 
     /**
-     * Determines the pool's action when no connections are available
-     * and the limit has been reached.
-     * If true, the pool will queue the connection request and call
-     * it when one becomes available.
-     * If false, the pool will immediately call back with an error.
+     * maximum number of clients the pool should contain
+     * by default this is set to 10.
      */
-    waitForConnections: boolean;
-
-    /**
-     * The maximum number of connections to create at once.
-     */
-    connectionLimit: number;
-
-    /**
-     * The maximum number of connection requests the pool
-     * will queue before returning an error from getConnection.
-     * If set to 0, there is no limit to the number of queued connection requests.
-     */
-    queueLimit: number;
+    max: number;
 
     /**
      * Constructor
-     * @param host Mysql database host
-     * @param user Mysql database user
-     * @param password Mysql database password
-     * @param database Mysql database name
-     * @param port Mysql database port
-     * @param multipleStatements Mysql allow multiple statement to execute (true / false)
-     * @param waitForConnections Determines the pool's action when no connections are available
-     * and the limit has been reached.
-     * If true, the pool will queue the connection request and call
-     * it when one becomes available.
-     * If false, the pool will immediately call back with an error.
-     * @param connectionLimit The maximum number of connections to create at once.
-     * @param queueLimit The maximum number of connection requests the pool
-     * will queue before returning an error from getConnection.
-     * If set to 0, there is no limit to the number of queued connection requests.
+     * @param host Postgresql database host
+     * @param user Postgresql database user
+     * @param password Postgresql database password
+     * @param database Postgresql database name
+     * @param port Postgresql database port
+     * @param connectionTimeoutMillis Number of milliseconds to wait before
+     * timing out when connecting a new client.
+     * By default this is 0 which means no timeout.
+     * @param max Number of milliseconds to wait before timing out when
+     * connecting a new client by default this is 0 which means no timeout.
      */
     constructor(
         host?: string,
@@ -236,10 +217,8 @@ export class DatabaseConfig implements IDatabaseConfig {
         password?: string,
         database?: string,
         port?: number,
-        multipleStatements?: boolean,
-        waitForConnections?: boolean,
-        connectionLimit?: number,
-        queueLimit?: number
+        connectionTimeoutMillis?: number,
+        max?: number
     ) {
         const conf = extend(true, {}, DatabaseConfig.defaultValue());
         extend(true, conf, {
@@ -248,20 +227,16 @@ export class DatabaseConfig implements IDatabaseConfig {
             password,
             database,
             port,
-            multipleStatements,
-            waitForConnections,
-            connectionLimit,
-            queueLimit,
+            connectionTimeoutMillis,
+            max,
         });
         this.host = conf.host;
         this.user = conf.user;
         this.password = conf.password;
         this.database = conf.database;
         this.port = conf.port;
-        this.multipleStatements = conf.multipleStatements;
-        this.waitForConnections = conf.waitForConnections;
-        this.connectionLimit = conf.connectionLimit;
-        this.queueLimit = conf.queueLimit;
+        this.connectionTimeoutMillis = conf.connectionTimeoutMillis;
+        this.max = conf.max;
     }
 
     /**
@@ -272,12 +247,10 @@ export class DatabaseConfig implements IDatabaseConfig {
             host: "localhost",
             user: "root",
             password: "12345678",
-            database: "boascan",
-            port: 3306,
-            multipleStatements: true,
-            waitForConnections: true,
-            connectionLimit: 10,
-            queueLimit: 0,
+            database: "relay",
+            port: 5432,
+            connectionTimeoutMillis: 2000,
+            max: 20,
         };
     }
 
@@ -293,10 +266,8 @@ export class DatabaseConfig implements IDatabaseConfig {
         this.password = conf.password;
         this.database = conf.database;
         this.port = conf.port;
-        this.multipleStatements = conf.multipleStatements;
-        this.waitForConnections = conf.waitForConnections;
-        this.connectionLimit = conf.connectionLimit;
-        this.queueLimit = conf.queueLimit;
+        this.connectionTimeoutMillis = conf.connectionTimeoutMillis;
+        this.max = conf.max;
     }
 }
 
@@ -494,30 +465,16 @@ export interface IDatabaseConfig {
     port: number;
 
     /**
-     * Multiple Statements execution statement Option
+     * number of milliseconds to wait before timing out when connecting a new client
+     * by default this is 0 which means no timeout
      */
-    multipleStatements: boolean;
+    connectionTimeoutMillis: number;
 
     /**
-     * Determines the pool's action when no connections are available
-     * and the limit has been reached.
-     * If true, the pool will queue the connection request and call
-     * it when one becomes available.
-     * If false, the pool will immediately call back with an error.
+     * maximum number of clients the pool should contain
+     * by default this is set to 10.
      */
-    waitForConnections: boolean;
-
-    /**
-     * The maximum number of connections to create at once.
-     */
-    connectionLimit: number;
-
-    /**
-     * The maximum number of connection requests the pool
-     * will queue before returning an error from getConnection.
-     * If set to 0, there is no limit to the number of queued connection requests.
-     */
-    queueLimit: number;
+    max: number;
 }
 
 /**

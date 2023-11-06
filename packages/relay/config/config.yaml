@@ -13,12 +13,11 @@ server:
 database:
   host: "${DATABASE_HOST}"
   user: "${DATABASE_USER}"
-  database: "${DATABASE_NAME}"
   password: "${DATABASE_PASSWORD}"
+  database: "${DATABASE_NAME}"
   port: "${DATABASE_PORT}"
-  waitForConnections: true
-  connectionLimit: 30
-  queueLimit: 0
+  connectionTimeoutMillis: 2000
+  max: 100
 
 ################################################################################
 ##                               Logging options                              ##

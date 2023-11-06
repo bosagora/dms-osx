@@ -1,4 +1,5 @@
 import { Amount } from "../src/common/Amount";
+import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
@@ -29,7 +30,6 @@ import path from "path";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
-import { RelayStorage } from "../src/storage/RelayStorage";
 
 chai.use(solidity);
 
@@ -359,7 +359,7 @@ describe("Test for ShopCollection", () => {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.dropTestDB(config.database.database);
+            await storage.close();
         });
 
         before("Prepare Token", async () => {
