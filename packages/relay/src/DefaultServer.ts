@@ -9,6 +9,7 @@ import { ShopRouter } from "./routers/ShopRouter";
 import { WebService } from "./service/WebService";
 
 import { RelaySigners } from "./contract/Signers";
+import { RelayStorage } from "./storage/RelayStorage";
 
 export class DefaultServer extends WebService {
     /**
@@ -22,20 +23,22 @@ export class DefaultServer extends WebService {
     public readonly shopRouter: ShopRouter;
     public readonly paymentRouter: PaymentRouter;
     public readonly relaySigners: RelaySigners;
+    public readonly storage: RelayStorage;
 
     /**
      * Constructor
      * @param config Configuration
      */
-    constructor(config: Config) {
+    constructor(config: Config, storage: RelayStorage) {
         super(config.server.port, config.server.address);
 
         this.config = config;
+        this.storage = storage;
         this.relaySigners = new RelaySigners(this.config);
-        this.defaultRouter = new DefaultRouter(this, this.config, this.relaySigners);
-        this.ledgerRouter = new LedgerRouter(this, this.config, this.relaySigners);
-        this.shopRouter = new ShopRouter(this, this.config, this.relaySigners);
-        this.paymentRouter = new PaymentRouter(this, this.config, this.relaySigners);
+        this.defaultRouter = new DefaultRouter(this, this.config, this.storage, this.relaySigners);
+        this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
+        this.shopRouter = new ShopRouter(this, this.config, this.storage, this.relaySigners);
+        this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners);
     }
 
     /**

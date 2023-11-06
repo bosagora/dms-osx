@@ -25,6 +25,8 @@ import { BigNumber, Wallet } from "ethers";
 import { AddressZero } from "@ethersproject/constants";
 import { LoyaltyPaymentInputDataStatus, LoyaltyType } from "../src/types";
 
+import { RelayStorage } from "../src/storage/RelayStorage";
+
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
 
@@ -169,6 +171,7 @@ describe("Test of Server", function () {
     };
 
     const client = new TestClient();
+    let storage: RelayStorage;
     let server: TestServer;
     let serverURL: URL;
     let config: Config;
@@ -295,7 +298,8 @@ describe("Test of Server", function () {
 
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
-            server = new TestServer(config);
+            storage = await RelayStorage.make(config.database);
+            server = new TestServer(config, storage);
         });
 
         before("Start TestServer", async () => {
@@ -304,6 +308,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
+            await storage.dropTestDB(config.database.database);
         });
 
         context("Prepare shop data", () => {
@@ -756,7 +761,8 @@ describe("Test of Server", function () {
 
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
-            server = new TestServer(config);
+            storage = await RelayStorage.make(config.database);
+            server = new TestServer(config, storage);
         });
 
         before("Start TestServer", async () => {
@@ -765,6 +771,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
+            await storage.dropTestDB(config.database.database);
         });
 
         context("Prepare shop data", () => {
@@ -1085,7 +1092,8 @@ describe("Test of Server", function () {
 
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
-            server = new TestServer(config);
+            storage = await RelayStorage.make(config.database);
+            server = new TestServer(config, storage);
         });
 
         before("Start TestServer", async () => {
@@ -1094,6 +1102,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
+            await storage.dropTestDB(config.database.database);
         });
 
         context("Prepare shop data", () => {
@@ -1397,7 +1406,8 @@ describe("Test of Server", function () {
 
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
-            server = new TestServer(config);
+            storage = await RelayStorage.make(config.database);
+            server = new TestServer(config, storage);
         });
 
         before("Start TestServer", async () => {
@@ -1406,6 +1416,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
+            await storage.dropTestDB(config.database.database);
         });
 
         context("Prepare shop data", () => {

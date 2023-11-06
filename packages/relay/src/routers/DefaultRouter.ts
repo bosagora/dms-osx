@@ -6,6 +6,7 @@ import * as hre from "hardhat";
 
 import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
+import { RelayStorage } from "../storage/RelayStorage";
 
 export class DefaultRouter {
     /**
@@ -52,15 +53,18 @@ export class DefaultRouter {
      */
     private _currencyRateContract: CurrencyRate | undefined;
 
+    private _storage: RelayStorage;
+
     /**
      *
      * @param service  WebService
      * @param config Configuration
      */
-    constructor(service: WebService, config: Config, relaySigners: RelaySigners) {
+    constructor(service: WebService, config: Config, storage: RelayStorage, relaySigners: RelaySigners) {
         this._web_service = service;
         this._config = config;
 
+        this._storage = storage;
         this._relaySigners = relaySigners;
     }
 

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="payment">
+
+    <insert id="postPayment">
+        INSERT INTO payments
+            (
+                paymentId       ,
+                purchaseId      ,
+                amount          ,
+                currency        ,
+                shopId          ,
+                account         ,
+                loyaltyType     ,
+                purchaseAmount  ,
+                feeAmount       ,
+                totalAmount     ,
+                paymentStatus
+            )
+        VALUES
+            (
+                #{paymentId},
+                #{purchaseId},
+                #{amount},
+                #{currency},
+                #{shopId},
+                #{account},
+                ${loyaltyType},
+                #{purchaseAmount},
+                #{feeAmount},
+                #{totalAmount},
+                ${paymentStatus}
+            )
+        ON DUPLICATE KEY UPDATE
+            purchaseId = VALUES(purchaseId),
+            amount = VALUES(amount),
+            currency = VALUES(currency),
+            shopId = VALUES(shopId),
+            account = VALUES(account),
+            loyaltyType = VALUES(loyaltyType),
+            purchaseAmount = VALUES(purchaseAmount),
+            feeAmount = VALUES(feeAmount),
+            totalAmount = VALUES(totalAmount),
+            paymentStatus = VALUES(paymentStatus);
+    </insert>
+
+    <select id="getPayment">
+        SELECT * FROM payments WHERE paymentId = #{paymentId};
+    </select>
+
+    <update id="updateStatus">
+        UPDATE payments
+        SET
+            paymentStatus = #{paymentStatus}
+        WHERE paymentId = #{paymentId}
+    </update>
+</mapper>
