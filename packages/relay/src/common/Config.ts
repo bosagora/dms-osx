@@ -281,6 +281,7 @@ export class RelayConfig implements IRelayConfig {
     public managerKeys: string[];
     public accessKey: string;
     public certifierKey: string;
+    public callbackEndpoint: string;
 
     /**
      * Constructor
@@ -291,6 +292,7 @@ export class RelayConfig implements IRelayConfig {
         this.managerKeys = defaults.managerKeys;
         this.accessKey = defaults.accessKey;
         this.certifierKey = defaults.certifierKey;
+        this.callbackEndpoint = defaults.callbackEndpoint;
     }
 
     /**
@@ -307,6 +309,7 @@ export class RelayConfig implements IRelayConfig {
             ],
             accessKey: process.env.ACCESS_SECRET || "",
             certifierKey: process.env.CERTIFIER_KEY || "",
+            callbackEndpoint: process.env.CALLBACK_ENDPOINT || "",
         };
     }
 
@@ -318,6 +321,7 @@ export class RelayConfig implements IRelayConfig {
         if (config.managerKeys !== undefined) this.managerKeys = config.managerKeys;
         if (config.accessKey !== undefined) this.accessKey = config.accessKey;
         if (config.certifierKey !== undefined) this.certifierKey = config.certifierKey;
+        if (config.callbackEndpoint !== undefined) this.callbackEndpoint = config.callbackEndpoint;
     }
 }
 
@@ -501,6 +505,7 @@ export interface IRelayConfig {
     managerKeys: string[];
     accessKey: string;
     certifierKey: string;
+    callbackEndpoint: string;
 }
 
 export interface IContractsConfig {

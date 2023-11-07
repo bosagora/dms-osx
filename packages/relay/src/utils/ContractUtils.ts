@@ -4,7 +4,16 @@ import { BigNumberish, BytesLike, ethers, Signer } from "ethers";
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
 
+import { Log } from "@ethersproject/providers";
+import { id } from "@ethersproject/hash";
+import { ContractReceipt } from "@ethersproject/contracts";
+import { Interface } from "@ethersproject/abi";
+
 export class ContractUtils {
+    public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {
+        return receipt.logs.find((log) => log.topics[0] === id(iface.getEvent(eventName).format("sighash")));
+    }
+
     /**
      * It generates hash values.
      * @param data The source data

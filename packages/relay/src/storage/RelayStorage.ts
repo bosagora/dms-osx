@@ -6,7 +6,7 @@ import { BigNumber } from "ethers";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
-import { LoyaltyPaymentInputData, LoyaltyPaymentInputDataStatus, LoyaltyType } from "../types";
+import { LoyaltyPaymentInputDataStatus, LoyaltyPaymentInternalData, LoyaltyType } from "../types";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -40,9 +40,6 @@ export class RelayStorage extends Storage {
     }
 
     public async dropTestDB(database: any): Promise<any> {
-        await this.exec(
-            `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '${database}'`
-        );
         await this.queryForMapper("table", "drop_table", { database });
     }
 
@@ -54,10 +51,17 @@ export class RelayStorage extends Storage {
         shopId: string,
         account: string,
         loyaltyType: LoyaltyType,
-        purchaseAmount: BigNumber,
-        feeAmount: BigNumber,
-        totalAmount: BigNumber,
-        paymentStatus: LoyaltyPaymentInputDataStatus
+        paidPoint: BigNumber,
+        paidToken: BigNumber,
+        paidValue: BigNumber,
+        feePoint: BigNumber,
+        feeToken: BigNumber,
+        feeValue: BigNumber,
+        totalPoint: BigNumber,
+        totalToken: BigNumber,
+        totalValue: BigNumber,
+        paymentStatus: LoyaltyPaymentInputDataStatus,
+        createTimestamp: number
     ): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "postPayment", {
@@ -68,10 +72,17 @@ export class RelayStorage extends Storage {
                 shopId,
                 account,
                 loyaltyType,
-                purchaseAmount: purchaseAmount.toString(),
-                feeAmount: feeAmount.toString(),
-                totalAmount: totalAmount.toString(),
+                paidPoint: paidPoint.toString(),
+                paidToken: paidToken.toString(),
+                paidValue: paidValue.toString(),
+                feePoint: feePoint.toString(),
+                feeToken: feeToken.toString(),
+                feeValue: feeValue.toString(),
+                totalPoint: totalPoint.toString(),
+                totalToken: totalToken.toString(),
+                totalValue: totalValue.toString(),
                 paymentStatus,
+                createTimestamp,
             })
                 .then(() => {
                     return resolve();
@@ -83,8 +94,8 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getPayment(paymentId: string): Promise<LoyaltyPaymentInputData | undefined> {
-        return new Promise<LoyaltyPaymentInputData | undefined>(async (resolve, reject) => {
+    public getPayment(paymentId: string): Promise<LoyaltyPaymentInternalData | undefined> {
+        return new Promise<LoyaltyPaymentInternalData | undefined>(async (resolve, reject) => {
             this.queryForMapper("payment", "getPayment", { paymentId })
                 .then((result) => {
                     if (result.rows.length > 0) {
@@ -97,10 +108,18 @@ export class RelayStorage extends Storage {
                             shopId: m.shopId,
                             account: m.account,
                             loyaltyType: m.loyaltyType,
-                            purchaseAmount: BigNumber.from(m.purchaseAmount),
-                            feeAmount: BigNumber.from(m.feeAmount),
-                            totalAmount: BigNumber.from(m.totalAmount),
+                            paidPoint: BigNumber.from(m.paidPoint),
+                            paidToken: BigNumber.from(m.paidToken),
+                            paidValue: BigNumber.from(m.paidValue),
+                            feePoint: BigNumber.from(m.feePoint),
+                            feeToken: BigNumber.from(m.feeToken),
+                            feeValue: BigNumber.from(m.feeValue),
+                            totalPoint: BigNumber.from(m.totalPoint),
+                            totalToken: BigNumber.from(m.totalToken),
+                            totalValue: BigNumber.from(m.totalValue),
                             paymentStatus: m.paymentStatus,
+                            createTimestamp: m.createTimestamp,
+                            cancelTimestamp: m.cancelTimestamp,
                         });
                     } else {
                         return resolve(undefined);
@@ -118,6 +137,22 @@ export class RelayStorage extends Storage {
             this.queryForMapper("payment", "updateStatus", {
                 paymentId,
                 paymentStatus,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateCancelTimestamp(paymentId: string, cancelTimestamp: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateCancelTimestamp", {
+                paymentId,
+                cancelTimestamp,
             })
                 .then(() => {
                     return resolve();
