@@ -11,10 +11,18 @@
             "shopId"                VARCHAR(66) NOT NULL,
             "account"               VARCHAR(42) NOT NULL,
             "loyaltyType"           INTEGER,
-            "purchaseAmount"        VARCHAR(64) NOT NULL,
-            "feeAmount"             VARCHAR(64) NOT NULL,
-            "totalAmount"           VARCHAR(64) NOT NULL,
-            "paymentStatus"         INTEGER,
+            "paidPoint"             VARCHAR(64) NOT NULL,
+            "paidToken"             VARCHAR(64) NOT NULL,
+            "paidValue"             VARCHAR(64) NOT NULL,
+            "feePoint"              VARCHAR(64) NOT NULL,
+            "feeToken"              VARCHAR(64) NOT NULL,
+            "feeValue"              VARCHAR(64) NOT NULL,
+            "totalPoint"            VARCHAR(64) NOT NULL,
+            "totalToken"            VARCHAR(64) NOT NULL,
+            "totalValue"            VARCHAR(64) NOT NULL,
+            "paymentStatus"         INTEGER DEFAULT 0,
+            "createTimestamp"       INTEGER DEFAULT 0,
+            "cencelTimestamp"       INTEGER DEFAULT 0,
             PRIMARY KEY ("paymentId")
         )
     </sql>

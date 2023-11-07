@@ -25,6 +25,7 @@ import { BigNumber, Wallet } from "ethers";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 import { LoyaltyPaymentInputDataStatus, LoyaltyType } from "../src/types";
+import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -174,6 +175,8 @@ describe("Test of Server", function () {
     let serverURL: URL;
     let config: Config;
 
+    let fakerCallbackServer: FakerCallbackServer;
+
     interface IShopData {
         shopId: string;
         name: string;
@@ -307,6 +310,15 @@ describe("Test of Server", function () {
         after("Stop TestServer", async () => {
             await server.stop();
             await storage.close();
+        });
+
+        before("Start CallbackServer", async () => {
+            fakerCallbackServer = new FakerCallbackServer(3400);
+            await fakerCallbackServer.start();
+        });
+
+        after("Stop CallbackServer", async () => {
+            await fakerCallbackServer.stop();
         });
 
         context("Prepare shop data", () => {
@@ -457,9 +469,9 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
-                assert.deepStrictEqual(response.data.data.purchaseAmount, Amount.make(1000).toString());
-                assert.deepStrictEqual(response.data.data.feeAmount, Amount.make(50).toString());
-                assert.deepStrictEqual(response.data.data.totalAmount, Amount.make(1050).toString());
+                assert.deepStrictEqual(response.data.data.paidPoint, Amount.make(1000).toString());
+                assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
+                assert.deepStrictEqual(response.data.data.totalPoint, Amount.make(1050).toString());
                 assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
                 assert.deepStrictEqual(response.data.data.currency, "USD");
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
@@ -502,7 +514,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.purchaseAmount, amountOfLoyalty.toString());
+                assert.deepStrictEqual(response.data.data.amount, amountOfLoyalty.toString());
             });
 
             it("Endpoint POST /v1/payment/create/deny", async () => {
@@ -535,6 +547,12 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_DENIED);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
+                assert.deepStrictEqual(fakerCallbackServer.responseData.length, 1);
+                assert.deepStrictEqual(fakerCallbackServer.responseData[0].code, 1001);
             });
 
             it("Endpoint POST /v1/payment/create/confirm", async () => {
@@ -688,6 +706,12 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
             });
 
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
+                assert.deepStrictEqual(fakerCallbackServer.responseData.length, 2);
+                assert.deepStrictEqual(fakerCallbackServer.responseData[1].code, 0);
+            });
+
             it("Endpoint POST /v1/payment/create/deny", async () => {
                 const responseItem = await client.post(
                     URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
@@ -772,6 +796,15 @@ describe("Test of Server", function () {
             await storage.close();
         });
 
+        before("Start CallbackServer", async () => {
+            fakerCallbackServer = new FakerCallbackServer(3400);
+            await fakerCallbackServer.start();
+        });
+
+        after("Stop CallbackServer", async () => {
+            await fakerCallbackServer.stop();
+        });
+
         context("Prepare shop data", () => {
             it("Add Shop Data", async () => {
                 for (const elem of shopData) {
@@ -920,9 +953,9 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
-                assert.deepStrictEqual(response.data.data.purchaseAmount, Amount.make(1000).toString());
-                assert.deepStrictEqual(response.data.data.feeAmount, Amount.make(50).toString());
-                assert.deepStrictEqual(response.data.data.totalAmount, Amount.make(1050).toString());
+                assert.deepStrictEqual(response.data.data.paidPoint, Amount.make(1000).toString());
+                assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
+                assert.deepStrictEqual(response.data.data.totalPoint, Amount.make(1050).toString());
                 assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
                 assert.deepStrictEqual(response.data.data.currency, "USD");
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
@@ -981,6 +1014,10 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
             });
 
             it("Endpoint POST /v1/payment/cancel", async () => {
@@ -1041,12 +1078,12 @@ describe("Test of Server", function () {
                     LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED
                 );
                 const newBalance = await ledgerContract.pointBalanceOf(users[purchaseOfLoyalty.userIndex].address);
-                assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalAmount)));
+                assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalPoint)));
 
                 const newShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
                 assert.deepStrictEqual(
                     newShopInfo.usedPoint,
-                    oldShopInfo.usedPoint.sub(BigNumber.from(responseItem.data.data.purchaseAmount))
+                    oldShopInfo.usedPoint.sub(BigNumber.from(responseItem.data.data.paidPoint))
                 );
             });
         });
@@ -1101,6 +1138,15 @@ describe("Test of Server", function () {
         after("Stop TestServer", async () => {
             await server.stop();
             await storage.close();
+        });
+
+        before("Start CallbackServer", async () => {
+            fakerCallbackServer = new FakerCallbackServer(3400);
+            await fakerCallbackServer.start();
+        });
+
+        after("Stop CallbackServer", async () => {
+            await fakerCallbackServer.stop();
         });
 
         context("Prepare shop data", () => {
@@ -1251,9 +1297,9 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
-                assert.deepStrictEqual(response.data.data.purchaseAmount, Amount.make(1000).toString());
-                assert.deepStrictEqual(response.data.data.feeAmount, Amount.make(50).toString());
-                assert.deepStrictEqual(response.data.data.totalAmount, Amount.make(1050).toString());
+                assert.deepStrictEqual(response.data.data.paidPoint, Amount.make(1000).toString());
+                assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
+                assert.deepStrictEqual(response.data.data.totalPoint, Amount.make(1050).toString());
                 assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
                 assert.deepStrictEqual(response.data.data.currency, "USD");
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
@@ -1312,6 +1358,10 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
             });
 
             it("Endpoint POST /v1/payment/cancel", async () => {
@@ -1415,6 +1465,15 @@ describe("Test of Server", function () {
         after("Stop TestServer", async () => {
             await server.stop();
             await storage.close();
+        });
+
+        before("Start CallbackServer", async () => {
+            fakerCallbackServer = new FakerCallbackServer(3400);
+            await fakerCallbackServer.start();
+        });
+
+        after("Stop CallbackServer", async () => {
+            await fakerCallbackServer.stop();
         });
 
         context("Prepare shop data", () => {
@@ -1631,6 +1690,10 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
             });
         });
     });

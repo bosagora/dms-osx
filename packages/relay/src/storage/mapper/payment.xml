@@ -5,17 +5,25 @@
     <insert id="postPayment">
         INSERT INTO payments
             (
-                "paymentId"       ,
-                "purchaseId"      ,
-                "amount"           ,
-                "currency"         ,
-                "shopId"          ,
-                "account"          ,
-                "loyaltyType"     ,
-                "purchaseAmount"  ,
-                "feeAmount"       ,
-                "totalAmount"     ,
-                "paymentStatus"
+                "paymentId"         ,
+                "purchaseId"        ,
+                "amount"            ,
+                "currency"          ,
+                "shopId"            ,
+                "account"           ,
+                "loyaltyType"       ,
+                "paidPoint"         ,
+                "paidToken"         ,
+                "paidValue"         ,
+                "feePoint"          ,
+                "feeToken"          ,
+                "feeValue"          ,
+                "totalPoint"        ,
+                "totalToken"        ,
+                "totalValue"        ,
+                "paymentStatus"     ,
+                "createTimestamp"   ,
+                "cencelTimestamp"
             )
         VALUES
             (
@@ -26,10 +34,18 @@
                 #{shopId},
                 #{account},
                 ${loyaltyType},
-                #{purchaseAmount},
-                #{feeAmount},
-                #{totalAmount},
-                ${paymentStatus}
+                #{paidPoint},
+                #{paidToken},
+                #{paidValue},
+                #{feePoint},
+                #{feeToken},
+                #{feeValue},
+                #{totalPoint},
+                #{totalToken},
+                #{totalValue},
+                ${paymentStatus},
+                ${createTimestamp},
+                0
             )
         ON CONFLICT ("paymentId")  DO NOTHING;
     </insert>
@@ -42,6 +58,13 @@
         UPDATE payments
         SET
             "paymentStatus" = #{paymentStatus}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <update id="updateCancelTimestamp">
+        UPDATE payments
+        SET
+            "cencelTimestamp" = #{cancelTimestamp}
         WHERE "paymentId" = #{paymentId}
     </update>
 </mapper>

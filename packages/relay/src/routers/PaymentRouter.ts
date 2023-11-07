@@ -2,7 +2,15 @@ import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
-import { LoyaltyPaymentInputDataStatus, LoyaltyType, WithdrawStatus } from "../types";
+import {
+    LoyaltyPaymentInputDataStatus,
+    LoyaltyPaymentInternalData,
+    LoyaltyType,
+    PaymentResultCode,
+    PaymentResultData,
+    PaymentResultType,
+    WithdrawStatus,
+} from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Validation } from "../validation";
 
@@ -13,6 +21,7 @@ import * as hre from "hardhat";
 import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { RelayStorage } from "../storage/RelayStorage";
+import { HTTPClient } from "../utils/Utils";
 
 export class PaymentRouter {
     /**
@@ -65,6 +74,8 @@ export class PaymentRouter {
      *
      * @param service  WebService
      * @param config Configuration
+     * @param storage
+     * @param relaySigners
      */
     constructor(service: WebService, config: Config, storage: RelayStorage, relaySigners: RelaySigners) {
         this._web_service = service;
@@ -76,97 +87,6 @@ export class PaymentRouter {
 
     private get app(): express.Application {
         return this._web_service.app;
-    }
-
-    /***
-     * 트팬잭션을 중계할 때 사용될 서명자
-     * @private
-     */
-    private async getRelaySigner(): Promise<ISignerItem> {
-        return this._relaySigners.getSigner();
-    }
-
-    /***
-     * 트팬잭션을 중계할 때 사용될 서명자
-     * @private
-     */
-    private releaseRelaySigner(signer: ISignerItem) {
-        signer.using = false;
-    }
-
-    /**
-     * ERC20 토큰 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getTokenContract(): Promise<Token> {
-        if (this._tokenContract === undefined) {
-            const tokenFactory = await hre.ethers.getContractFactory("Token");
-            this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress);
-        }
-        return this._tokenContract;
-    }
-
-    /**
-     * 사용자의 원장 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getLedgerContract(): Promise<Ledger> {
-        if (this._ledgerContract === undefined) {
-            const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
-            this._ledgerContract = ledgerFactory.attach(this._config.contracts.ledgerAddress);
-        }
-        return this._ledgerContract;
-    }
-
-    private async getShopContract(): Promise<ShopCollection> {
-        if (this._shopContract === undefined) {
-            const shopFactory = await hre.ethers.getContractFactory("ShopCollection");
-            this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
-        }
-        return this._shopContract;
-    }
-
-    /**
-     * 이메일 지갑주소 링크 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getPhoneLinkerContract(): Promise<PhoneLinkCollection> {
-        if (this._phoneLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
-            this._phoneLinkerContract = linkCollectionFactory.attach(this._config.contracts.phoneLinkerAddress);
-        }
-        return this._phoneLinkerContract;
-    }
-
-    /**
-     * 환률 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getCurrencyRateContract(): Promise<CurrencyRate> {
-        if (this._currencyRateContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("CurrencyRate");
-            this._currencyRateContract = factory.attach(this._config.contracts.currencyRateAddress);
-        }
-        return this._currencyRateContract;
-    }
-
-    /**
-     * Make the response data
-     * @param code      The result code
-     * @param data      The result data
-     * @param error     The error
-     * @private
-     */
-    private makeResponseData(code: number, data: any, error?: any): any {
-        return {
-            code,
-            data,
-            error,
-        };
     }
 
     public registerRoutes() {
@@ -276,6 +196,97 @@ export class PaymentRouter {
             ],
             this.payment_cancel_deny.bind(this)
         );
+    }
+
+    /***
+     * 트팬잭션을 중계할 때 사용될 서명자
+     * @private
+     */
+    private async getRelaySigner(): Promise<ISignerItem> {
+        return this._relaySigners.getSigner();
+    }
+
+    /***
+     * 트팬잭션을 중계할 때 사용될 서명자
+     * @private
+     */
+    private releaseRelaySigner(signer: ISignerItem) {
+        signer.using = false;
+    }
+
+    /**
+     * ERC20 토큰 컨트랙트를 리턴한다.
+     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
+     * @private
+     */
+    private async getTokenContract(): Promise<Token> {
+        if (this._tokenContract === undefined) {
+            const tokenFactory = await hre.ethers.getContractFactory("Token");
+            this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress);
+        }
+        return this._tokenContract;
+    }
+
+    /**
+     * 사용자의 원장 컨트랙트를 리턴한다.
+     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
+     * @private
+     */
+    private async getLedgerContract(): Promise<Ledger> {
+        if (this._ledgerContract === undefined) {
+            const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
+            this._ledgerContract = ledgerFactory.attach(this._config.contracts.ledgerAddress);
+        }
+        return this._ledgerContract;
+    }
+
+    private async getShopContract(): Promise<ShopCollection> {
+        if (this._shopContract === undefined) {
+            const shopFactory = await hre.ethers.getContractFactory("ShopCollection");
+            this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
+        }
+        return this._shopContract;
+    }
+
+    /**
+     * 이메일 지갑주소 링크 컨트랙트를 리턴한다.
+     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
+     * @private
+     */
+    private async getPhoneLinkerContract(): Promise<PhoneLinkCollection> {
+        if (this._phoneLinkerContract === undefined) {
+            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
+            this._phoneLinkerContract = linkCollectionFactory.attach(this._config.contracts.phoneLinkerAddress);
+        }
+        return this._phoneLinkerContract;
+    }
+
+    /**
+     * 환률 컨트랙트를 리턴한다.
+     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
+     * @private
+     */
+    private async getCurrencyRateContract(): Promise<CurrencyRate> {
+        if (this._currencyRateContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("CurrencyRate");
+            this._currencyRateContract = factory.attach(this._config.contracts.currencyRateAddress);
+        }
+        return this._currencyRateContract;
+    }
+
+    /**
+     * Make the response data
+     * @param code      The result code
+     * @param data      The result data
+     * @param error     The error
+     * @private
+     */
+    private makeResponseData(code: number, data: any, error?: any): any {
+        return {
+            code,
+            data,
+            error,
+        };
     }
 
     private async getPaymentId(account: string): Promise<string> {
@@ -453,23 +464,38 @@ export class PaymentRouter {
             const multiple = await (await this.getCurrencyRateContract()).MULTIPLE();
 
             let balance: BigNumber;
-            let purchaseAmount: BigNumber;
-            let feeAmount: BigNumber;
-            let totalAmount: BigNumber;
+            let paidPoint: BigNumber;
+            let paidToken: BigNumber;
+            let paidValue: BigNumber;
+            let feePoint: BigNumber;
+            let feeToken: BigNumber;
+            let feeValue: BigNumber;
+            let totalPoint: BigNumber;
+            let totalToken: BigNumber;
+            let totalValue: BigNumber;
 
             if (loyaltyType === LoyaltyType.POINT) {
                 balance = await (await this.getLedgerContract()).pointBalanceOf(account);
-                purchaseAmount = amount.mul(rate).div(multiple);
-                feeAmount = purchaseAmount.mul(feeRate).div(100);
-                totalAmount = purchaseAmount.add(feeAmount);
+                paidPoint = amount.mul(rate).div(multiple);
+                feePoint = paidPoint.mul(feeRate).div(100);
+                totalPoint = paidPoint.add(feePoint);
+                paidToken = BigNumber.from(0);
+                feeToken = BigNumber.from(0);
+                totalToken = BigNumber.from(0);
             } else {
                 balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
                 const symbol = await (await this.getTokenContract()).symbol();
                 const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
-                purchaseAmount = amount.mul(rate).div(tokenRate);
-                feeAmount = purchaseAmount.mul(feeRate).div(100);
-                totalAmount = purchaseAmount.add(feeAmount);
+                paidToken = amount.mul(rate).div(tokenRate);
+                feeToken = paidToken.mul(feeRate).div(100);
+                totalToken = paidToken.add(feeToken);
+                paidPoint = BigNumber.from(0);
+                feePoint = BigNumber.from(0);
+                totalPoint = BigNumber.from(0);
             }
+            paidValue = BigNumber.from(amount);
+            feeValue = paidValue.mul(feeRate).div(100);
+            totalValue = paidValue.add(feeValue);
 
             return res.status(200).json(
                 this.makeResponseData(200, {
@@ -478,9 +504,15 @@ export class PaymentRouter {
                     amount: amount.toString(),
                     currency,
                     balance: balance.toString(),
-                    purchaseAmount: purchaseAmount.toString(),
-                    feeAmount: feeAmount.toString(),
-                    totalAmount: totalAmount.toString(),
+                    paidPoint: paidPoint.toString(),
+                    paidToken: paidToken.toString(),
+                    paidValue: paidValue.toString(),
+                    feePoint: feePoint.toString(),
+                    feeToken: feeToken.toString(),
+                    feeValue: feeValue.toString(),
+                    totalPoint: totalPoint.toString(),
+                    totalToken: totalToken.toString(),
+                    totalValue: totalValue.toString(),
                     feeRate: feeRate / 100,
                 })
             );
@@ -535,31 +567,48 @@ export class PaymentRouter {
             const multiple = await (await this.getCurrencyRateContract()).MULTIPLE();
 
             let balance: BigNumber;
-            let purchaseAmount: BigNumber;
-            let feeAmount: BigNumber;
-            let totalAmount: BigNumber;
+            let paidPoint: BigNumber;
+            let paidToken: BigNumber;
+            let paidValue: BigNumber;
+            let feePoint: BigNumber;
+            let feeToken: BigNumber;
+            let feeValue: BigNumber;
+            let totalPoint: BigNumber;
+            let totalToken: BigNumber;
+            let totalValue: BigNumber;
 
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
             if (loyaltyType === LoyaltyType.POINT) {
                 balance = await (await this.getLedgerContract()).pointBalanceOf(account);
-                purchaseAmount = amount.mul(rate).div(multiple);
-                feeAmount = purchaseAmount.mul(feeRate).div(100);
-                totalAmount = purchaseAmount.add(feeAmount);
+                paidPoint = amount.mul(rate).div(multiple);
+                feePoint = paidPoint.mul(feeRate).div(100);
+                totalPoint = paidPoint.add(feePoint);
+                if (totalPoint.gt(balance)) {
+                    return res.status(200).json(this.makeResponseData(401, null, { message: "Insufficient balance" }));
+                }
+                paidToken = BigNumber.from(0);
+                feeToken = BigNumber.from(0);
+                totalToken = BigNumber.from(0);
             } else {
                 balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
                 const symbol = await (await this.getTokenContract()).symbol();
                 const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
-                purchaseAmount = amount.mul(rate).div(tokenRate);
-                feeAmount = purchaseAmount.mul(feeRate).div(100);
-                totalAmount = purchaseAmount.add(feeAmount);
+                paidToken = amount.mul(rate).div(tokenRate);
+                feeToken = paidToken.mul(feeRate).div(100);
+                totalToken = paidToken.add(feeToken);
+                if (totalToken.gt(balance)) {
+                    return res.status(200).json(this.makeResponseData(401, null, { message: "Insufficient balance" }));
+                }
+                paidPoint = BigNumber.from(0);
+                feePoint = BigNumber.from(0);
+                totalPoint = BigNumber.from(0);
             }
-
-            if (totalAmount.gt(balance)) {
-                return res.status(200).json(this.makeResponseData(401, null, { message: "Insufficient balance" }));
-            }
+            paidValue = BigNumber.from(amount);
+            feeValue = paidValue.mul(feeRate).div(100);
+            totalValue = paidValue.add(feeValue);
 
             const paymentId = await this.getPaymentId(account);
-            const item = {
+            const item: LoyaltyPaymentInternalData = {
                 paymentId,
                 purchaseId,
                 amount,
@@ -567,10 +616,18 @@ export class PaymentRouter {
                 shopId,
                 account,
                 loyaltyType,
-                purchaseAmount,
-                feeAmount,
-                totalAmount,
+                paidPoint,
+                paidToken,
+                paidValue,
+                feePoint,
+                feeToken,
+                feeValue,
+                totalPoint,
+                totalToken,
+                totalValue,
                 paymentStatus: LoyaltyPaymentInputDataStatus.CREATED,
+                createTimestamp: ContractUtils.getTimeStamp(),
+                cancelTimestamp: 0,
             };
             await this._storage.postPayment(
                 item.paymentId,
@@ -580,10 +637,17 @@ export class PaymentRouter {
                 item.shopId,
                 item.account,
                 item.loyaltyType,
-                item.purchaseAmount,
-                item.feeAmount,
-                item.totalAmount,
-                item.paymentStatus
+                item.paidPoint,
+                item.paidToken,
+                item.paidValue,
+                item.feePoint,
+                item.feeToken,
+                item.feeValue,
+                item.totalPoint,
+                item.totalToken,
+                item.totalValue,
+                item.paymentStatus,
+                item.createTimestamp
             );
 
             /// 사용자에게 푸쉬 메세지 발송 후 서명을 확인함
@@ -597,10 +661,17 @@ export class PaymentRouter {
                     shopId: item.shopId,
                     account: item.account,
                     loyaltyType: item.loyaltyType,
-                    purchaseAmount: item.purchaseAmount.toString(),
-                    feeAmount: item.feeAmount.toString(),
-                    totalAmount: item.totalAmount.toString(),
+                    paidPoint: item.paidPoint.toString(),
+                    paidToken: item.paidToken.toString(),
+                    paidValue: item.paidValue.toString(),
+                    feePoint: item.feePoint.toString(),
+                    feeToken: item.feeToken.toString(),
+                    feeValue: item.feeValue.toString(),
+                    totalPoint: item.totalPoint.toString(),
+                    totalToken: item.totalToken.toString(),
+                    totalValue: item.totalValue.toString(),
                     paymentStatus: item.paymentStatus,
+                    createTimestamp: item.createTimestamp,
                 })
             );
         } catch (error: any) {
@@ -651,10 +722,17 @@ export class PaymentRouter {
                     shopId: item.shopId,
                     account: item.account,
                     loyaltyType: item.loyaltyType,
-                    purchaseAmount: item.purchaseAmount.toString(),
-                    feeAmount: item.feeAmount.toString(),
-                    totalAmount: item.totalAmount.toString(),
+                    paidPoint: item.paidPoint.toString(),
+                    paidToken: item.paidToken.toString(),
+                    paidValue: item.paidValue.toString(),
+                    feePoint: item.feePoint.toString(),
+                    feeToken: item.feeToken.toString(),
+                    feeValue: item.feeValue.toString(),
+                    totalPoint: item.totalPoint.toString(),
+                    totalToken: item.totalToken.toString(),
+                    totalValue: item.totalValue.toString(),
                     paymentStatus: item.paymentStatus,
+                    createTimestamp: item.createTimestamp,
                 })
             );
         } catch (error: any) {
@@ -728,34 +806,169 @@ export class PaymentRouter {
                     return;
                 }
 
-                const tx = await (await this.getLedgerContract()).connect(signerItem.signer).createLoyaltyPayment({
+                const defaultResult: PaymentResultData = {
                     paymentId: item.paymentId,
                     purchaseId: item.purchaseId,
-                    amount: item.amount,
-                    currency: item.currency.toLowerCase(),
+                    amount: item.amount.toString(),
+                    currency: item.currency,
                     shopId: item.shopId,
                     account: item.account,
-                    signature,
-                });
+                    loyaltyType: item.loyaltyType,
+                    paidPoint: item.paidPoint.toString(),
+                    paidToken: item.paidToken.toString(),
+                    paidValue: item.paidValue.toString(),
+                    feePoint: item.feePoint.toString(),
+                    feeToken: item.feeToken.toString(),
+                    feeValue: item.feeValue.toString(),
+                    totalPoint: item.totalPoint.toString(),
+                    totalToken: item.totalToken.toString(),
+                    totalValue: item.totalValue.toString(),
+                };
 
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED;
-                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                return res.status(200).json(
-                    this.makeResponseData(200, {
+                const now = ContractUtils.getTimeStamp();
+                if (now - item.createTimestamp > 60) {
+                    const message = "Timeout period expired";
+                    res.status(200).json(
+                        this.makeResponseData(404, undefined, {
+                            message,
+                        })
+                    );
+
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                    await this.sendPaymentResult(
+                        PaymentResultType.CREATE,
+                        PaymentResultCode.TIMEOUT,
+                        message,
+                        defaultResult
+                    );
+                    return;
+                }
+
+                let success = true;
+                const contract = await this.getLedgerContract();
+                let tx: any;
+                try {
+                    tx = await contract.connect(signerItem.signer).createLoyaltyPayment({
                         paymentId: item.paymentId,
                         purchaseId: item.purchaseId,
-                        amount: item.amount.toString(),
-                        currency: item.currency,
+                        amount: item.amount,
+                        currency: item.currency.toLowerCase(),
                         shopId: item.shopId,
                         account: item.account,
-                        loyaltyType: item.loyaltyType,
-                        purchaseAmount: item.purchaseAmount.toString(),
-                        feeAmount: item.feeAmount.toString(),
-                        totalAmount: item.totalAmount.toString(),
-                        paymentStatus: item.paymentStatus,
-                        txHash: tx.hash,
-                    })
-                );
+                        signature,
+                    });
+
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                    res.status(200).json(
+                        this.makeResponseData(200, {
+                            paymentId: item.paymentId,
+                            purchaseId: item.purchaseId,
+                            amount: item.amount.toString(),
+                            currency: item.currency,
+                            shopId: item.shopId,
+                            account: item.account,
+                            loyaltyType: item.loyaltyType,
+                            paidPoint: item.paidPoint.toString(),
+                            paidToken: item.paidToken.toString(),
+                            paidValue: item.paidValue.toString(),
+                            feePoint: item.feePoint.toString(),
+                            feeToken: item.feeToken.toString(),
+                            feeValue: item.feeValue.toString(),
+                            totalPoint: item.totalPoint.toString(),
+                            totalToken: item.totalToken.toString(),
+                            totalValue: item.totalValue.toString(),
+                            paymentStatus: item.paymentStatus,
+                            createTimestamp: item.createTimestamp,
+                            txHash: tx.hash,
+                        })
+                    );
+                } catch (error) {
+                    success = false;
+                    const message = ContractUtils.cacheEVMError(error as any);
+                    await this.sendPaymentResult(
+                        PaymentResultType.CREATE,
+                        PaymentResultCode.CONTRACT_ERROR,
+                        `An error occurred while executing the contract. (${message})`,
+                        defaultResult
+                    );
+                }
+
+                if (success && tx !== undefined) {
+                    const contractReceipt = await tx.wait();
+                    const log = ContractUtils.findLog(contractReceipt, contract.interface, "CreatedLoyaltyPayment");
+                    if (log !== undefined) {
+                        const parsedLog = contract.interface.parseLog(log);
+                        if (item.paymentId === parsedLog.args.paymentId) {
+                            item.paidPoint =
+                                parsedLog.args.loyaltyType === LoyaltyType.POINT
+                                    ? BigNumber.from(parsedLog.args.paidPoint)
+                                    : BigNumber.from(0);
+                            item.paidToken =
+                                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
+                                    ? BigNumber.from(parsedLog.args.paidToken)
+                                    : BigNumber.from(0);
+                            item.paidValue = BigNumber.from(parsedLog.args.paidValue);
+
+                            item.feePoint =
+                                parsedLog.args.loyaltyType === LoyaltyType.POINT
+                                    ? BigNumber.from(parsedLog.args.feePoint)
+                                    : BigNumber.from(0);
+                            item.feeToken =
+                                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
+                                    ? BigNumber.from(parsedLog.args.feeToken)
+                                    : BigNumber.from(0);
+                            item.feeValue = BigNumber.from(parsedLog.args.feeValue);
+
+                            item.totalPoint = item.paidPoint.add(item.feePoint);
+                            item.totalToken = item.paidToken.add(item.feeToken);
+                            item.totalValue = item.paidValue.add(item.feeValue);
+
+                            await this.sendPaymentResult(
+                                PaymentResultType.CREATE,
+                                PaymentResultCode.SUCCESS,
+                                "The payment has been successfully completed.",
+                                {
+                                    paymentId: parsedLog.args.paymentId,
+                                    purchaseId: parsedLog.args.purchaseId,
+                                    amount: parsedLog.args.paidValue.toString(),
+                                    currency: parsedLog.args.currency,
+                                    account: parsedLog.args.account,
+                                    shopId: parsedLog.args.shopId,
+                                    loyaltyType: parsedLog.args.loyaltyType,
+                                    paidPoint: item.paidPoint.toString(),
+                                    paidToken: item.paidToken.toString(),
+                                    paidValue: item.paidValue.toString(),
+                                    feePoint: item.feePoint.toString(),
+                                    feeToken: item.feeToken.toString(),
+                                    feeValue: item.feeValue.toString(),
+                                    totalPoint: item.totalPoint.toString(),
+                                    totalToken: item.totalToken.toString(),
+                                    totalValue: item.totalValue.toString(),
+                                    balance: parsedLog.args.balance.toString(),
+                                }
+                            );
+                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_COMPLETE;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        } else {
+                            await this.sendPaymentResult(
+                                PaymentResultType.CREATE,
+                                PaymentResultCode.INTERNAL_ERROR,
+                                `An error occurred while executing the contract.`,
+                                defaultResult
+                            );
+                        }
+                    } else {
+                        await this.sendPaymentResult(
+                            PaymentResultType.CREATE,
+                            PaymentResultCode.INTERNAL_ERROR,
+                            `An error occurred while executing the contract.`,
+                            defaultResult
+                        );
+                    }
+                }
             }
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
@@ -828,9 +1041,53 @@ export class PaymentRouter {
                     return;
                 }
 
+                const defaultResult: PaymentResultData = {
+                    paymentId: item.paymentId,
+                    purchaseId: item.purchaseId,
+                    amount: item.amount.toString(),
+                    currency: item.currency,
+                    shopId: item.shopId,
+                    account: item.account,
+                    loyaltyType: item.loyaltyType,
+                    paidPoint: item.paidPoint.toString(),
+                    paidToken: item.paidToken.toString(),
+                    paidValue: item.paidValue.toString(),
+                    feePoint: item.feePoint.toString(),
+                    feeToken: item.feeToken.toString(),
+                    feeValue: item.feeValue.toString(),
+                    totalPoint: item.totalPoint.toString(),
+                    totalToken: item.totalToken.toString(),
+                    totalValue: item.totalValue.toString(),
+                };
+
+                const now = ContractUtils.getTimeStamp();
+                if (now - item.createTimestamp > 60) {
+                    const message = "Timeout period expired";
+                    res.status(200).json(
+                        this.makeResponseData(404, undefined, {
+                            message,
+                        })
+                    );
+
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                    await this.sendPaymentResult(
+                        PaymentResultType.CREATE,
+                        PaymentResultCode.TIMEOUT,
+                        message,
+                        defaultResult
+                    );
+                    return;
+                }
+
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_DENIED;
                 await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                return res.status(200).json(
+
+                item.cancelTimestamp = ContractUtils.getTimeStamp();
+                await this._storage.updateCancelTimestamp(item.paymentId, item.cancelTimestamp);
+
+                res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
                         purchaseId: item.purchaseId,
@@ -839,11 +1096,25 @@ export class PaymentRouter {
                         shopId: item.shopId,
                         account: item.account,
                         loyaltyType: item.loyaltyType,
-                        purchaseAmount: item.purchaseAmount.toString(),
-                        feeAmount: item.feeAmount.toString(),
-                        totalAmount: item.totalAmount.toString(),
+                        paidPoint: item.paidPoint.toString(),
+                        paidToken: item.paidToken.toString(),
+                        paidValue: item.paidValue.toString(),
+                        feePoint: item.feePoint.toString(),
+                        feeToken: item.feeToken.toString(),
+                        feeValue: item.feeValue.toString(),
+                        totalPoint: item.totalPoint.toString(),
+                        totalToken: item.totalToken.toString(),
+                        totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
+                        createTimestamp: item.createTimestamp,
                     })
+                );
+
+                await this.sendPaymentResult(
+                    PaymentResultType.CREATE,
+                    PaymentResultCode.DENIED,
+                    "The payment denied by user.",
+                    defaultResult
                 );
             }
         } catch (error: any) {
@@ -895,15 +1166,16 @@ export class PaymentRouter {
                     })
                 );
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED) {
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATE_COMPLETE) {
                     res.status(200).json(
                         this.makeResponseData(402, undefined, {
-                            message: "This payment has not been confirmed.",
+                            message: "This payment has not been completed.",
                         })
                     );
                     return;
                 }
 
+                item.cancelTimestamp = LoyaltyPaymentInputDataStatus.CANCELED;
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCELED;
                 await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                 return res.status(200).json(
@@ -915,10 +1187,17 @@ export class PaymentRouter {
                         shopId: item.shopId,
                         account: item.account,
                         loyaltyType: item.loyaltyType,
-                        purchaseAmount: item.purchaseAmount.toString(),
-                        feeAmount: item.feeAmount.toString(),
-                        totalAmount: item.totalAmount.toString(),
+                        paidPoint: item.paidPoint.toString(),
+                        paidToken: item.paidToken.toString(),
+                        paidValue: item.paidValue.toString(),
+                        feePoint: item.feePoint.toString(),
+                        feeToken: item.feeToken.toString(),
+                        feeValue: item.feeValue.toString(),
+                        totalPoint: item.totalPoint.toString(),
+                        totalToken: item.totalToken.toString(),
+                        totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
+                        createTimestamp: item.createTimestamp,
                     })
                 );
             }
@@ -990,6 +1269,46 @@ export class PaymentRouter {
                     return;
                 }
 
+                const defaultResult: PaymentResultData = {
+                    paymentId: item.paymentId,
+                    purchaseId: item.purchaseId,
+                    amount: item.amount.toString(),
+                    currency: item.currency,
+                    shopId: item.shopId,
+                    account: item.account,
+                    loyaltyType: item.loyaltyType,
+                    paidPoint: item.paidPoint.toString(),
+                    paidToken: item.paidToken.toString(),
+                    paidValue: item.paidValue.toString(),
+                    feePoint: item.feePoint.toString(),
+                    feeToken: item.feeToken.toString(),
+                    feeValue: item.feeValue.toString(),
+                    totalPoint: item.totalPoint.toString(),
+                    totalToken: item.totalToken.toString(),
+                    totalValue: item.totalValue.toString(),
+                };
+
+                const now = ContractUtils.getTimeStamp();
+                if (now - item.cancelTimestamp > 60) {
+                    const message = "Timeout period expired";
+                    res.status(200).json(
+                        this.makeResponseData(404, undefined, {
+                            message,
+                        })
+                    );
+
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                    await this.sendPaymentResult(
+                        PaymentResultType.CANCEL,
+                        PaymentResultCode.TIMEOUT,
+                        message,
+                        defaultResult
+                    );
+                    return;
+                }
+
                 const wallet = new hre.ethers.Wallet(this._config.relay.certifierKey);
                 const certifierSignature = await ContractUtils.signLoyaltyPaymentCancel(
                     wallet,
@@ -998,32 +1317,103 @@ export class PaymentRouter {
                     await (await this.getLedgerContract()).nonceOf(wallet.address)
                 );
 
-                const tx = await (await this.getLedgerContract()).connect(signerItem.signer).cancelLoyaltyPayment({
-                    paymentId: item.paymentId,
-                    purchaseId: item.purchaseId,
-                    account: item.account,
-                    signature,
-                    certifierSignature,
-                });
-
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED;
-                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                return res.status(200).json(
-                    this.makeResponseData(200, {
+                let success = true;
+                const contract = await this.getLedgerContract();
+                let tx: any;
+                try {
+                    tx = await (await this.getLedgerContract()).connect(signerItem.signer).cancelLoyaltyPayment({
                         paymentId: item.paymentId,
                         purchaseId: item.purchaseId,
-                        amount: item.amount.toString(),
-                        currency: item.currency,
-                        shopId: item.shopId,
                         account: item.account,
-                        loyaltyType: item.loyaltyType,
-                        purchaseAmount: item.purchaseAmount.toString(),
-                        feeAmount: item.feeAmount.toString(),
-                        totalAmount: item.totalAmount.toString(),
-                        paymentStatus: item.paymentStatus,
-                        txHash: tx.hash,
-                    })
-                );
+                        signature,
+                        certifierSignature,
+                    });
+
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                    res.status(200).json(
+                        this.makeResponseData(200, {
+                            paymentId: item.paymentId,
+                            purchaseId: item.purchaseId,
+                            amount: item.amount.toString(),
+                            currency: item.currency,
+                            shopId: item.shopId,
+                            account: item.account,
+                            loyaltyType: item.loyaltyType,
+                            paidPoint: item.paidPoint.toString(),
+                            paidToken: item.paidToken.toString(),
+                            paidValue: item.paidValue.toString(),
+                            feePoint: item.feePoint.toString(),
+                            feeToken: item.feeToken.toString(),
+                            feeValue: item.feeValue.toString(),
+                            totalPoint: item.totalPoint.toString(),
+                            totalToken: item.totalToken.toString(),
+                            totalValue: item.totalValue.toString(),
+                            paymentStatus: item.paymentStatus,
+                            createTimestamp: item.createTimestamp,
+                            txHash: tx.hash,
+                        })
+                    );
+                } catch (error) {
+                    success = false;
+                    const message = ContractUtils.cacheEVMError(error as any);
+                    await this.sendPaymentResult(
+                        PaymentResultType.CANCEL,
+                        PaymentResultCode.CONTRACT_ERROR,
+                        `An error occurred while executing the contract. (${message})`,
+                        defaultResult
+                    );
+                }
+
+                if (success && tx !== undefined) {
+                    const contractReceipt = await tx.wait();
+                    const log = ContractUtils.findLog(contractReceipt, contract.interface, "CancelledLoyaltyPayment");
+                    if (log !== undefined) {
+                        const parsedLog = contract.interface.parseLog(log);
+                        if (item.amount.eq(parsedLog.args.paidValue)) {
+                            await this.sendPaymentResult(
+                                PaymentResultType.CANCEL,
+                                PaymentResultCode.SUCCESS,
+                                "The cancellation has been successfully completed.",
+                                {
+                                    paymentId: parsedLog.args.paymentId,
+                                    purchaseId: parsedLog.args.purchaseId,
+                                    amount: parsedLog.args.paidValue.toString(),
+                                    currency: parsedLog.args.currency,
+                                    account: parsedLog.args.account,
+                                    shopId: parsedLog.args.shopId,
+                                    loyaltyType: parsedLog.args.loyaltyType,
+                                    paidPoint: item.paidPoint.toString(),
+                                    paidToken: item.paidToken.toString(),
+                                    paidValue: item.paidValue.toString(),
+                                    feePoint: item.feePoint.toString(),
+                                    feeToken: item.feeToken.toString(),
+                                    feeValue: item.feeValue.toString(),
+                                    totalPoint: item.totalPoint.toString(),
+                                    totalToken: item.totalToken.toString(),
+                                    totalValue: item.totalValue.toString(),
+                                    balance: parsedLog.args.balance.toString(),
+                                }
+                            );
+                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_COMPLETE;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        } else {
+                            await this.sendPaymentResult(
+                                PaymentResultType.CANCEL,
+                                PaymentResultCode.INTERNAL_ERROR,
+                                `An error occurred while executing the contract.`,
+                                defaultResult
+                            );
+                        }
+                    } else {
+                        await this.sendPaymentResult(
+                            PaymentResultType.CANCEL,
+                            PaymentResultCode.INTERNAL_ERROR,
+                            `An error occurred while executing the contract.`,
+                            defaultResult
+                        );
+                    }
+                }
             }
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
@@ -1093,9 +1483,49 @@ export class PaymentRouter {
                     return;
                 }
 
+                const defaultResult: PaymentResultData = {
+                    paymentId: item.paymentId,
+                    purchaseId: item.purchaseId,
+                    amount: item.amount.toString(),
+                    currency: item.currency,
+                    shopId: item.shopId,
+                    account: item.account,
+                    loyaltyType: item.loyaltyType,
+                    paidPoint: item.paidPoint.toString(),
+                    paidToken: item.paidToken.toString(),
+                    paidValue: item.paidValue.toString(),
+                    feePoint: item.feePoint.toString(),
+                    feeToken: item.feeToken.toString(),
+                    feeValue: item.feeValue.toString(),
+                    totalPoint: item.totalPoint.toString(),
+                    totalToken: item.totalToken.toString(),
+                    totalValue: item.totalValue.toString(),
+                };
+
+                const now = ContractUtils.getTimeStamp();
+                if (now - item.cancelTimestamp > 60) {
+                    const message = "Timeout period expired";
+                    res.status(200).json(
+                        this.makeResponseData(404, undefined, {
+                            message,
+                        })
+                    );
+
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                    await this.sendPaymentResult(
+                        PaymentResultType.CANCEL,
+                        PaymentResultCode.TIMEOUT,
+                        message,
+                        defaultResult
+                    );
+                    return;
+                }
+
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_DENIED;
                 await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                return res.status(200).json(
+                res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
                         purchaseId: item.purchaseId,
@@ -1104,11 +1534,25 @@ export class PaymentRouter {
                         shopId: item.shopId,
                         account: item.account,
                         loyaltyType: item.loyaltyType,
-                        purchaseAmount: item.purchaseAmount.toString(),
-                        feeAmount: item.feeAmount.toString(),
-                        totalAmount: item.totalAmount.toString(),
+                        paidPoint: item.paidPoint.toString(),
+                        paidToken: item.paidToken.toString(),
+                        paidValue: item.paidValue.toString(),
+                        feePoint: item.feePoint.toString(),
+                        feeToken: item.feeToken.toString(),
+                        feeValue: item.feeValue.toString(),
+                        totalPoint: item.totalPoint.toString(),
+                        totalToken: item.totalToken.toString(),
+                        totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
+                        createTimestamp: item.createTimestamp,
                     })
+                );
+
+                await this.sendPaymentResult(
+                    PaymentResultType.CANCEL,
+                    PaymentResultCode.DENIED,
+                    "The cancellation denied by user.",
+                    defaultResult
                 );
             }
         } catch (error: any) {
@@ -1121,5 +1565,20 @@ export class PaymentRouter {
                 })
             );
         }
+    }
+
+    private async sendPaymentResult(
+        type: PaymentResultType,
+        code: PaymentResultCode,
+        message: string,
+        data: PaymentResultData
+    ) {
+        const client = new HTTPClient();
+        await client.post(this._config.relay.callbackEndpoint, {
+            type,
+            code,
+            message,
+            data,
+        });
     }
 }
