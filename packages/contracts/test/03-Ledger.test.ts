@@ -1239,6 +1239,12 @@ describe("Test for Ledger", () => {
                     });
                 const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 expect(newFeeBalance).to.deep.equal(oldFeeBalance.add(feeToken));
+
+                const paymentData = await ledgerContract.loyaltyPaymentOf(paymentId);
+                expect(paymentData.paymentId).to.deep.equal(paymentId);
+                expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
+                expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
+                expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
             });
         });
 
