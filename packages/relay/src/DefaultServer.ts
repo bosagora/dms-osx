@@ -35,7 +35,7 @@ export class DefaultServer extends WebService {
         this.config = config;
         this.storage = storage;
         this.relaySigners = new RelaySigners(this.config);
-        this.defaultRouter = new DefaultRouter(this, this.config, this.storage, this.relaySigners);
+        this.defaultRouter = new DefaultRouter(this);
         this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
         this.shopRouter = new ShopRouter(this, this.config, this.storage, this.relaySigners);
         this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners);

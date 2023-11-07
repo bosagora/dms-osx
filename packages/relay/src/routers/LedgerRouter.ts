@@ -3,7 +3,6 @@ import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
 import { ContractUtils } from "../utils/ContractUtils";
-import { Validation } from "../validation";
 
 import { body, validationResult } from "express-validator";
 import * as hre from "hardhat";
