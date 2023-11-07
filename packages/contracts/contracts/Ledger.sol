@@ -73,9 +73,9 @@ contract Ledger {
         address account;
         uint256 timestamp;
         LoyaltyType loyaltyType;
-        uint256 amountPoint;
-        uint256 amountToken;
-        uint256 amountValue;
+        uint256 paidPoint;
+        uint256 paidToken;
+        uint256 paidValue;
         uint256 feePoint;
         uint256 feeToken;
         uint256 feeValue;
@@ -399,6 +399,12 @@ contract Ledger {
         else return false;
     }
 
+    /// @notice 로얄티(포인트/토큰)을 구매데아타를 제공하는 함수
+    /// @param _paymentId 지불 아이디
+    function loyaltyPaymentOf(bytes32 _paymentId) public view returns (LoyaltyPaymentData memory) {
+        return loyaltyPayments[_paymentId];
+    }
+
     /// @notice 로얄티(포인트/토큰)을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
     function createLoyaltyPayment(LoyaltyPaymentInputData calldata _data) public {
@@ -431,22 +437,22 @@ contract Ledger {
     /// @notice 포인트를 구매에 사용하는 함수
     function _createLoyaltyPaymentPoint(LoyaltyPaymentInputData memory _data) internal {
         LoyaltyPaymentInputData memory data = _data;
-        uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
-        uint256 purchaseToken = convertPointToToken(purchasePoint);
+        uint256 paidPoint = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 paidToken = convertPointToToken(paidPoint);
         uint256 feeValue = (data.amount * fee) / 100;
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
 
-        require(pointBalances[data.account] >= purchasePoint + feePoint, "Insufficient balance");
+        require(pointBalances[data.account] >= paidPoint + feePoint, "Insufficient balance");
         require(tokenBalances[foundationAccount] >= feeToken, "Insufficient foundation balance");
 
-        pointBalances[data.account] -= (purchasePoint + feePoint);
+        pointBalances[data.account] -= (paidPoint + feePoint);
 
         // 재단의 토큰으로 교환해 지급한다.
         tokenBalances[foundationAccount] -= feeToken;
         tokenBalances[feeAccount] += feeToken;
 
-        shopCollection.addUsedPoint(data.shopId, purchasePoint, data.purchaseId);
+        shopCollection.addUsedPoint(data.shopId, paidPoint, data.purchaseId);
 
         uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
         if (settlementPoint > 0) {
@@ -476,9 +482,9 @@ contract Ledger {
             account: data.account,
             timestamp: block.timestamp,
             loyaltyType: LoyaltyType.POINT,
-            amountPoint: purchasePoint,
-            amountToken: purchaseToken,
-            amountValue: data.amount,
+            paidPoint: paidPoint,
+            paidToken: paidToken,
+            paidValue: data.amount,
             feePoint: feePoint,
             feeToken: feeToken,
             feeValue: feeValue,
@@ -493,9 +499,9 @@ contract Ledger {
             payData.account,
             payData.shopId,
             payData.loyaltyType,
-            payData.amountPoint,
-            payData.amountToken,
-            payData.amountValue,
+            payData.paidPoint,
+            payData.paidToken,
+            payData.paidValue,
             payData.feePoint,
             payData.feeToken,
             payData.feeValue,
@@ -507,19 +513,19 @@ contract Ledger {
     function _createLoyaltyPaymentToken(LoyaltyPaymentInputData memory _data) internal {
         LoyaltyPaymentInputData memory data = _data;
 
-        uint256 purchasePoint = convertCurrencyToPoint(data.amount, data.currency);
-        uint256 purchaseToken = convertPointToToken(purchasePoint);
+        uint256 paidPoint = convertCurrencyToPoint(data.amount, data.currency);
+        uint256 paidToken = convertPointToToken(paidPoint);
         uint256 feeValue = (data.amount * fee) / 100;
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
 
-        require(tokenBalances[data.account] >= purchaseToken + feeToken, "Insufficient balance");
+        require(tokenBalances[data.account] >= paidToken + feeToken, "Insufficient balance");
 
-        tokenBalances[data.account] -= (purchaseToken + feeToken);
-        tokenBalances[foundationAccount] += purchaseToken;
+        tokenBalances[data.account] -= (paidToken + feeToken);
+        tokenBalances[foundationAccount] += paidToken;
         tokenBalances[feeAccount] += feeToken;
 
-        shopCollection.addUsedPoint(data.shopId, purchasePoint, data.purchaseId);
+        shopCollection.addUsedPoint(data.shopId, paidPoint, data.purchaseId);
 
         uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
         if (settlementPoint > 0) {
@@ -549,9 +555,9 @@ contract Ledger {
             account: data.account,
             timestamp: block.timestamp,
             loyaltyType: LoyaltyType.TOKEN,
-            amountPoint: purchasePoint,
-            amountToken: purchaseToken,
-            amountValue: data.amount,
+            paidPoint: paidPoint,
+            paidToken: paidToken,
+            paidValue: data.amount,
             feePoint: feePoint,
             feeToken: feeToken,
             feeValue: feeValue,
@@ -566,9 +572,9 @@ contract Ledger {
             payData.account,
             payData.shopId,
             payData.loyaltyType,
-            payData.amountPoint,
-            payData.amountToken,
-            payData.amountValue,
+            payData.paidPoint,
+            payData.paidToken,
+            payData.paidValue,
             payData.feePoint,
             payData.feeToken,
             payData.feeValue,
@@ -604,8 +610,8 @@ contract Ledger {
             if (tokenBalances[feeAccount] >= payData.feeToken) {
                 tokenBalances[foundationAccount] += payData.feeToken;
                 tokenBalances[feeAccount] -= payData.feeToken;
-                pointBalances[data.account] += (payData.amountPoint + payData.feePoint);
-                shopCollection.subUsedPoint(payData.shopId, payData.amountPoint, payData.purchaseId);
+                pointBalances[data.account] += (payData.paidPoint + payData.feePoint);
+                shopCollection.subUsedPoint(payData.shopId, payData.paidPoint, payData.purchaseId);
                 emit CancelledLoyaltyPayment(
                     payData.paymentId,
                     payData.purchaseId,
@@ -613,9 +619,9 @@ contract Ledger {
                     payData.account,
                     payData.shopId,
                     LoyaltyType.POINT,
-                    payData.amountPoint,
-                    payData.amountToken,
-                    payData.amountValue,
+                    payData.paidPoint,
+                    payData.paidToken,
+                    payData.paidValue,
                     payData.feePoint,
                     payData.feeToken,
                     payData.feeValue,
@@ -626,13 +632,13 @@ contract Ledger {
             }
         } else {
             if (
-                (tokenBalances[foundationAccount] >= payData.amountToken) &&
+                (tokenBalances[foundationAccount] >= payData.paidToken) &&
                 (tokenBalances[feeAccount] >= payData.feeToken)
             ) {
-                tokenBalances[foundationAccount] -= payData.amountToken;
+                tokenBalances[foundationAccount] -= payData.paidToken;
                 tokenBalances[feeAccount] -= payData.feeToken;
-                pointBalances[data.account] += (payData.amountToken + payData.feeToken);
-                shopCollection.subUsedPoint(payData.shopId, payData.amountPoint, payData.purchaseId);
+                pointBalances[data.account] += (payData.paidToken + payData.feeToken);
+                shopCollection.subUsedPoint(payData.shopId, payData.paidPoint, payData.purchaseId);
                 emit CancelledLoyaltyPayment(
                     payData.paymentId,
                     payData.purchaseId,
@@ -640,9 +646,9 @@ contract Ledger {
                     payData.account,
                     payData.shopId,
                     LoyaltyType.TOKEN,
-                    payData.amountPoint,
-                    payData.amountToken,
-                    payData.amountValue,
+                    payData.paidPoint,
+                    payData.paidToken,
+                    payData.paidValue,
                     payData.feePoint,
                     payData.feeToken,
                     payData.feeValue,
