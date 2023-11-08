@@ -40,6 +40,7 @@ relay:
   accessKey: "${ACCESS_KEY}"
   certifier: "${CERTIFIER_KEY}"
   callbackEndpoint: "${CALLBACK_ENDPOINT}"
+  paymentTimeoutSecond: 45
 
 contracts:
   tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"

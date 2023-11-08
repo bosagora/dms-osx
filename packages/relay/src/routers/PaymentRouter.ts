@@ -825,8 +825,7 @@ export class PaymentRouter {
                     totalValue: item.totalValue.toString(),
                 };
 
-                const now = ContractUtils.getTimeStamp();
-                if (now - item.createTimestamp > 60) {
+                if (ContractUtils.getTimeStamp() - item.cancelTimestamp > this._config.relay.paymentTimeoutSecond) {
                     const message = "Timeout period expired";
                     res.status(200).json(
                         this.makeResponseData(404, undefined, {
@@ -1060,8 +1059,7 @@ export class PaymentRouter {
                     totalValue: item.totalValue.toString(),
                 };
 
-                const now = ContractUtils.getTimeStamp();
-                if (now - item.createTimestamp > 60) {
+                if (ContractUtils.getTimeStamp() - item.createTimestamp > this._config.relay.paymentTimeoutSecond) {
                     const message = "Timeout period expired";
                     res.status(200).json(
                         this.makeResponseData(404, undefined, {
@@ -1288,8 +1286,7 @@ export class PaymentRouter {
                     totalValue: item.totalValue.toString(),
                 };
 
-                const now = ContractUtils.getTimeStamp();
-                if (now - item.cancelTimestamp > 60) {
+                if (ContractUtils.getTimeStamp() - item.cancelTimestamp > this._config.relay.paymentTimeoutSecond) {
                     const message = "Timeout period expired";
                     res.status(200).json(
                         this.makeResponseData(404, undefined, {
@@ -1502,8 +1499,7 @@ export class PaymentRouter {
                     totalValue: item.totalValue.toString(),
                 };
 
-                const now = ContractUtils.getTimeStamp();
-                if (now - item.cancelTimestamp > 60) {
+                if (ContractUtils.getTimeStamp() - item.cancelTimestamp > this._config.relay.paymentTimeoutSecond) {
                     const message = "Timeout period expired";
                     res.status(200).json(
                         this.makeResponseData(404, undefined, {

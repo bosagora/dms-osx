@@ -282,6 +282,7 @@ export class RelayConfig implements IRelayConfig {
     public accessKey: string;
     public certifierKey: string;
     public callbackEndpoint: string;
+    public paymentTimeoutSecond: number;
 
     /**
      * Constructor
@@ -293,6 +294,7 @@ export class RelayConfig implements IRelayConfig {
         this.accessKey = defaults.accessKey;
         this.certifierKey = defaults.certifierKey;
         this.callbackEndpoint = defaults.callbackEndpoint;
+        this.paymentTimeoutSecond = defaults.paymentTimeoutSecond;
     }
 
     /**
@@ -310,6 +312,7 @@ export class RelayConfig implements IRelayConfig {
             accessKey: process.env.ACCESS_SECRET || "",
             certifierKey: process.env.CERTIFIER_KEY || "",
             callbackEndpoint: process.env.CALLBACK_ENDPOINT || "",
+            paymentTimeoutSecond: 45,
         };
     }
 
@@ -322,6 +325,7 @@ export class RelayConfig implements IRelayConfig {
         if (config.accessKey !== undefined) this.accessKey = config.accessKey;
         if (config.certifierKey !== undefined) this.certifierKey = config.certifierKey;
         if (config.callbackEndpoint !== undefined) this.callbackEndpoint = config.callbackEndpoint;
+        if (config.paymentTimeoutSecond !== undefined) this.paymentTimeoutSecond = config.paymentTimeoutSecond;
     }
 }
 
@@ -506,6 +510,7 @@ export interface IRelayConfig {
     accessKey: string;
     certifierKey: string;
     callbackEndpoint: string;
+    paymentTimeoutSecond: number;
 }
 
 export interface IContractsConfig {
