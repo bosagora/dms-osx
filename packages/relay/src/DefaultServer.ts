@@ -10,6 +10,7 @@ import { WebService } from "./service/WebService";
 
 import { RelaySigners } from "./contract/Signers";
 import { RelayStorage } from "./storage/RelayStorage";
+import { INotificationEventHandler, INotificationSender, NotificationSender } from "./delegator/NotificationSender";
 
 export class DefaultServer extends WebService {
     /**
@@ -24,21 +25,25 @@ export class DefaultServer extends WebService {
     public readonly paymentRouter: PaymentRouter;
     public readonly relaySigners: RelaySigners;
     public readonly storage: RelayStorage;
+    private readonly sender: INotificationSender;
 
     /**
      * Constructor
      * @param config Configuration
+     * @param storage
+     * @param handler
      */
-    constructor(config: Config, storage: RelayStorage) {
+    constructor(config: Config, storage: RelayStorage, handler?: INotificationEventHandler) {
         super(config.server.port, config.server.address);
 
         this.config = config;
         this.storage = storage;
+        this.sender = new NotificationSender(handler);
         this.relaySigners = new RelaySigners(this.config);
         this.defaultRouter = new DefaultRouter(this);
         this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
         this.shopRouter = new ShopRouter(this, this.config, this.storage, this.relaySigners);
-        this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners);
+        this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners, this.sender);
     }
 
     /**
