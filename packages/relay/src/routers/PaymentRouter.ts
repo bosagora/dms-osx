@@ -118,13 +118,12 @@ export class PaymentRouter {
             this.shop_withdrawal.bind(this)
         );
 
-        this.app.post(
+        this.app.get(
             "/v1/payment/info",
             [
-                body("accessKey").exists(),
-                body("account").exists().trim().isEthereumAddress(),
-                body("amount").exists().custom(Validation.isAmount),
-                body("currency").exists(),
+                query("account").exists().trim().isEthereumAddress(),
+                query("amount").exists().custom(Validation.isAmount),
+                query("currency").exists(),
             ],
             this.payment_info.bind(this)
         );
@@ -145,7 +144,7 @@ export class PaymentRouter {
             this.payment_create.bind(this)
         );
 
-        this.app.post("/v1/payment/create/item", [body("paymentId").exists()], this.payment_create_item.bind(this));
+        this.app.get("/v1/payment/item", [query("paymentId").exists()], this.payment_item.bind(this));
 
         this.app.post(
             "/v1/payment/create/confirm",
@@ -445,18 +444,9 @@ export class PaymentRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
-                return res.json(
-                    this.makeResponseData(400, undefined, {
-                        message: "The access key entered is not valid.",
-                    })
-                );
-            }
-
-            const account: string = String(req.body.account).trim();
-            const amount: BigNumber = BigNumber.from(req.body.amount);
-            const currency: string = String(req.body.currency).trim();
+            const account: string = String(req.query.account).trim();
+            const amount: BigNumber = BigNumber.from(req.query.amount);
+            const currency: string = String(req.query.currency).trim();
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
 
             const feeRate = await (await this.getLedgerContract()).fee();
@@ -530,11 +520,11 @@ export class PaymentRouter {
 
     /**
      * 결제 / 결제정보를 제공한다
-     * GET /v1/payment/create
+     * POST /v1/payment/create
      * @private
      */
     private async payment_create(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/create`);
+        logger.http(`POST /v1/payment/create`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -677,7 +667,7 @@ export class PaymentRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/create";
-            logger.error(`GET /v1/payment/create :`, message);
+            logger.error(`POST /v1/payment/create :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -687,11 +677,11 @@ export class PaymentRouter {
     }
 
     /**
-     * GET /v1/payment/create/item
+     * GET /v1/payment/item
      * @private
      */
-    private async payment_create_item(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/create/item`);
+    private async payment_item(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/item`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -704,7 +694,7 @@ export class PaymentRouter {
         }
 
         try {
-            const paymentId: string = String(req.body.paymentId).trim();
+            const paymentId: string = String(req.query.paymentId).trim();
             const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(
@@ -733,12 +723,13 @@ export class PaymentRouter {
                     totalValue: item.totalValue.toString(),
                     paymentStatus: item.paymentStatus,
                     createTimestamp: item.createTimestamp,
+                    cancelTimestamp: item.cancelTimestamp,
                 })
             );
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/create/item";
-            logger.error(`GET /v1/payment/create/item :`, message);
+            if (message === "") message = "Failed /v1/payment/item";
+            logger.error(`GET /v1/payment/item :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -748,11 +739,11 @@ export class PaymentRouter {
     }
 
     /**
-     * GET /v1/payment/create/confirm
+     * POST /v1/payment/create/confirm
      * @private
      */
     private async payment_create_confirm(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/create/confirm`);
+        logger.http(`POST /v1/payment/create/confirm`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -880,7 +871,6 @@ export class PaymentRouter {
                             totalToken: item.totalToken.toString(),
                             totalValue: item.totalValue.toString(),
                             paymentStatus: item.paymentStatus,
-                            createTimestamp: item.createTimestamp,
                             txHash: tx.hash,
                         })
                     );
@@ -972,7 +962,7 @@ export class PaymentRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/create/confirm";
-            logger.error(`GET /v1/payment/create/confirm :`, message);
+            logger.error(`POST /v1/payment/create/confirm :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -984,11 +974,11 @@ export class PaymentRouter {
     }
 
     /**
-     * GET /v1/payment/create/deny
+     * POST /v1/payment/create/deny
      * @private
      */
     private async payment_create_deny(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/create/deny`);
+        logger.http(`POST /v1/payment/create/deny`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1082,9 +1072,6 @@ export class PaymentRouter {
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_DENIED;
                 await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
-                item.cancelTimestamp = ContractUtils.getTimeStamp();
-                await this._storage.updateCancelTimestamp(item.paymentId, item.cancelTimestamp);
-
                 res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -1104,7 +1091,6 @@ export class PaymentRouter {
                         totalToken: item.totalToken.toString(),
                         totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
-                        createTimestamp: item.createTimestamp,
                     })
                 );
 
@@ -1118,7 +1104,7 @@ export class PaymentRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/create/deny";
-            logger.error(`GET /v1/payment/create/deny :`, message);
+            logger.error(`POST /v1/payment/create/deny :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -1129,11 +1115,11 @@ export class PaymentRouter {
 
     /**
      * 결제 / 결제정보를 제공한다
-     * GET /v1/payment/cancel
+     * POST /v1/payment/cancel
      * @private
      */
     private async payment_cancel(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/cancel`);
+        logger.http(`POST /v1/payment/cancel`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1173,9 +1159,12 @@ export class PaymentRouter {
                     return;
                 }
 
-                item.cancelTimestamp = LoyaltyPaymentInputDataStatus.CANCELED;
                 item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCELED;
                 await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                item.cancelTimestamp = ContractUtils.getTimeStamp();
+                await this._storage.updateCancelTimestamp(item.paymentId, item.cancelTimestamp);
+
                 return res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
@@ -1196,13 +1185,14 @@ export class PaymentRouter {
                         totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
                         createTimestamp: item.createTimestamp,
+                        cancelTimestamp: item.cancelTimestamp,
                     })
                 );
             }
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/cancel";
-            logger.error(`GET /v1/payment/cancel :`, message);
+            logger.error(`POST /v1/payment/cancel :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -1212,11 +1202,11 @@ export class PaymentRouter {
     }
 
     /**
-     * GET /v1/payment/cancel/confirm
+     * POST /v1/payment/cancel/confirm
      * @private
      */
     private async payment_cancel_confirm(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/create/confirm`);
+        logger.http(`POST /v1/payment/cancel/confirm`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1347,7 +1337,6 @@ export class PaymentRouter {
                             totalToken: item.totalToken.toString(),
                             totalValue: item.totalValue.toString(),
                             paymentStatus: item.paymentStatus,
-                            createTimestamp: item.createTimestamp,
                             txHash: tx.hash,
                         })
                     );
@@ -1415,7 +1404,7 @@ export class PaymentRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/cancel/confirm";
-            logger.error(`GET /v1/payment/cancel/confirm :`, message);
+            logger.error(`POST /v1/payment/cancel/confirm :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
@@ -1427,11 +1416,11 @@ export class PaymentRouter {
     }
 
     /**
-     * GET /v1/payment/cancel/deny
+     * POST /v1/payment/cancel/deny
      * @private
      */
     private async payment_cancel_deny(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/cancel/deny`);
+        logger.http(`POST /v1/payment/cancel/deny`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1540,7 +1529,6 @@ export class PaymentRouter {
                         totalToken: item.totalToken.toString(),
                         totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
-                        createTimestamp: item.createTimestamp,
                     })
                 );
 
@@ -1554,7 +1542,7 @@ export class PaymentRouter {
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/cancel/deny";
-            logger.error(`GET /v1/payment/cancel/deny :`, message);
+            logger.error(`POST /v1/payment/cancel/deny :`, message);
             return res.status(200).json(
                 this.makeResponseData(500, undefined, {
                     message,
