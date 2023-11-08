@@ -39,5 +39,4 @@
 
 ## 3. 마일리지를 사용한 결제 프로세스
 
-[마일리지를 사용한 결제 프로세스 - 시퀀스 다이어그램](docs%2Floyalty-payment-sequence-diagram.md)  
-[마일리지를 사용한 결제 프로세스 - 엔드포인트](docs%2Floyalty-payment-endpoint.md)
+[마일리지를 사용한 결제 프로세스](docs%2Floyalty-payment.md)
