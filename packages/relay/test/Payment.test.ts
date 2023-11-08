@@ -24,6 +24,7 @@ import { BigNumber, Wallet } from "ethers";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+import { INotificationEventHandler } from "../src/delegator/NotificationSender";
 import { LoyaltyPaymentInputDataStatus, LoyaltyType } from "../src/types";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
@@ -1647,6 +1648,321 @@ describe("Test of Server", function () {
             it("Waiting", async () => {
                 await ContractUtils.delay(2000);
             });
+        });
+    });
+
+    context("Mobile Notification", () => {
+        const purchase: IPurchaseData = {
+            purchaseId: "P000001",
+            timestamp: 1672844400,
+            amount: 10000,
+            method: 0,
+            currency: "krw",
+            shopIndex: 1,
+            userIndex: 0,
+        };
+
+        const purchaseAmount = Amount.make(purchase.amount, 18).value;
+        const shop = shopData[purchase.shopIndex];
+        const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+
+        const purchaseOfLoyalty: IPurchaseData = {
+            purchaseId: "P000002",
+            timestamp: 1672844500,
+            amount: 10,
+            method: 0,
+            currency: "krw",
+            shopIndex: 1,
+            userIndex: 0,
+        };
+        const amountOfLoyalty = Amount.make(purchaseOfLoyalty.amount, 18).value;
+
+        let paymentId: string;
+
+        const mobilePhone: INotificationEventHandler = {
+            receive: async (title: string, body: string) => {
+                await ContractUtils.delay(1000);
+                if (title === "KIOS 결제 승인 요청") {
+                    const searchString = "결제 아이디 : ";
+                    const pos = body.lastIndexOf("결제 아이디 : ");
+                    if (pos > 0) {
+                        const receivedPaymentId = body.substring(pos + searchString.length).trim();
+                        const responseItem = await client.get(
+                            URI(serverURL)
+                                .directory("/v1/payment/item")
+                                .addQuery("paymentId", receivedPaymentId)
+                                .toString()
+                        );
+                        const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                        const signature = await ContractUtils.signLoyaltyPayment(
+                            users[purchaseOfLoyalty.userIndex],
+                            receivedPaymentId,
+                            responseItem.data.data.purchaseId,
+                            responseItem.data.data.amount,
+                            responseItem.data.data.currency,
+                            responseItem.data.data.shopId,
+                            nonce
+                        );
+
+                        const response = await client.post(
+                            URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                            {
+                                paymentId: receivedPaymentId,
+                                signature,
+                            }
+                        );
+
+                        assert.deepStrictEqual(response.data.code, 200);
+                        assert.ok(response.data.data !== undefined);
+                        assert.ok(response.data.data.txHash !== undefined);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
+                    }
+                } else if (title === "KIOS 결제 취소 요청") {
+                    const searchString = "결제 아이디 : ";
+                    const pos = body.lastIndexOf("결제 아이디 : ");
+                    if (pos > 0) {
+                        const receivedPaymentId = body.substring(pos + searchString.length).trim();
+                        const responseItem = await client.get(
+                            URI(serverURL)
+                                .directory("/v1/payment/item")
+                                .addQuery("paymentId", receivedPaymentId)
+                                .toString()
+                        );
+                        const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                        const signature = await ContractUtils.signLoyaltyPaymentCancel(
+                            users[purchaseOfLoyalty.userIndex],
+                            receivedPaymentId,
+                            responseItem.data.data.purchaseId,
+                            nonce
+                        );
+
+                        const response = await client.post(
+                            URI(serverURL).directory("/v1/payment/cancel").filename("confirm").toString(),
+                            {
+                                paymentId: receivedPaymentId,
+                                signature,
+                            }
+                        );
+
+                        assert.deepStrictEqual(response.data.code, 200);
+                        assert.ok(response.data.data !== undefined);
+                        assert.ok(response.data.data.txHash !== undefined);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED);
+                    }
+                }
+            },
+        };
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+            }
+        });
+
+        before("Deploy", async () => {
+            await deployAllContract();
+        });
+
+        before("Prepare Token", async () => {
+            for (const elem of users) {
+                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
+            }
+        });
+
+        before("Create Config", async () => {
+            config = new Config();
+            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+            config.contracts.tokenAddress = tokenContract.address;
+            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.ledgerAddress = ledgerContract.address;
+            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.currencyRateAddress = currencyRateContract.address;
+
+            config.relay.managerKeys = [
+                relay1.privateKey,
+                relay2.privateKey,
+                relay3.privateKey,
+                relay4.privateKey,
+                relay5.privateKey,
+            ];
+            config.relay.certifierKey = certifier.privateKey;
+        });
+
+        before("Create TestServer", async () => {
+            serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
+            storage = await RelayStorage.make(config.database);
+            server = new TestServer(config, storage, mobilePhone);
+        });
+
+        before("Start TestServer", async () => {
+            await server.start();
+        });
+
+        after("Stop TestServer", async () => {
+            await server.stop();
+            await storage.close();
+        });
+
+        before("Start CallbackServer", async () => {
+            fakerCallbackServer = new FakerCallbackServer(3400);
+            await fakerCallbackServer.start();
+        });
+
+        after("Stop CallbackServer", async () => {
+            await fakerCallbackServer.stop();
+        });
+
+        it("Add Shop Data", async () => {
+            for (const elem of shopData) {
+                const nonce = await shopCollection.nonceOf(elem.wallet.address);
+                const signature = ContractUtils.signShop(
+                    elem.wallet,
+                    elem.shopId,
+                    elem.name,
+                    elem.provideWaitTime,
+                    elem.providePercent,
+                    nonce
+                );
+                await expect(
+                    shopCollection
+                        .connect(elem.wallet)
+                        .add(
+                            elem.shopId,
+                            elem.name,
+                            elem.provideWaitTime,
+                            elem.providePercent,
+                            elem.wallet.address,
+                            signature
+                        )
+                )
+                    .to.emit(shopCollection, "AddedShop")
+                    .withNamedArgs({
+                        shopId: elem.shopId,
+                        name: elem.name,
+                        provideWaitTime: elem.provideWaitTime,
+                        providePercent: elem.providePercent,
+                        account: elem.wallet.address,
+                    });
+            }
+            expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+        });
+
+        it("Deposit foundation's token", async () => {
+            await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+            await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+            await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
+                .to.emit(ledgerContract, "Deposited")
+                .withNamedArgs({
+                    account: foundation.address,
+                    depositedToken: assetAmount.value,
+                    balanceToken: assetAmount.value,
+                });
+        });
+
+        it("Save Purchase Data", async () => {
+            const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+            const userAccount =
+                userData[purchase.userIndex].address.trim() !== ""
+                    ? userData[purchase.userIndex].address.trim()
+                    : AddressZero;
+            await expect(
+                ledgerContract.connect(validators[0]).savePurchase({
+                    purchaseId: purchase.purchaseId,
+                    timestamp: purchase.timestamp,
+                    amount: purchaseAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    method: purchase.method,
+                    account: userAccount,
+                    phone: phoneHash,
+                })
+            )
+                .to.emit(ledgerContract, "SavedPurchase")
+                .withNamedArgs({
+                    purchaseId: purchase.purchaseId,
+                    timestamp: purchase.timestamp,
+                    amount: purchaseAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    method: purchase.method,
+                    account: userAccount,
+                    phone: phoneHash,
+                })
+                .emit(ledgerContract, "ProvidedPoint")
+                .withNamedArgs({
+                    account: userAccount,
+                    providedPoint: pointAmount,
+                    providedValue: pointAmount,
+                    purchaseId: purchase.purchaseId,
+                    shopId: shop.shopId,
+                });
+        });
+
+        it("Get user's balance", async () => {
+            const url = URI(serverURL)
+                .directory("/v1/payment/user")
+                .filename("balance")
+                .addQuery("account", users[purchase.userIndex].address)
+                .toString();
+            const response = await client.get(url);
+
+            assert.deepStrictEqual(response.data.code, 200);
+            assert.ok(response.data.data !== undefined);
+            assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+            assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
+        });
+
+        it("Endpoint POST /v1/payment/create", async () => {
+            const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+
+            const params = {
+                accessKey: config.relay.accessKey,
+                purchaseId: purchaseOfLoyalty.purchaseId,
+                amount: amountOfLoyalty.toString(),
+                currency: "krw",
+                shopId: shopData[purchaseOfLoyalty.shopIndex].shopId,
+                account: users[purchaseOfLoyalty.userIndex].address,
+            };
+            const response = await client.post(url, params);
+
+            assert.deepStrictEqual(response.data.code, 200);
+            assert.ok(response.data.data !== undefined);
+
+            assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+            assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+
+            paymentId = response.data.data.paymentId;
+        });
+
+        it("Waiting", async () => {
+            await ContractUtils.delay(6000);
+            assert.deepStrictEqual(fakerCallbackServer.responseData.length, 1);
+            assert.deepStrictEqual(fakerCallbackServer.responseData[0].code, 0);
+        });
+
+        it("Endpoint POST /v1/payment/cancel", async () => {
+            const url = URI(serverURL).directory("/v1/payment").filename("cancel").toString();
+
+            const params = {
+                accessKey: config.relay.accessKey,
+                paymentId,
+            };
+            const response = await client.post(url, params);
+
+            assert.deepStrictEqual(response.data.code, 200);
+            assert.ok(response.data.data !== undefined);
+
+            assert.deepStrictEqual(response.data.data.paymentId, paymentId);
+            assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
+            assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
+            assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+            assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.CANCELED);
+        });
+
+        it("Waiting", async () => {
+            await ContractUtils.delay(6000);
+            assert.deepStrictEqual(fakerCallbackServer.responseData.length, 2);
+            assert.deepStrictEqual(fakerCallbackServer.responseData[1].code, 0);
         });
     });
 });

@@ -1,7 +1,10 @@
 import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ISignerItem, RelaySigners } from "../contract/Signers";
+import { INotificationSender } from "../delegator/NotificationSender";
 import { WebService } from "../service/WebService";
+import { RelayStorage } from "../storage/RelayStorage";
 import {
     LoyaltyPaymentInputDataStatus,
     LoyaltyPaymentInternalData,
@@ -12,6 +15,7 @@ import {
     WithdrawStatus,
 } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
+import { HTTPClient } from "../utils/Utils";
 import { Validation } from "../validation";
 
 import { BigNumber } from "ethers";
@@ -19,9 +23,7 @@ import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
 import express from "express";
-import { ISignerItem, RelaySigners } from "../contract/Signers";
-import { RelayStorage } from "../storage/RelayStorage";
-import { HTTPClient } from "../utils/Utils";
+import { Amount } from "../common/Amount";
 
 export class PaymentRouter {
     /**
@@ -70,19 +72,29 @@ export class PaymentRouter {
 
     private _storage: RelayStorage;
 
+    private readonly _sender: INotificationSender;
+
     /**
      *
      * @param service  WebService
      * @param config Configuration
      * @param storage
      * @param relaySigners
+     * @param sender
      */
-    constructor(service: WebService, config: Config, storage: RelayStorage, relaySigners: RelaySigners) {
+    constructor(
+        service: WebService,
+        config: Config,
+        storage: RelayStorage,
+        relaySigners: RelaySigners,
+        sender: INotificationSender
+    ) {
         this._web_service = service;
         this._config = config;
 
         this._storage = storage;
         this._relaySigners = relaySigners;
+        this._sender = sender;
     }
 
     private get app(): express.Application {
@@ -642,7 +654,7 @@ export class PaymentRouter {
 
             /// 사용자에게 푸쉬 메세지 발송 후 서명을 확인함
 
-            return res.status(200).json(
+            res.status(200).json(
                 this.makeResponseData(200, {
                     paymentId: item.paymentId,
                     purchaseId: item.purchaseId,
@@ -664,6 +676,14 @@ export class PaymentRouter {
                     createTimestamp: item.createTimestamp,
                 })
             );
+
+            const title = "KIOS 결제 승인 요청";
+            const contents: string[] = [];
+            contents.push(`결제 금액 : ${new Amount(item.amount, 18).toBOAString()}`);
+            contents.push(`결제 아이디 : ${item.paymentId}`);
+            this._sender.send(title, contents.join("\n"));
+
+            return;
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/create";
@@ -1165,7 +1185,7 @@ export class PaymentRouter {
                 item.cancelTimestamp = ContractUtils.getTimeStamp();
                 await this._storage.updateCancelTimestamp(item.paymentId, item.cancelTimestamp);
 
-                return res.status(200).json(
+                res.status(200).json(
                     this.makeResponseData(200, {
                         paymentId: item.paymentId,
                         purchaseId: item.purchaseId,
@@ -1189,6 +1209,13 @@ export class PaymentRouter {
                     })
                 );
             }
+
+            const title = "KIOS 결제 취소 요청";
+            const contents: string[] = [];
+            contents.push(`결제 금액 : ${new Amount(item.amount, 18).toBOAString()}`);
+            contents.push(`결제 아이디 : ${item.paymentId}`);
+            this._sender.send(title, contents.join("\n"));
+            return;
         } catch (error: any) {
             let message = ContractUtils.cacheEVMError(error as any);
             if (message === "") message = "Failed /v1/payment/cancel";
