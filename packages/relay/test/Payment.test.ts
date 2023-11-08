@@ -452,16 +452,14 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/info", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("info").toString();
-
                 const amount2 = Amount.make(1, 18).value;
-                const params = {
-                    accessKey: config.relay.accessKey,
-                    account: users[purchase.userIndex].address,
-                    amount: amount2.toString(),
-                    currency: "USD",
-                };
-                const response = await client.post(url, params);
+                const url = URI(serverURL)
+                    .directory("/v1/payment/info")
+                    .addQuery("account", users[purchase.userIndex].address)
+                    .addQuery("amount", amount2.toString())
+                    .addQuery("currency", "USD")
+                    .toString();
+                const response = await client.get(url);
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
@@ -500,13 +498,9 @@ describe("Test of Server", function () {
                 paymentId = response.data.data.paymentId;
             });
 
-            it("Endpoint POST /v1/payment/create/item", async () => {
-                const url = URI(serverURL).directory("/v1/payment/create").filename("item").toString();
-
-                const params = {
-                    paymentId,
-                };
-                const response = await client.post(url, params);
+            it("Endpoint POST /v1/payment/item", async () => {
+                const url = URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString();
+                const response = await client.get(url);
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
@@ -518,11 +512,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/deny", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
 
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
@@ -556,11 +547,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
@@ -610,11 +598,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm - wrong ID", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const wrongPaymentId = ContractUtils.getPaymentId(users[purchaseOfLoyalty.userIndex].address, nonce);
@@ -643,11 +628,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm - Wrong signature", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
@@ -675,11 +657,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
@@ -713,11 +692,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/deny", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
@@ -936,16 +912,14 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/info", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("info").toString();
-
                 const amount2 = Amount.make(1, 18).value;
-                const params = {
-                    accessKey: config.relay.accessKey,
-                    account: users[purchase.userIndex].address,
-                    amount: amount2.toString(),
-                    currency: "USD",
-                };
-                const response = await client.post(url, params);
+                const url = URI(serverURL)
+                    .directory("/v1/payment/info")
+                    .addQuery("account", users[purchase.userIndex].address)
+                    .addQuery("amount", amount2.toString())
+                    .addQuery("currency", "USD")
+                    .toString();
+                const response = await client.get(url);
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
@@ -985,11 +959,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
@@ -1040,13 +1011,9 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/cancel/confirm", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
-
                 const oldBalance = await ledgerContract.pointBalanceOf(responseItem.data.data.account);
                 const oldShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
 
@@ -1280,16 +1247,14 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/info", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("info").toString();
-
                 const amount2 = Amount.make(1, 18).value;
-                const params = {
-                    accessKey: config.relay.accessKey,
-                    account: users[purchase.userIndex].address,
-                    amount: amount2.toString(),
-                    currency: "USD",
-                };
-                const response = await client.post(url, params);
+                const url = URI(serverURL)
+                    .directory("/v1/payment/info")
+                    .addQuery("account", users[purchase.userIndex].address)
+                    .addQuery("amount", amount2.toString())
+                    .addQuery("currency", "USD")
+                    .toString();
+                const response = await client.get(url);
 
                 assert.deepStrictEqual(response.data.code, 200);
                 assert.ok(response.data.data !== undefined);
@@ -1329,11 +1294,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
@@ -1384,11 +1346,8 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/cancel/deny", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPaymentCancel(
@@ -1644,12 +1603,9 @@ describe("Test of Server", function () {
                 paymentId = response.data.data.paymentId;
             });
 
-            it("Endpoint POST /v1/payment/create/item", async () => {
-                const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+            it("Endpoint POST /v1/payment/item", async () => {
+                const response = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
 
                 assert.deepStrictEqual(response.data.code, 200);
@@ -1661,13 +1617,9 @@ describe("Test of Server", function () {
             });
 
             it("Endpoint POST /v1/payment/create/confirm", async () => {
-                const responseItem = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("item").toString(),
-                    {
-                        paymentId,
-                    }
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
-
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyPayment(
                     users[purchaseOfLoyalty.userIndex],
