@@ -242,7 +242,7 @@ contract Ledger {
     }
 
     modifier onlyValidator(address _account) {
-        require(validatorCollection.isActiveValidator(_account), "Not validator");
+        require(validatorCollection.isActiveValidator(_account), "1000");
         _;
     }
 
@@ -353,7 +353,7 @@ contract Ledger {
     ) internal {
         uint256 amountToken = convertPointToToken(_loyaltyPoint);
 
-        require(tokenBalances[foundationAccount] >= amountToken, "Insufficient foundation balance");
+        require(tokenBalances[foundationAccount] >= amountToken, "1510");
         tokenBalances[_account] += amountToken;
         tokenBalances[foundationAccount] -= amountToken;
 
@@ -364,7 +364,7 @@ contract Ledger {
     /// @dev 중계서버를 통해서 호출됩니다.
     function changeToPayablePoint(bytes32 _phone, address _account, bytes calldata _signature) public {
         bytes32 dataHash = keccak256(abi.encode(_phone, _account, nonce[_account]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         _changeToPayablePoint(_phone, _account);
     }
@@ -378,9 +378,9 @@ contract Ledger {
     /// @notice 사용가능한 포인트로 전환합니다.
     function _changeToPayablePoint(bytes32 _phone, address _account) internal {
         address userAddress = linkCollection.toAddress(_phone);
-        require(userAddress != address(0x00), "Unregistered phone-address");
-        require(userAddress == _account, "Invalid address");
-        require(unPayablePointBalances[_phone] > 0, "Insufficient balance");
+        require(userAddress != address(0x00), "1502");
+        require(userAddress == _account, "1503");
+        require(unPayablePointBalances[_phone] > 0, "1511");
 
         uint256 amount = unPayablePointBalances[_phone];
         uint256 value = amount;
@@ -408,7 +408,7 @@ contract Ledger {
     /// @notice 로얄티(포인트/토큰)을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
     function createLoyaltyPayment(LoyaltyPaymentInputData calldata _data) public {
-        require(loyaltyPayments[_data.paymentId].status == LoyaltyPaymentStatus.INVALID, "Payment ID already in use");
+        require(loyaltyPayments[_data.paymentId].status == LoyaltyPaymentStatus.INVALID, "1530");
 
         LoyaltyPaymentInputData memory data = _data;
         bytes32 dataHash = keccak256(
@@ -422,10 +422,7 @@ contract Ledger {
                 nonce[data.account]
             )
         );
-        require(
-            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account,
-            "Invalid signature"
-        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account, "1501");
 
         if (loyaltyTypes[data.account] == LoyaltyType.POINT) {
             _createLoyaltyPaymentPoint(data);
@@ -443,8 +440,8 @@ contract Ledger {
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
 
-        require(pointBalances[data.account] >= paidPoint + feePoint, "Insufficient balance");
-        require(tokenBalances[foundationAccount] >= feeToken, "Insufficient foundation balance");
+        require(pointBalances[data.account] >= paidPoint + feePoint, "1511");
+        require(tokenBalances[foundationAccount] >= feeToken, "1510");
 
         pointBalances[data.account] -= (paidPoint + feePoint);
 
@@ -519,7 +516,7 @@ contract Ledger {
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
 
-        require(tokenBalances[data.account] >= paidToken + feeToken, "Insufficient balance");
+        require(tokenBalances[data.account] >= paidToken + feeToken, "1511");
 
         tokenBalances[data.account] -= (paidToken + feeToken);
         tokenBalances[foundationAccount] += paidToken;
@@ -583,25 +580,19 @@ contract Ledger {
     }
 
     function cancelLoyaltyPayment(LoyaltyCancelInputData calldata _data) public {
-        require(loyaltyPayments[_data.paymentId].status != LoyaltyPaymentStatus.INVALID, "Payment ID does not exist");
-        require(
-            block.timestamp <= loyaltyPayments[_data.paymentId].timestamp + 86400 * 7,
-            "Cancellable period has elapsed."
-        );
+        require(loyaltyPayments[_data.paymentId].status != LoyaltyPaymentStatus.INVALID, "1531");
+        require(block.timestamp <= loyaltyPayments[_data.paymentId].timestamp + 86400 * 7, "1534");
 
         LoyaltyCancelInputData memory data = _data;
         bytes32 dataHash = keccak256(abi.encode(data.paymentId, data.purchaseId, data.account, nonce[data.account]));
-        require(
-            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account,
-            "Invalid signature"
-        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account, "1501");
 
         bytes32 dataHash2 = keccak256(
             abi.encode(data.paymentId, data.purchaseId, certifierAddress, nonce[certifierAddress])
         );
         require(
             ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), data.certifierSignature) == certifierAddress,
-            "Invalid signature"
+            "1501"
         );
 
         LoyaltyPaymentData memory payData = loyaltyPayments[data.paymentId];
@@ -628,7 +619,7 @@ contract Ledger {
                     pointBalances[payData.account]
                 );
             } else {
-                revert("Not enough balance on account to provide the refund amount.");
+                revert("1513");
             }
         } else {
             if (
@@ -655,7 +646,7 @@ contract Ledger {
                     tokenBalances[payData.account]
                 );
             } else {
-                revert("Not enough balance on account to provide the refund amount.");
+                revert("1513");
             }
         }
 
@@ -664,13 +655,11 @@ contract Ledger {
     }
 
     function convertPointToToken(uint256 amount) internal view returns (uint256) {
-        uint256 price = currencyRate.get(token.symbol());
-        return (amount * currencyRate.MULTIPLE()) / price;
+        return (amount * currencyRate.MULTIPLE()) / currencyRate.get(token.symbol());
     }
 
     function convertTokenToPoint(uint256 amount) internal view returns (uint256) {
-        uint256 price = currencyRate.get(token.symbol());
-        return (amount * price) / currencyRate.MULTIPLE();
+        return (amount * currencyRate.get(token.symbol())) / currencyRate.MULTIPLE();
     }
 
     function convertCurrencyToPoint(uint256 _amount, string memory _currency) internal view returns (uint256) {
@@ -678,34 +667,31 @@ contract Ledger {
         if ((byteCurrency == BASE_CURRENCY) || (byteCurrency == NULL_CURRENCY)) {
             return _amount;
         } else {
-            uint256 rate = currencyRate.get(_currency);
-            return (_amount * rate) / currencyRate.MULTIPLE();
+            return (_amount * currencyRate.get(_currency)) / currencyRate.MULTIPLE();
         }
     }
 
     /// @notice 토큰을 예치합니다.
     /// @param _amount 금액
     function deposit(uint256 _amount) public {
-        require(loyaltyTypes[msg.sender] == LoyaltyType.TOKEN, "Loyalty type is not TOKEN");
-        require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
+        require(loyaltyTypes[msg.sender] == LoyaltyType.TOKEN, "1520");
+        require(_amount <= token.allowance(msg.sender, address(this)), "1512");
         token.transferFrom(msg.sender, address(this), _amount);
 
         tokenBalances[msg.sender] += _amount;
 
-        uint256 amountPoint = convertTokenToPoint(_amount);
-        emit Deposited(msg.sender, _amount, amountPoint, tokenBalances[msg.sender]);
+        emit Deposited(msg.sender, _amount, convertTokenToPoint(_amount), tokenBalances[msg.sender]);
     }
 
     /// @notice 토큰을 인출합니다.
     /// @param _amount 금액
     function withdraw(uint256 _amount) public {
-        require(_amount <= tokenBalances[msg.sender], "Insufficient balance");
+        require(_amount <= tokenBalances[msg.sender], "1511");
         token.transfer(msg.sender, _amount);
 
         tokenBalances[msg.sender] -= _amount;
 
-        uint256 amountPoint = convertTokenToPoint(_amount);
-        emit Withdrawn(msg.sender, _amount, amountPoint, tokenBalances[msg.sender]);
+        emit Withdrawn(msg.sender, _amount, convertTokenToPoint(_amount), tokenBalances[msg.sender]);
     }
 
     /// @notice 포인트의 잔고를 리턴한다
@@ -761,7 +747,7 @@ contract Ledger {
     /// @dev 중계서버를 통해서 호출됩니다.
     function changeToLoyaltyToken(address _account, bytes calldata _signature) public {
         bytes32 dataHash = keccak256(abi.encode(_account, nonce[_account]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "Invalid signature");
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         _changeToLoyaltyToken(_account);
     }
@@ -780,7 +766,7 @@ contract Ledger {
             if (pointBalances[_account] > 0) {
                 amountPoint = pointBalances[_account];
                 amountToken = convertPointToToken(amountPoint);
-                require(tokenBalances[foundationAccount] >= amountToken, "Insufficient foundation balance");
+                require(tokenBalances[foundationAccount] >= amountToken, "1510");
                 tokenBalances[_account] += amountToken;
                 tokenBalances[foundationAccount] -= amountToken;
                 pointBalances[_account] = 0;
@@ -796,8 +782,8 @@ contract Ledger {
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.
     /// @param _fee % 단위 입니다.
     function setFee(uint32 _fee) public {
-        require(_fee <= MAX_FEE, "Invalid value");
-        require(msg.sender == feeAccount, "Invalid sender");
+        require(_fee <= MAX_FEE, "1521");
+        require(msg.sender == feeAccount, "1050");
         fee = _fee;
     }
 }

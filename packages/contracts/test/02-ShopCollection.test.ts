@@ -5,7 +5,6 @@ import { ShopCollection } from "../typechain-types";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
-import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 

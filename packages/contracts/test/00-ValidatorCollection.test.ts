@@ -57,11 +57,11 @@ describe("Test for ValidatorCollection", () => {
 
     it("Deposit not validator", async () => {
         await tokenContract.connect(deployer).approve(contract.address, amount.value);
-        await expect(contract.connect(deployer).deposit(amount.value)).to.be.revertedWith("Not validator");
+        await expect(contract.connect(deployer).deposit(amount.value)).to.be.revertedWith("1000");
     });
 
     it("Deposit not allowed", async () => {
-        await expect(contract.connect(validators[0]).deposit(amount.value)).to.be.revertedWith("Not allowed deposit");
+        await expect(contract.connect(validators[0]).deposit(amount.value)).to.be.revertedWith("1020");
     });
 
     it("Deposit 25,000", async () => {
@@ -95,7 +95,7 @@ describe("Test for ValidatorCollection", () => {
     it("Request participation - already validator", async () => {
         await tokenContract.connect(deployer).transfer(validator1.address, amount.value);
         await tokenContract.connect(validator1).approve(contract.address, amount.value);
-        await expect(contract.connect(validator1).requestRegistration()).to.be.revertedWith("Already validator");
+        await expect(contract.connect(validator1).requestRegistration()).to.be.revertedWith("1003");
     });
 
     it("Request participation - not allowed deposit", async () => {
@@ -150,6 +150,6 @@ describe("Test for ValidatorCollection", () => {
     });
 
     it("Voluntary Exit 2", async () => {
-        await expect(contract.connect(validator2).exit()).to.revertedWith("Last validator");
+        await expect(contract.connect(validator2).exit()).to.revertedWith("1010");
     });
 });

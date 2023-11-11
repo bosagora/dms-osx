@@ -63,7 +63,7 @@ describe("Test for CurrencyRate", () => {
         it("Not validator", async () => {
             const currency = "the9";
             const price = 123000000000;
-            await expect(currencyRateContract.connect(user1).set(currency, price)).to.revertedWith("Not validator");
+            await expect(currencyRateContract.connect(user1).set(currency, price)).to.revertedWith("1000");
         });
         it("Success", async () => {
             const currency = "the9";
