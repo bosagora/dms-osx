@@ -157,6 +157,7 @@ contract Ledger {
         bytes32 shopId
     );
 
+    event LoyaltyPaymentEvent(LoyaltyPaymentData payment, uint256 balance);
     /// @notice 토큰/포인트로 지불을 완료했을 때 발생하는 이벤트
     event CreatedLoyaltyPayment(
         bytes32 paymentId,
@@ -407,10 +408,9 @@ contract Ledger {
 
     /// @notice 로얄티(포인트/토큰)을 구매에 사용하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    function createLoyaltyPayment(LoyaltyPaymentInputData calldata _data) public {
-        require(loyaltyPayments[_data.paymentId].status == LoyaltyPaymentStatus.INVALID, "1530");
+    function createLoyaltyPayment(LoyaltyPaymentInputData calldata data) public {
+        require(loyaltyPayments[data.paymentId].status == LoyaltyPaymentStatus.INVALID, "1530");
 
-        LoyaltyPaymentInputData memory data = _data;
         bytes32 dataHash = keccak256(
             abi.encode(
                 data.paymentId,
@@ -432,8 +432,7 @@ contract Ledger {
     }
 
     /// @notice 포인트를 구매에 사용하는 함수
-    function _createLoyaltyPaymentPoint(LoyaltyPaymentInputData memory _data) internal {
-        LoyaltyPaymentInputData memory data = _data;
+    function _createLoyaltyPaymentPoint(LoyaltyPaymentInputData memory data) internal {
         uint256 paidPoint = convertCurrencyToPoint(data.amount, data.currency);
         uint256 paidToken = convertPointToToken(paidPoint);
         uint256 feeValue = (data.amount * fee) / 100;
@@ -471,7 +470,7 @@ contract Ledger {
 
         nonce[data.account]++;
 
-        LoyaltyPaymentData memory payData = LoyaltyPaymentData({
+        loyaltyPayments[data.paymentId] = LoyaltyPaymentData({
             paymentId: data.paymentId,
             purchaseId: data.purchaseId,
             currency: data.currency,
@@ -487,29 +486,12 @@ contract Ledger {
             feeValue: feeValue,
             status: LoyaltyPaymentStatus.PAID
         });
-        loyaltyPayments[payData.paymentId] = payData;
 
-        emit CreatedLoyaltyPayment(
-            payData.paymentId,
-            payData.purchaseId,
-            payData.currency,
-            payData.account,
-            payData.shopId,
-            payData.loyaltyType,
-            payData.paidPoint,
-            payData.paidToken,
-            payData.paidValue,
-            payData.feePoint,
-            payData.feeToken,
-            payData.feeValue,
-            pointBalances[payData.account]
-        );
+        emit LoyaltyPaymentEvent(loyaltyPayments[data.paymentId], pointBalanceOf(data.account));
     }
 
     /// @notice 토큰을 구매에 사용하는 함수
-    function _createLoyaltyPaymentToken(LoyaltyPaymentInputData memory _data) internal {
-        LoyaltyPaymentInputData memory data = _data;
-
+    function _createLoyaltyPaymentToken(LoyaltyPaymentInputData memory data) internal {
         uint256 paidPoint = convertCurrencyToPoint(data.amount, data.currency);
         uint256 paidToken = convertPointToToken(paidPoint);
         uint256 feeValue = (data.amount * fee) / 100;
@@ -544,7 +526,7 @@ contract Ledger {
 
         nonce[data.account]++;
 
-        LoyaltyPaymentData memory payData = LoyaltyPaymentData({
+        loyaltyPayments[data.paymentId] = LoyaltyPaymentData({
             paymentId: data.paymentId,
             purchaseId: data.purchaseId,
             currency: data.currency,
@@ -560,23 +542,7 @@ contract Ledger {
             feeValue: feeValue,
             status: LoyaltyPaymentStatus.PAID
         });
-        loyaltyPayments[payData.paymentId] = payData;
-
-        emit CreatedLoyaltyPayment(
-            payData.paymentId,
-            payData.purchaseId,
-            payData.currency,
-            payData.account,
-            payData.shopId,
-            payData.loyaltyType,
-            payData.paidPoint,
-            payData.paidToken,
-            payData.paidValue,
-            payData.feePoint,
-            payData.feeToken,
-            payData.feeValue,
-            tokenBalances[payData.account]
-        );
+        emit LoyaltyPaymentEvent(loyaltyPayments[data.paymentId], tokenBalanceOf(data.account));
     }
 
     function cancelLoyaltyPayment(LoyaltyCancelInputData calldata _data) public {

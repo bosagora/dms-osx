@@ -907,29 +907,29 @@ export class PaymentRouter {
 
                 if (success && tx !== undefined) {
                     const contractReceipt = await tx.wait();
-                    const log = ContractUtils.findLog(contractReceipt, contract.interface, "CreatedLoyaltyPayment");
+                    const log = ContractUtils.findLog(contractReceipt, contract.interface, "LoyaltyPaymentEvent");
                     if (log !== undefined) {
                         const parsedLog = contract.interface.parseLog(log);
-                        if (item.paymentId === parsedLog.args.paymentId) {
+                        if (item.paymentId === parsedLog.args.payment.paymentId) {
                             item.paidPoint =
                                 parsedLog.args.loyaltyType === LoyaltyType.POINT
-                                    ? BigNumber.from(parsedLog.args.paidPoint)
+                                    ? BigNumber.from(parsedLog.args.payment.paidPoint)
                                     : BigNumber.from(0);
                             item.paidToken =
                                 parsedLog.args.loyaltyType === LoyaltyType.TOKEN
-                                    ? BigNumber.from(parsedLog.args.paidToken)
+                                    ? BigNumber.from(parsedLog.args.payment.paidToken)
                                     : BigNumber.from(0);
-                            item.paidValue = BigNumber.from(parsedLog.args.paidValue);
+                            item.paidValue = BigNumber.from(parsedLog.args.payment.paidValue);
 
                             item.feePoint =
                                 parsedLog.args.loyaltyType === LoyaltyType.POINT
-                                    ? BigNumber.from(parsedLog.args.feePoint)
+                                    ? BigNumber.from(parsedLog.args.payment.feePoint)
                                     : BigNumber.from(0);
                             item.feeToken =
                                 parsedLog.args.loyaltyType === LoyaltyType.TOKEN
-                                    ? BigNumber.from(parsedLog.args.feeToken)
+                                    ? BigNumber.from(parsedLog.args.payment.feeToken)
                                     : BigNumber.from(0);
-                            item.feeValue = BigNumber.from(parsedLog.args.feeValue);
+                            item.feeValue = BigNumber.from(parsedLog.args.payment.feeValue);
 
                             item.totalPoint = item.paidPoint.add(item.feePoint);
                             item.totalToken = item.paidToken.add(item.feeToken);
@@ -940,13 +940,13 @@ export class PaymentRouter {
                                 PaymentResultCode.SUCCESS,
                                 "The payment has been successfully completed.",
                                 {
-                                    paymentId: parsedLog.args.paymentId,
-                                    purchaseId: parsedLog.args.purchaseId,
-                                    amount: parsedLog.args.paidValue.toString(),
-                                    currency: parsedLog.args.currency,
-                                    account: parsedLog.args.account,
-                                    shopId: parsedLog.args.shopId,
-                                    loyaltyType: parsedLog.args.loyaltyType,
+                                    paymentId: parsedLog.args.payment.paymentId,
+                                    purchaseId: parsedLog.args.payment.purchaseId,
+                                    amount: parsedLog.args.payment.paidValue.toString(),
+                                    currency: parsedLog.args.payment.currency,
+                                    account: parsedLog.args.payment.account,
+                                    shopId: parsedLog.args.payment.shopId,
+                                    loyaltyType: parsedLog.args.payment.loyaltyType,
                                     paidPoint: item.paidPoint.toString(),
                                     paidToken: item.paidToken.toString(),
                                     paidValue: item.paidValue.toString(),
