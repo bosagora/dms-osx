@@ -68,11 +68,11 @@ contract ValidatorCollection {
     /// @param _amount 추가로 입금할 예치 금액
     function deposit(uint256 _amount) public {
         ValidatorData memory item = validators[msg.sender];
-        require(item.validator == msg.sender, "Not validator");
-        require(item.status != Status.INVALID, "Not validator");
-        require(item.status != Status.EXIT, "Already exited");
+        require(item.validator == msg.sender, "1000");
+        require(item.status != Status.INVALID, "1001");
+        require(item.status != Status.EXIT, "1003");
 
-        require(_amount <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
+        require(_amount <= token.allowance(msg.sender, address(this)), "1020");
         token.transferFrom(msg.sender, address(this), _amount);
 
         validators[msg.sender].balance += _amount;
@@ -84,9 +84,9 @@ contract ValidatorCollection {
 
     /// @notice 신규 검증자 등록을 신청합니다.
     function requestRegistration() public {
-        require(validators[msg.sender].status == Status.INVALID, "Already validator");
+        require(validators[msg.sender].status == Status.INVALID, "1003");
 
-        require(MINIMUM_DEPOSIT_AMOUNT <= token.allowance(msg.sender, address(this)), "Not allowed deposit");
+        require(MINIMUM_DEPOSIT_AMOUNT <= token.allowance(msg.sender, address(this)), "1020");
         token.transferFrom(msg.sender, address(this), MINIMUM_DEPOSIT_AMOUNT);
 
         ValidatorData memory item = ValidatorData({
@@ -105,10 +105,10 @@ contract ValidatorCollection {
     /// @notice 검증자의 강제탈퇴를 신청합니다.
     function requestExit(address validator) public {
         ValidatorData memory item = validators[msg.sender];
-        require(item.validator == msg.sender, "Not validator");
-        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "Invalid validator");
+        require(item.validator == msg.sender, "1000");
+        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "1001");
 
-        require(validators[validator].status != Status.INVALID, "Not validator");
+        require(validators[validator].status != Status.INVALID, "1001");
         validators[validator].status = Status.EXIT;
 
         if (validators[validator].balance > 0) {
@@ -161,10 +161,10 @@ contract ValidatorCollection {
     /// @notice 자발적으로 탈퇴하기 위해 사용되는 함수입니다.
     function exit() public {
         ValidatorData memory item = validators[msg.sender];
-        require(item.validator == msg.sender, "Not validator");
-        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "Invalid validator");
+        require(item.validator == msg.sender, "1000");
+        require(item.status == Status.ACTIVE && item.start <= block.timestamp, "1001");
 
-        require(activeItemsLength() > 1, "Last validator");
+        require(activeItemsLength() > 1, "1010");
 
         validators[msg.sender].status = Status.EXIT;
 

@@ -24,7 +24,7 @@ contract CurrencyRate {
     }
 
     modifier onlyValidator(address _account) {
-        require(validatorCollection.isActiveValidator(_account), "Not validator");
+        require(validatorCollection.isActiveValidator(_account), "1000");
         _;
     }
 
