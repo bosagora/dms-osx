@@ -508,16 +508,18 @@ describe("Test for ShopCollection", () => {
                         shopId: shop.shopId,
                         providedPoint: Amount.make(200, 18).value,
                     })
-                    .to.emit(ledgerContract, "CreatedLoyaltyPayment")
-                    .withNamedArgs({
-                        paymentId,
-                        purchaseId: purchase.purchaseId,
-                        account: userWallets[purchase.userIndex].address,
-                        shopId: shop.shopId,
-                        loyaltyType: 0,
-                        paidPoint: purchaseAmount,
-                        paidValue: purchaseAmount,
-                    });
+                    .to.emit(ledgerContract, "LoyaltyPaymentEvent");
+
+                const paymentData = await ledgerContract.loyaltyPaymentOf(paymentId);
+                expect(paymentData.paymentId).to.deep.equal(paymentId);
+                expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
+                expect(paymentData.currency).to.deep.equal(purchase.currency);
+                expect(paymentData.shopId).to.deep.equal(shop.shopId);
+                expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
+                expect(paymentData.loyaltyType).to.deep.equal(0);
+                expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
+                expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
+
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo.usedPoint).to.equal(Amount.make(300, 18).value);
@@ -610,17 +612,18 @@ describe("Test for ShopCollection", () => {
                         account: userWallets[purchase.userIndex].address,
                         signature,
                     })
-                )
-                    .to.emit(ledgerContract, "CreatedLoyaltyPayment")
-                    .withNamedArgs({
-                        paymentId,
-                        purchaseId: purchase.purchaseId,
-                        account: userWallets[purchase.userIndex].address,
-                        shopId: shop.shopId,
-                        loyaltyType: 1,
-                        paidToken: tokenAmount,
-                        paidValue: purchaseAmount,
-                    });
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
+
+                const paymentData = await ledgerContract.loyaltyPaymentOf(paymentId);
+                expect(paymentData.paymentId).to.deep.equal(paymentId);
+                expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
+                expect(paymentData.currency).to.deep.equal(purchase.currency);
+                expect(paymentData.shopId).to.deep.equal(shop.shopId);
+                expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
+                expect(paymentData.loyaltyType).to.deep.equal(1);
+                expect(paymentData.paidToken).to.deep.equal(tokenAmount);
+                expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
+
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo2.usedPoint).to.equal(Amount.make(500, 18).value);
