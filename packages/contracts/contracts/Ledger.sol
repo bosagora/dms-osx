@@ -51,18 +51,14 @@ contract Ledger {
         bytes signature;
     }
 
-    struct LoyaltyCancelInputData {
-        bytes32 paymentId;
-        string purchaseId;
-        address account;
-        bytes signature;
-        bytes certifierSignature;
-    }
-
     enum LoyaltyPaymentStatus {
         INVALID,
-        PAID,
-        CANCELLED
+        OPENED_PAYMENT,
+        CLOSED_PAYMENT,
+        FAILED_PAYMENT,
+        OPENED_CANCEL,
+        CLOSED_CANCEL,
+        FAILED_CANCEL
     }
 
     struct LoyaltyPaymentData {
@@ -94,6 +90,8 @@ contract Ledger {
     address public shopCollectionAddress;
     address public certifierAddress;
     uint32 public fee;
+
+    address public temporaryAddress;
 
     ERC20 private token;
     ValidatorCollection private validatorCollection;
@@ -157,40 +155,8 @@ contract Ledger {
         bytes32 shopId
     );
 
-    event LoyaltyPaymentEvent(LoyaltyPaymentData payment, uint256 balance);
     /// @notice 토큰/포인트로 지불을 완료했을 때 발생하는 이벤트
-    event CreatedLoyaltyPayment(
-        bytes32 paymentId,
-        string purchaseId,
-        string currency,
-        address account,
-        bytes32 shopId,
-        LoyaltyType loyaltyType,
-        uint256 paidPoint,
-        uint256 paidToken,
-        uint256 paidValue,
-        uint256 feePoint,
-        uint256 feeToken,
-        uint256 feeValue,
-        uint256 balance
-    );
-
-    /// @notice 토큰/포인트로 지불의 취소가 완료되었을 때 발생하는 이벤트
-    event CancelledLoyaltyPayment(
-        bytes32 paymentId,
-        string purchaseId,
-        string currency,
-        address account,
-        bytes32 shopId,
-        LoyaltyType loyaltyType,
-        uint256 paidPoint,
-        uint256 paidToken,
-        uint256 paidValue,
-        uint256 feePoint,
-        uint256 feeToken,
-        uint256 feeValue,
-        uint256 balance
-    );
+    event LoyaltyPaymentEvent(LoyaltyPaymentData payment, uint256 balance);
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(address account, uint256 depositedToken, uint256 depositedValue, uint256 balanceToken);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
@@ -240,6 +206,8 @@ contract Ledger {
         loyaltyTypes[settlementAccount] = LoyaltyType.TOKEN;
         loyaltyTypes[feeAccount] = LoyaltyType.TOKEN;
         loyaltyTypes[certifierAddress] = LoyaltyType.TOKEN;
+
+        temporaryAddress = address(0x0);
     }
 
     modifier onlyValidator(address _account) {
@@ -406,9 +374,9 @@ contract Ledger {
         return loyaltyPayments[_paymentId];
     }
 
-    /// @notice 로얄티(포인트/토큰)을 구매에 사용하는 함수
+    /// @notice 로얄티(포인트/토큰)을 사용하여 구매요청을 시작하는 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    function createLoyaltyPayment(LoyaltyPaymentInputData calldata data) public {
+    function openNewLoyaltyPayment(LoyaltyPaymentInputData calldata data) public {
         require(loyaltyPayments[data.paymentId].status == LoyaltyPaymentStatus.INVALID, "1530");
 
         bytes32 dataHash = keccak256(
@@ -424,51 +392,27 @@ contract Ledger {
         );
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account, "1501");
 
+        nonce[data.account]++;
+
         if (loyaltyTypes[data.account] == LoyaltyType.POINT) {
-            _createLoyaltyPaymentPoint(data);
+            _openNewLoyaltyPaymentPoint(data);
         } else {
-            _createLoyaltyPaymentToken(data);
+            _openNewLoyaltyPaymentToken(data);
         }
     }
 
-    /// @notice 포인트를 구매에 사용하는 함수
-    function _createLoyaltyPaymentPoint(LoyaltyPaymentInputData memory data) internal {
+    /// @notice 포인트를 사용한 구매요청을 시작하는 함수
+    function _openNewLoyaltyPaymentPoint(LoyaltyPaymentInputData memory data) internal {
         uint256 paidPoint = convertCurrencyToPoint(data.amount, data.currency);
         uint256 paidToken = convertPointToToken(paidPoint);
         uint256 feeValue = (data.amount * fee) / 100;
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
 
-        require(pointBalances[data.account] >= paidPoint + feePoint, "1511");
-        require(tokenBalances[foundationAccount] >= feeToken, "1510");
+        require(pointBalances[data.account] >= (paidPoint + feePoint), "1511");
 
         pointBalances[data.account] -= (paidPoint + feePoint);
-
-        // 재단의 토큰으로 교환해 지급한다.
-        tokenBalances[foundationAccount] -= feeToken;
-        tokenBalances[feeAccount] += feeToken;
-
-        shopCollection.addUsedPoint(data.shopId, paidPoint, data.purchaseId);
-
-        uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
-        if (settlementPoint > 0) {
-            uint256 settlementToken = convertPointToToken(settlementPoint);
-            if (tokenBalances[foundationAccount] >= settlementToken) {
-                tokenBalances[settlementAccount] += settlementToken;
-                tokenBalances[foundationAccount] -= settlementToken;
-                shopCollection.addSettledPoint(data.shopId, settlementPoint, data.purchaseId);
-                emit ProvidedTokenForSettlement(
-                    settlementAccount,
-                    data.shopId,
-                    settlementPoint,
-                    settlementToken,
-                    tokenBalances[settlementAccount],
-                    data.purchaseId
-                );
-            }
-        }
-
-        nonce[data.account]++;
+        pointBalances[temporaryAddress] += (paidPoint + feePoint);
 
         loyaltyPayments[data.paymentId] = LoyaltyPaymentData({
             paymentId: data.paymentId,
@@ -484,47 +428,25 @@ contract Ledger {
             feePoint: feePoint,
             feeToken: feeToken,
             feeValue: feeValue,
-            status: LoyaltyPaymentStatus.PAID
+            status: LoyaltyPaymentStatus.OPENED_PAYMENT
         });
 
         emit LoyaltyPaymentEvent(loyaltyPayments[data.paymentId], pointBalanceOf(data.account));
     }
 
-    /// @notice 토큰을 구매에 사용하는 함수
-    function _createLoyaltyPaymentToken(LoyaltyPaymentInputData memory data) internal {
+    /// @notice 토큰을 사용한 구매요청을 시작하는 함수
+    function _openNewLoyaltyPaymentToken(LoyaltyPaymentInputData memory data) internal {
         uint256 paidPoint = convertCurrencyToPoint(data.amount, data.currency);
         uint256 paidToken = convertPointToToken(paidPoint);
         uint256 feeValue = (data.amount * fee) / 100;
         uint256 feePoint = convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = convertPointToToken(feePoint);
+        uint256 totalToken = paidToken + feeToken;
 
-        require(tokenBalances[data.account] >= paidToken + feeToken, "1511");
+        require(tokenBalances[data.account] >= totalToken, "1511");
 
-        tokenBalances[data.account] -= (paidToken + feeToken);
-        tokenBalances[foundationAccount] += paidToken;
-        tokenBalances[feeAccount] += feeToken;
-
-        shopCollection.addUsedPoint(data.shopId, paidPoint, data.purchaseId);
-
-        uint256 settlementPoint = shopCollection.getSettlementPoint(data.shopId);
-        if (settlementPoint > 0) {
-            uint256 settlementToken = convertPointToToken(settlementPoint);
-            if (tokenBalances[foundationAccount] >= settlementToken) {
-                tokenBalances[settlementAccount] += settlementToken;
-                tokenBalances[foundationAccount] -= settlementToken;
-                shopCollection.addSettledPoint(data.shopId, settlementPoint, data.purchaseId);
-                emit ProvidedTokenForSettlement(
-                    settlementAccount,
-                    data.shopId,
-                    settlementPoint,
-                    settlementToken,
-                    tokenBalances[settlementAccount],
-                    data.purchaseId
-                );
-            }
-        }
-
-        nonce[data.account]++;
+        tokenBalances[data.account] -= totalToken;
+        tokenBalances[temporaryAddress] += totalToken;
 
         loyaltyPayments[data.paymentId] = LoyaltyPaymentData({
             paymentId: data.paymentId,
@@ -540,84 +462,267 @@ contract Ledger {
             feePoint: feePoint,
             feeToken: feeToken,
             feeValue: feeValue,
-            status: LoyaltyPaymentStatus.PAID
+            status: LoyaltyPaymentStatus.OPENED_PAYMENT
         });
+
         emit LoyaltyPaymentEvent(loyaltyPayments[data.paymentId], tokenBalanceOf(data.account));
     }
 
-    function cancelLoyaltyPayment(LoyaltyCancelInputData calldata _data) public {
-        require(loyaltyPayments[_data.paymentId].status != LoyaltyPaymentStatus.INVALID, "1531");
-        require(block.timestamp <= loyaltyPayments[_data.paymentId].timestamp + 86400 * 7, "1534");
-
-        LoyaltyCancelInputData memory data = _data;
-        bytes32 dataHash = keccak256(abi.encode(data.paymentId, data.purchaseId, data.account, nonce[data.account]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signature) == data.account, "1501");
-
-        bytes32 dataHash2 = keccak256(
-            abi.encode(data.paymentId, data.purchaseId, certifierAddress, nonce[certifierAddress])
+    /// @notice 로얄티(포인트/토큰)을 사용하여 구매요청을 종료 함수
+    /// @dev 중계서버를 통해서 호출됩니다.
+    function closeNewLoyaltyPayment(bytes32 _paymentId, bool _confirm, bytes calldata _signature) public {
+        require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_PAYMENT, "1531");
+        bytes32 dataHash = keccak256(
+            abi.encode(
+                _paymentId,
+                loyaltyPayments[_paymentId].purchaseId,
+                _confirm,
+                certifierAddress,
+                nonce[certifierAddress]
+            )
         );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == certifierAddress, "1501");
+
+        nonce[certifierAddress]++;
+
+        if (loyaltyTypes[loyaltyPayments[_paymentId].account] == LoyaltyType.POINT) {
+            _closeNewLoyaltyPaymentPoint(_paymentId, _confirm);
+        } else {
+            _closeNewLoyaltyPaymentToken(_paymentId, _confirm);
+        }
+    }
+
+    /// @notice 포인트를 사용한 구매요청을 종료하는 함수
+    function _closeNewLoyaltyPaymentPoint(bytes32 _paymentId, bool _confirm) internal {
+        uint256 totalPoint = loyaltyPayments[_paymentId].paidPoint + loyaltyPayments[_paymentId].feePoint;
+        if (_confirm) {
+            pointBalances[temporaryAddress] -= totalPoint;
+
+            // 재단의 토큰으로 교환해 수수료계좌에 지급한다.
+            if (tokenBalances[foundationAccount] >= loyaltyPayments[_paymentId].feeToken) {
+                tokenBalances[foundationAccount] -= loyaltyPayments[_paymentId].feeToken;
+                tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
+            }
+
+            shopCollection.addUsedPoint(
+                loyaltyPayments[_paymentId].shopId,
+                loyaltyPayments[_paymentId].paidPoint,
+                loyaltyPayments[_paymentId].purchaseId,
+                _paymentId
+            );
+
+            uint256 settlementPoint = shopCollection.getSettlementPoint(loyaltyPayments[_paymentId].shopId);
+            if (settlementPoint > 0) {
+                uint256 settlementToken = convertPointToToken(settlementPoint);
+                if (tokenBalances[foundationAccount] >= settlementToken) {
+                    tokenBalances[settlementAccount] += settlementToken;
+                    tokenBalances[foundationAccount] -= settlementToken;
+                    shopCollection.addSettledPoint(
+                        loyaltyPayments[_paymentId].shopId,
+                        settlementPoint,
+                        loyaltyPayments[_paymentId].purchaseId
+                    );
+                    emit ProvidedTokenForSettlement(
+                        settlementAccount,
+                        loyaltyPayments[_paymentId].shopId,
+                        settlementPoint,
+                        settlementToken,
+                        tokenBalances[settlementAccount],
+                        loyaltyPayments[_paymentId].purchaseId
+                    );
+                }
+            }
+
+            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_PAYMENT;
+
+            emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], pointBalanceOf(loyaltyPayments[_paymentId].account));
+        } else {
+            // 임시저장 포인트를 소각한다.
+            pointBalances[temporaryAddress] -= totalPoint;
+
+            // 사용자에게 포인트를 반환한다
+            pointBalances[loyaltyPayments[_paymentId].account] += totalPoint;
+
+            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.FAILED_PAYMENT;
+
+            emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], pointBalanceOf(loyaltyPayments[_paymentId].account));
+        }
+    }
+
+    /// @notice 토큰을 사용한 구매요청을 종료하는 함수
+    function _closeNewLoyaltyPaymentToken(bytes32 _paymentId, bool _confirm) internal {
+        if (_confirm) {
+            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].paidToken;
+            tokenBalances[foundationAccount] += loyaltyPayments[_paymentId].paidToken;
+            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
+            tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
+
+            shopCollection.addUsedPoint(
+                loyaltyPayments[_paymentId].shopId,
+                loyaltyPayments[_paymentId].paidPoint,
+                loyaltyPayments[_paymentId].purchaseId,
+                _paymentId
+            );
+
+            uint256 settlementPoint = shopCollection.getSettlementPoint(loyaltyPayments[_paymentId].shopId);
+            if (settlementPoint > 0) {
+                uint256 settlementToken = convertPointToToken(settlementPoint);
+                if (tokenBalances[foundationAccount] >= settlementToken) {
+                    tokenBalances[settlementAccount] += settlementToken;
+                    tokenBalances[foundationAccount] -= settlementToken;
+                    shopCollection.addSettledPoint(
+                        loyaltyPayments[_paymentId].shopId,
+                        settlementPoint,
+                        loyaltyPayments[_paymentId].purchaseId
+                    );
+                    emit ProvidedTokenForSettlement(
+                        settlementAccount,
+                        loyaltyPayments[_paymentId].shopId,
+                        settlementPoint,
+                        settlementToken,
+                        tokenBalances[settlementAccount],
+                        loyaltyPayments[_paymentId].purchaseId
+                    );
+                }
+            }
+
+            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_PAYMENT;
+
+            emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], tokenBalanceOf(loyaltyPayments[_paymentId].account));
+        } else {
+            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].paidToken;
+            tokenBalances[loyaltyPayments[_paymentId].account] += loyaltyPayments[_paymentId].paidToken;
+            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
+            tokenBalances[loyaltyPayments[_paymentId].account] += loyaltyPayments[_paymentId].feeToken;
+
+            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.FAILED_PAYMENT;
+
+            emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], tokenBalanceOf(loyaltyPayments[_paymentId].account));
+        }
+    }
+
+    /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 시작하는 함수
+    /// @dev 상점주가 중계서버를 통해서 호출됩니다.
+    function openCancelLoyaltyPayment(bytes32 _paymentId, bytes calldata _signature) public {
         require(
-            ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), data.certifierSignature) == certifierAddress,
-            "1501"
+            (loyaltyPayments[_paymentId].status != LoyaltyPaymentStatus.CLOSED_PAYMENT) ||
+                (loyaltyPayments[_paymentId].status != LoyaltyPaymentStatus.FAILED_CANCEL),
+            "1532"
         );
+        require(block.timestamp <= loyaltyPayments[_paymentId].timestamp + 86400 * 7, "1534");
 
-        LoyaltyPaymentData memory payData = loyaltyPayments[data.paymentId];
-        if (payData.loyaltyType == LoyaltyType.POINT) {
-            loyaltyPayments[payData.paymentId].status = LoyaltyPaymentStatus.CANCELLED;
-            if (tokenBalances[feeAccount] >= payData.feeToken) {
-                tokenBalances[foundationAccount] += payData.feeToken;
-                tokenBalances[feeAccount] -= payData.feeToken;
-                pointBalances[data.account] += (payData.paidPoint + payData.feePoint);
-                shopCollection.subUsedPoint(payData.shopId, payData.paidPoint, payData.purchaseId);
-                emit CancelledLoyaltyPayment(
-                    payData.paymentId,
-                    payData.purchaseId,
-                    payData.currency,
-                    payData.account,
-                    payData.shopId,
-                    LoyaltyType.POINT,
-                    payData.paidPoint,
-                    payData.paidToken,
-                    payData.paidValue,
-                    payData.feePoint,
-                    payData.feeToken,
-                    payData.feeValue,
-                    pointBalances[payData.account]
+        ShopCollection.ShopData memory shopInfo = shopCollection.shopOf(loyaltyPayments[_paymentId].shopId);
+        bytes32 dataHash = keccak256(
+            abi.encode(_paymentId, loyaltyPayments[_paymentId].purchaseId, shopInfo.account, nonce[shopInfo.account])
+        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == shopInfo.account, "1501");
+
+        nonce[shopInfo.account]++;
+
+        if (loyaltyPayments[_paymentId].loyaltyType == LoyaltyType.POINT) {
+            if (tokenBalances[feeAccount] >= loyaltyPayments[_paymentId].feeToken) {
+                tokenBalances[feeAccount] -= loyaltyPayments[_paymentId].feeToken;
+                tokenBalances[temporaryAddress] += loyaltyPayments[_paymentId].feeToken;
+                pointBalances[temporaryAddress] += (loyaltyPayments[_paymentId].paidPoint +
+                    loyaltyPayments[_paymentId].feePoint);
+                loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.OPENED_CANCEL;
+                emit LoyaltyPaymentEvent(
+                    loyaltyPayments[_paymentId],
+                    pointBalanceOf(loyaltyPayments[_paymentId].account)
                 );
             } else {
                 revert("1513");
             }
         } else {
             if (
-                (tokenBalances[foundationAccount] >= payData.paidToken) &&
-                (tokenBalances[feeAccount] >= payData.feeToken)
+                (tokenBalances[foundationAccount] >= loyaltyPayments[_paymentId].paidToken) &&
+                (tokenBalances[feeAccount] >= loyaltyPayments[_paymentId].feeToken)
             ) {
-                tokenBalances[foundationAccount] -= payData.paidToken;
-                tokenBalances[feeAccount] -= payData.feeToken;
-                pointBalances[data.account] += (payData.paidToken + payData.feeToken);
-                shopCollection.subUsedPoint(payData.shopId, payData.paidPoint, payData.purchaseId);
-                emit CancelledLoyaltyPayment(
-                    payData.paymentId,
-                    payData.purchaseId,
-                    payData.currency,
-                    payData.account,
-                    payData.shopId,
-                    LoyaltyType.TOKEN,
-                    payData.paidPoint,
-                    payData.paidToken,
-                    payData.paidValue,
-                    payData.feePoint,
-                    payData.feeToken,
-                    payData.feeValue,
-                    tokenBalances[payData.account]
+                tokenBalances[foundationAccount] -= loyaltyPayments[_paymentId].paidToken;
+                tokenBalances[feeAccount] -= loyaltyPayments[_paymentId].feeToken;
+                tokenBalances[temporaryAddress] += (loyaltyPayments[_paymentId].paidToken +
+                    loyaltyPayments[_paymentId].feeToken);
+                loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.OPENED_CANCEL;
+                emit LoyaltyPaymentEvent(
+                    loyaltyPayments[_paymentId],
+                    tokenBalanceOf(loyaltyPayments[_paymentId].account)
                 );
             } else {
                 revert("1513");
             }
         }
+    }
 
-        nonce[data.account]++;
+    /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 종료하는 함수
+    /// @dev 사용자가 중계서버를 통해서 호출됩니다.
+    function closeCancelLoyaltyPayment(bytes32 _paymentId, bool _confirm, bytes calldata _signature) public {
+        require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_CANCEL, "1533");
+        bytes32 dataHash = keccak256(
+            abi.encode(
+                _paymentId,
+                loyaltyPayments[_paymentId].purchaseId,
+                _confirm,
+                certifierAddress,
+                nonce[certifierAddress]
+            )
+        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == certifierAddress, "1501");
+
         nonce[certifierAddress]++;
+
+        if (_confirm) {
+            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_CANCEL;
+            if (loyaltyPayments[_paymentId].loyaltyType == LoyaltyType.POINT) {
+                tokenBalances[foundationAccount] += loyaltyPayments[_paymentId].feeToken;
+                tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
+                pointBalances[loyaltyPayments[_paymentId].account] += (loyaltyPayments[_paymentId].paidPoint +
+                    loyaltyPayments[_paymentId].feePoint);
+                shopCollection.subUsedPoint(
+                    loyaltyPayments[_paymentId].shopId,
+                    loyaltyPayments[_paymentId].paidPoint,
+                    loyaltyPayments[_paymentId].purchaseId
+                );
+                emit LoyaltyPaymentEvent(
+                    loyaltyPayments[_paymentId],
+                    pointBalanceOf(loyaltyPayments[_paymentId].account)
+                );
+            } else {
+                tokenBalances[temporaryAddress] -= (loyaltyPayments[_paymentId].paidToken +
+                    loyaltyPayments[_paymentId].feeToken);
+                tokenBalances[loyaltyPayments[_paymentId].account] += (loyaltyPayments[_paymentId].paidToken +
+                    loyaltyPayments[_paymentId].feeToken);
+                shopCollection.subUsedPoint(
+                    loyaltyPayments[_paymentId].shopId,
+                    loyaltyPayments[_paymentId].paidPoint,
+                    loyaltyPayments[_paymentId].purchaseId
+                );
+                emit LoyaltyPaymentEvent(
+                    loyaltyPayments[_paymentId],
+                    tokenBalanceOf(loyaltyPayments[_paymentId].account)
+                );
+            }
+        } else {
+            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.FAILED_CANCEL;
+            if (loyaltyPayments[_paymentId].loyaltyType == LoyaltyType.POINT) {
+                tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
+                tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
+                pointBalances[temporaryAddress] -= (loyaltyPayments[_paymentId].paidPoint +
+                    loyaltyPayments[_paymentId].feePoint);
+                emit LoyaltyPaymentEvent(
+                    loyaltyPayments[_paymentId],
+                    pointBalanceOf(loyaltyPayments[_paymentId].account)
+                );
+            } else {
+                tokenBalances[temporaryAddress] -= (loyaltyPayments[_paymentId].paidToken +
+                    loyaltyPayments[_paymentId].feeToken);
+                tokenBalances[foundationAccount] += loyaltyPayments[_paymentId].paidToken;
+                tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
+                emit LoyaltyPaymentEvent(
+                    loyaltyPayments[_paymentId],
+                    tokenBalanceOf(loyaltyPayments[_paymentId].account)
+                );
+            }
+        }
     }
 
     function convertPointToToken(uint256 amount) internal view returns (uint256) {
