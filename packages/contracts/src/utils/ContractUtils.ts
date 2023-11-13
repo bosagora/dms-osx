@@ -9,7 +9,7 @@
  */
 
 import crypto from "crypto";
-import { BigNumberish, BytesLike, Signer } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
@@ -93,41 +93,7 @@ export class ContractUtils {
         return res.toLowerCase() === address.toLowerCase();
     }
 
-    public static getPaymentMessage(
-        address: string,
-        purchaseId: string,
-        amount: BigNumberish,
-        currency: string,
-        shopId: string,
-        nonce: BigNumberish
-    ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "string", "bytes32", "address", "uint256"],
-            [purchaseId, amount, currency, shopId, address, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
-    }
-
-    public static async signPayment(
-        signer: Signer,
-        purchaseId: string,
-        amount: BigNumberish,
-        currency: string,
-        shopId: string,
-        nonce: BigNumberish
-    ): Promise<string> {
-        const message = ContractUtils.getPaymentMessage(
-            await signer.getAddress(),
-            purchaseId,
-            amount,
-            currency,
-            shopId,
-            nonce
-        );
-        return signer.signMessage(message);
-    }
-
-    public static getLoyaltyPaymentMessage(
+    public static getLoyaltyNewPaymentMessage(
         address: string,
         paymentId: string,
         purchaseId: string,
@@ -143,7 +109,7 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signLoyaltyPayment(
+    public static async signLoyaltyNewPayment(
         signer: Signer,
         paymentId: string,
         purchaseId: string,
@@ -152,7 +118,7 @@ export class ContractUtils {
         shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const message = ContractUtils.getLoyaltyPaymentMessage(
+        const message = ContractUtils.getLoyaltyNewPaymentMessage(
             await signer.getAddress(),
             paymentId,
             purchaseId,
@@ -164,7 +130,38 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static getLoyaltyPaymentCancelMessage(
+    public static getLoyaltyClosePaymentMessage(
+        address: string,
+        paymentId: string,
+        purchaseId: string,
+        confirm: boolean,
+        nonce: BigNumberish
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "string", "bool", "address", "uint256"],
+            [paymentId, purchaseId, confirm, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signLoyaltyClosePayment(
+        signer: Signer,
+        paymentId: string,
+        purchaseId: string,
+        confirm: boolean,
+        nonce: BigNumberish
+    ): Promise<string> {
+        const message = ContractUtils.getLoyaltyClosePaymentMessage(
+            await signer.getAddress(),
+            paymentId,
+            purchaseId,
+            confirm,
+            nonce
+        );
+        return signer.signMessage(message);
+    }
+
+    public static getLoyaltyCancelPaymentMessage(
         address: string,
         paymentId: string,
         purchaseId: string,
@@ -177,13 +174,13 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signLoyaltyPaymentCancel(
+    public static async signLoyaltyCancelPayment(
         signer: Signer,
         paymentId: string,
         purchaseId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const message = ContractUtils.getLoyaltyPaymentCancelMessage(
+        const message = ContractUtils.getLoyaltyCancelPaymentMessage(
             await signer.getAddress(),
             paymentId,
             purchaseId,
