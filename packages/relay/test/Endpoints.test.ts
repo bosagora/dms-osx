@@ -373,7 +373,7 @@ describe("Test of Server", function () {
                     signature,
                 });
 
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
             });
@@ -553,7 +553,7 @@ describe("Test of Server", function () {
                     signature,
                 });
 
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 

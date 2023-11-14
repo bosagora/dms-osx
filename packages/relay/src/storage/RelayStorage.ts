@@ -43,46 +43,30 @@ export class RelayStorage extends Storage {
         await this.queryForMapper("table", "drop_table", { database });
     }
 
-    public postPayment(
-        paymentId: string,
-        purchaseId: string,
-        amount: BigNumber,
-        currency: string,
-        shopId: string,
-        account: string,
-        loyaltyType: LoyaltyType,
-        paidPoint: BigNumber,
-        paidToken: BigNumber,
-        paidValue: BigNumber,
-        feePoint: BigNumber,
-        feeToken: BigNumber,
-        feeValue: BigNumber,
-        totalPoint: BigNumber,
-        totalToken: BigNumber,
-        totalValue: BigNumber,
-        paymentStatus: LoyaltyPaymentInputDataStatus,
-        createTimestamp: number
-    ): Promise<void> {
+    public postPayment(item: LoyaltyPaymentInternalData): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "postPayment", {
-                paymentId,
-                purchaseId,
-                amount: amount.toString(),
-                currency,
-                shopId,
-                account,
-                loyaltyType,
-                paidPoint: paidPoint.toString(),
-                paidToken: paidToken.toString(),
-                paidValue: paidValue.toString(),
-                feePoint: feePoint.toString(),
-                feeToken: feeToken.toString(),
-                feeValue: feeValue.toString(),
-                totalPoint: totalPoint.toString(),
-                totalToken: totalToken.toString(),
-                totalValue: totalValue.toString(),
-                paymentStatus,
-                createTimestamp,
+                paymentId: item.paymentId,
+                purchaseId: item.purchaseId,
+                amount: item.amount.toString(),
+                currency: item.currency,
+                shopId: item.shopId,
+                account: item.account,
+                loyaltyType: item.loyaltyType,
+                paidPoint: item.paidPoint.toString(),
+                paidToken: item.paidToken.toString(),
+                paidValue: item.paidValue.toString(),
+                feePoint: item.feePoint.toString(),
+                feeToken: item.feeToken.toString(),
+                feeValue: item.feeValue.toString(),
+                totalPoint: item.totalPoint.toString(),
+                totalToken: item.totalToken.toString(),
+                totalValue: item.totalValue.toString(),
+                paymentStatus: item.paymentStatus,
+                openNewTimestamp: item.openNewTimestamp,
+                closeNewTimestamp: item.closeNewTimestamp,
+                openCancelTimestamp: item.openCancelTimestamp,
+                closeCancelTimestamp: item.closeCancelTimestamp,
             })
                 .then(() => {
                     return resolve();
@@ -118,12 +102,43 @@ export class RelayStorage extends Storage {
                             totalToken: BigNumber.from(m.totalToken),
                             totalValue: BigNumber.from(m.totalValue),
                             paymentStatus: m.paymentStatus,
-                            createTimestamp: m.createTimestamp,
-                            cancelTimestamp: m.cancelTimestamp,
+                            openNewTimestamp: m.openNewTimestamp,
+                            closeNewTimestamp: m.closeNewTimestamp,
+                            openCancelTimestamp: m.openCancelTimestamp,
+                            closeCancelTimestamp: m.closeCancelTimestamp,
                         });
                     } else {
                         return resolve(undefined);
                     }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updatePayment(item: LoyaltyPaymentInternalData): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updatePayment", {
+                paymentId: item.paymentId,
+                paidPoint: item.paidPoint.toString(),
+                paidToken: item.paidToken.toString(),
+                paidValue: item.paidValue.toString(),
+                feePoint: item.feePoint.toString(),
+                feeToken: item.feeToken.toString(),
+                feeValue: item.feeValue.toString(),
+                totalPoint: item.totalPoint.toString(),
+                totalToken: item.totalToken.toString(),
+                totalValue: item.totalValue.toString(),
+                paymentStatus: item.paymentStatus,
+                openNewTimestamp: item.openNewTimestamp,
+                closeNewTimestamp: item.closeNewTimestamp,
+                openCancelTimestamp: item.openCancelTimestamp,
+                closeCancelTimestamp: item.closeCancelTimestamp,
+            })
+                .then(() => {
+                    return resolve();
                 })
                 .catch((reason) => {
                     if (reason instanceof Error) return reject(reason);
@@ -148,11 +163,43 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateCancelTimestamp(paymentId: string, cancelTimestamp: number): Promise<any> {
+    public updateCloseNewTimestamp(paymentId: string, value: number): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
-            this.queryForMapper("payment", "updateCancelTimestamp", {
+            this.queryForMapper("payment", "updateCloseNewTimestamp", {
                 paymentId,
-                cancelTimestamp,
+                value,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateOpenCancelTimestamp(paymentId: string, value: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateOpenCancelTimestamp", {
+                paymentId,
+                value,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateCloseCancelTimestamp(paymentId: string, value: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateCloseCancelTimestamp", {
+                paymentId,
+                value,
             })
                 .then(() => {
                     return resolve();

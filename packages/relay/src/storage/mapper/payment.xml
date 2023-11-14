@@ -5,47 +5,51 @@
     <insert id="postPayment">
         INSERT INTO payments
             (
-                "paymentId"         ,
-                "purchaseId"        ,
-                "amount"            ,
-                "currency"          ,
-                "shopId"            ,
-                "account"           ,
-                "loyaltyType"       ,
-                "paidPoint"         ,
-                "paidToken"         ,
-                "paidValue"         ,
-                "feePoint"          ,
-                "feeToken"          ,
-                "feeValue"          ,
-                "totalPoint"        ,
-                "totalToken"        ,
-                "totalValue"        ,
-                "paymentStatus"     ,
-                "createTimestamp"   ,
-                "cencelTimestamp"
+                "paymentId"             ,
+                "purchaseId"            ,
+                "amount"                ,
+                "currency"              ,
+                "shopId"                ,
+                "account"               ,
+                "loyaltyType"           ,
+                "paidPoint"             ,
+                "paidToken"             ,
+                "paidValue"             ,
+                "feePoint"              ,
+                "feeToken"              ,
+                "feeValue"              ,
+                "totalPoint"            ,
+                "totalToken"            ,
+                "totalValue"            ,
+                "paymentStatus"         ,
+                "openNewTimestamp"      ,
+                "closeNewTimestamp"      ,
+                "openCancelTimestamp"   ,
+                "closeCancelTimestamp"
             )
         VALUES
             (
-                #{paymentId},
-                #{purchaseId},
-                #{amount},
-                #{currency},
-                #{shopId},
-                #{account},
-                ${loyaltyType},
-                #{paidPoint},
-                #{paidToken},
-                #{paidValue},
-                #{feePoint},
-                #{feeToken},
-                #{feeValue},
-                #{totalPoint},
-                #{totalToken},
-                #{totalValue},
-                ${paymentStatus},
-                ${createTimestamp},
-                0
+                #{paymentId}        ,
+                #{purchaseId}       ,
+                #{amount}           ,
+                #{currency}         ,
+                #{shopId}           ,
+                #{account}          ,
+                ${loyaltyType}      ,
+                #{paidPoint}        ,
+                #{paidToken}        ,
+                #{paidValue}        ,
+                #{feePoint}         ,
+                #{feeToken}         ,
+                #{feeValue}         ,
+                #{totalPoint}       ,
+                #{totalToken}       ,
+                #{totalValue}       ,
+                ${paymentStatus}    ,
+                ${openNewTimestamp} ,
+                ${closeNewTimestamp} ,
+                ${openCancelTimestamp},
+                ${closeCancelTimestamp}
             )
         ON CONFLICT ("paymentId")  DO NOTHING;
     </insert>
@@ -54,17 +58,52 @@
         SELECT * FROM payments WHERE "paymentId" = #{paymentId};
     </select>
 
-    <update id="updateStatus">
+
+    <update id="updatePayment">
         UPDATE payments
         SET
-            "paymentStatus" = #{paymentStatus}
+            "paidPoint"             = #{paidPoint},
+            "paidToken"             = #{paidToken},
+            "paidValue"             = #{paidValue},
+            "feePoint"              = #{feePoint},
+            "feeToken"              = #{feeToken},
+            "feeValue"              = #{feeValue},
+            "totalPoint"            = #{totalPoint},
+            "totalToken"            = #{totalToken},
+            "totalValue"            = #{totalValue},
+            "paymentStatus"         = ${paymentStatus},
+            "openNewTimestamp"      = ${openNewTimestamp},
+            "closeNewTimestamp"     = ${closeNewTimestamp},
+            "openCancelTimestamp"   = ${openCancelTimestamp},
+            "closeCancelTimestamp"  = ${closeCancelTimestamp}
         WHERE "paymentId" = #{paymentId}
     </update>
 
-    <update id="updateCancelTimestamp">
+    <update id="updateStatus">
         UPDATE payments
         SET
-            "cencelTimestamp" = #{cancelTimestamp}
+            "paymentStatus" = ${paymentStatus}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <update id="updateCloseNewTimestamp">
+        UPDATE payments
+        SET
+            "closeNewTimestamp" = ${value}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <update id="updateOpenCancelTimestamp">
+        UPDATE payments
+        SET
+            "openCancelTimestamp" = ${value}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <update id="updateCloseCancelTimestamp">
+        UPDATE payments
+        SET
+            "closeCancelTimestamp" = ${value}
         WHERE "paymentId" = #{paymentId}
     </update>
 </mapper>
