@@ -480,7 +480,7 @@ describe("Test for ShopCollection", () => {
                 const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address, nonce);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     userWallets[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
@@ -492,7 +492,7 @@ describe("Test for ShopCollection", () => {
 
                 const amt = purchaseAmount.mul(shop.providePercent).div(100);
                 await expect(
-                    ledgerContract.connect(relay).createLoyaltyPayment({
+                    ledgerContract.connect(relay).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -501,14 +501,7 @@ describe("Test for ShopCollection", () => {
                         account: userWallets[purchase.userIndex].address,
                         signature,
                     })
-                )
-                    .to.emit(ledgerContract, "ProvidedTokenForSettlement")
-                    .withNamedArgs({
-                        account: settlements.address,
-                        shopId: shop.shopId,
-                        providedPoint: Amount.make(200, 18).value,
-                    })
-                    .to.emit(ledgerContract, "LoyaltyPaymentEvent");
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const paymentData = await ledgerContract.loyaltyPaymentOf(paymentId);
                 expect(paymentData.paymentId).to.deep.equal(paymentId);
@@ -519,6 +512,23 @@ describe("Test for ShopCollection", () => {
                 expect(paymentData.loyaltyType).to.deep.equal(0);
                 expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
+
+                const nonce2 = await ledgerContract.nonceOf(certifier.address);
+                const signature2 = await ContractUtils.signLoyaltyClosePayment(
+                    certifier,
+                    paymentId,
+                    purchase.purchaseId,
+                    true,
+                    nonce2
+                );
+                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2))
+                    .to.emit(ledgerContract, "ProvidedTokenForSettlement")
+                    .withNamedArgs({
+                        account: settlements.address,
+                        shopId: shop.shopId,
+                        providedPoint: Amount.make(200, 18).value,
+                    })
+                    .to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
@@ -545,7 +555,7 @@ describe("Test for ShopCollection", () => {
                     signature,
                 });
 
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
             });
@@ -592,7 +602,7 @@ describe("Test for ShopCollection", () => {
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 const shop = shopData[purchase.shopIndex];
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     userWallets[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
@@ -603,7 +613,7 @@ describe("Test for ShopCollection", () => {
                 );
 
                 await expect(
-                    ledgerContract.connect(relay).createLoyaltyPayment({
+                    ledgerContract.connect(relay).openNewLoyaltyPayment({
                         purchaseId: purchase.purchaseId,
                         paymentId,
                         amount: purchaseAmount,
@@ -623,6 +633,19 @@ describe("Test for ShopCollection", () => {
                 expect(paymentData.loyaltyType).to.deep.equal(1);
                 expect(paymentData.paidToken).to.deep.equal(tokenAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
+
+                const nonce2 = await ledgerContract.nonceOf(certifier.address);
+                const signature2 = await ContractUtils.signLoyaltyClosePayment(
+                    certifier,
+                    paymentId,
+                    purchase.purchaseId,
+                    true,
+                    nonce2
+                );
+                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2)).to.emit(
+                    ledgerContract,
+                    "LoyaltyPaymentEvent"
+                );
 
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);
@@ -653,7 +676,7 @@ describe("Test for ShopCollection", () => {
                     .addQuery("shopId", shopData[shopIndex].shopId)
                     .toString();
                 const response = await client.get(url);
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
@@ -684,7 +707,7 @@ describe("Test for ShopCollection", () => {
                     signature,
                 });
 
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
@@ -699,7 +722,7 @@ describe("Test for ShopCollection", () => {
                     .addQuery("shopId", shopData[shopIndex].shopId)
                     .toString();
                 const response = await client.get(url);
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     withdrawAmount: "400000000000000000000",
@@ -723,7 +746,7 @@ describe("Test for ShopCollection", () => {
                     signature,
                 });
 
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
@@ -738,7 +761,7 @@ describe("Test for ShopCollection", () => {
                     .addQuery("shopId", shopData[shopIndex].shopId)
                     .toString();
                 const response = await client.get(url);
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
@@ -759,7 +782,7 @@ describe("Test for ShopCollection", () => {
                     .addQuery("shopId", shopData[shopIndex].shopId)
                     .toString();
                 const response = await client.get(url);
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     withdrawAmount: "400000000000000000000",

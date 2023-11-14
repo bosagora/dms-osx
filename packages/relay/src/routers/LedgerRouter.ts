@@ -10,6 +10,7 @@ import * as hre from "hardhat";
 import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { RelayStorage } from "../storage/RelayStorage";
+import { ResponseMessage } from "../types";
 
 export class LedgerRouter {
     /**
@@ -207,12 +208,7 @@ export class LedgerRouter {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         const signerItem = await this.getRelaySigner();
@@ -223,27 +219,18 @@ export class LedgerRouter {
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(account);
             if (!ContractUtils.verifyLoyaltyType(account, userNonce, signature))
-                return res.status(200).json(
-                    this.makeResponseData(500, undefined, {
-                        message: "Signature is not valid.",
-                    })
-                );
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
                 .changeToLoyaltyToken(account, signature);
 
             logger.http(`TxHash(changeToLoyaltyToken): `, tx.hash);
-            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+            return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed change loyalty type";
-            logger.error(`POST /v1/ledger/changeToLoyaltyToken :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/ledger/changeToLoyaltyToken :`, msg.error.message);
+            return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
@@ -259,12 +246,7 @@ export class LedgerRouter {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         const signerItem = await this.getRelaySigner();
@@ -276,27 +258,18 @@ export class LedgerRouter {
             // 서명검증
             const userNonce = await (await this.getLedgerContract()).nonceOf(account);
             if (!ContractUtils.verifyChangePayablePoint(phone, account, userNonce, signature))
-                return res.status(200).json(
-                    this.makeResponseData(500, undefined, {
-                        message: "Signature is not valid.",
-                    })
-                );
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
             const tx = await (await this.getLedgerContract())
                 .connect(signerItem.signer)
                 .changeToPayablePoint(phone, account, signature);
 
             logger.http(`TxHash(changeToPayablePoint): `, tx.hash);
-            return res.status(200).json(this.makeResponseData(200, { txHash: tx.hash }));
+            return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed change to payable point";
-            logger.error(`POST /v1/ledger/changeToPayablePoint :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/ledger/changeToPayablePoint :`, msg.error.message);
+            return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
         }

@@ -6,19 +6,21 @@ import { INotificationSender } from "../delegator/NotificationSender";
 import { WebService } from "../service/WebService";
 import { RelayStorage } from "../storage/RelayStorage";
 import {
+    LoyaltyPaymentEvent,
     LoyaltyPaymentInputDataStatus,
     LoyaltyPaymentInternalData,
     LoyaltyType,
     PaymentResultCode,
     PaymentResultData,
     PaymentResultType,
+    ResponseMessage,
     WithdrawStatus,
 } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { HTTPClient } from "../utils/Utils";
 import { Validation } from "../validation";
 
-import { BigNumber } from "ethers";
+import { BigNumber, ContractTransaction } from "ethers";
 import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
@@ -141,7 +143,7 @@ export class PaymentRouter {
         );
 
         this.app.post(
-            "/v1/payment/create",
+            "/v1/payment/new/open",
             [
                 body("accessKey").exists(),
                 body("purchaseId").exists(),
@@ -153,59 +155,51 @@ export class PaymentRouter {
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("account").exists().trim().isEthereumAddress(),
             ],
-            this.payment_create.bind(this)
+            this.payment_new_open.bind(this)
+        );
+
+        this.app.post(
+            "/v1/payment/new/close",
+            [body("accessKey").exists(), body("paymentId").exists()],
+            this.payment_new_close.bind(this)
+        );
+
+        this.app.post(
+            "/v1/payment/new/approval",
+            [
+                body("paymentId").exists(),
+                body("approval").exists().trim().toLowerCase().isIn(["true", "false"]),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.payment_new_approval.bind(this)
         );
 
         this.app.get("/v1/payment/item", [query("paymentId").exists()], this.payment_item.bind(this));
 
         this.app.post(
-            "/v1/payment/create/confirm",
-            [
-                body("paymentId").exists(),
-                body("signature")
-                    .exists()
-                    .matches(/^(0x)[0-9a-f]{130}$/i),
-            ],
-            this.payment_create_confirm.bind(this)
-        );
-
-        this.app.post(
-            "/v1/payment/create/deny",
-            [
-                body("paymentId").exists(),
-                body("signature")
-                    .exists()
-                    .matches(/^(0x)[0-9a-f]{130}$/i),
-            ],
-            this.payment_create_deny.bind(this)
-        );
-
-        this.app.post(
-            "/v1/payment/cancel",
+            "/v1/payment/cancel/open",
             [body("accessKey").exists(), body("paymentId").exists()],
-            this.payment_cancel.bind(this)
+            this.payment_cancel_open.bind(this)
         );
 
         this.app.post(
-            "/v1/payment/cancel/confirm",
+            "/v1/payment/cancel/close",
+            [body("accessKey").exists(), body("paymentId").exists()],
+            this.payment_cancel_close.bind(this)
+        );
+
+        this.app.post(
+            "/v1/payment/cancel/approval",
             [
                 body("paymentId").exists(),
+                body("approval").exists().trim().toLowerCase().isIn(["true", "false"]),
                 body("signature")
                     .exists()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.payment_cancel_confirm.bind(this)
-        );
-
-        this.app.post(
-            "/v1/payment/cancel/deny",
-            [
-                body("paymentId").exists(),
-                body("signature")
-                    .exists()
-                    .matches(/^(0x)[0-9a-f]{130}$/i),
-            ],
-            this.payment_cancel_deny.bind(this)
+            this.payment_cancel_approval.bind(this)
         );
     }
 
@@ -319,12 +313,7 @@ export class PaymentRouter {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         try {
@@ -336,16 +325,11 @@ export class PaymentRouter {
                     : await (await this.getLedgerContract()).tokenBalanceOf(account);
             return res
                 .status(200)
-                .json(this.makeResponseData(200, { account, loyaltyType, balance: balance.toString() }));
+                .json(this.makeResponseData(0, { account, loyaltyType, balance: balance.toString() }));
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /payment/balance";
-            logger.error(`GET /payment/balance :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/balance :`, msg.error.message);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 
@@ -359,12 +343,7 @@ export class PaymentRouter {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         try {
@@ -382,16 +361,11 @@ export class PaymentRouter {
                 settledPoint: info.settledPoint.toString(),
                 withdrawnPoint: info.withdrawnPoint.toString(),
             };
-            return res.status(200).json(this.makeResponseData(200, shopInfo));
+            return res.status(200).json(this.makeResponseData(0, shopInfo));
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/shop/info";
-            logger.error(`GET /v1/payment/shop/info :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/shop/info :`, msg.error.message);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 
@@ -405,12 +379,7 @@ export class PaymentRouter {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         try {
@@ -424,16 +393,11 @@ export class PaymentRouter {
                 withdrawStatus: status,
             };
 
-            return res.status(200).json(this.makeResponseData(200, shopWithdrawalInfo));
+            return res.status(200).json(this.makeResponseData(0, shopWithdrawalInfo));
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/shop/withdrawal";
-            logger.error(`GET /v1/payment/shop/withdrawal :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/shop/withdrawal :`, msg.error.message);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 
@@ -447,12 +411,7 @@ export class PaymentRouter {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         try {
@@ -500,7 +459,7 @@ export class PaymentRouter {
             totalValue = paidValue.add(feeValue);
 
             return res.status(200).json(
-                this.makeResponseData(200, {
+                this.makeResponseData(0, {
                     account,
                     loyaltyType,
                     amount: amount.toString(),
@@ -519,43 +478,28 @@ export class PaymentRouter {
                 })
             );
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/info";
-            logger.error(`GET /v1/payment/info :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/info :`, msg.error.message);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 
     /**
-     * 결제 / 결제정보를 제공한다
-     * POST /v1/payment/create
+     * POST /v1/payment/new/open
      * @private
      */
-    private async payment_create(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/payment/create`);
+    private async payment_new_open(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/new/open`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         try {
             const accessKey: string = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
-                return res.json(
-                    this.makeResponseData(400, undefined, {
-                        message: "The access key entered is not valid.",
-                    })
-                );
+                return res.json(ResponseMessage.getErrorMessage("2002"));
             }
 
             const purchaseId: string = String(req.body.purchaseId).trim();
@@ -579,9 +523,10 @@ export class PaymentRouter {
             let totalToken: BigNumber;
             let totalValue: BigNumber;
 
-            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+            const contract = await this.getLedgerContract();
+            const loyaltyType = await contract.loyaltyTypeOf(account);
             if (loyaltyType === LoyaltyType.POINT) {
-                balance = await (await this.getLedgerContract()).pointBalanceOf(account);
+                balance = await contract.pointBalanceOf(account);
                 paidPoint = amount.mul(rate).div(multiple);
                 feePoint = paidPoint.mul(feeRate).div(100);
                 totalPoint = paidPoint.add(feePoint);
@@ -592,7 +537,7 @@ export class PaymentRouter {
                 feeToken = BigNumber.from(0);
                 totalToken = BigNumber.from(0);
             } else {
-                balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
+                balance = await contract.tokenBalanceOf(account);
                 const symbol = await (await this.getTokenContract()).symbol();
                 const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
                 paidToken = amount.mul(rate).div(tokenRate);
@@ -627,35 +572,16 @@ export class PaymentRouter {
                 totalPoint,
                 totalToken,
                 totalValue,
-                paymentStatus: LoyaltyPaymentInputDataStatus.CREATED,
-                createTimestamp: ContractUtils.getTimeStamp(),
-                cancelTimestamp: 0,
+                paymentStatus: LoyaltyPaymentInputDataStatus.OPENED_NEW,
+                openNewTimestamp: ContractUtils.getTimeStamp(),
+                closeNewTimestamp: 0,
+                openCancelTimestamp: 0,
+                closeCancelTimestamp: 0,
             };
-            await this._storage.postPayment(
-                item.paymentId,
-                item.purchaseId,
-                item.amount,
-                item.currency,
-                item.shopId,
-                item.account,
-                item.loyaltyType,
-                item.paidPoint,
-                item.paidToken,
-                item.paidValue,
-                item.feePoint,
-                item.feeToken,
-                item.feeValue,
-                item.totalPoint,
-                item.totalToken,
-                item.totalValue,
-                item.paymentStatus,
-                item.createTimestamp
-            );
-
-            /// 사용자에게 푸쉬 메세지 발송 후 서명을 확인함
+            await this._storage.postPayment(item);
 
             res.status(200).json(
-                this.makeResponseData(200, {
+                this.makeResponseData(0, {
                     paymentId: item.paymentId,
                     purchaseId: item.purchaseId,
                     amount: item.amount.toString(),
@@ -673,10 +599,14 @@ export class PaymentRouter {
                     totalToken: item.totalToken.toString(),
                     totalValue: item.totalValue.toString(),
                     paymentStatus: item.paymentStatus,
-                    createTimestamp: item.createTimestamp,
+                    openNewTimestamp: item.openNewTimestamp,
+                    closeNewTimestamp: item.closeNewTimestamp,
+                    openCancelTimestamp: item.openCancelTimestamp,
+                    closeCancelTimestamp: item.closeCancelTimestamp,
                 })
             );
 
+            /// 사용자에게 푸쉬 메세지 발송
             const title = "KIOS 결제 승인 요청";
             const contents: string[] = [];
             contents.push(`결제 금액 : ${new Amount(item.amount, 18).toBOAString()}`);
@@ -685,14 +615,271 @@ export class PaymentRouter {
 
             return;
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/create";
-            logger.error(`POST /v1/payment/create :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/new/open :`, msg.error.message);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * POST /v1/payment/new/approval
+     * @private
+     */
+    private async payment_new_approval(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/new/approval`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const paymentId: string = String(req.body.paymentId).trim();
+            const approval: boolean = String(req.body.approval).trim().toLowerCase() === "true";
+            const signature: string = String(req.body.signature).trim();
+            const item = await this._storage.getPayment(paymentId);
+            if (item === undefined) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            } else {
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.OPENED_NEW) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
+                }
+
+                if (
+                    !ContractUtils.verifyLoyaltyNewPayment(
+                        item.paymentId,
+                        item.purchaseId,
+                        item.amount,
+                        item.currency,
+                        item.shopId,
+                        await (await this.getLedgerContract()).nonceOf(item.account),
+                        item.account,
+                        signature
+                    )
+                ) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                }
+
+                if (ContractUtils.getTimeStamp() - item.openNewTimestamp > this._config.relay.paymentTimeoutSecond) {
+                    const data = ResponseMessage.getErrorMessage("7000");
+                    res.status(200).json(data);
+
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                    await this.sendPaymentResult(
+                        PaymentResultType.NEW,
+                        PaymentResultCode.TIMEOUT,
+                        data.error.message,
+                        this.getCallBackResponse(item)
+                    );
+                    return;
+                }
+
+                if (approval) {
+                    const contract = await this.getLedgerContract();
+                    try {
+                        const tx = await contract.connect(signerItem.signer).openNewLoyaltyPayment({
+                            paymentId: item.paymentId,
+                            purchaseId: item.purchaseId,
+                            amount: item.amount,
+                            currency: item.currency.toLowerCase(),
+                            shopId: item.shopId,
+                            account: item.account,
+                            signature,
+                        });
+
+                        item.paymentStatus = LoyaltyPaymentInputDataStatus.CONFIRMED_NEW;
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                        res.status(200).json(
+                            this.makeResponseData(0, {
+                                paymentId: item.paymentId,
+                                purchaseId: item.purchaseId,
+                                amount: item.amount.toString(),
+                                currency: item.currency,
+                                shopId: item.shopId,
+                                account: item.account,
+                                paymentStatus: item.paymentStatus,
+                                txHash: tx.hash,
+                            })
+                        );
+
+                        const event = await this.waitPaymentLoyalty(contract, tx);
+                        if (event !== undefined) {
+                            item.paymentStatus = LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_NEW;
+                            this.updateEvent(event, item);
+                            await this._storage.updatePayment(item);
+
+                            await this.sendPaymentResult(
+                                PaymentResultType.NEW,
+                                PaymentResultCode.SUCCESS,
+                                "The payment has been successfully completed",
+                                this.getCallBackResponse(item)
+                            );
+                        }
+                    } catch (error) {
+                        const msg = ResponseMessage.getEVMErrorMessage(error);
+                        logger.error(`POST /v1/payment/new/approval :`, msg.error.message);
+                        return res.status(200).json(msg);
+                    }
+                } else {
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.DENIED_NEW;
+                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
+                    res.status(200).json(
+                        this.makeResponseData(0, {
+                            paymentId: item.paymentId,
+                            purchaseId: item.purchaseId,
+                            amount: item.amount.toString(),
+                            currency: item.currency,
+                            shopId: item.shopId,
+                            account: item.account,
+                            paymentStatus: item.paymentStatus,
+                        })
+                    );
+
+                    await this.sendPaymentResult(
+                        PaymentResultType.NEW,
+                        PaymentResultCode.DENIED,
+                        "The payment denied by user",
+                        this.getCallBackResponse(item)
+                    );
+                }
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/payment/new/approval :`, msg.error.message);
+            return res.status(200).json(msg);
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * POST /v1/payment/new/close
+     * @private
+     */
+    private async payment_new_close(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/new/close`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const accessKey: string = String(req.body.accessKey).trim();
+            if (accessKey !== this._config.relay.accessKey) {
+                return res.json(ResponseMessage.getErrorMessage("2002"));
+            }
+
+            const paymentId: string = String(req.body.paymentId).trim();
+            const item = await this._storage.getPayment(paymentId);
+            if (item === undefined) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            } else {
+                if (
+                    item.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW ||
+                    item.paymentStatus === LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_NEW
+                ) {
+                    const contract = await this.getLedgerContract();
+                    const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
+                    const signature = await ContractUtils.signLoyaltyClosePayment(
+                        certifier,
+                        paymentId,
+                        item.purchaseId,
+                        true,
+                        await contract.nonceOf(certifier.address)
+                    );
+
+                    try {
+                        const tx = await contract
+                            .connect(signerItem.signer)
+                            .closeNewLoyaltyPayment(item.paymentId, true, signature);
+
+                        const event = await this.waitPaymentLoyalty(contract, tx);
+                        if (event !== undefined) {
+                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_NEW;
+                            item.closeNewTimestamp = ContractUtils.getTimeStamp();
+                            this.updateEvent(event, item);
+                            await this._storage.updatePayment(item);
+
+                            res.status(200).json(
+                                this.makeResponseData(0, {
+                                    paymentId: item.paymentId,
+                                    purchaseId: item.purchaseId,
+                                    amount: item.amount.toString(),
+                                    currency: item.currency,
+                                    shopId: item.shopId,
+                                    account: item.account,
+                                    loyaltyType: item.loyaltyType,
+                                    paidPoint: item.paidPoint.toString(),
+                                    paidToken: item.paidToken.toString(),
+                                    paidValue: item.paidValue.toString(),
+                                    feePoint: item.feePoint.toString(),
+                                    feeToken: item.feeToken.toString(),
+                                    feeValue: item.feeValue.toString(),
+                                    totalPoint: item.totalPoint.toString(),
+                                    totalToken: item.totalToken.toString(),
+                                    totalValue: item.totalValue.toString(),
+                                    paymentStatus: item.paymentStatus,
+                                    openNewTimestamp: item.openNewTimestamp,
+                                    closeNewTimestamp: item.closeNewTimestamp,
+                                    openCancelTimestamp: item.openCancelTimestamp,
+                                    closeCancelTimestamp: item.closeCancelTimestamp,
+                                })
+                            );
+                        } else {
+                            res.status(200).json(ResponseMessage.getErrorMessage("5000"));
+                        }
+                    } catch (error) {
+                        const msg = ResponseMessage.getEVMErrorMessage(error);
+                        logger.error(`POST /v1/payment/new/close :`, msg.error.message);
+                        return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+                    }
+                } else if (item.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED_NEW) {
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_NEW;
+                    item.closeNewTimestamp = ContractUtils.getTimeStamp();
+                    await this._storage.updatePayment(item);
+
+                    res.status(200).json(
+                        this.makeResponseData(0, {
+                            paymentId: item.paymentId,
+                            purchaseId: item.purchaseId,
+                            amount: item.amount.toString(),
+                            currency: item.currency,
+                            shopId: item.shopId,
+                            account: item.account,
+                            loyaltyType: item.loyaltyType,
+                            paidPoint: item.paidPoint.toString(),
+                            paidToken: item.paidToken.toString(),
+                            paidValue: item.paidValue.toString(),
+                            feePoint: item.feePoint.toString(),
+                            feeToken: item.feeToken.toString(),
+                            feeValue: item.feeValue.toString(),
+                            totalPoint: item.totalPoint.toString(),
+                            totalToken: item.totalToken.toString(),
+                            totalValue: item.totalValue.toString(),
+                            paymentStatus: item.paymentStatus,
+                            openNewTimestamp: item.openNewTimestamp,
+                            closeNewTimestamp: item.closeNewTimestamp,
+                            openCancelTimestamp: item.openCancelTimestamp,
+                            closeCancelTimestamp: item.closeCancelTimestamp,
+                        })
+                    );
+                } else {
+                    res.status(200).json(ResponseMessage.getErrorMessage("2024"));
+                }
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/payment/new/close :`, msg.error.message);
+            return res.status(200).json(msg);
+        } finally {
+            this.releaseRelaySigner(signerItem);
         }
     }
 
@@ -705,26 +892,17 @@ export class PaymentRouter {
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         try {
             const paymentId: string = String(req.query.paymentId).trim();
             const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
-                return res.status(200).json(
-                    this.makeResponseData(402, undefined, {
-                        message: "Payment ID is not exist ",
-                    })
-                );
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             }
             return res.status(200).json(
-                this.makeResponseData(200, {
+                this.makeResponseData(0, {
                     paymentId: item.paymentId,
                     purchaseId: item.purchaseId,
                     amount: item.amount.toString(),
@@ -742,451 +920,55 @@ export class PaymentRouter {
                     totalToken: item.totalToken.toString(),
                     totalValue: item.totalValue.toString(),
                     paymentStatus: item.paymentStatus,
-                    createTimestamp: item.createTimestamp,
-                    cancelTimestamp: item.cancelTimestamp,
+                    openNewTimestamp: item.openNewTimestamp,
+                    closeNewTimestamp: item.closeNewTimestamp,
+                    openCancelTimestamp: item.openCancelTimestamp,
+                    closeCancelTimestamp: item.closeCancelTimestamp,
                 })
             );
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/item";
-            logger.error(`GET /v1/payment/item :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
-        }
-    }
-
-    /**
-     * POST /v1/payment/create/confirm
-     * @private
-     */
-    private async payment_create_confirm(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/payment/create/confirm`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
-        }
-
-        const signerItem = await this.getRelaySigner();
-        try {
-            const paymentId: string = String(req.body.paymentId).trim();
-            const signature: string = String(req.body.signature).trim();
-            const item = await this._storage.getPayment(paymentId);
-            if (item === undefined) {
-                res.status(200).json(
-                    this.makeResponseData(401, undefined, {
-                        message: "Payment ID is not exist.",
-                    })
-                );
-                return;
-            } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATED) {
-                    res.status(200).json(
-                        this.makeResponseData(402, undefined, {
-                            message: "This payment has already been closed.",
-                        })
-                    );
-                    return;
-                }
-
-                if (
-                    !ContractUtils.verifyLoyaltyPayment(
-                        item.paymentId,
-                        item.purchaseId,
-                        item.amount,
-                        item.currency,
-                        item.shopId,
-                        await (await this.getLedgerContract()).nonceOf(item.account),
-                        item.account,
-                        signature
-                    )
-                ) {
-                    res.status(200).json(
-                        this.makeResponseData(403, undefined, {
-                            message: "The signature value entered is not valid.",
-                        })
-                    );
-                    return;
-                }
-
-                const defaultResult: PaymentResultData = {
-                    paymentId: item.paymentId,
-                    purchaseId: item.purchaseId,
-                    amount: item.amount.toString(),
-                    currency: item.currency,
-                    shopId: item.shopId,
-                    account: item.account,
-                    loyaltyType: item.loyaltyType,
-                    paidPoint: item.paidPoint.toString(),
-                    paidToken: item.paidToken.toString(),
-                    paidValue: item.paidValue.toString(),
-                    feePoint: item.feePoint.toString(),
-                    feeToken: item.feeToken.toString(),
-                    feeValue: item.feeValue.toString(),
-                    totalPoint: item.totalPoint.toString(),
-                    totalToken: item.totalToken.toString(),
-                    totalValue: item.totalValue.toString(),
-                };
-
-                if (ContractUtils.getTimeStamp() - item.cancelTimestamp > this._config.relay.paymentTimeoutSecond) {
-                    const message = "Timeout period expired";
-                    res.status(200).json(
-                        this.makeResponseData(404, undefined, {
-                            message,
-                        })
-                    );
-
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-
-                    await this.sendPaymentResult(
-                        PaymentResultType.CREATE,
-                        PaymentResultCode.TIMEOUT,
-                        message,
-                        defaultResult
-                    );
-                    return;
-                }
-
-                let success = true;
-                const contract = await this.getLedgerContract();
-                let tx: any;
-                try {
-                    tx = await contract.connect(signerItem.signer).createLoyaltyPayment({
-                        paymentId: item.paymentId,
-                        purchaseId: item.purchaseId,
-                        amount: item.amount,
-                        currency: item.currency.toLowerCase(),
-                        shopId: item.shopId,
-                        account: item.account,
-                        signature,
-                    });
-
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED;
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                    res.status(200).json(
-                        this.makeResponseData(200, {
-                            paymentId: item.paymentId,
-                            purchaseId: item.purchaseId,
-                            amount: item.amount.toString(),
-                            currency: item.currency,
-                            shopId: item.shopId,
-                            account: item.account,
-                            loyaltyType: item.loyaltyType,
-                            paidPoint: item.paidPoint.toString(),
-                            paidToken: item.paidToken.toString(),
-                            paidValue: item.paidValue.toString(),
-                            feePoint: item.feePoint.toString(),
-                            feeToken: item.feeToken.toString(),
-                            feeValue: item.feeValue.toString(),
-                            totalPoint: item.totalPoint.toString(),
-                            totalToken: item.totalToken.toString(),
-                            totalValue: item.totalValue.toString(),
-                            paymentStatus: item.paymentStatus,
-                            txHash: tx.hash,
-                        })
-                    );
-                } catch (error) {
-                    success = false;
-                    const message = ContractUtils.cacheEVMError(error as any);
-                    await this.sendPaymentResult(
-                        PaymentResultType.CREATE,
-                        PaymentResultCode.CONTRACT_ERROR,
-                        `An error occurred while executing the contract. (${message})`,
-                        defaultResult
-                    );
-                }
-
-                if (success && tx !== undefined) {
-                    const contractReceipt = await tx.wait();
-                    const log = ContractUtils.findLog(contractReceipt, contract.interface, "LoyaltyPaymentEvent");
-                    if (log !== undefined) {
-                        const parsedLog = contract.interface.parseLog(log);
-                        if (item.paymentId === parsedLog.args.payment.paymentId) {
-                            item.paidPoint =
-                                parsedLog.args.loyaltyType === LoyaltyType.POINT
-                                    ? BigNumber.from(parsedLog.args.payment.paidPoint)
-                                    : BigNumber.from(0);
-                            item.paidToken =
-                                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
-                                    ? BigNumber.from(parsedLog.args.payment.paidToken)
-                                    : BigNumber.from(0);
-                            item.paidValue = BigNumber.from(parsedLog.args.payment.paidValue);
-
-                            item.feePoint =
-                                parsedLog.args.loyaltyType === LoyaltyType.POINT
-                                    ? BigNumber.from(parsedLog.args.payment.feePoint)
-                                    : BigNumber.from(0);
-                            item.feeToken =
-                                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
-                                    ? BigNumber.from(parsedLog.args.payment.feeToken)
-                                    : BigNumber.from(0);
-                            item.feeValue = BigNumber.from(parsedLog.args.payment.feeValue);
-
-                            item.totalPoint = item.paidPoint.add(item.feePoint);
-                            item.totalToken = item.paidToken.add(item.feeToken);
-                            item.totalValue = item.paidValue.add(item.feeValue);
-
-                            await this.sendPaymentResult(
-                                PaymentResultType.CREATE,
-                                PaymentResultCode.SUCCESS,
-                                "The payment has been successfully completed.",
-                                {
-                                    paymentId: parsedLog.args.payment.paymentId,
-                                    purchaseId: parsedLog.args.payment.purchaseId,
-                                    amount: parsedLog.args.payment.paidValue.toString(),
-                                    currency: parsedLog.args.payment.currency,
-                                    account: parsedLog.args.payment.account,
-                                    shopId: parsedLog.args.payment.shopId,
-                                    loyaltyType: parsedLog.args.payment.loyaltyType,
-                                    paidPoint: item.paidPoint.toString(),
-                                    paidToken: item.paidToken.toString(),
-                                    paidValue: item.paidValue.toString(),
-                                    feePoint: item.feePoint.toString(),
-                                    feeToken: item.feeToken.toString(),
-                                    feeValue: item.feeValue.toString(),
-                                    totalPoint: item.totalPoint.toString(),
-                                    totalToken: item.totalToken.toString(),
-                                    totalValue: item.totalValue.toString(),
-                                    balance: parsedLog.args.balance.toString(),
-                                }
-                            );
-                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_COMPLETE;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                        } else {
-                            await this.sendPaymentResult(
-                                PaymentResultType.CREATE,
-                                PaymentResultCode.INTERNAL_ERROR,
-                                `An error occurred while executing the contract.`,
-                                defaultResult
-                            );
-                        }
-                    } else {
-                        await this.sendPaymentResult(
-                            PaymentResultType.CREATE,
-                            PaymentResultCode.INTERNAL_ERROR,
-                            `An error occurred while executing the contract.`,
-                            defaultResult
-                        );
-                    }
-                }
-            }
-        } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/create/confirm";
-            logger.error(`POST /v1/payment/create/confirm :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
-        } finally {
-            this.releaseRelaySigner(signerItem);
-        }
-    }
-
-    /**
-     * POST /v1/payment/create/deny
-     * @private
-     */
-    private async payment_create_deny(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/payment/create/deny`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
-        }
-
-        try {
-            const paymentId: string = String(req.body.paymentId).trim();
-            const signature: string = String(req.body.signature).trim();
-            const item = await this._storage.getPayment(paymentId);
-            if (item === undefined) {
-                return res.status(200).json(
-                    this.makeResponseData(401, undefined, {
-                        message: "Payment ID is not exist.",
-                    })
-                );
-            } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATED) {
-                    res.status(200).json(
-                        this.makeResponseData(402, undefined, {
-                            message: "This payment has already been closed.",
-                        })
-                    );
-                    return;
-                }
-
-                if (
-                    !ContractUtils.verifyLoyaltyPayment(
-                        item.paymentId,
-                        item.purchaseId,
-                        item.amount,
-                        item.currency,
-                        item.shopId,
-                        await (await this.getLedgerContract()).nonceOf(item.account),
-                        item.account,
-                        signature
-                    )
-                ) {
-                    res.status(200).json(
-                        this.makeResponseData(403, undefined, {
-                            message: "The signature value entered is not valid.",
-                        })
-                    );
-                    return;
-                }
-
-                const defaultResult: PaymentResultData = {
-                    paymentId: item.paymentId,
-                    purchaseId: item.purchaseId,
-                    amount: item.amount.toString(),
-                    currency: item.currency,
-                    shopId: item.shopId,
-                    account: item.account,
-                    loyaltyType: item.loyaltyType,
-                    paidPoint: item.paidPoint.toString(),
-                    paidToken: item.paidToken.toString(),
-                    paidValue: item.paidValue.toString(),
-                    feePoint: item.feePoint.toString(),
-                    feeToken: item.feeToken.toString(),
-                    feeValue: item.feeValue.toString(),
-                    totalPoint: item.totalPoint.toString(),
-                    totalToken: item.totalToken.toString(),
-                    totalValue: item.totalValue.toString(),
-                };
-
-                if (ContractUtils.getTimeStamp() - item.createTimestamp > this._config.relay.paymentTimeoutSecond) {
-                    const message = "Timeout period expired";
-                    res.status(200).json(
-                        this.makeResponseData(404, undefined, {
-                            message,
-                        })
-                    );
-
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-
-                    await this.sendPaymentResult(
-                        PaymentResultType.CREATE,
-                        PaymentResultCode.TIMEOUT,
-                        message,
-                        defaultResult
-                    );
-                    return;
-                }
-
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.CREATE_DENIED;
-                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-
-                res.status(200).json(
-                    this.makeResponseData(200, {
-                        paymentId: item.paymentId,
-                        purchaseId: item.purchaseId,
-                        amount: item.amount.toString(),
-                        currency: item.currency,
-                        shopId: item.shopId,
-                        account: item.account,
-                        loyaltyType: item.loyaltyType,
-                        paidPoint: item.paidPoint.toString(),
-                        paidToken: item.paidToken.toString(),
-                        paidValue: item.paidValue.toString(),
-                        feePoint: item.feePoint.toString(),
-                        feeToken: item.feeToken.toString(),
-                        feeValue: item.feeValue.toString(),
-                        totalPoint: item.totalPoint.toString(),
-                        totalToken: item.totalToken.toString(),
-                        totalValue: item.totalValue.toString(),
-                        paymentStatus: item.paymentStatus,
-                    })
-                );
-
-                await this.sendPaymentResult(
-                    PaymentResultType.CREATE,
-                    PaymentResultCode.DENIED,
-                    "The payment denied by user.",
-                    defaultResult
-                );
-            }
-        } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/create/deny";
-            logger.error(`POST /v1/payment/create/deny :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/item :`, msg.error.message);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 
     /**
      * 결제 / 결제정보를 제공한다
-     * POST /v1/payment/cancel
+     * POST /v1/payment/cancel/open
      * @private
      */
-    private async payment_cancel(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/payment/cancel`);
+    private async payment_cancel_open(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/cancel/open`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         try {
             const accessKey: string = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
-                return res.json(
-                    this.makeResponseData(400, undefined, {
-                        message: "The access key entered is not valid.",
-                    })
-                );
+                return res.json(ResponseMessage.getErrorMessage("2002"));
             }
 
             const paymentId: string = String(req.body.paymentId).trim();
             const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
-                return res.status(200).json(
-                    this.makeResponseData(401, undefined, {
-                        message: "Payment ID is not exist.",
-                    })
-                );
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CREATE_COMPLETE) {
-                    res.status(200).json(
-                        this.makeResponseData(402, undefined, {
-                            message: "This payment has not been completed.",
-                        })
-                    );
-                    return;
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CLOSED_NEW) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2022"));
                 }
 
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCELED;
+                item.paymentStatus = LoyaltyPaymentInputDataStatus.OPENED_CANCEL;
                 await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
-                item.cancelTimestamp = ContractUtils.getTimeStamp();
-                await this._storage.updateCancelTimestamp(item.paymentId, item.cancelTimestamp);
+                item.openCancelTimestamp = ContractUtils.getTimeStamp();
+                await this._storage.updateOpenCancelTimestamp(item.paymentId, item.openCancelTimestamp);
 
                 res.status(200).json(
-                    this.makeResponseData(200, {
+                    this.makeResponseData(0, {
                         paymentId: item.paymentId,
                         purchaseId: item.purchaseId,
                         amount: item.amount.toString(),
@@ -1204,8 +986,10 @@ export class PaymentRouter {
                         totalToken: item.totalToken.toString(),
                         totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
-                        createTimestamp: item.createTimestamp,
-                        cancelTimestamp: item.cancelTimestamp,
+                        openNewTimestamp: item.openNewTimestamp,
+                        closeNewTimestamp: item.closeNewTimestamp,
+                        openCancelTimestamp: item.openCancelTimestamp,
+                        closeCancelTimestamp: item.closeCancelTimestamp,
                     })
                 );
             }
@@ -1217,136 +1001,231 @@ export class PaymentRouter {
             this._sender.send(title, contents.join("\n"));
             return;
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/cancel";
-            logger.error(`POST /v1/payment/cancel :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/payment/cancel/open :`, msg.error.message);
+            return res.status(200).json(msg);
         }
     }
 
     /**
-     * POST /v1/payment/cancel/confirm
+     * POST /v1/payment/cancel/approval
      * @private
      */
-    private async payment_cancel_confirm(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/payment/cancel/confirm`);
+    private async payment_cancel_approval(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/cancel/approval`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
         const signerItem = await this.getRelaySigner();
         try {
             const paymentId: string = String(req.body.paymentId).trim();
+            const approval: boolean = String(req.body.approval).trim().toLowerCase() === "true";
             const signature: string = String(req.body.signature).trim();
             const item = await this._storage.getPayment(paymentId);
             if (item === undefined) {
-                res.status(200).json(
-                    this.makeResponseData(401, undefined, {
-                        message: "Payment ID is not exist.",
-                    })
-                );
-                return;
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CANCELED) {
-                    res.status(200).json(
-                        this.makeResponseData(402, undefined, {
-                            message: "This payment is not in a cancellable state.",
-                        })
-                    );
-                    return;
+                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.OPENED_CANCEL) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
                 }
 
+                const shopContract = await this.getShopContract();
+                const shopData = await shopContract.shopOf(item.shopId);
+
                 if (
-                    !ContractUtils.verifyLoyaltyPaymentCancel(
+                    !ContractUtils.verifyLoyaltyCancelPayment(
                         item.paymentId,
                         item.purchaseId,
-                        await (await this.getLedgerContract()).nonceOf(item.account),
-                        item.account,
+                        await (await this.getLedgerContract()).nonceOf(shopData.account),
+                        shopData.account,
                         signature
                     )
                 ) {
-                    res.status(200).json(
-                        this.makeResponseData(403, undefined, {
-                            message: "The signature value entered is not valid.",
-                        })
-                    );
-                    return;
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
                 }
 
-                const defaultResult: PaymentResultData = {
-                    paymentId: item.paymentId,
-                    purchaseId: item.purchaseId,
-                    amount: item.amount.toString(),
-                    currency: item.currency,
-                    shopId: item.shopId,
-                    account: item.account,
-                    loyaltyType: item.loyaltyType,
-                    paidPoint: item.paidPoint.toString(),
-                    paidToken: item.paidToken.toString(),
-                    paidValue: item.paidValue.toString(),
-                    feePoint: item.feePoint.toString(),
-                    feeToken: item.feeToken.toString(),
-                    feeValue: item.feeValue.toString(),
-                    totalPoint: item.totalPoint.toString(),
-                    totalToken: item.totalToken.toString(),
-                    totalValue: item.totalValue.toString(),
-                };
-
-                if (ContractUtils.getTimeStamp() - item.cancelTimestamp > this._config.relay.paymentTimeoutSecond) {
-                    const message = "Timeout period expired";
-                    res.status(200).json(
-                        this.makeResponseData(404, undefined, {
-                            message,
-                        })
-                    );
-
+                if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > this._config.relay.paymentTimeoutSecond) {
+                    const msg = ResponseMessage.getErrorMessage("7000");
+                    res.status(200).json(msg);
                     item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                     await this.sendPaymentResult(
                         PaymentResultType.CANCEL,
                         PaymentResultCode.TIMEOUT,
-                        message,
-                        defaultResult
+                        msg.error.message,
+                        this.getCallBackResponse(item)
                     );
                     return;
                 }
 
-                const wallet = new hre.ethers.Wallet(this._config.relay.certifierKey);
-                const certifierSignature = await ContractUtils.signLoyaltyPaymentCancel(
-                    wallet,
-                    item.paymentId,
-                    item.purchaseId,
-                    await (await this.getLedgerContract()).nonceOf(wallet.address)
-                );
+                if (approval) {
+                    const contract = await this.getLedgerContract();
+                    try {
+                        const tx = await contract
+                            .connect(signerItem.signer)
+                            .openCancelLoyaltyPayment(item.paymentId, signature);
 
-                let success = true;
-                const contract = await this.getLedgerContract();
-                let tx: any;
-                try {
-                    tx = await (await this.getLedgerContract()).connect(signerItem.signer).cancelLoyaltyPayment({
-                        paymentId: item.paymentId,
-                        purchaseId: item.purchaseId,
-                        account: item.account,
-                        signature,
-                        certifierSignature,
-                    });
+                        item.paymentStatus = LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL;
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED;
+                        res.status(200).json(
+                            this.makeResponseData(0, {
+                                paymentId: item.paymentId,
+                                purchaseId: item.purchaseId,
+                                amount: item.amount.toString(),
+                                currency: item.currency,
+                                shopId: item.shopId,
+                                account: item.account,
+                                paymentStatus: item.paymentStatus,
+                                txHash: tx.hash,
+                            })
+                        );
+                        const event = await this.waitPaymentLoyalty(contract, tx);
+                        if (event !== undefined) {
+                            item.paymentStatus = LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_CANCEL;
+                            this.updateEvent(event, item);
+                            await this._storage.updatePayment(item);
+
+                            await this.sendPaymentResult(
+                                PaymentResultType.CANCEL,
+                                PaymentResultCode.SUCCESS,
+                                "The cancellation has been successfully completed.",
+                                this.getCallBackResponse(item)
+                            );
+                        }
+                    } catch (error) {
+                        const msg = ResponseMessage.getEVMErrorMessage(error);
+                        logger.error(`POST /v1/payment/cancel/approval :`, msg.error.message);
+                        return res.status(200).json(msg);
+                    }
+                } else {
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.DENIED_CANCEL;
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+
                     res.status(200).json(
-                        this.makeResponseData(200, {
+                        this.makeResponseData(0, {
+                            paymentId: item.paymentId,
+                            purchaseId: item.purchaseId,
+                            amount: item.amount.toString(),
+                            currency: item.currency,
+                            shopId: item.shopId,
+                            account: item.account,
+                            paymentStatus: item.paymentStatus,
+                        })
+                    );
+
+                    await this.sendPaymentResult(
+                        PaymentResultType.CANCEL,
+                        PaymentResultCode.DENIED,
+                        "The payment denied by user.",
+                        this.getCallBackResponse(item)
+                    );
+                }
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/payment/cancel/approval :`, msg.error.message);
+            return res.status(200).json(msg);
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 결제 / 결제정보를 제공한다
+     * POST /v1/payment/cancel/close
+     * @private
+     */
+    private async payment_cancel_close(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/cancel/close`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const accessKey: string = String(req.body.accessKey).trim();
+            if (accessKey !== this._config.relay.accessKey) {
+                return res.json(ResponseMessage.getErrorMessage("2002"));
+            }
+
+            const paymentId: string = String(req.body.paymentId).trim();
+            const item = await this._storage.getPayment(paymentId);
+            if (item === undefined) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            } else {
+                if (
+                    item.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL ||
+                    item.paymentStatus === LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_CANCEL
+                ) {
+                    const contract = await this.getLedgerContract();
+                    const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
+                    const signature = await ContractUtils.signLoyaltyClosePayment(
+                        certifier,
+                        paymentId,
+                        item.purchaseId,
+                        true,
+                        await contract.nonceOf(certifier.address)
+                    );
+
+                    try {
+                        const tx = await contract
+                            .connect(signerItem.signer)
+                            .closeCancelLoyaltyPayment(item.paymentId, true, signature);
+
+                        const event = await this.waitPaymentLoyalty(contract, tx);
+                        if (event !== undefined) {
+                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_CANCEL;
+                            item.closeCancelTimestamp = ContractUtils.getTimeStamp();
+                            this.updateEvent(event, item);
+                            await this._storage.updatePayment(item);
+
+                            res.status(200).json(
+                                this.makeResponseData(0, {
+                                    paymentId: item.paymentId,
+                                    purchaseId: item.purchaseId,
+                                    amount: item.amount.toString(),
+                                    currency: item.currency,
+                                    shopId: item.shopId,
+                                    account: item.account,
+                                    loyaltyType: item.loyaltyType,
+                                    paidPoint: item.paidPoint.toString(),
+                                    paidToken: item.paidToken.toString(),
+                                    paidValue: item.paidValue.toString(),
+                                    feePoint: item.feePoint.toString(),
+                                    feeToken: item.feeToken.toString(),
+                                    feeValue: item.feeValue.toString(),
+                                    totalPoint: item.totalPoint.toString(),
+                                    totalToken: item.totalToken.toString(),
+                                    totalValue: item.totalValue.toString(),
+                                    paymentStatus: item.paymentStatus,
+                                    openNewTimestamp: item.openNewTimestamp,
+                                    closeNewTimestamp: item.closeNewTimestamp,
+                                    openCancelTimestamp: item.openCancelTimestamp,
+                                    closeCancelTimestamp: item.closeCancelTimestamp,
+                                })
+                            );
+                        } else {
+                            res.status(200).json(ResponseMessage.getErrorMessage("5000"));
+                        }
+                    } catch (error) {
+                        const msg = ResponseMessage.getEVMErrorMessage(error);
+                        logger.error(`POST /v1/payment/cancel/close :`, msg.error.message);
+                        return res.status(200).json(msg);
+                    }
+                } else if (item.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED_CANCEL) {
+                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_CANCEL;
+                    item.closeCancelTimestamp = ContractUtils.getTimeStamp();
+                    await this._storage.updatePayment(item);
+
+                    res.status(200).json(
+                        this.makeResponseData(0, {
                             paymentId: item.paymentId,
                             purchaseId: item.purchaseId,
                             amount: item.amount.toString(),
@@ -1364,218 +1243,112 @@ export class PaymentRouter {
                             totalToken: item.totalToken.toString(),
                             totalValue: item.totalValue.toString(),
                             paymentStatus: item.paymentStatus,
-                            txHash: tx.hash,
+                            openNewTimestamp: item.openNewTimestamp,
+                            closeNewTimestamp: item.closeNewTimestamp,
+                            openCancelTimestamp: item.openCancelTimestamp,
+                            closeCancelTimestamp: item.closeCancelTimestamp,
                         })
                     );
-                } catch (error) {
-                    success = false;
-                    const message = ContractUtils.cacheEVMError(error as any);
-                    await this.sendPaymentResult(
-                        PaymentResultType.CANCEL,
-                        PaymentResultCode.CONTRACT_ERROR,
-                        `An error occurred while executing the contract. (${message})`,
-                        defaultResult
-                    );
-                }
-
-                if (success && tx !== undefined) {
-                    const contractReceipt = await tx.wait();
-                    const log = ContractUtils.findLog(contractReceipt, contract.interface, "CancelledLoyaltyPayment");
-                    if (log !== undefined) {
-                        const parsedLog = contract.interface.parseLog(log);
-                        if (item.amount.eq(parsedLog.args.paidValue)) {
-                            await this.sendPaymentResult(
-                                PaymentResultType.CANCEL,
-                                PaymentResultCode.SUCCESS,
-                                "The cancellation has been successfully completed.",
-                                {
-                                    paymentId: parsedLog.args.paymentId,
-                                    purchaseId: parsedLog.args.purchaseId,
-                                    amount: parsedLog.args.paidValue.toString(),
-                                    currency: parsedLog.args.currency,
-                                    account: parsedLog.args.account,
-                                    shopId: parsedLog.args.shopId,
-                                    loyaltyType: parsedLog.args.loyaltyType,
-                                    paidPoint: item.paidPoint.toString(),
-                                    paidToken: item.paidToken.toString(),
-                                    paidValue: item.paidValue.toString(),
-                                    feePoint: item.feePoint.toString(),
-                                    feeToken: item.feeToken.toString(),
-                                    feeValue: item.feeValue.toString(),
-                                    totalPoint: item.totalPoint.toString(),
-                                    totalToken: item.totalToken.toString(),
-                                    totalValue: item.totalValue.toString(),
-                                    balance: parsedLog.args.balance.toString(),
-                                }
-                            );
-                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_COMPLETE;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                        } else {
-                            await this.sendPaymentResult(
-                                PaymentResultType.CANCEL,
-                                PaymentResultCode.INTERNAL_ERROR,
-                                `An error occurred while executing the contract.`,
-                                defaultResult
-                            );
-                        }
-                    } else {
-                        await this.sendPaymentResult(
-                            PaymentResultType.CANCEL,
-                            PaymentResultCode.INTERNAL_ERROR,
-                            `An error occurred while executing the contract.`,
-                            defaultResult
-                        );
-                    }
+                } else {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
             }
         } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/cancel/confirm";
-            logger.error(`POST /v1/payment/cancel/confirm :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/payment/cancel/close :`, msg.error.message);
+            return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
     }
 
-    /**
-     * POST /v1/payment/cancel/deny
-     * @private
-     */
-    private async payment_cancel_deny(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/payment/cancel/deny`);
+    private getCallBackResponse(item: LoyaltyPaymentInternalData): any {
+        return {
+            paymentId: item.paymentId,
+            purchaseId: item.purchaseId,
+            amount: item.amount.toString(),
+            currency: item.currency,
+            shopId: item.shopId,
+            account: item.account,
+            loyaltyType: item.loyaltyType,
+            paidPoint: item.paidPoint.toString(),
+            paidToken: item.paidToken.toString(),
+            paidValue: item.paidValue.toString(),
+            feePoint: item.feePoint.toString(),
+            feeToken: item.feeToken.toString(),
+            feeValue: item.feeValue.toString(),
+            totalPoint: item.totalPoint.toString(),
+            totalToken: item.totalToken.toString(),
+            totalValue: item.totalValue.toString(),
+            paymentStatus: item.paymentStatus,
+        };
+    }
 
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(
-                this.makeResponseData(501, undefined, {
-                    message: "Failed to check the validity of parameters.",
-                    validation: errors.array(),
-                })
-            );
-        }
+    private updateEvent(event: LoyaltyPaymentEvent, item: LoyaltyPaymentInternalData): void {
+        if (item.paymentId !== event.paymentId) return;
+        item.purchaseId = event.purchaseId;
+        item.currency = event.currency;
+        item.shopId = event.shopId;
+        item.account = event.account;
+        item.loyaltyType = event.loyaltyType;
+        item.paidPoint = event.paidPoint;
+        item.paidToken = event.paidToken;
+        item.paidValue = event.paidValue;
+        item.feePoint = event.feePoint;
+        item.feeToken = event.feeToken;
+        item.feeValue = event.feeValue;
+        item.totalPoint = event.totalPoint;
+        item.totalToken = event.totalToken;
+        item.totalValue = event.totalValue;
+    }
 
-        try {
-            const paymentId: string = String(req.body.paymentId).trim();
-            const signature: string = String(req.body.signature).trim();
-            const item = await this._storage.getPayment(paymentId);
-            if (item === undefined) {
-                return res.status(200).json(
-                    this.makeResponseData(401, undefined, {
-                        message: "Payment ID is not exist.",
-                    })
-                );
-            } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CANCELED) {
-                    res.status(200).json(
-                        this.makeResponseData(402, undefined, {
-                            message: "This payment is not in a cancellable state.",
-                        })
-                    );
-                    return;
-                }
+    private async waitPaymentLoyalty(
+        contract: Ledger,
+        tx: ContractTransaction
+    ): Promise<LoyaltyPaymentEvent | undefined> {
+        const res: any = {};
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, contract.interface, "LoyaltyPaymentEvent");
+        if (log !== undefined) {
+            const parsedLog = contract.interface.parseLog(log);
 
-                if (
-                    !ContractUtils.verifyLoyaltyPaymentCancel(
-                        item.paymentId,
-                        item.purchaseId,
-                        await (await this.getLedgerContract()).nonceOf(item.account),
-                        item.account,
-                        signature
-                    )
-                ) {
-                    res.status(200).json(
-                        this.makeResponseData(403, undefined, {
-                            message: "The signature value entered is not valid.",
-                        })
-                    );
-                    return;
-                }
+            res.paymentId = parsedLog.args.payment.paymentId;
+            res.purchaseId = parsedLog.args.payment.purchaseId;
+            res.amount = BigNumber.from(parsedLog.args.payment.paidValue);
+            res.currency = parsedLog.args.payment.currency;
+            res.shopId = parsedLog.args.payment.shopId;
+            res.account = parsedLog.args.payment.account;
+            res.timestamp = parsedLog.args.payment.timestamp;
+            res.loyaltyType = parsedLog.args.payment.loyaltyType;
+            res.paidPoint =
+                parsedLog.args.loyaltyType === LoyaltyType.POINT
+                    ? BigNumber.from(parsedLog.args.payment.paidPoint)
+                    : BigNumber.from(0);
+            res.paidToken =
+                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
+                    ? BigNumber.from(parsedLog.args.payment.paidToken)
+                    : BigNumber.from(0);
+            res.paidValue = BigNumber.from(parsedLog.args.payment.paidValue);
 
-                const defaultResult: PaymentResultData = {
-                    paymentId: item.paymentId,
-                    purchaseId: item.purchaseId,
-                    amount: item.amount.toString(),
-                    currency: item.currency,
-                    shopId: item.shopId,
-                    account: item.account,
-                    loyaltyType: item.loyaltyType,
-                    paidPoint: item.paidPoint.toString(),
-                    paidToken: item.paidToken.toString(),
-                    paidValue: item.paidValue.toString(),
-                    feePoint: item.feePoint.toString(),
-                    feeToken: item.feeToken.toString(),
-                    feeValue: item.feeValue.toString(),
-                    totalPoint: item.totalPoint.toString(),
-                    totalToken: item.totalToken.toString(),
-                    totalValue: item.totalValue.toString(),
-                };
+            res.feePoint =
+                parsedLog.args.loyaltyType === LoyaltyType.POINT
+                    ? BigNumber.from(parsedLog.args.payment.feePoint)
+                    : BigNumber.from(0);
+            res.feeToken =
+                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
+                    ? BigNumber.from(parsedLog.args.payment.feeToken)
+                    : BigNumber.from(0);
+            res.feeValue = BigNumber.from(parsedLog.args.payment.feeValue);
 
-                if (ContractUtils.getTimeStamp() - item.cancelTimestamp > this._config.relay.paymentTimeoutSecond) {
-                    const message = "Timeout period expired";
-                    res.status(200).json(
-                        this.makeResponseData(404, undefined, {
-                            message,
-                        })
-                    );
+            res.status = BigNumber.from(parsedLog.args.payment.status);
+            res.balance = BigNumber.from(parsedLog.args.balance);
 
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+            res.totalPoint = res.paidPoint.add(res.feePoint);
+            res.totalToken = res.paidToken.add(res.feeToken);
+            res.totalValue = res.paidValue.add(res.feeValue);
 
-                    await this.sendPaymentResult(
-                        PaymentResultType.CANCEL,
-                        PaymentResultCode.TIMEOUT,
-                        message,
-                        defaultResult
-                    );
-                    return;
-                }
-
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.CANCEL_DENIED;
-                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                res.status(200).json(
-                    this.makeResponseData(200, {
-                        paymentId: item.paymentId,
-                        purchaseId: item.purchaseId,
-                        amount: item.amount.toString(),
-                        currency: item.currency,
-                        shopId: item.shopId,
-                        account: item.account,
-                        loyaltyType: item.loyaltyType,
-                        paidPoint: item.paidPoint.toString(),
-                        paidToken: item.paidToken.toString(),
-                        paidValue: item.paidValue.toString(),
-                        feePoint: item.feePoint.toString(),
-                        feeToken: item.feeToken.toString(),
-                        feeValue: item.feeValue.toString(),
-                        totalPoint: item.totalPoint.toString(),
-                        totalToken: item.totalToken.toString(),
-                        totalValue: item.totalValue.toString(),
-                        paymentStatus: item.paymentStatus,
-                    })
-                );
-
-                await this.sendPaymentResult(
-                    PaymentResultType.CANCEL,
-                    PaymentResultCode.DENIED,
-                    "The cancellation denied by user.",
-                    defaultResult
-                );
-            }
-        } catch (error: any) {
-            let message = ContractUtils.cacheEVMError(error as any);
-            if (message === "") message = "Failed /v1/payment/cancel/deny";
-            logger.error(`POST /v1/payment/cancel/deny :`, message);
-            return res.status(200).json(
-                this.makeResponseData(500, undefined, {
-                    message,
-                })
-            );
-        }
+            return res;
+        } else return undefined;
     }
 
     private async sendPaymentResult(

@@ -446,7 +446,7 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
@@ -462,7 +462,7 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -477,8 +477,8 @@ describe("Test of Server", function () {
             });
 
             let paymentId: string;
-            it("Endpoint POST /v1/payment/create", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+            it("Endpoint POST /v1/payment/new/open", async () => {
+                const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
                     accessKey: config.relay.accessKey,
@@ -490,7 +490,7 @@ describe("Test of Server", function () {
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -503,7 +503,7 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
@@ -512,13 +512,13 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.amount, amountOfLoyalty.toString());
             });
 
-            it("Endpoint POST /v1/payment/create/deny", async () => {
+            it("Endpoint POST /v1/payment/new/approval - deny", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
 
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -529,30 +529,31 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("deny").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: false,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_DENIED);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED_NEW);
             });
 
             it("Waiting", async () => {
                 await ContractUtils.delay(2000);
                 assert.deepStrictEqual(fakerCallbackServer.responseData.length, 1);
-                assert.deepStrictEqual(fakerCallbackServer.responseData[0].code, 1001);
+                assert.deepStrictEqual(fakerCallbackServer.responseData[0].code, 4000);
             });
 
-            it("Endpoint POST /v1/payment/create/confirm", async () => {
+            it("Endpoint POST /v1/payment/new/approval", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -563,21 +564,22 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: true,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 402);
+                assert.deepStrictEqual(response.data.code, 2020);
                 assert.ok(response.data.data === undefined);
                 assert.ok(response.data.error !== undefined);
-                assert.ok(response.data.error.message === "This payment has already been closed.");
+                assert.ok(response.data.error.message === "The status code for this payment cannot be approved");
             });
 
-            it("Endpoint POST /v1/payment/create", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+            it("Endpoint POST /v1/payment/new/open", async () => {
+                const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
                     accessKey: config.relay.accessKey,
@@ -589,7 +591,7 @@ describe("Test of Server", function () {
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -598,13 +600,13 @@ describe("Test of Server", function () {
                 paymentId = response.data.data.paymentId;
             });
 
-            it("Endpoint POST /v1/payment/create/confirm - wrong ID", async () => {
+            it("Endpoint POST /v1/payment/new/approval - wrong ID", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
                 const wrongPaymentId = ContractUtils.getPaymentId(users[purchaseOfLoyalty.userIndex].address, nonce);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     wrongPaymentId,
                     responseItem.data.data.purchaseId,
@@ -615,25 +617,26 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId: wrongPaymentId,
+                        approval: true,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 401);
+                assert.deepStrictEqual(response.data.code, 2003);
                 assert.ok(response.data.data === undefined);
                 assert.ok(response.data.error !== undefined);
-                assert.ok(response.data.error.message === "Payment ID is not exist.");
+                assert.ok(response.data.error.message === "The payment ID is not exist");
             });
 
-            it("Endpoint POST /v1/payment/create/confirm - Wrong signature", async () => {
+            it("Endpoint POST /v1/payment/new/approval - Wrong signature", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex + 1],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -644,25 +647,26 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: true,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 403);
+                assert.deepStrictEqual(response.data.code, 1501);
                 assert.ok(response.data.data === undefined);
                 assert.ok(response.data.error !== undefined);
-                assert.ok(response.data.error.message === "The signature value entered is not valid.");
+                assert.ok(response.data.error.message === "Invalid signature");
             });
 
-            it("Endpoint POST /v1/payment/create/confirm", async () => {
+            it("Endpoint POST /v1/payment/new/approval", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -673,17 +677,18 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: true,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
             });
 
             it("Waiting", async () => {
@@ -692,12 +697,12 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(fakerCallbackServer.responseData[1].code, 0);
             });
 
-            it("Endpoint POST /v1/payment/create/deny", async () => {
+            it("Endpoint POST /v1/payment/new/approval", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -707,17 +712,32 @@ describe("Test of Server", function () {
                     nonce
                 );
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("deny").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: false,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 402);
+                assert.deepStrictEqual(response.data.code, 2020);
                 assert.ok(response.data.data === undefined);
                 assert.ok(response.data.error !== undefined);
-                assert.ok(response.data.error.message === "This payment has already been closed.");
+                assert.ok(response.data.error.message === "The status code for this payment cannot be approved");
+            });
+
+            it("Endpoint POST /v1/payment/new/close", async () => {
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                    {
+                        accessKey: config.relay.accessKey,
+                        paymentId,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
             });
         });
     });
@@ -906,7 +926,7 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
@@ -922,7 +942,7 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -937,8 +957,8 @@ describe("Test of Server", function () {
             });
 
             let paymentId: string;
-            it("Endpoint POST /v1/payment/create", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+            it("Endpoint POST /v1/payment/new/open", async () => {
+                const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
                     accessKey: config.relay.accessKey,
@@ -950,7 +970,7 @@ describe("Test of Server", function () {
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -959,12 +979,12 @@ describe("Test of Server", function () {
                 paymentId = response.data.data.paymentId;
             });
 
-            it("Endpoint POST /v1/payment/create/confirm", async () => {
+            it("Endpoint POST /v1/payment/new/approval", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -975,25 +995,44 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: true,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
             });
 
             it("Waiting", async () => {
                 await ContractUtils.delay(2000);
             });
 
-            it("Endpoint POST /v1/payment/cancel", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("cancel").toString();
+            it("Endpoint POST /v1/payment/new/close", async () => {
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                    {
+                        accessKey: config.relay.accessKey,
+                        paymentId,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
+            });
+
+            it("Endpoint POST /v1/payment/cancel/open", async () => {
+                const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
                     accessKey: config.relay.accessKey,
@@ -1001,50 +1040,51 @@ describe("Test of Server", function () {
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.CANCELED);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.OPENED_CANCEL);
             });
 
-            it("Endpoint POST /v1/payment/cancel/confirm", async () => {
+            it("Endpoint POST /v1/payment/cancel/approval - true", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const oldBalance = await ledgerContract.pointBalanceOf(responseItem.data.data.account);
                 const oldShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
 
-                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPaymentCancel(
-                    users[purchaseOfLoyalty.userIndex],
+                const nonce = await ledgerContract.nonceOf(shopData[purchaseOfLoyalty.shopIndex].wallet.address);
+                const signature = await ContractUtils.signLoyaltyCancelPayment(
+                    shopData[purchaseOfLoyalty.shopIndex].wallet,
                     paymentId,
                     responseItem.data.data.purchaseId,
                     nonce
                 );
 
-                const url = URI(serverURL).directory("/v1/payment/cancel").filename("confirm").toString();
+                const url = URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString();
                 const params = {
                     paymentId,
+                    approval: true,
                     signature,
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.ok(response.data.data.txHash !== undefined);
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(
                     response.data.data.paymentStatus,
-                    LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED
+                    LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL
                 );
+
                 const newBalance = await ledgerContract.pointBalanceOf(users[purchaseOfLoyalty.userIndex].address);
                 assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalPoint)));
 
@@ -1053,6 +1093,20 @@ describe("Test of Server", function () {
                     newShopInfo.usedPoint,
                     oldShopInfo.usedPoint.sub(BigNumber.from(responseItem.data.data.paidPoint))
                 );
+            });
+
+            it("Endpoint POST /v1/payment/cancel/close", async () => {
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
+                    {
+                        accessKey: config.relay.accessKey,
+                        paymentId,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_CANCEL);
             });
         });
     });
@@ -1241,7 +1295,7 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
@@ -1257,7 +1311,7 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -1272,8 +1326,8 @@ describe("Test of Server", function () {
             });
 
             let paymentId: string;
-            it("Endpoint POST /v1/payment/create", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+            it("Endpoint POST /v1/payment/new/open", async () => {
+                const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
                     accessKey: config.relay.accessKey,
@@ -1285,7 +1339,7 @@ describe("Test of Server", function () {
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -1294,12 +1348,12 @@ describe("Test of Server", function () {
                 paymentId = response.data.data.paymentId;
             });
 
-            it("Endpoint POST /v1/payment/create/confirm", async () => {
+            it("Endpoint POST /v1/payment/new/approval", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -1310,25 +1364,44 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: true,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
             });
 
             it("Waiting", async () => {
                 await ContractUtils.delay(2000);
             });
 
-            it("Endpoint POST /v1/payment/cancel", async () => {
-                const url = URI(serverURL).directory("/v1/payment").filename("cancel").toString();
+            it("Endpoint POST /v1/payment/new/close", async () => {
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                    {
+                        accessKey: config.relay.accessKey,
+                        paymentId,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
+            });
+
+            it("Endpoint POST /v1/payment/cancel/open", async () => {
+                const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
                     accessKey: config.relay.accessKey,
@@ -1336,43 +1409,57 @@ describe("Test of Server", function () {
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.CANCELED);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.OPENED_CANCEL);
             });
 
-            it("Endpoint POST /v1/payment/cancel/deny", async () => {
+            it("Endpoint POST /v1/payment/cancel/approval - false", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
-                const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPaymentCancel(
-                    users[purchaseOfLoyalty.userIndex],
+                const nonce = await ledgerContract.nonceOf(shopData[purchaseOfLoyalty.shopIndex].wallet.address);
+                const signature = await ContractUtils.signLoyaltyCancelPayment(
+                    shopData[purchaseOfLoyalty.shopIndex].wallet,
                     paymentId,
                     responseItem.data.data.purchaseId,
                     nonce
                 );
 
-                const url = URI(serverURL).directory("/v1/payment/cancel").filename("deny").toString();
+                const url = URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString();
                 const params = {
                     paymentId,
+                    approval: false,
                     signature,
                 };
                 const response = await client.post(url, params);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.CANCEL_DENIED);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.DENIED_CANCEL);
+            });
+
+            it("Endpoint POST /v1/payment/cancel/close", async () => {
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
+                    {
+                        accessKey: config.relay.accessKey,
+                        paymentId,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_CANCEL);
             });
         });
     });
@@ -1410,6 +1497,7 @@ describe("Test of Server", function () {
                 relay4.privateKey,
                 relay5.privateKey,
             ];
+            config.relay.certifierKey = certifier.privateKey;
         });
 
         before("Create TestServer", async () => {
@@ -1523,7 +1611,7 @@ describe("Test of Server", function () {
                     signature,
                 });
 
-                expect(response.data.code).to.equal(200);
+                expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
             });
@@ -1575,16 +1663,16 @@ describe("Test of Server", function () {
                     .toString();
                 const response = await client.get(url);
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
             });
 
             let paymentId: string;
-            it("Endpoint POST /v1/payment/create", async () => {
+            it("Endpoint POST /v1/payment/new/open", async () => {
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment").filename("create").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("open").toString(),
                     {
                         accessKey: config.relay.accessKey,
                         purchaseId: purchaseOfLoyalty.purchaseId,
@@ -1595,7 +1683,7 @@ describe("Test of Server", function () {
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -1609,7 +1697,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
@@ -1617,12 +1705,12 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
             });
 
-            it("Endpoint POST /v1/payment/create/confirm", async () => {
+            it("Endpoint POST /v1/payment/new/approval", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyPayment(
+                const signature = await ContractUtils.signLoyaltyNewPayment(
                     users[purchaseOfLoyalty.userIndex],
                     paymentId,
                     responseItem.data.data.purchaseId,
@@ -1633,20 +1721,35 @@ describe("Test of Server", function () {
                 );
 
                 const response = await client.post(
-                    URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                    URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                     {
                         paymentId,
+                        approval: true,
                         signature,
                     }
                 );
 
-                assert.deepStrictEqual(response.data.code, 200);
+                assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
             });
 
             it("Waiting", async () => {
                 await ContractUtils.delay(2000);
+            });
+
+            it("Endpoint POST /v1/payment/new/close", async () => {
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                    {
+                        accessKey: config.relay.accessKey,
+                        paymentId,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
             });
         });
     });
@@ -1694,7 +1797,7 @@ describe("Test of Server", function () {
                                 .toString()
                         );
                         const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                        const signature = await ContractUtils.signLoyaltyPayment(
+                        const signature = await ContractUtils.signLoyaltyNewPayment(
                             users[purchaseOfLoyalty.userIndex],
                             receivedPaymentId,
                             responseItem.data.data.purchaseId,
@@ -1705,17 +1808,18 @@ describe("Test of Server", function () {
                         );
 
                         const response = await client.post(
-                            URI(serverURL).directory("/v1/payment/create").filename("confirm").toString(),
+                            URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                             {
                                 paymentId: receivedPaymentId,
+                                approval: true,
                                 signature,
                             }
                         );
 
-                        assert.deepStrictEqual(response.data.code, 200);
+                        assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CREATE_CONFIRMED);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
                     }
                 } else if (title === "KIOS 결제 취소 요청") {
                     const searchString = "결제 아이디 : ";
@@ -1728,26 +1832,28 @@ describe("Test of Server", function () {
                                 .addQuery("paymentId", receivedPaymentId)
                                 .toString()
                         );
-                        const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                        const signature = await ContractUtils.signLoyaltyPaymentCancel(
-                            users[purchaseOfLoyalty.userIndex],
+                        const wallet = shopData[purchaseOfLoyalty.shopIndex].wallet;
+                        const nonce = await ledgerContract.nonceOf(wallet.address);
+                        const signature = await ContractUtils.signLoyaltyCancelPayment(
+                            wallet,
                             receivedPaymentId,
                             responseItem.data.data.purchaseId,
                             nonce
                         );
 
                         const response = await client.post(
-                            URI(serverURL).directory("/v1/payment/cancel").filename("confirm").toString(),
+                            URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString(),
                             {
                                 paymentId: receivedPaymentId,
+                                approval: true,
                                 signature,
                             }
                         );
 
-                        assert.deepStrictEqual(response.data.code, 200);
+                        assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CANCEL_CONFIRMED);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL);
                     }
                 }
             },
@@ -1906,14 +2012,14 @@ describe("Test of Server", function () {
                 .toString();
             const response = await client.get(url);
 
-            assert.deepStrictEqual(response.data.code, 200);
+            assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
             assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
             assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
         });
 
-        it("Endpoint POST /v1/payment/create", async () => {
-            const url = URI(serverURL).directory("/v1/payment").filename("create").toString();
+        it("Endpoint POST /v1/payment/new/open", async () => {
+            const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
             const params = {
                 accessKey: config.relay.accessKey,
@@ -1925,7 +2031,7 @@ describe("Test of Server", function () {
             };
             const response = await client.post(url, params);
 
-            assert.deepStrictEqual(response.data.code, 200);
+            assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
 
             assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
@@ -1940,8 +2046,26 @@ describe("Test of Server", function () {
             assert.deepStrictEqual(fakerCallbackServer.responseData[0].code, 0);
         });
 
-        it("Endpoint POST /v1/payment/cancel", async () => {
-            const url = URI(serverURL).directory("/v1/payment").filename("cancel").toString();
+        it("Endpoint POST /v1/payment/new/close", async () => {
+            const response = await client.post(
+                URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                {
+                    accessKey: config.relay.accessKey,
+                    paymentId,
+                }
+            );
+
+            assert.deepStrictEqual(response.data.code, 0);
+            assert.ok(response.data.data !== undefined);
+            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+        });
+
+        it("Waiting", async () => {
+            await ContractUtils.delay(2000);
+        });
+
+        it("Endpoint POST /v1/payment/cancel/open", async () => {
+            const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
             const params = {
                 accessKey: config.relay.accessKey,
@@ -1949,20 +2073,34 @@ describe("Test of Server", function () {
             };
             const response = await client.post(url, params);
 
-            assert.deepStrictEqual(response.data.code, 200);
+            assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
 
             assert.deepStrictEqual(response.data.data.paymentId, paymentId);
             assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
             assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
             assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-            assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.CANCELED);
+            assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.OPENED_CANCEL);
         });
 
         it("Waiting", async () => {
             await ContractUtils.delay(6000);
             assert.deepStrictEqual(fakerCallbackServer.responseData.length, 2);
             assert.deepStrictEqual(fakerCallbackServer.responseData[1].code, 0);
+        });
+
+        it("Endpoint POST /v1/payment/cancel/close", async () => {
+            const response = await client.post(
+                URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
+                {
+                    accessKey: config.relay.accessKey,
+                    paymentId,
+                }
+            );
+
+            assert.deepStrictEqual(response.data.code, 0);
+            assert.ok(response.data.data !== undefined);
+            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_CANCEL);
         });
     });
 });

@@ -21,8 +21,10 @@
             "totalToken"            VARCHAR(64) NOT NULL,
             "totalValue"            VARCHAR(64) NOT NULL,
             "paymentStatus"         INTEGER DEFAULT 0,
-            "createTimestamp"       INTEGER DEFAULT 0,
-            "cencelTimestamp"       INTEGER DEFAULT 0,
+            "openNewTimestamp"      INTEGER DEFAULT 0,
+            "closeNewTimestamp"     INTEGER DEFAULT 0,
+            "openCancelTimestamp"   INTEGER DEFAULT 0,
+            "closeCancelTimestamp"  INTEGER DEFAULT 0,
             PRIMARY KEY ("paymentId")
         )
     </sql>

@@ -306,7 +306,7 @@ export class ContractUtils {
         return res.toLowerCase() === account.toLowerCase();
     }
 
-    public static getLoyaltyPaymentMessage(
+    public static getLoyaltyNewPaymentMessage(
         address: string,
         paymentId: string,
         purchaseId: string,
@@ -322,7 +322,7 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signLoyaltyPayment(
+    public static async signLoyaltyNewPayment(
         signer: Signer,
         paymentId: string,
         purchaseId: string,
@@ -331,7 +331,7 @@ export class ContractUtils {
         shopId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const message = ContractUtils.getLoyaltyPaymentMessage(
+        const message = ContractUtils.getLoyaltyNewPaymentMessage(
             await signer.getAddress(),
             paymentId,
             purchaseId,
@@ -343,7 +343,7 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static verifyLoyaltyPayment(
+    public static verifyLoyaltyNewPayment(
         paymentId: string,
         purchaseId: string,
         amount: BigNumberish,
@@ -353,7 +353,7 @@ export class ContractUtils {
         account: string,
         signature: BytesLike
     ): boolean {
-        const message = ContractUtils.getLoyaltyPaymentMessage(
+        const message = ContractUtils.getLoyaltyNewPaymentMessage(
             account,
             paymentId,
             purchaseId,
@@ -371,7 +371,7 @@ export class ContractUtils {
         return res.toLowerCase() === account.toLowerCase();
     }
 
-    public static getLoyaltyPaymentCancelMessage(
+    public static getLoyaltyCancelPaymentMessage(
         address: string,
         paymentId: string,
         purchaseId: string,
@@ -384,13 +384,13 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signLoyaltyPaymentCancel(
+    public static async signLoyaltyCancelPayment(
         signer: Signer,
         paymentId: string,
         purchaseId: string,
         nonce: BigNumberish
     ): Promise<string> {
-        const message = ContractUtils.getLoyaltyPaymentCancelMessage(
+        const message = ContractUtils.getLoyaltyCancelPaymentMessage(
             await signer.getAddress(),
             paymentId,
             purchaseId,
@@ -398,15 +398,14 @@ export class ContractUtils {
         );
         return signer.signMessage(message);
     }
-
-    public static verifyLoyaltyPaymentCancel(
+    public static verifyLoyaltyCancelPayment(
         paymentId: string,
         purchaseId: string,
         nonce: BigNumberish,
         account: string,
         signature: BytesLike
     ): boolean {
-        const message = ContractUtils.getLoyaltyPaymentCancelMessage(account, paymentId, purchaseId, nonce);
+        const message = ContractUtils.getLoyaltyCancelPaymentMessage(account, paymentId, purchaseId, nonce);
         let res: string;
         try {
             res = ethers.utils.verifyMessage(message, signature);
@@ -422,5 +421,36 @@ export class ContractUtils {
             [account, nonce, crypto.randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
+    }
+
+    public static getLoyaltyClosePaymentMessage(
+        address: string,
+        paymentId: string,
+        purchaseId: string,
+        confirm: boolean,
+        nonce: BigNumberish
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "string", "bool", "address", "uint256"],
+            [paymentId, purchaseId, confirm, address, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signLoyaltyClosePayment(
+        signer: Signer,
+        paymentId: string,
+        purchaseId: string,
+        confirm: boolean,
+        nonce: BigNumberish
+    ): Promise<string> {
+        const message = ContractUtils.getLoyaltyClosePaymentMessage(
+            await signer.getAddress(),
+            paymentId,
+            purchaseId,
+            confirm,
+            nonce
+        );
+        return signer.signMessage(message);
     }
 }
