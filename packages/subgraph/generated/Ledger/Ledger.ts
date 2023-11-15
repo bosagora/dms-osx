@@ -104,95 +104,85 @@ export class Deposited__Params {
   }
 }
 
-export class PaidPoint extends ethereum.Event {
-  get params(): PaidPoint__Params {
-    return new PaidPoint__Params(this);
+export class LoyaltyPaymentEvent extends ethereum.Event {
+  get params(): LoyaltyPaymentEvent__Params {
+    return new LoyaltyPaymentEvent__Params(this);
   }
 }
 
-export class PaidPoint__Params {
-  _event: PaidPoint;
+export class LoyaltyPaymentEvent__Params {
+  _event: LoyaltyPaymentEvent;
 
-  constructor(event: PaidPoint) {
+  constructor(event: LoyaltyPaymentEvent) {
     this._event = event;
   }
 
+  get payment(): LoyaltyPaymentEventPaymentStruct {
+    return changetype<LoyaltyPaymentEventPaymentStruct>(
+      this._event.parameters[0].value.toTuple()
+    );
+  }
+
+  get balance(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+}
+
+export class LoyaltyPaymentEventPaymentStruct extends ethereum.Tuple {
+  get paymentId(): Bytes {
+    return this[0].toBytes();
+  }
+
+  get purchaseId(): string {
+    return this[1].toString();
+  }
+
+  get currency(): string {
+    return this[2].toString();
+  }
+
+  get shopId(): Bytes {
+    return this[3].toBytes();
+  }
+
   get account(): Address {
-    return this._event.parameters[0].value.toAddress();
+    return this[4].toAddress();
+  }
+
+  get timestamp(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get loyaltyType(): i32 {
+    return this[6].toI32();
   }
 
   get paidPoint(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
-  }
-
-  get paidValue(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
-  }
-
-  get feePoint(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
-  }
-
-  get feeValue(): BigInt {
-    return this._event.parameters[4].value.toBigInt();
-  }
-
-  get balancePoint(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
-  }
-
-  get purchaseId(): string {
-    return this._event.parameters[6].value.toString();
-  }
-
-  get shopId(): Bytes {
-    return this._event.parameters[7].value.toBytes();
-  }
-}
-
-export class PaidToken extends ethereum.Event {
-  get params(): PaidToken__Params {
-    return new PaidToken__Params(this);
-  }
-}
-
-export class PaidToken__Params {
-  _event: PaidToken;
-
-  constructor(event: PaidToken) {
-    this._event = event;
-  }
-
-  get account(): Address {
-    return this._event.parameters[0].value.toAddress();
+    return this[7].toBigInt();
   }
 
   get paidToken(): BigInt {
-    return this._event.parameters[1].value.toBigInt();
+    return this[8].toBigInt();
   }
 
   get paidValue(): BigInt {
-    return this._event.parameters[2].value.toBigInt();
+    return this[9].toBigInt();
+  }
+
+  get feePoint(): BigInt {
+    return this[10].toBigInt();
   }
 
   get feeToken(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
+    return this[11].toBigInt();
   }
 
   get feeValue(): BigInt {
-    return this._event.parameters[4].value.toBigInt();
+    return this[12].toBigInt();
   }
 
-  get balanceToken(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
-  }
-
-  get purchaseId(): string {
-    return this._event.parameters[6].value.toString();
-  }
-
-  get shopId(): Bytes {
-    return this._event.parameters[7].value.toBytes();
+  get status(): i32 {
+    return this[13].toI32();
   }
 }
 
@@ -424,6 +414,64 @@ export class Withdrawn__Params {
   }
 }
 
+export class Ledger__loyaltyPaymentOfResultValue0Struct extends ethereum.Tuple {
+  get paymentId(): Bytes {
+    return this[0].toBytes();
+  }
+
+  get purchaseId(): string {
+    return this[1].toString();
+  }
+
+  get currency(): string {
+    return this[2].toString();
+  }
+
+  get shopId(): Bytes {
+    return this[3].toBytes();
+  }
+
+  get account(): Address {
+    return this[4].toAddress();
+  }
+
+  get timestamp(): BigInt {
+    return this[5].toBigInt();
+  }
+
+  get loyaltyType(): i32 {
+    return this[6].toI32();
+  }
+
+  get paidPoint(): BigInt {
+    return this[7].toBigInt();
+  }
+
+  get paidToken(): BigInt {
+    return this[8].toBigInt();
+  }
+
+  get paidValue(): BigInt {
+    return this[9].toBigInt();
+  }
+
+  get feePoint(): BigInt {
+    return this[10].toBigInt();
+  }
+
+  get feeToken(): BigInt {
+    return this[11].toBigInt();
+  }
+
+  get feeValue(): BigInt {
+    return this[12].toBigInt();
+  }
+
+  get status(): i32 {
+    return this[13].toI32();
+  }
+}
+
 export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
   get purchaseId(): string {
     return this[0].toString();
@@ -531,6 +579,29 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
+  certifierAddress(): Address {
+    let result = super.call(
+      "certifierAddress",
+      "certifierAddress():(address)",
+      []
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_certifierAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "certifierAddress",
+      "certifierAddress():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   currencyRateAddress(): Address {
     let result = super.call(
       "currencyRateAddress",
@@ -607,6 +678,29 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  isAvailablePaymentId(_paymentId: Bytes): boolean {
+    let result = super.call(
+      "isAvailablePaymentId",
+      "isAvailablePaymentId(bytes32):(bool)",
+      [ethereum.Value.fromFixedBytes(_paymentId)]
+    );
+
+    return result[0].toBoolean();
+  }
+
+  try_isAvailablePaymentId(_paymentId: Bytes): ethereum.CallResult<boolean> {
+    let result = super.tryCall(
+      "isAvailablePaymentId",
+      "isAvailablePaymentId(bytes32):(bool)",
+      [ethereum.Value.fromFixedBytes(_paymentId)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
+  }
+
   linkCollectionAddress(): Address {
     let result = super.call(
       "linkCollectionAddress",
@@ -628,6 +722,37 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  loyaltyPaymentOf(
+    _paymentId: Bytes
+  ): Ledger__loyaltyPaymentOfResultValue0Struct {
+    let result = super.call(
+      "loyaltyPaymentOf",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      [ethereum.Value.fromFixedBytes(_paymentId)]
+    );
+
+    return changetype<Ledger__loyaltyPaymentOfResultValue0Struct>(
+      result[0].toTuple()
+    );
+  }
+
+  try_loyaltyPaymentOf(
+    _paymentId: Bytes
+  ): ethereum.CallResult<Ledger__loyaltyPaymentOfResultValue0Struct> {
+    let result = super.tryCall(
+      "loyaltyPaymentOf",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      [ethereum.Value.fromFixedBytes(_paymentId)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(
+      changetype<Ledger__loyaltyPaymentOfResultValue0Struct>(value[0].toTuple())
+    );
   }
 
   loyaltyTypeOf(_account: Address): i32 {
@@ -812,6 +937,29 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  temporaryAddress(): Address {
+    let result = super.call(
+      "temporaryAddress",
+      "temporaryAddress():(address)",
+      []
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_temporaryAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "temporaryAddress",
+      "temporaryAddress():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   tokenAddress(): Address {
     let result = super.call("tokenAddress", "tokenAddress():(address)", []);
 
@@ -926,24 +1074,28 @@ export class ConstructorCall__Inputs {
     return this._call.inputValues[2].value.toAddress();
   }
 
-  get _tokenAddress(): Address {
+  get _certifierAddress(): Address {
     return this._call.inputValues[3].value.toAddress();
   }
 
-  get _validatorAddress(): Address {
+  get _tokenAddress(): Address {
     return this._call.inputValues[4].value.toAddress();
   }
 
-  get _linkCollectionAddress(): Address {
+  get _validatorAddress(): Address {
     return this._call.inputValues[5].value.toAddress();
   }
 
-  get _currencyRateAddress(): Address {
+  get _linkCollectionAddress(): Address {
     return this._call.inputValues[6].value.toAddress();
   }
 
-  get _shopCollectionAddress(): Address {
+  get _currencyRateAddress(): Address {
     return this._call.inputValues[7].value.toAddress();
+  }
+
+  get _shopCollectionAddress(): Address {
+    return this._call.inputValues[8].value.toAddress();
   }
 }
 
@@ -952,60 +1104,6 @@ export class ConstructorCall__Outputs {
 
   constructor(call: ConstructorCall) {
     this._call = call;
-  }
-}
-
-export class _payTokenCall extends ethereum.Call {
-  get inputs(): _payTokenCall__Inputs {
-    return new _payTokenCall__Inputs(this);
-  }
-
-  get outputs(): _payTokenCall__Outputs {
-    return new _payTokenCall__Outputs(this);
-  }
-}
-
-export class _payTokenCall__Inputs {
-  _call: _payTokenCall;
-
-  constructor(call: _payTokenCall) {
-    this._call = call;
-  }
-
-  get _data(): _payTokenCall_dataStruct {
-    return changetype<_payTokenCall_dataStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
-  }
-
-  get _account(): Address {
-    return this._call.inputValues[1].value.toAddress();
-  }
-}
-
-export class _payTokenCall__Outputs {
-  _call: _payTokenCall;
-
-  constructor(call: _payTokenCall) {
-    this._call = call;
-  }
-}
-
-export class _payTokenCall_dataStruct extends ethereum.Tuple {
-  get purchaseId(): string {
-    return this[0].toString();
-  }
-
-  get amount(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get currency(): string {
-    return this[2].toString();
-  }
-
-  get shopId(): Bytes {
-    return this[3].toBytes();
   }
 }
 
@@ -1137,6 +1235,82 @@ export class ChangeToPayablePointDirectCall__Outputs {
   }
 }
 
+export class CloseCancelLoyaltyPaymentCall extends ethereum.Call {
+  get inputs(): CloseCancelLoyaltyPaymentCall__Inputs {
+    return new CloseCancelLoyaltyPaymentCall__Inputs(this);
+  }
+
+  get outputs(): CloseCancelLoyaltyPaymentCall__Outputs {
+    return new CloseCancelLoyaltyPaymentCall__Outputs(this);
+  }
+}
+
+export class CloseCancelLoyaltyPaymentCall__Inputs {
+  _call: CloseCancelLoyaltyPaymentCall;
+
+  constructor(call: CloseCancelLoyaltyPaymentCall) {
+    this._call = call;
+  }
+
+  get _paymentId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _confirm(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
+  }
+}
+
+export class CloseCancelLoyaltyPaymentCall__Outputs {
+  _call: CloseCancelLoyaltyPaymentCall;
+
+  constructor(call: CloseCancelLoyaltyPaymentCall) {
+    this._call = call;
+  }
+}
+
+export class CloseNewLoyaltyPaymentCall extends ethereum.Call {
+  get inputs(): CloseNewLoyaltyPaymentCall__Inputs {
+    return new CloseNewLoyaltyPaymentCall__Inputs(this);
+  }
+
+  get outputs(): CloseNewLoyaltyPaymentCall__Outputs {
+    return new CloseNewLoyaltyPaymentCall__Outputs(this);
+  }
+}
+
+export class CloseNewLoyaltyPaymentCall__Inputs {
+  _call: CloseNewLoyaltyPaymentCall;
+
+  constructor(call: CloseNewLoyaltyPaymentCall) {
+    this._call = call;
+  }
+
+  get _paymentId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _confirm(): boolean {
+    return this._call.inputValues[1].value.toBoolean();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
+  }
+}
+
+export class CloseNewLoyaltyPaymentCall__Outputs {
+  _call: CloseNewLoyaltyPaymentCall;
+
+  constructor(call: CloseNewLoyaltyPaymentCall) {
+    this._call = call;
+  }
+}
+
 export class DepositCall extends ethereum.Call {
   get inputs(): DepositCall__Inputs {
     return new DepositCall__Inputs(this);
@@ -1167,219 +1341,99 @@ export class DepositCall__Outputs {
   }
 }
 
-export class PayPointCall extends ethereum.Call {
-  get inputs(): PayPointCall__Inputs {
-    return new PayPointCall__Inputs(this);
+export class OpenCancelLoyaltyPaymentCall extends ethereum.Call {
+  get inputs(): OpenCancelLoyaltyPaymentCall__Inputs {
+    return new OpenCancelLoyaltyPaymentCall__Inputs(this);
   }
 
-  get outputs(): PayPointCall__Outputs {
-    return new PayPointCall__Outputs(this);
+  get outputs(): OpenCancelLoyaltyPaymentCall__Outputs {
+    return new OpenCancelLoyaltyPaymentCall__Outputs(this);
   }
 }
 
-export class PayPointCall__Inputs {
-  _call: PayPointCall;
+export class OpenCancelLoyaltyPaymentCall__Inputs {
+  _call: OpenCancelLoyaltyPaymentCall;
 
-  constructor(call: PayPointCall) {
+  constructor(call: OpenCancelLoyaltyPaymentCall) {
     this._call = call;
   }
 
-  get _data(): PayPointCall_dataStruct {
-    return changetype<PayPointCall_dataStruct>(
+  get _paymentId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class OpenCancelLoyaltyPaymentCall__Outputs {
+  _call: OpenCancelLoyaltyPaymentCall;
+
+  constructor(call: OpenCancelLoyaltyPaymentCall) {
+    this._call = call;
+  }
+}
+
+export class OpenNewLoyaltyPaymentCall extends ethereum.Call {
+  get inputs(): OpenNewLoyaltyPaymentCall__Inputs {
+    return new OpenNewLoyaltyPaymentCall__Inputs(this);
+  }
+
+  get outputs(): OpenNewLoyaltyPaymentCall__Outputs {
+    return new OpenNewLoyaltyPaymentCall__Outputs(this);
+  }
+}
+
+export class OpenNewLoyaltyPaymentCall__Inputs {
+  _call: OpenNewLoyaltyPaymentCall;
+
+  constructor(call: OpenNewLoyaltyPaymentCall) {
+    this._call = call;
+  }
+
+  get data(): OpenNewLoyaltyPaymentCallDataStruct {
+    return changetype<OpenNewLoyaltyPaymentCallDataStruct>(
       this._call.inputValues[0].value.toTuple()
     );
   }
 }
 
-export class PayPointCall__Outputs {
-  _call: PayPointCall;
+export class OpenNewLoyaltyPaymentCall__Outputs {
+  _call: OpenNewLoyaltyPaymentCall;
 
-  constructor(call: PayPointCall) {
+  constructor(call: OpenNewLoyaltyPaymentCall) {
     this._call = call;
   }
 }
 
-export class PayPointCall_dataStruct extends ethereum.Tuple {
+export class OpenNewLoyaltyPaymentCallDataStruct extends ethereum.Tuple {
+  get paymentId(): Bytes {
+    return this[0].toBytes();
+  }
+
   get purchaseId(): string {
-    return this[0].toString();
+    return this[1].toString();
   }
 
   get amount(): BigInt {
-    return this[1].toBigInt();
+    return this[2].toBigInt();
   }
 
   get currency(): string {
-    return this[2].toString();
+    return this[3].toString();
   }
 
   get shopId(): Bytes {
-    return this[3].toBytes();
+    return this[4].toBytes();
   }
 
   get account(): Address {
-    return this[4].toAddress();
+    return this[5].toAddress();
   }
 
   get signature(): Bytes {
-    return this[5].toBytes();
-  }
-}
-
-export class PayPointDirectCall extends ethereum.Call {
-  get inputs(): PayPointDirectCall__Inputs {
-    return new PayPointDirectCall__Inputs(this);
-  }
-
-  get outputs(): PayPointDirectCall__Outputs {
-    return new PayPointDirectCall__Outputs(this);
-  }
-}
-
-export class PayPointDirectCall__Inputs {
-  _call: PayPointDirectCall;
-
-  constructor(call: PayPointDirectCall) {
-    this._call = call;
-  }
-
-  get _data(): PayPointDirectCall_dataStruct {
-    return changetype<PayPointDirectCall_dataStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
-  }
-}
-
-export class PayPointDirectCall__Outputs {
-  _call: PayPointDirectCall;
-
-  constructor(call: PayPointDirectCall) {
-    this._call = call;
-  }
-}
-
-export class PayPointDirectCall_dataStruct extends ethereum.Tuple {
-  get purchaseId(): string {
-    return this[0].toString();
-  }
-
-  get amount(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get currency(): string {
-    return this[2].toString();
-  }
-
-  get shopId(): Bytes {
-    return this[3].toBytes();
-  }
-}
-
-export class PayTokenCall extends ethereum.Call {
-  get inputs(): PayTokenCall__Inputs {
-    return new PayTokenCall__Inputs(this);
-  }
-
-  get outputs(): PayTokenCall__Outputs {
-    return new PayTokenCall__Outputs(this);
-  }
-}
-
-export class PayTokenCall__Inputs {
-  _call: PayTokenCall;
-
-  constructor(call: PayTokenCall) {
-    this._call = call;
-  }
-
-  get _data(): PayTokenCall_dataStruct {
-    return changetype<PayTokenCall_dataStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
-  }
-}
-
-export class PayTokenCall__Outputs {
-  _call: PayTokenCall;
-
-  constructor(call: PayTokenCall) {
-    this._call = call;
-  }
-}
-
-export class PayTokenCall_dataStruct extends ethereum.Tuple {
-  get purchaseId(): string {
-    return this[0].toString();
-  }
-
-  get amount(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get currency(): string {
-    return this[2].toString();
-  }
-
-  get shopId(): Bytes {
-    return this[3].toBytes();
-  }
-
-  get account(): Address {
-    return this[4].toAddress();
-  }
-
-  get signature(): Bytes {
-    return this[5].toBytes();
-  }
-}
-
-export class PayTokenDirectCall extends ethereum.Call {
-  get inputs(): PayTokenDirectCall__Inputs {
-    return new PayTokenDirectCall__Inputs(this);
-  }
-
-  get outputs(): PayTokenDirectCall__Outputs {
-    return new PayTokenDirectCall__Outputs(this);
-  }
-}
-
-export class PayTokenDirectCall__Inputs {
-  _call: PayTokenDirectCall;
-
-  constructor(call: PayTokenDirectCall) {
-    this._call = call;
-  }
-
-  get _data(): PayTokenDirectCall_dataStruct {
-    return changetype<PayTokenDirectCall_dataStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
-  }
-}
-
-export class PayTokenDirectCall__Outputs {
-  _call: PayTokenDirectCall;
-
-  constructor(call: PayTokenDirectCall) {
-    this._call = call;
-  }
-}
-
-export class PayTokenDirectCall_dataStruct extends ethereum.Tuple {
-  get purchaseId(): string {
-    return this[0].toString();
-  }
-
-  get amount(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get currency(): string {
-    return this[2].toString();
-  }
-
-  get shopId(): Bytes {
-    return this[3].toBytes();
+    return this[6].toBytes();
   }
 }
 
