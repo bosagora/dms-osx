@@ -6,14 +6,14 @@ import { INotificationSender } from "../delegator/NotificationSender";
 import { WebService } from "../service/WebService";
 import { RelayStorage } from "../storage/RelayStorage";
 import {
-    LoyaltyPaymentEvent,
-    LoyaltyPaymentInputDataStatus,
-    LoyaltyPaymentInternalData,
+    ContractLoyaltyPaymentEvent,
+    LoyaltyPaymentTaskData,
+    LoyaltyPaymentTaskStatus,
     LoyaltyType,
-    PaymentResultCode,
     PaymentResultData,
-    PaymentResultType,
     ResponseMessage,
+    TaskResultCode,
+    TaskResultType,
     WithdrawStatus,
 } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
@@ -328,7 +328,7 @@ export class PaymentRouter {
                 .json(this.makeResponseData(0, { account, loyaltyType, balance: balance.toString() }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/balance :`, msg.error.message);
+            logger.error(`GET /v1/payment/balance : ${msg.error.message}`);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -353,8 +353,9 @@ export class PaymentRouter {
             const shopInfo = {
                 shopId: info.shopId,
                 name: info.name,
-                provideWaitTime: info.provideWaitTime.toString(),
-                providePercent: info.provideWaitTime.toString(),
+                provideWaitTime: info.provideWaitTime.toNumber(),
+                providePercent: info.provideWaitTime.toNumber(),
+                status: info.status,
                 account: info.account,
                 providedPoint: info.providedPoint.toString(),
                 usedPoint: info.usedPoint.toString(),
@@ -364,7 +365,7 @@ export class PaymentRouter {
             return res.status(200).json(this.makeResponseData(0, shopInfo));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/shop/info :`, msg.error.message);
+            logger.error(`GET /v1/payment/shop/info : ${msg.error.message}`);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -396,7 +397,7 @@ export class PaymentRouter {
             return res.status(200).json(this.makeResponseData(0, shopWithdrawalInfo));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/shop/withdrawal :`, msg.error.message);
+            logger.error(`GET /v1/payment/shop/withdrawal : ${msg.error.message}`);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -479,7 +480,7 @@ export class PaymentRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/info :`, msg.error.message);
+            logger.error(`GET /v1/payment/info : ${msg.error.message}`);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -555,7 +556,7 @@ export class PaymentRouter {
             totalValue = paidValue.add(feeValue);
 
             const paymentId = await this.getPaymentId(account);
-            const item: LoyaltyPaymentInternalData = {
+            const item: LoyaltyPaymentTaskData = {
                 paymentId,
                 purchaseId,
                 amount,
@@ -572,7 +573,7 @@ export class PaymentRouter {
                 totalPoint,
                 totalToken,
                 totalValue,
-                paymentStatus: LoyaltyPaymentInputDataStatus.OPENED_NEW,
+                paymentStatus: LoyaltyPaymentTaskStatus.OPENED_NEW,
                 openNewTimestamp: ContractUtils.getTimeStamp(),
                 closeNewTimestamp: 0,
                 openCancelTimestamp: 0,
@@ -616,7 +617,7 @@ export class PaymentRouter {
             return;
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/new/open :`, msg.error.message);
+            logger.error(`GET /v1/payment/new/open : ${msg.error.message}`);
             return res.status(200).json(msg);
         }
     }
@@ -642,7 +643,7 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.OPENED_NEW) {
+                if (item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_NEW) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
                 }
 
@@ -665,12 +666,12 @@ export class PaymentRouter {
                     const data = ResponseMessage.getErrorMessage("7000");
                     res.status(200).json(data);
 
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.TIMEOUT;
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                     await this.sendPaymentResult(
-                        PaymentResultType.NEW,
-                        PaymentResultCode.TIMEOUT,
+                        TaskResultType.NEW,
+                        TaskResultCode.TIMEOUT,
                         data.error.message,
                         this.getCallBackResponse(item)
                     );
@@ -690,7 +691,7 @@ export class PaymentRouter {
                             signature,
                         });
 
-                        item.paymentStatus = LoyaltyPaymentInputDataStatus.CONFIRMED_NEW;
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.CONFIRMED_NEW;
                         await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                         res.status(200).json(
@@ -708,24 +709,24 @@ export class PaymentRouter {
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {
-                            item.paymentStatus = LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_NEW;
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW;
                             this.updateEvent(event, item);
                             await this._storage.updatePayment(item);
 
                             await this.sendPaymentResult(
-                                PaymentResultType.NEW,
-                                PaymentResultCode.SUCCESS,
+                                TaskResultType.NEW,
+                                TaskResultCode.SUCCESS,
                                 "The payment has been successfully completed",
                                 this.getCallBackResponse(item)
                             );
                         }
                     } catch (error) {
                         const msg = ResponseMessage.getEVMErrorMessage(error);
-                        logger.error(`POST /v1/payment/new/approval :`, msg.error.message);
+                        logger.error(`POST /v1/payment/new/approval : ${msg.error.message}`);
                         return res.status(200).json(msg);
                     }
                 } else {
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.DENIED_NEW;
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.DENIED_NEW;
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                     res.status(200).json(
@@ -741,8 +742,8 @@ export class PaymentRouter {
                     );
 
                     await this.sendPaymentResult(
-                        PaymentResultType.NEW,
-                        PaymentResultCode.DENIED,
+                        TaskResultType.NEW,
+                        TaskResultCode.DENIED,
                         "The payment denied by user",
                         this.getCallBackResponse(item)
                     );
@@ -750,7 +751,7 @@ export class PaymentRouter {
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/new/approval :`, msg.error.message);
+            logger.error(`POST /v1/payment/new/approval : ${msg.error.message}`);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -782,8 +783,8 @@ export class PaymentRouter {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
                 if (
-                    item.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW ||
-                    item.paymentStatus === LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_NEW
+                    item.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW ||
+                    item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW
                 ) {
                     const contract = await this.getLedgerContract();
                     const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
@@ -802,7 +803,7 @@ export class PaymentRouter {
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {
-                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_NEW;
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
                             item.closeNewTimestamp = ContractUtils.getTimeStamp();
                             this.updateEvent(event, item);
                             await this._storage.updatePayment(item);
@@ -837,11 +838,11 @@ export class PaymentRouter {
                         }
                     } catch (error) {
                         const msg = ResponseMessage.getEVMErrorMessage(error);
-                        logger.error(`POST /v1/payment/new/close :`, msg.error.message);
+                        logger.error(`POST /v1/payment/new/close : ${msg.error.message}`);
                         return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
                     }
-                } else if (item.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED_NEW) {
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_NEW;
+                } else if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_NEW) {
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
                     item.closeNewTimestamp = ContractUtils.getTimeStamp();
                     await this._storage.updatePayment(item);
 
@@ -876,7 +877,7 @@ export class PaymentRouter {
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/new/close :`, msg.error.message);
+            logger.error(`POST /v1/payment/new/close : ${msg.error.message}`);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -928,7 +929,7 @@ export class PaymentRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/item :`, msg.error.message);
+            logger.error(`GET /v1/payment/item : ${msg.error.message}`);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -957,11 +958,11 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.CLOSED_NEW) {
+                if (item.paymentStatus !== LoyaltyPaymentTaskStatus.CLOSED_NEW) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2022"));
                 }
 
-                item.paymentStatus = LoyaltyPaymentInputDataStatus.OPENED_CANCEL;
+                item.paymentStatus = LoyaltyPaymentTaskStatus.OPENED_CANCEL;
                 await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                 item.openCancelTimestamp = ContractUtils.getTimeStamp();
@@ -1002,7 +1003,7 @@ export class PaymentRouter {
             return;
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/cancel/open :`, msg.error.message);
+            logger.error(`POST /v1/payment/cancel/open : ${msg.error.message}`);
             return res.status(200).json(msg);
         }
     }
@@ -1028,7 +1029,7 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentInputDataStatus.OPENED_CANCEL) {
+                if (item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_CANCEL) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
                 }
 
@@ -1050,12 +1051,12 @@ export class PaymentRouter {
                 if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > this._config.relay.paymentTimeoutSecond) {
                     const msg = ResponseMessage.getErrorMessage("7000");
                     res.status(200).json(msg);
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.TIMEOUT;
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.TIMEOUT;
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                     await this.sendPaymentResult(
-                        PaymentResultType.CANCEL,
-                        PaymentResultCode.TIMEOUT,
+                        TaskResultType.CANCEL,
+                        TaskResultCode.TIMEOUT,
                         msg.error.message,
                         this.getCallBackResponse(item)
                     );
@@ -1069,7 +1070,7 @@ export class PaymentRouter {
                             .connect(signerItem.signer)
                             .openCancelLoyaltyPayment(item.paymentId, signature);
 
-                        item.paymentStatus = LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL;
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL;
                         await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                         res.status(200).json(
@@ -1086,24 +1087,24 @@ export class PaymentRouter {
                         );
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {
-                            item.paymentStatus = LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_CANCEL;
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL;
                             this.updateEvent(event, item);
                             await this._storage.updatePayment(item);
 
                             await this.sendPaymentResult(
-                                PaymentResultType.CANCEL,
-                                PaymentResultCode.SUCCESS,
+                                TaskResultType.CANCEL,
+                                TaskResultCode.SUCCESS,
                                 "The cancellation has been successfully completed.",
                                 this.getCallBackResponse(item)
                             );
                         }
                     } catch (error) {
                         const msg = ResponseMessage.getEVMErrorMessage(error);
-                        logger.error(`POST /v1/payment/cancel/approval :`, msg.error.message);
+                        logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
                         return res.status(200).json(msg);
                     }
                 } else {
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.DENIED_CANCEL;
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.DENIED_CANCEL;
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                     res.status(200).json(
@@ -1119,8 +1120,8 @@ export class PaymentRouter {
                     );
 
                     await this.sendPaymentResult(
-                        PaymentResultType.CANCEL,
-                        PaymentResultCode.DENIED,
+                        TaskResultType.CANCEL,
+                        TaskResultCode.DENIED,
                         "The payment denied by user.",
                         this.getCallBackResponse(item)
                     );
@@ -1128,7 +1129,7 @@ export class PaymentRouter {
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/cancel/approval :`, msg.error.message);
+            logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -1161,8 +1162,8 @@ export class PaymentRouter {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
                 if (
-                    item.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL ||
-                    item.paymentStatus === LoyaltyPaymentInputDataStatus.REPLY_COMPLETED_CANCEL
+                    item.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL ||
+                    item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
                 ) {
                     const contract = await this.getLedgerContract();
                     const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
@@ -1181,7 +1182,7 @@ export class PaymentRouter {
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {
-                            item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_CANCEL;
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
                             item.closeCancelTimestamp = ContractUtils.getTimeStamp();
                             this.updateEvent(event, item);
                             await this._storage.updatePayment(item);
@@ -1216,11 +1217,11 @@ export class PaymentRouter {
                         }
                     } catch (error) {
                         const msg = ResponseMessage.getEVMErrorMessage(error);
-                        logger.error(`POST /v1/payment/cancel/close :`, msg.error.message);
+                        logger.error(`POST /v1/payment/cancel/close : ${msg.error.message}`);
                         return res.status(200).json(msg);
                     }
-                } else if (item.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED_CANCEL) {
-                    item.paymentStatus = LoyaltyPaymentInputDataStatus.CLOSED_CANCEL;
+                } else if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_CANCEL) {
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
                     item.closeCancelTimestamp = ContractUtils.getTimeStamp();
                     await this._storage.updatePayment(item);
 
@@ -1255,14 +1256,14 @@ export class PaymentRouter {
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/cancel/close :`, msg.error.message);
+            logger.error(`POST /v1/payment/cancel/close : ${msg.error.message}`);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
     }
 
-    private getCallBackResponse(item: LoyaltyPaymentInternalData): any {
+    private getCallBackResponse(item: LoyaltyPaymentTaskData): any {
         return {
             paymentId: item.paymentId,
             purchaseId: item.purchaseId,
@@ -1284,7 +1285,7 @@ export class PaymentRouter {
         };
     }
 
-    private updateEvent(event: LoyaltyPaymentEvent, item: LoyaltyPaymentInternalData): void {
+    private updateEvent(event: ContractLoyaltyPaymentEvent, item: LoyaltyPaymentTaskData): void {
         if (item.paymentId !== event.paymentId) return;
         item.purchaseId = event.purchaseId;
         item.currency = event.currency;
@@ -1305,7 +1306,7 @@ export class PaymentRouter {
     private async waitPaymentLoyalty(
         contract: Ledger,
         tx: ContractTransaction
-    ): Promise<LoyaltyPaymentEvent | undefined> {
+    ): Promise<ContractLoyaltyPaymentEvent | undefined> {
         const res: any = {};
         const contractReceipt = await tx.wait();
         const log = ContractUtils.findLog(contractReceipt, contract.interface, "LoyaltyPaymentEvent");
@@ -1352,8 +1353,8 @@ export class PaymentRouter {
     }
 
     private async sendPaymentResult(
-        type: PaymentResultType,
-        code: PaymentResultCode,
+        type: TaskResultType,
+        code: TaskResultCode,
         message: string,
         data: PaymentResultData
     ) {

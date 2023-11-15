@@ -25,8 +25,10 @@ import assert from "assert";
 import URI from "urijs";
 import { URL } from "url";
 import { Config } from "../src/common/Config";
+import { ContractShopStatus, LoyaltyPaymentTaskStatus, ShopTaskStatus, TaskResultType } from "../src/types";
 
 import path from "path";
+import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 chai.use(solidity);
 
@@ -41,7 +43,11 @@ describe("Test for ShopCollection", () => {
         validator1,
         validator2,
         validator3,
-        relay,
+        relay1,
+        relay2,
+        relay3,
+        relay4,
+        relay5,
         user1,
         user2,
         user3,
@@ -125,7 +131,7 @@ describe("Test for ShopCollection", () => {
 
     const deployShopCollection = async () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
+        shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifier.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -167,7 +173,9 @@ describe("Test for ShopCollection", () => {
     let serverURL: URL;
     let config: Config;
 
-    context("Add, Update, Delete of shops", () => {
+    let fakerCallbackServer: FakerCallbackServer;
+
+    context("Add of shops", () => {
         interface IShopData {
             shopId: string;
             name: string;
@@ -246,7 +254,14 @@ describe("Test for ShopCollection", () => {
             config.contracts.ledgerAddress = ledgerContract.address;
             config.contracts.shopAddress = shopCollection.address;
 
-            config.relay.managerKeys = [relay.privateKey];
+            config.relay.managerKeys = [
+                relay1.privateKey,
+                relay2.privateKey,
+                relay3.privateKey,
+                relay4.privateKey,
+                relay5.privateKey,
+            ];
+            config.relay.certifierKey = certifier.privateKey;
         });
 
         before("Create TestServer", async () => {
@@ -261,28 +276,28 @@ describe("Test for ShopCollection", () => {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.close();
+            await storage.dropTestDB();
+        });
+
+        before("Start CallbackServer", async () => {
+            fakerCallbackServer = new FakerCallbackServer(3400);
+            await fakerCallbackServer.start();
+        });
+
+        after("Stop CallbackServer", async () => {
+            await fakerCallbackServer.stop();
         });
 
         it("Add", async () => {
             for (const elem of shopData) {
                 const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                const signature = await ContractUtils.signShop(
-                    elem.wallet,
-                    elem.shopId,
-                    elem.name,
-                    elem.provideWaitTime,
-                    elem.providePercent,
-                    nonce
-                );
+                const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
 
                 const uri = URI(serverURL).directory("/v1/shop").filename("add");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     shopId: elem.shopId,
                     name: elem.name,
-                    provideWaitTime: elem.provideWaitTime,
-                    providePercent: elem.providePercent,
                     account: elem.wallet.address,
                     signature,
                 });
@@ -294,62 +309,171 @@ describe("Test for ShopCollection", () => {
         });
 
         it("Check", async () => {
-            const ids = await shopCollection.shopsOf(shopWallets[0].address);
-            expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
+            for (const elem of shopData) {
+                const shop = await shopCollection.shopOf(elem.shopId);
+                expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
+            }
         });
 
-        it("Update", async () => {
-            const elem = shopData[0];
-            const nonce = await shopCollection.nonceOf(elem.wallet.address);
-            elem.name = "New Shop";
-            elem.provideWaitTime = 86400 * 7;
-            elem.providePercent = 10;
-            const signature = await ContractUtils.signShop(
-                elem.wallet,
-                elem.shopId,
-                elem.name,
-                elem.provideWaitTime,
-                elem.providePercent,
-                nonce
-            );
+        let taskId: string;
+        context("Shop update", () => {
+            it("Endpoint POST /v1/shop/update/create", async () => {
+                const url = URI(serverURL).directory("/v1/shop/update").filename("create").toString();
 
-            const uri = URI(serverURL).directory("/v1/shop").filename("update");
-            const url = uri.toString();
-            const response = await client.post(url, {
-                shopId: elem.shopId,
-                name: elem.name,
-                provideWaitTime: elem.provideWaitTime,
-                providePercent: elem.providePercent,
-                account: elem.wallet.address,
-                signature,
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    shopId: shopData[0].shopId,
+                    name: "새로운 이름",
+                    provideWaitTime: 86400,
+                    providePercent: 10,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.OPENED);
+                taskId = response.data.data.taskId;
             });
 
-            expect(response.data.code).to.equal(0);
-            expect(response.data.data).to.not.equal(undefined);
-            expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-        });
+            it("Endpoint GET /v1/shop/task", async () => {
+                const url = URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString();
 
-        it("Remove", async () => {
-            const elem = shopData[0];
-            const nonce = await shopCollection.nonceOf(elem.wallet.address);
-            const signature = await ContractUtils.signShopId(elem.wallet, elem.shopId, nonce);
+                const response = await client.get(url);
 
-            const uri = URI(serverURL).directory("/v1/shop").filename("remove");
-            const url = uri.toString();
-            const response = await client.post(url, {
-                shopId: elem.shopId,
-                account: elem.wallet.address,
-                signature,
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.type, TaskResultType.UPDATE);
+                assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.INACTIVE);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.OPENED);
             });
 
-            expect(response.data.code).to.equal(0);
-            expect(response.data.data).to.not.equal(undefined);
-            expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
+            it("Endpoint POST /v1/shop/update/approval", async () => {
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
+                );
+                const nonce = await shopCollection.nonceOf(shopData[0].wallet.address);
+                const signature = await ContractUtils.signShop(shopData[0].wallet, shopData[0].shopId, nonce);
+
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/shop/update").filename("approval").toString(),
+                    {
+                        taskId,
+                        approval: true,
+                        signature,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.txHash !== undefined);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.CONFIRMED);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
+            });
+
+            it("Endpoint GET /v1/shop/task", async () => {
+                const url = URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString();
+
+                const response = await client.get(url);
+
+                assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.type, TaskResultType.UPDATE);
+                assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.INACTIVE);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
+            });
+
+            it("Check update", async () => {
+                const shop = await shopCollection.shopOf(shopData[0].shopId);
+                expect(shop.name).to.deep.equal("새로운 이름");
+                expect(shop.provideWaitTime.toNumber()).to.deep.equal(86400);
+                expect(shop.providePercent.toNumber()).to.deep.equal(10);
+            });
         });
 
-        it("Check remove", async () => {
-            const ids = await shopCollection.shopsOf(shopWallets[0].address);
-            expect(ids).to.deep.equal([shopData[1].shopId]);
+        context("Shop status", () => {
+            it("Endpoint POST /v1/shop/status/create", async () => {
+                const url = URI(serverURL).directory("/v1/shop/status").filename("create").toString();
+
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    shopId: shopData[0].shopId,
+                    status: ContractShopStatus.ACTIVE,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.OPENED);
+                taskId = response.data.data.taskId;
+            });
+
+            it("Endpoint GET /v1/shop/task", async () => {
+                const url = URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString();
+
+                const response = await client.get(url);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.type, TaskResultType.STATUS);
+                assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.ACTIVE);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.OPENED);
+            });
+
+            it("Endpoint POST /v1/shop/status/approval", async () => {
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
+                );
+                const nonce = await shopCollection.nonceOf(shopData[0].wallet.address);
+                const signature = await ContractUtils.signShop(shopData[0].wallet, shopData[0].shopId, nonce);
+
+                const response = await client.post(
+                    URI(serverURL).directory("/v1/shop/status").filename("approval").toString(),
+                    {
+                        taskId,
+                        approval: true,
+                        signature,
+                    }
+                );
+
+                assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
+                assert.ok(response.data.data !== undefined);
+                assert.ok(response.data.data.txHash !== undefined);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.CONFIRMED);
+            });
+
+            it("Waiting", async () => {
+                await ContractUtils.delay(2000);
+            });
+
+            it("Endpoint GET /v1/shop/task", async () => {
+                const url = URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString();
+
+                const response = await client.get(url);
+
+                assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
+                assert.ok(response.data.data !== undefined);
+
+                assert.deepStrictEqual(response.data.data.type, TaskResultType.STATUS);
+                assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.ACTIVE);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
+            });
+
+            it("Check status", async () => {
+                const shop = await shopCollection.shopOf(shopData[0].shopId);
+                expect(shop.status).to.deep.equal(ContractShopStatus.ACTIVE);
+            });
         });
     });
 });

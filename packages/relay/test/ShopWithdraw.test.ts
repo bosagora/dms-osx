@@ -10,6 +10,7 @@ import {
     ValidatorCollection,
 } from "../typechain-types";
 import { TestClient, TestServer } from "./helper/Utility";
+import { ContractShopStatus } from "../src/types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -153,9 +154,66 @@ describe("Test for ShopCollection", () => {
 
     const deployShopCollection = async () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
+        shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifier.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
+    };
+
+    const addShopData = async (shops: IShopData[]) => {
+        for (const shop of shops) {
+            const nonce = await shopCollection.nonceOf(shop.wallet.address);
+            const signature = await ContractUtils.signShop(shop.wallet, shop.shopId, nonce);
+            await shopCollection.connect(deployer).add(shop.shopId, shop.name, shop.wallet.address, signature);
+        }
+
+        for (const shop of shops) {
+            const signature1 = ContractUtils.signShop(
+                shop.wallet,
+                shop.shopId,
+                await shopCollection.nonceOf(shop.wallet.address)
+            );
+            const signature2 = ContractUtils.signShop(
+                certifier,
+                shop.shopId,
+                await shopCollection.nonceOf(certifier.address)
+            );
+            await shopCollection
+                .connect(deployer)
+                .update(
+                    shop.shopId,
+                    shop.name,
+                    shop.provideWaitTime,
+                    shop.providePercent,
+                    shop.wallet.address,
+                    signature1,
+                    signature2
+                );
+        }
+
+        for (const shop of shops) {
+            const signature1 = ContractUtils.signShop(
+                shop.wallet,
+                shop.shopId,
+                await shopCollection.nonceOf(shop.wallet.address)
+            );
+            const signature2 = ContractUtils.signShop(
+                certifier,
+                shop.shopId,
+                await shopCollection.nonceOf(certifier.address)
+            );
+            await shopCollection
+                .connect(deployer)
+                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.wallet.address, signature1, signature2);
+        }
+    };
+
+    const prepareToken = async () => {
+        for (const elem of userWallets) {
+            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
+        }
+        await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+        await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+        await ledgerContract.connect(foundation).deposit(assetAmount.value);
     };
 
     const deployLedger = async () => {
@@ -179,7 +237,7 @@ describe("Test for ShopCollection", () => {
         await shopCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
     };
 
-    const deployAllContract = async () => {
+    const deployAllContract = async (shops: IShopData[]) => {
         await deployToken();
         await deployValidatorCollection();
         await depositValidators();
@@ -187,6 +245,8 @@ describe("Test for ShopCollection", () => {
         await deployCurrencyRate();
         await deployShopCollection();
         await deployLedger();
+        await addShopData(shops);
+        await prepareToken();
     };
 
     const client = new TestClient();
@@ -333,7 +393,7 @@ describe("Test for ShopCollection", () => {
         });
 
         before("Deploy", async () => {
-            await deployAllContract();
+            await deployAllContract(shopData);
         });
 
         before("Create Config", async () => {
@@ -359,64 +419,7 @@ describe("Test for ShopCollection", () => {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.close();
-        });
-
-        before("Prepare Token", async () => {
-            for (const elem of userWallets) {
-                await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-            }
-        });
-
-        context("Prepare shop data", () => {
-            it("Add Shop Data", async () => {
-                for (const elem of shopData) {
-                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = await ContractUtils.signShop(
-                        elem.wallet,
-                        elem.shopId,
-                        elem.name,
-                        elem.provideWaitTime,
-                        elem.providePercent,
-                        nonce
-                    );
-                    await expect(
-                        shopCollection
-                            .connect(elem.wallet)
-                            .add(
-                                elem.shopId,
-                                elem.name,
-                                elem.provideWaitTime,
-                                elem.providePercent,
-                                elem.wallet.address,
-                                signature
-                            )
-                    )
-                        .to.emit(shopCollection, "AddedShop")
-                        .withNamedArgs({
-                            shopId: elem.shopId,
-                            name: elem.name,
-                            provideWaitTime: elem.provideWaitTime,
-                            providePercent: elem.providePercent,
-                            account: elem.wallet.address,
-                        });
-                }
-                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-            });
-        });
-
-        context("Prepare foundation's asset", () => {
-            it("Deposit foundation's token", async () => {
-                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
-                    .to.emit(ledgerContract, "Deposited")
-                    .withNamedArgs({
-                        account: foundation.address,
-                        depositedToken: assetAmount.value,
-                        balanceToken: assetAmount.value,
-                    });
-            });
+            await storage.dropTestDB();
         });
 
         context("Save Purchase Data", () => {
@@ -680,8 +683,9 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
-                    provideWaitTime: "0",
-                    providePercent: "0",
+                    provideWaitTime: 0,
+                    providePercent: 0,
+                    status: 1,
                     account: shopData[shopIndex].wallet.address,
                     providedPoint: "100000000000000000000",
                     usedPoint: "500000000000000000000",
@@ -692,13 +696,13 @@ describe("Test for ShopCollection", () => {
 
             it("Open Withdrawal", async () => {
                 const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShopId(
+                const signature = await ContractUtils.signShop(
                     shopData[shopIndex].wallet,
                     shopData[shopIndex].shopId,
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("/v1/shop").filename("openWithdrawal");
+                const uri = URI(serverURL).directory("/v1/shop/withdrawal").filename("open");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     shopId: shopData[shopIndex].shopId,
@@ -732,13 +736,13 @@ describe("Test for ShopCollection", () => {
 
             it("Close Withdrawal", async () => {
                 const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShopId(
+                const signature = await ContractUtils.signShop(
                     shopData[shopIndex].wallet,
                     shopData[shopIndex].shopId,
                     nonce
                 );
 
-                const uri = URI(serverURL).directory("/v1/shop").filename("closeWithdrawal");
+                const uri = URI(serverURL).directory("/v1/shop/withdrawal").filename("close");
                 const url = uri.toString();
                 const response = await client.post(url, {
                     shopId: shopData[shopIndex].shopId,
@@ -765,8 +769,9 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
-                    provideWaitTime: "0",
-                    providePercent: "0",
+                    provideWaitTime: 0,
+                    providePercent: 0,
+                    status: 1,
                     account: shopData[shopIndex].wallet.address,
                     providedPoint: "100000000000000000000",
                     usedPoint: "500000000000000000000",

@@ -10,7 +10,13 @@ export enum WithdrawStatus {
     OPEN,
 }
 
-export enum LoyaltyPaymentInputDataStatus {
+export enum ContractShopStatus {
+    INVALID,
+    ACTIVE,
+    INACTIVE,
+}
+
+export enum LoyaltyPaymentTaskStatus {
     NULL,
     OPENED_NEW,
     CONFIRMED_NEW,
@@ -25,7 +31,7 @@ export enum LoyaltyPaymentInputDataStatus {
     TIMEOUT,
 }
 
-export interface LoyaltyPaymentInternalData {
+export interface LoyaltyPaymentTaskData {
     paymentId: string;
     purchaseId: string;
     amount: BigNumber;
@@ -44,19 +50,21 @@ export interface LoyaltyPaymentInternalData {
     totalToken: BigNumber;
     totalValue: BigNumber;
 
-    paymentStatus: LoyaltyPaymentInputDataStatus;
+    paymentStatus: LoyaltyPaymentTaskStatus;
     openNewTimestamp: number;
     closeNewTimestamp: number;
     openCancelTimestamp: number;
     closeCancelTimestamp: number;
 }
 
-export enum PaymentResultType {
+export enum TaskResultType {
     NEW = "new",
     CANCEL = "cancel",
+    UPDATE = "update",
+    STATUS = "status",
 }
 
-export enum PaymentResultCode {
+export enum TaskResultCode {
     SUCCESS = 0,
     DENIED = 4000,
     CONTRACT_ERROR = 5000,
@@ -82,14 +90,14 @@ export interface PaymentResultData {
     totalToken: string;
     totalValue: string;
     balance?: string;
-    paymentStatus?: LoyaltyPaymentInputDataStatus;
+    paymentStatus?: LoyaltyPaymentTaskStatus;
     openNewTimestamp?: number;
     closeNewTimestamp?: number;
     openCancelTimestamp?: number;
     closeCancelTimestamp?: number;
 }
 
-export interface LoyaltyPaymentEvent {
+export interface ContractLoyaltyPaymentEvent {
     paymentId: string;
     purchaseId: string;
     currency: string;
@@ -110,6 +118,42 @@ export interface LoyaltyPaymentEvent {
     balance: BigNumber;
 }
 
+export enum ShopTaskStatus {
+    NULL,
+    OPENED,
+    CONFIRMED,
+    DENIED,
+    COMPLETED,
+    TIMEOUT,
+}
+
+export interface ShopTaskData {
+    taskId: string;
+    type: TaskResultType;
+    shopId: string;
+    name: string;
+    provideWaitTime: number;
+    providePercent: number;
+    status: ContractShopStatus;
+    account: string;
+    taskStatus: ShopTaskStatus;
+    timestamp: number;
+}
+
+export interface ContractShopUpdateEvent {
+    shopId: string;
+    name: string;
+    provideWaitTime: number;
+    providePercent: number;
+    account: string;
+    status: ContractShopStatus;
+}
+
+export interface ContractShopStatusEvent {
+    shopId: string;
+    status: ContractShopStatus;
+}
+
 export class ResponseMessage {
     static messages: Map<string, string> = new Map([
         ["0000", "Success"],
@@ -122,6 +166,7 @@ export class ResponseMessage {
         ["1050", "Sender is not authorized to execute"],
         ["1200", "The shop ID already exists"],
         ["1201", "The shop ID is not exists"],
+        ["1202", "The shop is not activated"],
         ["1220", "Insufficient withdrawal amount"],
         ["1221", "Withdrawal is already opened"],
         ["1222", "Withdrawal is not opened"],
@@ -145,6 +190,8 @@ export class ResponseMessage {
         ["2020", "The status code for this payment cannot be approved"],
         ["2022", "The status code for this payment cannot be cancel"],
         ["2024", "The status code for this payment cannot process closing"],
+        ["2033", "The task ID is not exist"],
+        ["2040", "The status code for this task cannot be approved"],
         ["4000", "This payment denied by user"],
         ["5000", "Smart Contract Error"],
         ["6000", "Server Error"],
@@ -157,10 +204,15 @@ export class ResponseMessage {
         if (message !== undefined) {
             return { code: Number(code), error: { message } };
         }
-        const defaultCode = "5000";
-        const defaultMessage = ResponseMessage.messages.get(defaultCode);
-        if (defaultMessage !== undefined) {
-            return { code: Number(defaultCode), error: { message: defaultMessage } };
+
+        if (ContractUtils.isErrorOfEVM(error)) {
+            const defaultCode = "5000";
+            const defaultMessage = ResponseMessage.messages.get(defaultCode);
+            if (defaultMessage !== undefined) {
+                return { code: Number(defaultCode), error: { message: defaultMessage } };
+            }
+        } else if (error instanceof Error && error.message) {
+            return { code: 9000, error: { message: error.message } };
         }
         return { code: 9000, error: { message: "Unknown Error" } };
     }

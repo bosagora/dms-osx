@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="task">
+
+    <insert id="postTask">
+        INSERT INTO tasks
+            (
+                "taskId"                ,
+                "type"                  ,
+                "shopId"                ,
+                "account"               ,
+                "name"                  ,
+                "provideWaitTime"       ,
+                "providePercent"        ,
+                "status"                ,
+                "taskStatus"            ,
+                "timestamp"
+            )
+        VALUES
+            (
+                #{taskId}               ,
+                #{type}                 ,
+                #{shopId}               ,
+                #{account}              ,
+                #{name}                 ,
+                ${provideWaitTime}      ,
+                ${providePercent}       ,
+                ${status}               ,
+                ${taskStatus}           ,
+                ${timestamp}
+            )
+        ON CONFLICT ("taskId")  DO NOTHING;
+    </insert>
+
+    <select id="getTask">
+        SELECT * FROM tasks WHERE "taskId" = #{taskId};
+    </select>
+
+    <update id="updateTask">
+        UPDATE tasks
+        SET
+            "name"              = #{name},
+            "provideWaitTime"   = ${provideWaitTime},
+            "providePercent"    = ${providePercent},
+            "status"            = ${status},
+            "taskStatus"        = ${taskStatus},
+            "timestamp"         = ${timestamp}
+        WHERE "taskId" = #{taskId}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE tasks
+        SET
+            "taskStatus" = ${taskStatus}
+        WHERE "taskId" = #{taskId}
+    </update>
+
+    <update id="updateTimestamp">
+        UPDATE tasks
+        SET
+            "timestamp" = ${value}
+        WHERE "taskId" = #{taskId}
+    </update>
+</mapper>
