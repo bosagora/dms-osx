@@ -40,6 +40,7 @@ relay:
   accessKey: "${ACCESS_KEY}"
   certifier: "${CERTIFIER_KEY}"
   callbackEndpoint: "${CALLBACK_ENDPOINT}"
+  callbackAccessKey: "${CALLBACK_ACCESS_KEY}"
   paymentTimeoutSecond: 45
 
 contracts:

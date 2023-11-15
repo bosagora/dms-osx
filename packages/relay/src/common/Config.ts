@@ -281,6 +281,7 @@ export class RelayConfig implements IRelayConfig {
     public managerKeys: string[];
     public accessKey: string;
     public certifierKey: string;
+    public callbackAccessKey: string;
     public callbackEndpoint: string;
     public paymentTimeoutSecond: number;
 
@@ -293,6 +294,7 @@ export class RelayConfig implements IRelayConfig {
         this.managerKeys = defaults.managerKeys;
         this.accessKey = defaults.accessKey;
         this.certifierKey = defaults.certifierKey;
+        this.callbackAccessKey = defaults.callbackAccessKey;
         this.callbackEndpoint = defaults.callbackEndpoint;
         this.paymentTimeoutSecond = defaults.paymentTimeoutSecond;
     }
@@ -311,6 +313,7 @@ export class RelayConfig implements IRelayConfig {
             ],
             accessKey: process.env.ACCESS_SECRET || "",
             certifierKey: process.env.CERTIFIER_KEY || "",
+            callbackAccessKey: process.env.CALLBACK_ACCESS_KEY || "",
             callbackEndpoint: process.env.CALLBACK_ENDPOINT || "",
             paymentTimeoutSecond: 45,
         };
@@ -324,6 +327,7 @@ export class RelayConfig implements IRelayConfig {
         if (config.managerKeys !== undefined) this.managerKeys = config.managerKeys;
         if (config.accessKey !== undefined) this.accessKey = config.accessKey;
         if (config.certifierKey !== undefined) this.certifierKey = config.certifierKey;
+        if (config.callbackAccessKey !== undefined) this.callbackAccessKey = config.callbackAccessKey;
         if (config.callbackEndpoint !== undefined) this.callbackEndpoint = config.callbackEndpoint;
         if (config.paymentTimeoutSecond !== undefined) this.paymentTimeoutSecond = config.paymentTimeoutSecond;
     }
@@ -374,6 +378,7 @@ export class ContractsConfig implements IContractsConfig {
         if (config.ledgerAddress !== undefined) this.ledgerAddress = config.ledgerAddress;
         if (config.phoneLinkerAddress !== undefined) this.phoneLinkerAddress = config.phoneLinkerAddress;
         if (config.shopAddress !== undefined) this.shopAddress = config.shopAddress;
+        if (config.currencyRateAddress !== undefined) this.currencyRateAddress = config.currencyRateAddress;
     }
 }
 
@@ -509,6 +514,7 @@ export interface IRelayConfig {
     managerKeys: string[];
     accessKey: string;
     certifierKey: string;
+    callbackAccessKey: string;
     callbackEndpoint: string;
     paymentTimeoutSecond: number;
 }

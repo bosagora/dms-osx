@@ -1360,6 +1360,7 @@ export class PaymentRouter {
     ) {
         const client = new HTTPClient();
         await client.post(this._config.relay.callbackEndpoint, {
+            accessKey: this._config.relay.callbackAccessKey,
             type,
             code,
             message,

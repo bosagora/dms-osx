@@ -24,9 +24,21 @@ export class DefaultRouter {
     public registerRoutes() {
         // Get Health Status
         this.app.get("/", [], this.getHealthStatus.bind(this));
+        this.app.post("/callback", [], this.callback.bind(this));
     }
 
     private async getHealthStatus(req: express.Request, res: express.Response) {
         return res.status(200).json("OK");
+    }
+    private async callback(req: express.Request, res: express.Response) {
+        console.log(JSON.stringify(req.body));
+        res.status(200).json(this.makeResponseData(0, { message: "OK" }, undefined));
+    }
+    private makeResponseData(code: number, data: any, error?: any): any {
+        return {
+            code,
+            data,
+            error,
+        };
     }
 }
