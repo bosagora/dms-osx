@@ -130,6 +130,17 @@ function getAccounts() {
     }
 
     if (
+        process.env.CERTIFIER !== undefined &&
+        process.env.CERTIFIER.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER)
+    ) {
+        accounts.push(process.env.CERTIFIER);
+    } else {
+        process.env.CERTIFIER = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER);
+    }
+
+    if (
         process.env.LINK_VALIDATOR1 !== undefined &&
         process.env.LINK_VALIDATOR1.trim() !== "" &&
         reg_bytes64.test(process.env.LINK_VALIDATOR1)
@@ -259,14 +270,17 @@ const config = {
         fee: {
             default: 9,
         },
-        linkValidator1: {
+        certifier: {
             default: 10,
         },
-        linkValidator2: {
+        linkValidator1: {
             default: 11,
         },
-        linkValidator3: {
+        linkValidator2: {
             default: 12,
+        },
+        linkValidator3: {
+            default: 13,
         },
     },
     gasReporter: {

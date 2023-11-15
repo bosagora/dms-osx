@@ -220,41 +220,7 @@ export class ContractUtils {
         return hre.ethers.utils.keccak256(encodedResult);
     }
 
-    public static getShopMessage(
-        shopId: BytesLike,
-        name: string,
-        provideWaitTime: BigNumberish,
-        providePercent: BigNumberish,
-        account: string,
-        nonce: BigNumberish
-    ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "string", "uint256", "uint256", "address", "uint256"],
-            [shopId, name, provideWaitTime, providePercent, account, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
-    }
-
-    public static async signShop(
-        signer: Signer,
-        shopId: BytesLike,
-        name: string,
-        provideWaitTime: BigNumberish,
-        providePercent: BigNumberish,
-        nonce: BigNumberish
-    ): Promise<string> {
-        const message = ContractUtils.getShopMessage(
-            shopId,
-            name,
-            provideWaitTime,
-            providePercent,
-            await signer.getAddress(),
-            nonce
-        );
-        return signer.signMessage(message);
-    }
-
-    public static getShopIdMessage(shopId: BytesLike, account: string, nonce: BigNumberish): Uint8Array {
+    public static getShopMessage(shopId: BytesLike, account: string, nonce: BigNumberish): Uint8Array {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256"],
             [shopId, account, nonce]
@@ -262,8 +228,8 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signShopId(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
-        const message = ContractUtils.getShopIdMessage(shopId, await signer.getAddress(), nonce);
+    public static async signShop(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getShopMessage(shopId, await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
 

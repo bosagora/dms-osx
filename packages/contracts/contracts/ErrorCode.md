@@ -10,6 +10,7 @@
 -
 -   1200: The shop ID already exists
 -   1201: The shop ID is not exists
+-   1202: The shop is not activated
 
 -   1220: Insufficient withdrawal amount
 -   1221: Withdrawal is already opened

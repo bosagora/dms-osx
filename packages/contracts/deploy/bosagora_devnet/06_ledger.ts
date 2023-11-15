@@ -19,8 +19,17 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
-    const { deployer, foundation, settlements, fee, validator1, linkValidator1, linkValidator2, linkValidator3 } =
-        await getNamedAccounts();
+    const {
+        deployer,
+        foundation,
+        settlements,
+        fee,
+        certifier,
+        validator1,
+        linkValidator1,
+        linkValidator2,
+        linkValidator3,
+    } = await getNamedAccounts();
 
     const linkCollectionContractAddress = await getPhoneLinkCollectionContractAddress("PhoneLinkCollection", hre);
     const tokenContractAddress = await getContractAddress("Token", hre);
@@ -34,6 +43,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             foundation,
             settlements,
             fee,
+            certifier,
             tokenContractAddress,
             validatorContractAddress,
             linkCollectionContractAddress,
@@ -118,19 +128,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         }
 
         for (const user of users) {
-            const balance = await tokenContract.balanceOf(user.address);
-
-            const depositedToken = balance.div(2);
-            const signer = new Wallet(user.privateKey).connect(ethers.provider);
-            const tx8 = await tokenContract.connect(signer).approve(ledgerContract.address, depositedToken);
-            console.log(`Approve user's amount (tx: ${tx8.hash})...`);
-            await tx8.wait();
-
-            const tx9 = await ledgerContract.connect(signer).deposit(depositedToken);
-            console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
-            await tx9.wait();
-
             if (user.loyaltyType === 1) {
+                const signer = new Wallet(user.privateKey).connect(ethers.provider);
                 const nonce = await ledgerContract.nonceOf(user.address);
                 const signature = ContractUtils.signLoyaltyType(signer, nonce);
                 const tx10 = await ledgerContract.connect(signer).changeToLoyaltyToken(user.address, signature);
@@ -142,6 +141,16 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 } else {
                     console.error(`Fail changeToLoyaltyToken...`);
                 }
+
+                const balance = await tokenContract.balanceOf(user.address);
+                const depositedToken = balance.div(2);
+                const tx8 = await tokenContract.connect(signer).approve(ledgerContract.address, depositedToken);
+                console.log(`Approve user's amount (tx: ${tx8.hash})...`);
+                await tx8.wait();
+
+                const tx9 = await ledgerContract.connect(signer).deposit(depositedToken);
+                console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
+                await tx9.wait();
             }
         }
     }

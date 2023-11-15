@@ -1,4 +1,4 @@
-import { Amount } from "../src/utils/Amount";
+import { ContractShopStatus } from "../src/types";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import { ShopCollection } from "../typechain-types";
 
@@ -16,8 +16,23 @@ chai.use(solidity);
 
 describe("Test for ShopCollection", () => {
     const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, user1, shop1, shop2, shop3, shop4, shop5, relay] =
-        provider.getWallets();
+    const [
+        deployer,
+        ,
+        ,
+        ,
+        certifier,
+        validator1,
+        validator2,
+        validator3,
+        user1,
+        shop1,
+        shop2,
+        shop3,
+        shop4,
+        shop5,
+        relay,
+    ] = provider.getWallets();
 
     const shopWallets: Wallet[] = [shop1, shop2, shop3, shop4, shop5];
     let shopCollection: ShopCollection;
@@ -82,180 +97,113 @@ describe("Test for ShopCollection", () => {
         },
     ];
 
-    context("Using Relay", () => {
-        before(async () => {
-            const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-            shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
-            await shopCollection.deployed();
-            await shopCollection.deployTransaction.wait();
-        });
+    before(async () => {
+        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+        shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifier.address)) as ShopCollection;
+        await shopCollection.deployed();
+        await shopCollection.deployTransaction.wait();
+    });
 
-        before("Set Shop ID", async () => {
-            for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
-            }
-        });
+    before("Set Shop ID", async () => {
+        for (const elem of shopData) {
+            elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+        }
+    });
 
-        it("Success", async () => {
-            for (const elem of shopData) {
-                const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                const signature = ContractUtils.signShop(
-                    elem.wallet,
+    it("Success", async () => {
+        for (const elem of shopData) {
+            const nonce = await shopCollection.nonceOf(elem.wallet.address);
+            const signature = ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
+            await expect(shopCollection.connect(relay).add(elem.shopId, elem.name, elem.wallet.address, signature))
+                .to.emit(shopCollection, "AddedShop")
+                .withNamedArgs({
+                    shopId: elem.shopId,
+                    name: elem.name,
+                    account: elem.wallet.address,
+                });
+        }
+        expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+    });
+
+    it("Check", async () => {
+        const ids = await shopCollection.shopsOf(shopWallets[0].address);
+        expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
+    });
+
+    it("Update", async () => {
+        const elem = shopData[0];
+        elem.name = "New Shop";
+        elem.provideWaitTime = 86400 * 7;
+        elem.providePercent = 10;
+        const signature1 = ContractUtils.signShop(
+            elem.wallet,
+            elem.shopId,
+            await shopCollection.nonceOf(elem.wallet.address)
+        );
+        const signature2 = ContractUtils.signShop(
+            certifier,
+            elem.shopId,
+            await shopCollection.nonceOf(certifier.address)
+        );
+        await expect(
+            shopCollection
+                .connect(relay)
+                .update(
                     elem.shopId,
                     elem.name,
                     elem.provideWaitTime,
                     elem.providePercent,
-                    nonce
-                );
-                await expect(
-                    shopCollection
-                        .connect(relay)
-                        .add(
-                            elem.shopId,
-                            elem.name,
-                            elem.provideWaitTime,
-                            elem.providePercent,
-                            elem.wallet.address,
-                            signature
-                        )
+                    elem.wallet.address,
+                    signature1,
+                    signature2
                 )
-                    .to.emit(shopCollection, "AddedShop")
-                    .withNamedArgs({
-                        shopId: elem.shopId,
-                        name: elem.name,
-                        provideWaitTime: elem.provideWaitTime,
-                        providePercent: elem.providePercent,
-                        account: elem.wallet.address,
-                    });
-            }
-            expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-        });
+        )
+            .to.emit(shopCollection, "UpdatedShop")
+            .withNamedArgs({
+                shopId: elem.shopId,
+                name: elem.name,
+                provideWaitTime: elem.provideWaitTime,
+                providePercent: elem.providePercent,
+                account: elem.wallet.address,
+            });
+    });
 
-        it("Check", async () => {
-            const ids = await shopCollection.shopsOf(shopWallets[0].address);
-            expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
-        });
+    it("Check status", async () => {
+        for (const elem of shopData) {
+            const shop = await shopCollection.shopOf(elem.shopId);
+            expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
+        }
+    });
 
-        it("Update", async () => {
-            const elem = shopData[0];
-            const nonce = await shopCollection.nonceOf(elem.wallet.address);
-            elem.name = "New Shop";
-            elem.provideWaitTime = 86400 * 7;
-            elem.providePercent = 10;
-            const signature = ContractUtils.signShop(
+    it("Change status", async () => {
+        for (const elem of shopData) {
+            const signature1 = ContractUtils.signShop(
                 elem.wallet,
                 elem.shopId,
-                elem.name,
-                elem.provideWaitTime,
-                elem.providePercent,
-                nonce
+                await shopCollection.nonceOf(elem.wallet.address)
+            );
+            const signature2 = ContractUtils.signShop(
+                certifier,
+                elem.shopId,
+                await shopCollection.nonceOf(certifier.address)
             );
             await expect(
                 shopCollection
-                    .connect(relay)
-                    .update(
-                        elem.shopId,
-                        elem.name,
-                        elem.provideWaitTime,
-                        elem.providePercent,
-                        elem.wallet.address,
-                        signature
-                    )
+                    .connect(elem.wallet)
+                    .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature1, signature2)
             )
-                .to.emit(shopCollection, "UpdatedShop")
+                .to.emit(shopCollection, "ChangedShopStatus")
                 .withNamedArgs({
                     shopId: elem.shopId,
-                    name: elem.name,
-                    provideWaitTime: elem.provideWaitTime,
-                    providePercent: elem.providePercent,
-                    account: elem.wallet.address,
+                    status: ContractShopStatus.ACTIVE,
                 });
-        });
-
-        it("Remove", async () => {
-            const elem = shopData[0];
-            const nonce = await shopCollection.nonceOf(elem.wallet.address);
-            const signature = ContractUtils.signShopId(elem.wallet, elem.shopId, nonce);
-            await expect(shopCollection.connect(elem.wallet).remove(elem.shopId, elem.wallet.address, signature))
-                .to.emit(shopCollection, "RemovedShop")
-                .withNamedArgs({
-                    shopId: elem.shopId,
-                });
-        });
-
-        it("Check remove", async () => {
-            const ids = await shopCollection.shopsOf(shopWallets[0].address);
-            expect(ids).to.deep.equal([shopData[1].shopId]);
-        });
+        }
     });
 
-    context("Using Direct", () => {
-        before(async () => {
-            const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-            shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
-            await shopCollection.deployed();
-            await shopCollection.deployTransaction.wait();
-        });
-
-        before("Set Shop ID", async () => {
-            for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
-            }
-        });
-
-        it("Success", async () => {
-            for (const elem of shopData) {
-                await expect(
-                    shopCollection
-                        .connect(elem.wallet)
-                        .addDirect(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
-                )
-                    .to.emit(shopCollection, "AddedShop")
-                    .withNamedArgs({
-                        shopId: elem.shopId,
-                        name: elem.name,
-                        provideWaitTime: elem.provideWaitTime,
-                        providePercent: elem.providePercent,
-                        account: elem.wallet.address,
-                    });
-            }
-            expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-        });
-
-        it("Check", async () => {
-            const ids = await shopCollection.shopsOf(shopWallets[0].address);
-            expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
-        });
-
-        it("Update", async () => {
-            const elem = shopData[0];
-            await expect(
-                shopCollection
-                    .connect(elem.wallet)
-                    .updateDirect(elem.shopId, elem.name, elem.provideWaitTime, elem.providePercent)
-            )
-                .to.emit(shopCollection, "UpdatedShop")
-                .withNamedArgs({
-                    shopId: elem.shopId,
-                    name: elem.name,
-                    provideWaitTime: elem.provideWaitTime,
-                    providePercent: elem.providePercent,
-                    account: elem.wallet.address,
-                });
-        });
-
-        it("Remove", async () => {
-            const elem = shopData[0];
-            await expect(shopCollection.connect(elem.wallet).removeDirect(elem.shopId))
-                .to.emit(shopCollection, "RemovedShop")
-                .withNamedArgs({
-                    shopId: elem.shopId,
-                });
-        });
-
-        it("Check remove", async () => {
-            const ids = await shopCollection.shopsOf(shopWallets[0].address);
-            expect(ids).to.deep.equal([shopData[1].shopId]);
-        });
+    it("Check status", async () => {
+        for (const elem of shopData) {
+            const shop = await shopCollection.shopOf(elem.shopId);
+            expect(shop.status).to.deep.equal(ContractShopStatus.ACTIVE);
+        }
     });
 });
