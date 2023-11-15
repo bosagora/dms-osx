@@ -225,11 +225,11 @@ export class LedgerRouter {
                 .connect(signerItem.signer)
                 .changeToLoyaltyToken(account, signature);
 
-            logger.http(`TxHash(changeToLoyaltyToken): `, tx.hash);
+            logger.http(`TxHash(changeToLoyaltyToken): ${tx.hash}`);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/ledger/changeToLoyaltyToken :`, msg.error.message);
+            logger.error(`POST /v1/ledger/changeToLoyaltyToken : ${msg.error.message}`);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -264,11 +264,11 @@ export class LedgerRouter {
                 .connect(signerItem.signer)
                 .changeToPayablePoint(phone, account, signature);
 
-            logger.http(`TxHash(changeToPayablePoint): `, tx.hash);
+            logger.http(`TxHash(changeToPayablePoint): ${tx.hash}`);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/ledger/changeToPayablePoint :`, msg.error.message);
+            logger.error(`POST /v1/ledger/changeToPayablePoint : ${msg.error.message}`);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);

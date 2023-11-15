@@ -6,7 +6,7 @@ import { BigNumber } from "ethers";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
-import { LoyaltyPaymentInputDataStatus, LoyaltyPaymentInternalData, LoyaltyType } from "../types";
+import { LoyaltyPaymentTaskData, LoyaltyPaymentTaskStatus, ShopTaskData, ShopTaskStatus } from "../types";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -16,6 +16,7 @@ export class RelayStorage extends Storage {
         super(databaseConfig, callback);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/table.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/payment.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/task.xml")]);
         this.createTables()
             .then(() => {
                 if (callback != null) callback(null);
@@ -39,11 +40,11 @@ export class RelayStorage extends Storage {
         return this.queryForMapper("table", "create_table", {});
     }
 
-    public async dropTestDB(database: any): Promise<any> {
-        await this.queryForMapper("table", "drop_table", { database });
+    public async dropTestDB(): Promise<any> {
+        await this.queryForMapper("table", "drop_table", {});
     }
 
-    public postPayment(item: LoyaltyPaymentInternalData): Promise<void> {
+    public postPayment(item: LoyaltyPaymentTaskData): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "postPayment", {
                 paymentId: item.paymentId,
@@ -78,8 +79,8 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getPayment(paymentId: string): Promise<LoyaltyPaymentInternalData | undefined> {
-        return new Promise<LoyaltyPaymentInternalData | undefined>(async (resolve, reject) => {
+    public getPayment(paymentId: string): Promise<LoyaltyPaymentTaskData | undefined> {
+        return new Promise<LoyaltyPaymentTaskData | undefined>(async (resolve, reject) => {
             this.queryForMapper("payment", "getPayment", { paymentId })
                 .then((result) => {
                     if (result.rows.length > 0) {
@@ -118,7 +119,7 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updatePayment(item: LoyaltyPaymentInternalData): Promise<void> {
+    public updatePayment(item: LoyaltyPaymentTaskData): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updatePayment", {
                 paymentId: item.paymentId,
@@ -147,7 +148,7 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updatePaymentStatus(paymentId: string, paymentStatus: LoyaltyPaymentInputDataStatus): Promise<any> {
+    public updatePaymentStatus(paymentId: string, paymentStatus: LoyaltyPaymentTaskStatus): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateStatus", {
                 paymentId,
@@ -199,6 +200,112 @@ export class RelayStorage extends Storage {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateCloseCancelTimestamp", {
                 paymentId,
+                value,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public postTask(item: ShopTaskData): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("task", "postTask", {
+                taskId: item.taskId,
+                type: item.type,
+                shopId: item.shopId,
+                account: item.account,
+                name: item.name,
+                provideWaitTime: item.provideWaitTime,
+                providePercent: item.providePercent,
+                status: item.status,
+                taskStatus: item.taskStatus,
+                timestamp: item.timestamp,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getTask(taskId: string): Promise<ShopTaskData | undefined> {
+        return new Promise<ShopTaskData | undefined>(async (resolve, reject) => {
+            this.queryForMapper("task", "getTask", { taskId })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        const m = result.rows[0];
+                        return resolve({
+                            taskId: m.taskId,
+                            type: m.type,
+                            shopId: m.shopId,
+                            account: m.account,
+                            name: m.name,
+                            provideWaitTime: m.provideWaitTime,
+                            providePercent: m.providePercent,
+                            status: m.status,
+                            taskStatus: m.taskStatus,
+                            timestamp: m.timestamp,
+                        });
+                    } else {
+                        return resolve(undefined);
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateTask(item: ShopTaskData): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("task", "updateTask", {
+                taskId: item.taskId,
+                name: item.name,
+                provideWaitTime: item.provideWaitTime,
+                providePercent: item.providePercent,
+                status: item.status,
+                taskStatus: item.taskStatus,
+                timestamp: item.timestamp,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateTaskStatus(taskId: string, taskStatus: ShopTaskStatus): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("task", "updateStatus", {
+                taskId,
+                taskStatus,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateTaskTimestamp(taskId: string, value: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("task", "updateTimestamp", {
+                taskId,
                 value,
             })
                 .then(() => {

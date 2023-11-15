@@ -25,7 +25,7 @@ import { BigNumber, Wallet } from "ethers";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 import { INotificationEventHandler } from "../src/delegator/NotificationSender";
-import { LoyaltyPaymentInputDataStatus, LoyaltyType } from "../src/types";
+import { LoyaltyPaymentTaskStatus, LoyaltyType, ContractShopStatus } from "../src/types";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 // tslint:disable-next-line:no-var-requires
@@ -135,9 +135,66 @@ describe("Test of Server", function () {
 
     const deployShopCollection = async () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory.connect(deployer).deploy()) as ShopCollection;
+        shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifier.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
+    };
+
+    const addShopData = async (shops: IShopData[]) => {
+        for (const shop of shops) {
+            const nonce = await shopCollection.nonceOf(shop.wallet.address);
+            const signature = await ContractUtils.signShop(shop.wallet, shop.shopId, nonce);
+            await shopCollection.connect(deployer).add(shop.shopId, shop.name, shop.wallet.address, signature);
+        }
+
+        for (const shop of shops) {
+            const signature1 = ContractUtils.signShop(
+                shop.wallet,
+                shop.shopId,
+                await shopCollection.nonceOf(shop.wallet.address)
+            );
+            const signature2 = ContractUtils.signShop(
+                certifier,
+                shop.shopId,
+                await shopCollection.nonceOf(certifier.address)
+            );
+            await shopCollection
+                .connect(deployer)
+                .update(
+                    shop.shopId,
+                    shop.name,
+                    shop.provideWaitTime,
+                    shop.providePercent,
+                    shop.wallet.address,
+                    signature1,
+                    signature2
+                );
+        }
+
+        for (const shop of shops) {
+            const signature1 = ContractUtils.signShop(
+                shop.wallet,
+                shop.shopId,
+                await shopCollection.nonceOf(shop.wallet.address)
+            );
+            const signature2 = ContractUtils.signShop(
+                certifier,
+                shop.shopId,
+                await shopCollection.nonceOf(certifier.address)
+            );
+            await shopCollection
+                .connect(deployer)
+                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.wallet.address, signature1, signature2);
+        }
+    };
+
+    const prepareToken = async () => {
+        for (const elem of users) {
+            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
+        }
+        await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
+        await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
+        await ledgerContract.connect(foundation).deposit(assetAmount.value);
     };
 
     const deployLedger = async () => {
@@ -160,7 +217,7 @@ describe("Test of Server", function () {
         await shopCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
     };
 
-    const deployAllContract = async () => {
+    const deployAllContract = async (shops: IShopData[]) => {
         await deployToken();
         await deployValidatorCollection();
         await depositValidators();
@@ -168,6 +225,8 @@ describe("Test of Server", function () {
         await deployCurrencyRate();
         await deployShopCollection();
         await deployLedger();
+        await addShopData(shops);
+        await prepareToken();
     };
 
     const client = new TestClient();
@@ -270,13 +329,7 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract();
-        });
-
-        before("Prepare Token", async () => {
-            for (const elem of users) {
-                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
-            }
+            await deployAllContract(shopData);
         });
 
         before("Create Config", async () => {
@@ -310,7 +363,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.close();
+            await storage.dropTestDB();
         });
 
         before("Start CallbackServer", async () => {
@@ -320,57 +373,6 @@ describe("Test of Server", function () {
 
         after("Stop CallbackServer", async () => {
             await fakerCallbackServer.stop();
-        });
-
-        context("Prepare shop data", () => {
-            it("Add Shop Data", async () => {
-                for (const elem of shopData) {
-                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
-                        elem.wallet,
-                        elem.shopId,
-                        elem.name,
-                        elem.provideWaitTime,
-                        elem.providePercent,
-                        nonce
-                    );
-                    await expect(
-                        shopCollection
-                            .connect(elem.wallet)
-                            .add(
-                                elem.shopId,
-                                elem.name,
-                                elem.provideWaitTime,
-                                elem.providePercent,
-                                elem.wallet.address,
-                                signature
-                            )
-                    )
-                        .to.emit(shopCollection, "AddedShop")
-                        .withNamedArgs({
-                            shopId: elem.shopId,
-                            name: elem.name,
-                            provideWaitTime: elem.provideWaitTime,
-                            providePercent: elem.providePercent,
-                            account: elem.wallet.address,
-                        });
-                }
-                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-            });
-        });
-
-        context("Prepare foundation's asset", () => {
-            it("Deposit foundation's token", async () => {
-                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
-                    .to.emit(ledgerContract, "Deposited")
-                    .withNamedArgs({
-                        account: foundation.address,
-                        depositedToken: assetAmount.value,
-                        balanceToken: assetAmount.value,
-                    });
-            });
         });
 
         context("Test of Loyalty Point", () => {
@@ -539,7 +541,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.DENIED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_NEW);
             });
 
             it("Waiting", async () => {
@@ -688,7 +690,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
             });
 
             it("Waiting", async () => {
@@ -737,7 +739,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
             });
         });
     });
@@ -750,13 +752,7 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract();
-        });
-
-        before("Prepare Token", async () => {
-            for (const elem of users) {
-                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
-            }
+            await deployAllContract(shopData);
         });
 
         before("Create Config", async () => {
@@ -790,7 +786,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.close();
+            await storage.dropTestDB();
         });
 
         before("Start CallbackServer", async () => {
@@ -800,57 +796,6 @@ describe("Test of Server", function () {
 
         after("Stop CallbackServer", async () => {
             await fakerCallbackServer.stop();
-        });
-
-        context("Prepare shop data", () => {
-            it("Add Shop Data", async () => {
-                for (const elem of shopData) {
-                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
-                        elem.wallet,
-                        elem.shopId,
-                        elem.name,
-                        elem.provideWaitTime,
-                        elem.providePercent,
-                        nonce
-                    );
-                    await expect(
-                        shopCollection
-                            .connect(elem.wallet)
-                            .add(
-                                elem.shopId,
-                                elem.name,
-                                elem.provideWaitTime,
-                                elem.providePercent,
-                                elem.wallet.address,
-                                signature
-                            )
-                    )
-                        .to.emit(shopCollection, "AddedShop")
-                        .withNamedArgs({
-                            shopId: elem.shopId,
-                            name: elem.name,
-                            provideWaitTime: elem.provideWaitTime,
-                            providePercent: elem.providePercent,
-                            account: elem.wallet.address,
-                        });
-                }
-                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-            });
-        });
-
-        context("Prepare foundation's asset", () => {
-            it("Deposit foundation's token", async () => {
-                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
-                    .to.emit(ledgerContract, "Deposited")
-                    .withNamedArgs({
-                        account: foundation.address,
-                        depositedToken: assetAmount.value,
-                        balanceToken: assetAmount.value,
-                    });
-            });
         });
 
         context("Test of Loyalty Point", () => {
@@ -1006,7 +951,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
             });
 
             it("Waiting", async () => {
@@ -1024,7 +969,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
             });
 
             it("Waiting", async () => {
@@ -1047,7 +992,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.OPENED_CANCEL);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 
             it("Endpoint POST /v1/payment/cancel/approval - true", async () => {
@@ -1080,10 +1025,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(
-                    response.data.data.paymentStatus,
-                    LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL
-                );
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL);
 
                 const newBalance = await ledgerContract.pointBalanceOf(users[purchaseOfLoyalty.userIndex].address);
                 assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalPoint)));
@@ -1106,7 +1048,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_CANCEL);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
             });
         });
     });
@@ -1119,13 +1061,7 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract();
-        });
-
-        before("Prepare Token", async () => {
-            for (const elem of users) {
-                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
-            }
+            await deployAllContract(shopData);
         });
 
         before("Create Config", async () => {
@@ -1159,7 +1095,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.close();
+            await storage.dropTestDB();
         });
 
         before("Start CallbackServer", async () => {
@@ -1169,57 +1105,6 @@ describe("Test of Server", function () {
 
         after("Stop CallbackServer", async () => {
             await fakerCallbackServer.stop();
-        });
-
-        context("Prepare shop data", () => {
-            it("Add Shop Data", async () => {
-                for (const elem of shopData) {
-                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
-                        elem.wallet,
-                        elem.shopId,
-                        elem.name,
-                        elem.provideWaitTime,
-                        elem.providePercent,
-                        nonce
-                    );
-                    await expect(
-                        shopCollection
-                            .connect(elem.wallet)
-                            .add(
-                                elem.shopId,
-                                elem.name,
-                                elem.provideWaitTime,
-                                elem.providePercent,
-                                elem.wallet.address,
-                                signature
-                            )
-                    )
-                        .to.emit(shopCollection, "AddedShop")
-                        .withNamedArgs({
-                            shopId: elem.shopId,
-                            name: elem.name,
-                            provideWaitTime: elem.provideWaitTime,
-                            providePercent: elem.providePercent,
-                            account: elem.wallet.address,
-                        });
-                }
-                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-            });
-        });
-
-        context("Prepare foundation's asset", () => {
-            it("Deposit foundation's token", async () => {
-                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
-                    .to.emit(ledgerContract, "Deposited")
-                    .withNamedArgs({
-                        account: foundation.address,
-                        depositedToken: assetAmount.value,
-                        balanceToken: assetAmount.value,
-                    });
-            });
         });
 
         context("Test of Loyalty Point", () => {
@@ -1375,7 +1260,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
             });
 
             it("Waiting", async () => {
@@ -1393,7 +1278,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
             });
 
             it("Waiting", async () => {
@@ -1416,7 +1301,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.OPENED_CANCEL);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 
             it("Endpoint POST /v1/payment/cancel/approval - false", async () => {
@@ -1445,7 +1330,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.DENIED_CANCEL);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.DENIED_CANCEL);
             });
 
             it("Endpoint POST /v1/payment/cancel/close", async () => {
@@ -1459,7 +1344,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_CANCEL);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
             });
         });
     });
@@ -1472,13 +1357,7 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract();
-        });
-
-        before("Prepare Token", async () => {
-            for (const elem of users) {
-                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
-            }
+            await deployAllContract(shopData);
         });
 
         before("Create Config", async () => {
@@ -1512,7 +1391,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.close();
+            await storage.dropTestDB();
         });
 
         before("Start CallbackServer", async () => {
@@ -1522,57 +1401,6 @@ describe("Test of Server", function () {
 
         after("Stop CallbackServer", async () => {
             await fakerCallbackServer.stop();
-        });
-
-        context("Prepare shop data", () => {
-            it("Add Shop Data", async () => {
-                for (const elem of shopData) {
-                    const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                    const signature = ContractUtils.signShop(
-                        elem.wallet,
-                        elem.shopId,
-                        elem.name,
-                        elem.provideWaitTime,
-                        elem.providePercent,
-                        nonce
-                    );
-                    await expect(
-                        shopCollection
-                            .connect(elem.wallet)
-                            .add(
-                                elem.shopId,
-                                elem.name,
-                                elem.provideWaitTime,
-                                elem.providePercent,
-                                elem.wallet.address,
-                                signature
-                            )
-                    )
-                        .to.emit(shopCollection, "AddedShop")
-                        .withNamedArgs({
-                            shopId: elem.shopId,
-                            name: elem.name,
-                            provideWaitTime: elem.provideWaitTime,
-                            providePercent: elem.providePercent,
-                            account: elem.wallet.address,
-                        });
-                }
-                expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-            });
-        });
-
-        context("Prepare foundation's asset", () => {
-            it("Deposit foundation's token", async () => {
-                await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-                await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-                await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
-                    .to.emit(ledgerContract, "Deposited")
-                    .withNamedArgs({
-                        account: foundation.address,
-                        depositedToken: assetAmount.value,
-                        balanceToken: assetAmount.value,
-                    });
-            });
         });
 
         context("Test of Loyalty Token", () => {
@@ -1749,7 +1577,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
             });
         });
     });
@@ -1819,7 +1647,7 @@ describe("Test of Server", function () {
                         assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_NEW);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
                     }
                 } else if (title === "KIOS 결제 취소 요청") {
                     const searchString = "결제 아이디 : ";
@@ -1853,7 +1681,7 @@ describe("Test of Server", function () {
                         assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CONFIRMED_CANCEL);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL);
                     }
                 }
             },
@@ -1866,13 +1694,7 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract();
-        });
-
-        before("Prepare Token", async () => {
-            for (const elem of users) {
-                await tokenContract.connect(deployer).transfer(elem.address, amount.value.mul(10));
-            }
+            await deployAllContract(shopData);
         });
 
         before("Create Config", async () => {
@@ -1906,7 +1728,7 @@ describe("Test of Server", function () {
 
         after("Stop TestServer", async () => {
             await server.stop();
-            await storage.close();
+            await storage.dropTestDB();
         });
 
         before("Start CallbackServer", async () => {
@@ -1916,53 +1738,6 @@ describe("Test of Server", function () {
 
         after("Stop CallbackServer", async () => {
             await fakerCallbackServer.stop();
-        });
-
-        it("Add Shop Data", async () => {
-            for (const elem of shopData) {
-                const nonce = await shopCollection.nonceOf(elem.wallet.address);
-                const signature = ContractUtils.signShop(
-                    elem.wallet,
-                    elem.shopId,
-                    elem.name,
-                    elem.provideWaitTime,
-                    elem.providePercent,
-                    nonce
-                );
-                await expect(
-                    shopCollection
-                        .connect(elem.wallet)
-                        .add(
-                            elem.shopId,
-                            elem.name,
-                            elem.provideWaitTime,
-                            elem.providePercent,
-                            elem.wallet.address,
-                            signature
-                        )
-                )
-                    .to.emit(shopCollection, "AddedShop")
-                    .withNamedArgs({
-                        shopId: elem.shopId,
-                        name: elem.name,
-                        provideWaitTime: elem.provideWaitTime,
-                        providePercent: elem.providePercent,
-                        account: elem.wallet.address,
-                    });
-            }
-            expect(await shopCollection.shopsLength()).to.equal(shopData.length);
-        });
-
-        it("Deposit foundation's token", async () => {
-            await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-            await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-            await expect(ledgerContract.connect(foundation).deposit(assetAmount.value))
-                .to.emit(ledgerContract, "Deposited")
-                .withNamedArgs({
-                    account: foundation.address,
-                    depositedToken: assetAmount.value,
-                    balanceToken: assetAmount.value,
-                });
         });
 
         it("Save Purchase Data", async () => {
@@ -2057,7 +1832,7 @@ describe("Test of Server", function () {
 
             assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
-            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_NEW);
+            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
         });
 
         it("Waiting", async () => {
@@ -2080,7 +1855,7 @@ describe("Test of Server", function () {
             assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
             assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
             assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
-            assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentInputDataStatus.OPENED_CANCEL);
+            assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
         });
 
         it("Waiting", async () => {
@@ -2100,7 +1875,7 @@ describe("Test of Server", function () {
 
             assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
-            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentInputDataStatus.CLOSED_CANCEL);
+            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
         });
     });
 });

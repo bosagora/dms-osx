@@ -86,6 +86,14 @@ export class ContractUtils {
         }
     }
 
+    public static isErrorOfEVM(error: any): boolean {
+        if (error instanceof Error) {
+            const idx = error.message.indexOf(ContractUtils.find_message);
+            if (idx >= 0) return true;
+            else return false;
+        } else return false;
+    }
+
     public static getRequestId(emailHash: string, address: string, nonce: BigNumberish): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256", "bytes32"],
@@ -229,60 +237,7 @@ export class ContractUtils {
         return hre.ethers.utils.keccak256(encodedResult);
     }
 
-    public static getShopMessage(
-        shopId: BytesLike,
-        name: string,
-        provideWaitTime: BigNumberish,
-        providePercent: BigNumberish,
-        account: string,
-        nonce: BigNumberish
-    ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "string", "uint256", "uint256", "address", "uint256"],
-            [shopId, name, provideWaitTime, providePercent, account, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
-    }
-
-    public static async signShop(
-        signer: Signer,
-        shopId: BytesLike,
-        name: string,
-        provideWaitTime: BigNumberish,
-        providePercent: BigNumberish,
-        nonce: BigNumberish
-    ): Promise<string> {
-        const message = ContractUtils.getShopMessage(
-            shopId,
-            name,
-            provideWaitTime,
-            providePercent,
-            await signer.getAddress(),
-            nonce
-        );
-        return signer.signMessage(message);
-    }
-
-    public static verifyShop(
-        shopId: BytesLike,
-        name: string,
-        provideWaitTime: BigNumberish,
-        providePercent: BigNumberish,
-        nonce: BigNumberish,
-        account: string,
-        signature: BytesLike
-    ): boolean {
-        const message = ContractUtils.getShopMessage(shopId, name, provideWaitTime, providePercent, account, nonce);
-        let res: string;
-        try {
-            res = ethers.utils.verifyMessage(message, signature);
-        } catch (error) {
-            return false;
-        }
-        return res.toLowerCase() === account.toLowerCase();
-    }
-
-    public static getShopIdMessage(shopId: BytesLike, account: string, nonce: BigNumberish): Uint8Array {
+    public static getShopMessage(shopId: BytesLike, account: string, nonce: BigNumberish): Uint8Array {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256"],
             [shopId, account, nonce]
@@ -290,13 +245,13 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signShopId(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
-        const message = ContractUtils.getShopIdMessage(shopId, await signer.getAddress(), nonce);
+    public static async signShop(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
+        const message = ContractUtils.getShopMessage(shopId, await signer.getAddress(), nonce);
         return signer.signMessage(message);
     }
 
-    public static verifyShopId(shopId: BytesLike, nonce: BigNumberish, account: string, signature: BytesLike): boolean {
-        const message = ContractUtils.getShopIdMessage(shopId, account, nonce);
+    public static verifyShop(shopId: BytesLike, nonce: BigNumberish, account: string, signature: BytesLike): boolean {
+        const message = ContractUtils.getShopMessage(shopId, account, nonce);
         let res: string;
         try {
             res = ethers.utils.verifyMessage(message, signature);
@@ -419,6 +374,14 @@ export class ContractUtils {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["address", "uint256", "bytes32"],
             [account, nonce, crypto.randomBytes(32)]
+        );
+        return hre.ethers.utils.keccak256(encodedResult);
+    }
+
+    public static getTaskId(shopId: string): string {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["bytes32", "uint256", "bytes32", "bytes32"],
+            [shopId, ContractUtils.getTimeStamp(), crypto.randomBytes(32), crypto.randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }

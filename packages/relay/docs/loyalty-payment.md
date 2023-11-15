@@ -44,8 +44,9 @@
 
 -   [7. 상점용 모바일 앱을 위한 엔드포인트](#7-상점용-모바일-앱을-위한-엔드포인트)
 
-    -   [7.1. 상점 정보 변경 승인/거부](#71-상점-정보-변경-승인거부)
-    -   [7.2. 상점 활성 상태 변경 승인/거부](#72-상점-활성-상태-변경-승인거부)
+    -   [7.1. 상점 정보를 변경하는 작업을 조회](#71-상점-정보를-변경하는-작업을-조회)
+    -   [7.2. 상점 정보 변경 승인/거부](#72-상점-정보-변경-승인거부)
+    -   [7.3. 상점 활성 상태 변경 승인/거부](#73-상점-활성-상태-변경-승인거부)
 
 -   [8. 응답 코드와 메세지](#8-응답-코드와-메세지)
 
@@ -291,12 +292,13 @@
 | --------------- | ------ | ---- | -------------------------------------- |
 | shopId          | string | Yes  | 상점 아이디                            |
 | name            | string | Yes  | 상점 이름                              |
-| provideWaitTime | number | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
-| providePercent  | number | Yes  | 적립비율\*100                          |
+| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
+| providePercent  | int    | Yes  | 적립비율\*100                          |
+| status          | int    | Yes  | 상점의 상태(1:활성, 2:비활성)          |
 | account         | string | Yes  | 상점주의 월렛주소                      |
 | providedPoint   | string | Yes  | 누적된 상점에서 제공한 로열티 포인트   |
 | usedPoint       | string | Yes  | 누적된 상점에서 사용된 로열티 포인트   |
-| settledPoint    | int    | Yes  | 정산이 된 금액                         |
+| settledPoint    | string | Yes  | 정산이 된 금액                         |
 | withdrawnPoint  | string | Yes  | 정산이 되어 출금이 완료된 금액         |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
@@ -321,7 +323,7 @@
 | -------------- | ------ | ---- | --------------------------------------------------------------------------- |
 | shopId         | string | Yes  | 상점 아이디                                                                 |
 | withdrawAmount | string | Yes  | 인출요청이 된 금액                                                          |
-| withdrawStatus | number | Yes  | 누적된 상점에서 사용된 로열티 포인트 (0: 인출진행중이 아님 , 1: 인출진행중) |
+| withdrawStatus | int    | Yes  | 누적된 상점에서 사용된 로열티 포인트 (0: 인출진행중이 아님 , 1: 인출진행중) |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -368,11 +370,11 @@
 | totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
 | totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | number | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
-| openNewTimestamp     | number | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeNewTimestamp    | number | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
-| openCancelTimestamp  | number | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeCancelTimestamp | number | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeCancelTimestamp | int    | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
 
 #### - 기타
 
@@ -417,11 +419,11 @@
 | totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
 | totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | number | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
-| openNewTimestamp     | number | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeNewTimestamp    | number | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
-| openCancelTimestamp  | number | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeCancelTimestamp | number | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeCancelTimestamp | int    | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -462,11 +464,11 @@
 | totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
 | totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | number | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
-| openNewTimestamp     | number | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeNewTimestamp    | number | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
-| openCancelTimestamp  | number | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeCancelTimestamp | number | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeCancelTimestamp | int    | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -507,11 +509,11 @@
 | totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
 | totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | number | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
-| openNewTimestamp     | number | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeNewTimestamp    | number | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
-| openCancelTimestamp  | number | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeCancelTimestamp | number | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
+| closeCancelTimestamp | int    | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -526,7 +528,7 @@
 | --------- | ------------- | ------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | accessKey |               | string | Yes  | 비밀키                                                                                                                                                                                                         |
 | type      |               | string | Yes  | "new": 결제요청<br/>"cancel":취소요청                                                                                                                                                                          |
-| code      |               | int    | Yes  | 0: 성공<br/>1001: 거부<br/>1002: 컨트랙트 오류<br/>1003: 서버오류<br/>2000: 타임아웃                                                                                                                           |
+| code      |               | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃                                                                                                                           |
 | message   |               | string | Yes  | 응답 메세지                                                                                                                                                                                                    |
 | data      | paymentId     | string | Yes  | 결제 아이디                                                                                                                                                                                                    |
 | data      | purchaseId    | string | Yes  | 구매 아이디                                                                                                                                                                                                    |
@@ -544,7 +546,7 @@
 | data      | totalPoint    | string | Yes  | 전체 포인트, loyaltyType가 0일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                             |
 | data      | totalToken    | string | Yes  | 전체 토큰, loyaltyType가 1일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                               |
 | data      | totalValue    | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| data      | paymentStatus | number | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| data      | paymentStatus | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -680,7 +682,7 @@
 
 #### - HTTP Request
 
-`POST /v1/payment/shop/update`
+`POST /v1/shop/update/create`
 
 #### - 입력 파라메타들
 
@@ -689,18 +691,20 @@
 | accessKey       | string | Yes  | 비밀키                                 |
 | shopId          | string | Yes  | 상점 아이디                            |
 | name            | string | Yes  | 상점 이름                              |
-| provideWaitTime | number | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
-| providePercent  | number | Yes  | 적립비율\*100                          |
+| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
+| providePercent  | int    | Yes  | 적립비율\*100                          |
 
 #### - 결과
 
-| 필드명          | 유형   | 필수 | 설명                                   |
-| --------------- | ------ | ---- | -------------------------------------- |
-| taskId          | string | Yes  | 처리를 작업 아이디                     |
-| shopId          | string | Yes  | 상점 아이디                            |
-| name            | string | Yes  | 상점 이름                              |
-| provideWaitTime | number | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
-| providePercent  | number | Yes  | 적립비율\*100                          |
+| 필드명          | 유형   | 필수 | 설명                                                                          |
+| --------------- | ------ | ---- | ----------------------------------------------------------------------------- |
+| taskId          | string | Yes  | 처리를 작업 아이디                                                            |
+| shopId          | string | Yes  | 상점 아이디                                                                   |
+| name            | string | Yes  | 상점 이름                                                                     |
+| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                        |
+| providePercent  | int    | Yes  | 적립비율\*100                                                                 |
+| taskStatus      | int    | Yes  | 처리상태<br/>1 : 시작<br/>2 : 승인<br/>3 : 거부<br/>4 : 완료<br/>5 : 타임아웃 |
+| timestamp       | int    | Yes  | 접수 시간                                                                     |
 
 #### - 기타
 
@@ -716,23 +720,25 @@
 
 #### - HTTP Request
 
-`POST /v1/payment/shop/status`
+`POST /v1/shop/status/create`
 
 #### - 입력 파라메타들
 
-| 파라메타명 | 유형   | 필수 | 설명                       |
-| ---------- | ------ | ---- | -------------------------- |
-| accessKey  | string | Yes  | 비밀키                     |
-| shopId     | string | Yes  | 상점 아이디                |
-| status     | number | Yes  | 활성상태(1:활성, 2:비활성) |
+| 파라메타명 | 유형   | 필수 | 설명                                 |
+| ---------- | ------ | ---- | ------------------------------------ |
+| accessKey  | string | Yes  | 비밀키                               |
+| shopId     | string | Yes  | 상점 아이디                          |
+| status     | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성 |
 
 #### - 결과
 
-| 필드명 | 유형   | 필수 | 설명                       |
-| ------ | ------ | ---- | -------------------------- |
-| taskId | string | Yes  | 처리를 작업 아이디         |
-| shopId | string | Yes  | 상점 아이디                |
-| status | number | Yes  | 활성상태(1:활성, 2:비활성) |
+| 필드명     | 유형   | 필수 | 설명                                                                          |
+| ---------- | ------ | ---- | ----------------------------------------------------------------------------- |
+| taskId     | string | Yes  | 처리를 작업 아이디                                                            |
+| shopId     | string | Yes  | 상점 아이디                                                                   |
+| status     | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                          |
+| taskStatus | int    | Yes  | 처리상태<br/>1 : 시작<br/>2 : 승인<br/>3 : 거부<br/>4 : 완료<br/>5 : 타임아웃 |
+| timestamp  | int    | Yes  | 접수 시간                                                                     |
 
 #### - 기타
 
@@ -748,14 +754,14 @@
 | --------- | --------------- | ------ | ---- | ------------------------------------------------------------------------------------ | --- |
 | accessKey |                 | string | Yes  | 비밀키                                                                               |
 | type      |                 | string | Yes  | "update": 정보수정<br/>"status":상태수정                                             |
-| code      |                 | int    | Yes  | 0: 성공<br/>1001: 거부<br/>1002: 컨트랙트 오류<br/>1003: 서버오류<br/>2000: 타임아웃 |
+| code      |                 | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃 |
 | message   |                 | string | Yes  | 응답 메세지                                                                          |
 | data      | taskId          | string | Yes  | 처리 아이디                                                                          |
 | data      | shopId          | string | Yes  | 상점 아이디                                                                          |
 | data      | name            | string | Yes  | 상점 이름                                                                            |
-| data      | provideWaitTime | string | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                               |
-| data      | providePercent  | string | Yes  | 적립비율\*100                                                                        |
-| data      | status          | string | Yes  | 활성상태(1:활성, 2:비활성)                                                           |     |
+| data      | provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                               |
+| data      | providePercent  | int    | Yes  | 적립비율\*100                                                                        |
+| data      | status          | int    | Yes  | 활성상태(1:활성, 2:비활성)                                                           |     |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -766,13 +772,29 @@
     "accessKey": "9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "update",
     "code": 0,
-    "message": "The update has been successfully completed.",
+    "message": "Success",
     "data": {
-        "taskId": "0x644a5568445869656a16b67ab82894bbe7fb40e984bc5bff90002aa40177292f",
-        "shopId": "0x5b2eaa90dbb877356c28cf13fe9263b1e749abeb78f031a4b35fa63c7d30e5db",
-        "name": "Name",
+        "taskId": "0xb3c3172b8d1167f05d63df43a30e6e1b26674d6ca803a7085a5c9584a1f6fde0",
+        "shopId": "0xb8f52b4a0eaf3df50da590642aea92dda53f1d74770dfd3d1e238d1d150c950f",
+        "name": "새로운 이름",
         "provideWaitTime": 86400,
-        "providePercent": 5,
+        "providePercent": 10,
+        "status": 2
+    }
+}
+```
+
+```json
+{
+    "type": "status",
+    "code": 0,
+    "message": "Success",
+    "data": {
+        "taskId": "0x3b4a374e8cefc043e435054245560967c58cb7c17b7237f4672f96c00003b52d",
+        "shopId": "0xe9a2b83b3cc19c2da7d954d4901d6b3c59a7784a2457f6b5e6f7d9e76f6e7483",
+        "name": "새로운 이름",
+        "provideWaitTime": 86400,
+        "providePercent": 10,
         "status": 1
     }
 }
@@ -814,11 +836,11 @@
 | totalPoint           | string | Yes  | 전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                               |
 | totalToken           | string | Yes  | 전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                 |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                 |
-| paymentStatus        | number | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ): |
-| openNewTimestamp     | number | Yes  | 신규결제 생성 명령어 접수 시간                                                                                               |
-| closeNewTimestamp    | number | Yes  | 신규결제 완료 명령어 접수 시간                                                                                               |
-| openCancelTimestamp  | number | Yes  | 취소결제 생성 명령어 접수 시간                                                                                               |
-| closeCancelTimestamp | number | Yes  | 취소결제 완료 명령어 접수 시간                                                                                               |
+| paymentStatus        | int    | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ): |
+| openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                               |
+| closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                               |
+| openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                               |
+| closeCancelTimestamp | int    | Yes  | 취소결제 완료 명령어 접수 시간                                                                                               |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -834,11 +856,11 @@
 
 #### - 입력 파라메타들
 
-| 파라메타명 | 유형   | 필수 | 설명                       |
-| ---------- | ------ | ---- | -------------------------- |
-| paymentId  | string | Yes  | 지불 아이디                |
-| approval   | string | Yes  | 동의여부(0: 거부, 1: 승인) |
-| signature  | string | Yes  | 서명                       |
+| 파라메타명 | 유형    | 필수 | 설명                              |
+| ---------- | ------- | ---- | --------------------------------- |
+| paymentId  | string  | Yes  | 지불 아이디                       |
+| approval   | boolean | Yes  | 동의여부(false: 거부, true: 승인) |
+| signature  | string  | Yes  | 서명                              |
 
 #### - 결과
 
@@ -850,7 +872,7 @@
 | currency      | string | Yes  | 환률코드(usd, krw, the9, point...)                                                                                           |
 | shopId        | string | Yes  | 상점 아이디                                                                                                                  |
 | account       | string | Yes  | 월렛주소                                                                                                                     |
-| paymentStatus | number | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ): |
+| paymentStatus | int    | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ): |
 | txHash        | string | Yes  | 트랜잭션 해시                                                                                                                |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
@@ -867,11 +889,11 @@
 
 #### - 입력 파라메타들
 
-| 파라메타명 | 유형   | 필수 | 설명                       |
-| ---------- | ------ | ---- | -------------------------- |
-| paymentId  | string | Yes  | 지불 아이디                |
-| approval   | string | Yes  | 동의여부(0: 거부, 1: 승인) |
-| signature  | string | Yes  | 서명                       |
+| 파라메타명 | 유형   | 필수 | 설명                              |
+| ---------- | ------ | ---- | --------------------------------- |
+| paymentId  | string | Yes  | 지불 아이디                       |
+| approval   | string | Yes  | 동의여부(false: 거부, true: 승인) |
+| signature  | string | Yes  | 서명                              |
 
 #### - 결과
 
@@ -883,7 +905,7 @@
 | currency      | string | Yes  | 환률코드(usd, krw, the9, point...)                                                                                          |
 | shopId        | string | Yes  | 상점 아이디                                                                                                                 |
 | account       | string | Yes  | 월렛주소                                                                                                                    |
-| paymentStatus | number | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ) |
+| paymentStatus | int    | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ) |
 | txHash        | string | Yes  | 트랜잭션 해시                                                                                                               |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
@@ -892,57 +914,90 @@
 
 ## 7. 상점용 모바일 앱을 위한 엔드포인트
 
-### 7.1. 상점 정보 변경 승인/거부
+### 7.1. 상점 정보를 변경하는 작업을 조회
 
 #### - HTTP Request
 
-`POST /v1/payment/update/approval`
+`GET /v1/shop/task`
 
 #### - 입력 파라메타들
 
-| 파라메타명 | 유형   | 필수 | 설명                       |
-| ---------- | ------ | ---- | -------------------------- |
-| taskId     | string | Yes  | 지불 아이디                |
-| approval   | string | Yes  | 동의여부(0: 거부, 1: 승인) |
-| signature  | string | Yes  | 서명                       |
+| 파라메타명 | 유형   | 필수 | 설명        |
+| ---------- | ------ | ---- | ----------- |
+| taskId     | string | Yes  | 지불 아이디 |
 
 #### - 결과
 
-| 필드명          | 유형   | 필수 | 설명                                   |
-| --------------- | ------ | ---- | -------------------------------------- |
-| taskId          | string | Yes  | 처리를 작업 아이디                     |
-| approval        | string | Yes  | 동의여부(0: 거부, 1: 승인)             |
-| shopId          | string | Yes  | 상점 아이디                            |
-| name            | string | Yes  | 상점 이름                              |
-| provideWaitTime | number | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
-| providePercent  | number | Yes  | 적립비율\*100                          |
+| 필드명          | 유형   | 필수 | 설명                                                                          |
+| --------------- | ------ | ---- | ----------------------------------------------------------------------------- |
+| taskId          | string | Yes  | 처리를 작업 아이디                                                            |
+| type            | string | Yes  | "update" : 상점정보변경<br/>"status" : 상점의 상태변경                        |
+| shopId          | string | Yes  | 상점 아이디                                                                   |
+| name            | string | Yes  | 상점 이름                                                                     |
+| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                        |
+| providePercent  | int    | Yes  | 적립비율\*100                                                                 |
+| status          | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                          |
+| account         | string | Yes  | 상점주의 월렛주소                                                             |
+| taskStatus      | int    | Yes  | 처리상태<br/>1 : 시작<br/>2 : 승인<br/>3 : 거부<br/>4 : 완료<br/>5 : 타임아웃 |
+| timestamp       | int    | Yes  | 접수 시간                                                                     |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
 ---
 
-### 7.2. 상점 활성 상태 변경 승인/거부
+### 7.2. 상점 정보 변경 승인/거부
 
 #### - HTTP Request
 
-`POST /v1/payment/status/approval`
+`POST /v1/shop/update/approval`
 
 #### - 입력 파라메타들
 
-| 파라메타명 | 유형   | 필수 | 설명                       |
-| ---------- | ------ | ---- | -------------------------- |
-| taskId     | string | Yes  | 지불 아이디                |
-| approval   | string | Yes  | 동의여부(0: 거부, 1: 승인) |
-| signature  | string | Yes  | 서명                       |
+| 파라메타명 | 유형    | 필수 | 설명                                    |
+| ---------- | ------- | ---- | --------------------------------------- |
+| taskId     | string  | Yes  | 지불 아이디                             |
+| approval   | boolean | Yes  | 승인여부<br/>true: 승인<br/>false: 거부 |
+| signature  | string  | Yes  | 서명                                    |
 
 #### - 결과
 
-| 필드명   | 유형   | 필수 | 설명                       |
-| -------- | ------ | ---- | -------------------------- |
-| taskId   | string | Yes  | 처리를 작업 아이디         |
-| approval | string | Yes  | 동의여부(0: 거부, 1: 승인) |
-| shopId   | string | Yes  | 상점 아이디                |
-| status   | number | Yes  | 활성상태(1:활성, 2:비활성) |
+| 필드명          | 유형   | 필수 | 설명                                                                          |
+| --------------- | ------ | ---- | ----------------------------------------------------------------------------- |
+| taskId          | string | Yes  | 처리를 작업 아이디                                                            |
+| shopId          | string | Yes  | 상점 아이디                                                                   |
+| name            | string | Yes  | 상점 이름                                                                     |
+| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                        |
+| providePercent  | int    | Yes  | 적립비율\*100                                                                 |
+| taskStatus      | int    | Yes  | 처리상태<br/>1 : 시작<br/>2 : 승인<br/>3 : 거부<br/>4 : 완료<br/>5 : 타임아웃 |
+| timestamp       | int    | Yes  | 접수 시간                                                                     |
+
+[상단으로 이동](#로열티를-사용한-결제-프로세스)
+
+---
+
+### 7.3. 상점 활성 상태 변경 승인/거부
+
+#### - HTTP Request
+
+`POST /v1/shop/status/approval`
+
+#### - 입력 파라메타들
+
+| 파라메타명 | 유형    | 필수 | 설명                                    |
+| ---------- | ------- | ---- | --------------------------------------- |
+| taskId     | string  | Yes  | 지불 아이디                             |
+| approval   | boolean | Yes  | 승인여부<br/>true: 승인<br/>false: 거부 |
+| signature  | string  | Yes  | 서명                                    |
+
+#### - 결과
+
+| 필드명     | 유형   | 필수 | 설명                                                                          |
+| ---------- | ------ | ---- | ----------------------------------------------------------------------------- |
+| taskId     | string | Yes  | 처리를 작업 아이디                                                            |
+| shopId     | string | Yes  | 상점 아이디                                                                   |
+| status     | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                          |
+| taskStatus | int    | Yes  | 처리상태<br/>1 : 시작<br/>2 : 승인<br/>3 : 거부<br/>4 : 완료<br/>5 : 타임아웃 |
+| timestamp  | int    | Yes  | 접수 시간                                                                     |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -985,7 +1040,13 @@
 | 2020 | 지불에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this payment cannot be approved                                              |
 | 2022 | 지불에 대한 상태코드는 취소를 할 수 없습니다<br/>The status code for this payment cannot be cancel                                                |
 | 2024 | 지불에 대한 상태코드는 종료처리를 할 수 없습니다<br/>The status code for this payment cannot process closing                                      |
+| 2033 | 작업아이디가 존재하지 않습니다<br/>The task ID is not exist                                                                                       |
+| 2040 | 작업에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this task cannot be approved                                                 |
 | 4000 | 사용자에 의해 지불이 거부되었습니다<br/>This payment denied by user                                                                               |
 | 5000 | 스마트컨트랙트 실행중 오류가 발생했습니다<br/>Smart Contract Error                                                                                |
 | 6000 | 내부서버에서 오류가 발생했습니다<br/>Server Error                                                                                                 |
 | 7000 | 처리시간 초과오류입니다(45초)<br/>Timeout period expired                                                                                          |
+
+[상단으로 이동](#로열티를-사용한-결제-프로세스)
+
+---
