@@ -32,31 +32,23 @@ type Deposited @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type PaidPoint @entity(immutable: true) {
+type LoyaltyPaymentEvent @entity(immutable: true) {
   id: Bytes!
-  account: Bytes! # address
-  paidPoint: BigInt! # uint256
-  paidValue: BigInt! # uint256
-  feePoint: BigInt! # uint256
-  feeValue: BigInt! # uint256
-  balancePoint: BigInt! # uint256
+  paymentId: Bytes! # bytes32
   purchaseId: String! # string
+  currency: String! # string
   shopId: Bytes! # bytes32
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type PaidToken @entity(immutable: true) {
-  id: Bytes!
   account: Bytes! # address
+  timestamp: BigInt! # uint256
+  loyaltyType: Int! # uint8
+  paidPoint: BigInt! # uint256
   paidToken: BigInt! # uint256
   paidValue: BigInt! # uint256
+  feePoint: BigInt! # uint256
   feeToken: BigInt! # uint256
   feeValue: BigInt! # uint256
-  balanceToken: BigInt! # uint256
-  purchaseId: String! # string
-  shopId: Bytes! # bytes32
+  status: Int! # uint8
+  balance: BigInt! # uint256
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -140,37 +132,20 @@ type Withdrawn @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-enum UserAction {
-  ProvidedPoint,
-  ProvidedToken,
-  PaidPoint,
-  PaidToken,
-  DepositedToken,
-  WithdrawnToken,
-  SettlementToken,
-  ChangedToToken
-}
-
-enum AssetFlow {
-  Save,
-  Use,
-  Deposit,
-  Withdraw,
-  None
-}
-
 type UserTradeHistory @entity(immutable: true) {
   id: Bytes!
   account: Bytes!
-  action: UserAction!
-  assetFlow: AssetFlow!
+  action: Int!
+  cancel: Boolean!
+  loyaltyType: Int!
   amountPoint: BigInt!
   amountToken: BigInt!
-  value: BigInt!
+  amountValue: BigInt!
   balancePoint: BigInt!
   balanceToken: BigInt!
   purchaseId: String
-  shopId: Bytes! # bytes32
+  paymentId: Bytes
+  shopId: Bytes # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
@@ -179,8 +154,7 @@ type UserTradeHistory @entity(immutable: true) {
 type UserUnPayableTradeHistory @entity(immutable: true) {
   id: Bytes!
   phone: Bytes!
-  action: UserAction!
-  assetFlow: AssetFlow!
+  action: Int!
   amount: BigInt!
   balance: BigInt!
   purchaseId: String
@@ -201,37 +175,22 @@ type UserBalance @entity {
   transactionHash: Bytes!
 }
 
-enum ShopAction {
-  ProvidedPoint,
-  UsedPoint,
-  SettledPoint,
-  OpenWithdrawnPoint,
-  CloseWithdrawnPoint,
-}
-
 type ShopTradeHistory @entity(immutable: true) {
   id: Bytes!
   shopId: Bytes! # bytes32
-  purchaseId: String
-
-  action: ShopAction!
-
+  action: Int!
+  cancel: Boolean!
   increase: BigInt! # uint256
-
   providedPoint: BigInt!
   usedPoint: BigInt!
   settledPoint: BigInt!
   withdrawnPoint: BigInt!
+  purchaseId: String
+  paymentId: Bytes
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!
-}
-
-enum ShopDataAction {
-  Create,
-  Update,
-  Remove
 }
 
 type Shop @entity {
@@ -240,8 +199,9 @@ type Shop @entity {
   name: String! # string
   provideWaitTime: BigInt! # uint256
   providePercent: BigInt! # uint256
+  status: Int!
   account: Bytes! # address
-  action: ShopDataAction!
+  action: Int!
 
   providedPoint: BigInt!
   usedPoint: BigInt!

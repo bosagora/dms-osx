@@ -19,8 +19,7 @@ dataSources:
         - ChangedToLoyaltyToken
         - ChangedToPayablePoint
         - Deposited
-        - PaidPoint
-        - PaidToken
+        - LoyaltyPaymentEvent
         - ProvidedPoint
         - ProvidedToken
         - ProvidedTokenForSettlement
@@ -37,10 +36,8 @@ dataSources:
           handler: handleChangedToPayablePoint
         - event: Deposited(address,uint256,uint256,uint256)
           handler: handleDeposited
-        - event: PaidPoint(address,uint256,uint256,uint256,uint256,uint256,string,bytes32)
-          handler: handlePaidPoint
-        - event: PaidToken(address,uint256,uint256,uint256,uint256,uint256,string,bytes32)
-          handler: handlePaidToken
+        - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
+          handler: handleLoyaltyPaymentEvent
         - event: ProvidedPoint(address,uint256,uint256,uint256,string,bytes32)
           handler: handleProvidedPoint
         - event: ProvidedToken(address,uint256,uint256,uint256,string,bytes32)
@@ -68,31 +65,34 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - AddedShop
+        - ChangedShopStatus
         - ClosedWithdrawal
+        - DecreasedUsedPoint
         - IncreasedProvidedPoint
         - IncreasedSettledPoint
         - IncreasedUsedPoint
         - OpenedWithdrawal
-        - RemovedShop
         - UpdatedShop
       abis:
         - name: ShopCollection
           file: $DMS_OSX_MODULE/artifacts/contracts/ShopCollection.sol/ShopCollection.json
       eventHandlers:
-        - event: AddedShop(bytes32,string,uint256,uint256,address)
+        - event: AddedShop(bytes32,string,uint256,uint256,address,uint8)
           handler: handleAddedShop
+        - event: ChangedShopStatus(bytes32,uint8)
+          handler: handleChangedShopStatus
         - event: ClosedWithdrawal(bytes32,uint256,uint256,address)
           handler: handleClosedWithdrawal
+        - event: DecreasedUsedPoint(bytes32,uint256,uint256,string,bytes32)
+          handler: handleDecreasedUsedPoint
         - event: IncreasedProvidedPoint(bytes32,uint256,uint256,string)
           handler: handleIncreasedProvidedPoint
         - event: IncreasedSettledPoint(bytes32,uint256,uint256,string)
           handler: handleIncreasedSettledPoint
-        - event: IncreasedUsedPoint(bytes32,uint256,uint256,string)
+        - event: IncreasedUsedPoint(bytes32,uint256,uint256,string,bytes32)
           handler: handleIncreasedUsedPoint
         - event: OpenedWithdrawal(bytes32,uint256,address)
           handler: handleOpenedWithdrawal
-        - event: RemovedShop(bytes32)
-          handler: handleRemovedShop
-        - event: UpdatedShop(bytes32,string,uint256,uint256,address)
+        - event: UpdatedShop(bytes32,string,uint256,uint256,address,uint8)
           handler: handleUpdatedShop
       file: ./src/shop-collection.ts

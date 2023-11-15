@@ -42,6 +42,32 @@ export class AddedShop__Params {
   get account(): Address {
     return this._event.parameters[4].value.toAddress();
   }
+
+  get status(): i32 {
+    return this._event.parameters[5].value.toI32();
+  }
+}
+
+export class ChangedShopStatus extends ethereum.Event {
+  get params(): ChangedShopStatus__Params {
+    return new ChangedShopStatus__Params(this);
+  }
+}
+
+export class ChangedShopStatus__Params {
+  _event: ChangedShopStatus;
+
+  constructor(event: ChangedShopStatus) {
+    this._event = event;
+  }
+
+  get shopId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get status(): i32 {
+    return this._event.parameters[1].value.toI32();
+  }
 }
 
 export class ClosedWithdrawal extends ethereum.Event {
@@ -71,6 +97,40 @@ export class ClosedWithdrawal__Params {
 
   get account(): Address {
     return this._event.parameters[3].value.toAddress();
+  }
+}
+
+export class DecreasedUsedPoint extends ethereum.Event {
+  get params(): DecreasedUsedPoint__Params {
+    return new DecreasedUsedPoint__Params(this);
+  }
+}
+
+export class DecreasedUsedPoint__Params {
+  _event: DecreasedUsedPoint;
+
+  constructor(event: DecreasedUsedPoint) {
+    this._event = event;
+  }
+
+  get shopId(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get increase(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get total(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+
+  get purchaseId(): string {
+    return this._event.parameters[3].value.toString();
+  }
+
+  get paymentId(): Bytes {
+    return this._event.parameters[4].value.toBytes();
   }
 }
 
@@ -162,6 +222,10 @@ export class IncreasedUsedPoint__Params {
   get purchaseId(): string {
     return this._event.parameters[3].value.toString();
   }
+
+  get paymentId(): Bytes {
+    return this._event.parameters[4].value.toBytes();
+  }
 }
 
 export class OpenedWithdrawal extends ethereum.Event {
@@ -187,24 +251,6 @@ export class OpenedWithdrawal__Params {
 
   get account(): Address {
     return this._event.parameters[2].value.toAddress();
-  }
-}
-
-export class RemovedShop extends ethereum.Event {
-  get params(): RemovedShop__Params {
-    return new RemovedShop__Params(this);
-  }
-}
-
-export class RemovedShop__Params {
-  _event: RemovedShop;
-
-  constructor(event: RemovedShop) {
-    this._event = event;
-  }
-
-  get shopId(): Bytes {
-    return this._event.parameters[0].value.toBytes();
   }
 }
 
@@ -239,6 +285,10 @@ export class UpdatedShop__Params {
 
   get account(): Address {
     return this._event.parameters[4].value.toAddress();
+  }
+
+  get status(): i32 {
+    return this._event.parameters[5].value.toI32();
   }
 }
 
@@ -311,6 +361,29 @@ export class ShopCollection__shopOfResultValue0WithdrawDataStruct extends ethere
 export class ShopCollection extends ethereum.SmartContract {
   static bind(address: Address): ShopCollection {
     return new ShopCollection("ShopCollection", address);
+  }
+
+  certifierAddress(): Address {
+    let result = super.call(
+      "certifierAddress",
+      "certifierAddress():(address)",
+      []
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_certifierAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "certifierAddress",
+      "certifierAddress():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   deployer(): Address {
@@ -532,6 +605,10 @@ export class ConstructorCall__Inputs {
   constructor(call: ConstructorCall) {
     this._call = call;
   }
+
+  get _certifierAddress(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
 }
 
 export class ConstructorCall__Outputs {
@@ -567,20 +644,12 @@ export class AddCall__Inputs {
     return this._call.inputValues[1].value.toString();
   }
 
-  get _provideWaitTime(): BigInt {
-    return this._call.inputValues[2].value.toBigInt();
-  }
-
-  get _providePercent(): BigInt {
-    return this._call.inputValues[3].value.toBigInt();
-  }
-
   get _account(): Address {
-    return this._call.inputValues[4].value.toAddress();
+    return this._call.inputValues[2].value.toAddress();
   }
 
   get _signature(): Bytes {
-    return this._call.inputValues[5].value.toBytes();
+    return this._call.inputValues[3].value.toBytes();
   }
 }
 
@@ -588,48 +657,6 @@ export class AddCall__Outputs {
   _call: AddCall;
 
   constructor(call: AddCall) {
-    this._call = call;
-  }
-}
-
-export class AddDirectCall extends ethereum.Call {
-  get inputs(): AddDirectCall__Inputs {
-    return new AddDirectCall__Inputs(this);
-  }
-
-  get outputs(): AddDirectCall__Outputs {
-    return new AddDirectCall__Outputs(this);
-  }
-}
-
-export class AddDirectCall__Inputs {
-  _call: AddDirectCall;
-
-  constructor(call: AddDirectCall) {
-    this._call = call;
-  }
-
-  get _shopId(): Bytes {
-    return this._call.inputValues[0].value.toBytes();
-  }
-
-  get _name(): string {
-    return this._call.inputValues[1].value.toString();
-  }
-
-  get _provideWaitTime(): BigInt {
-    return this._call.inputValues[2].value.toBigInt();
-  }
-
-  get _providePercent(): BigInt {
-    return this._call.inputValues[3].value.toBigInt();
-  }
-}
-
-export class AddDirectCall__Outputs {
-  _call: AddDirectCall;
-
-  constructor(call: AddDirectCall) {
     this._call = call;
   }
 }
@@ -738,12 +765,62 @@ export class AddUsedPointCall__Inputs {
   get _purchaseId(): string {
     return this._call.inputValues[2].value.toString();
   }
+
+  get _paymentId(): Bytes {
+    return this._call.inputValues[3].value.toBytes();
+  }
 }
 
 export class AddUsedPointCall__Outputs {
   _call: AddUsedPointCall;
 
   constructor(call: AddUsedPointCall) {
+    this._call = call;
+  }
+}
+
+export class ChangeStatusCall extends ethereum.Call {
+  get inputs(): ChangeStatusCall__Inputs {
+    return new ChangeStatusCall__Inputs(this);
+  }
+
+  get outputs(): ChangeStatusCall__Outputs {
+    return new ChangeStatusCall__Outputs(this);
+  }
+}
+
+export class ChangeStatusCall__Inputs {
+  _call: ChangeStatusCall;
+
+  constructor(call: ChangeStatusCall) {
+    this._call = call;
+  }
+
+  get _shopId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _status(): i32 {
+    return this._call.inputValues[1].value.toI32();
+  }
+
+  get _account(): Address {
+    return this._call.inputValues[2].value.toAddress();
+  }
+
+  get _signature1(): Bytes {
+    return this._call.inputValues[3].value.toBytes();
+  }
+
+  get _signature2(): Bytes {
+    return this._call.inputValues[4].value.toBytes();
+  }
+}
+
+export class ChangeStatusCall__Outputs {
+  _call: ChangeStatusCall;
+
+  constructor(call: ChangeStatusCall) {
     this._call = call;
   }
 }
@@ -892,74 +969,6 @@ export class OpenWithdrawalDirectCall__Outputs {
   }
 }
 
-export class RemoveCall extends ethereum.Call {
-  get inputs(): RemoveCall__Inputs {
-    return new RemoveCall__Inputs(this);
-  }
-
-  get outputs(): RemoveCall__Outputs {
-    return new RemoveCall__Outputs(this);
-  }
-}
-
-export class RemoveCall__Inputs {
-  _call: RemoveCall;
-
-  constructor(call: RemoveCall) {
-    this._call = call;
-  }
-
-  get _shopId(): Bytes {
-    return this._call.inputValues[0].value.toBytes();
-  }
-
-  get _account(): Address {
-    return this._call.inputValues[1].value.toAddress();
-  }
-
-  get _signature(): Bytes {
-    return this._call.inputValues[2].value.toBytes();
-  }
-}
-
-export class RemoveCall__Outputs {
-  _call: RemoveCall;
-
-  constructor(call: RemoveCall) {
-    this._call = call;
-  }
-}
-
-export class RemoveDirectCall extends ethereum.Call {
-  get inputs(): RemoveDirectCall__Inputs {
-    return new RemoveDirectCall__Inputs(this);
-  }
-
-  get outputs(): RemoveDirectCall__Outputs {
-    return new RemoveDirectCall__Outputs(this);
-  }
-}
-
-export class RemoveDirectCall__Inputs {
-  _call: RemoveDirectCall;
-
-  constructor(call: RemoveDirectCall) {
-    this._call = call;
-  }
-
-  get _shopId(): Bytes {
-    return this._call.inputValues[0].value.toBytes();
-  }
-}
-
-export class RemoveDirectCall__Outputs {
-  _call: RemoveDirectCall;
-
-  constructor(call: RemoveDirectCall) {
-    this._call = call;
-  }
-}
-
 export class SetLedgerAddressCall extends ethereum.Call {
   get inputs(): SetLedgerAddressCall__Inputs {
     return new SetLedgerAddressCall__Inputs(this);
@@ -986,6 +995,48 @@ export class SetLedgerAddressCall__Outputs {
   _call: SetLedgerAddressCall;
 
   constructor(call: SetLedgerAddressCall) {
+    this._call = call;
+  }
+}
+
+export class SubUsedPointCall extends ethereum.Call {
+  get inputs(): SubUsedPointCall__Inputs {
+    return new SubUsedPointCall__Inputs(this);
+  }
+
+  get outputs(): SubUsedPointCall__Outputs {
+    return new SubUsedPointCall__Outputs(this);
+  }
+}
+
+export class SubUsedPointCall__Inputs {
+  _call: SubUsedPointCall;
+
+  constructor(call: SubUsedPointCall) {
+    this._call = call;
+  }
+
+  get _shopId(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+
+  get _purchaseId(): string {
+    return this._call.inputValues[2].value.toString();
+  }
+
+  get _paymentId(): Bytes {
+    return this._call.inputValues[3].value.toBytes();
+  }
+}
+
+export class SubUsedPointCall__Outputs {
+  _call: SubUsedPointCall;
+
+  constructor(call: SubUsedPointCall) {
     this._call = call;
   }
 }
@@ -1027,8 +1078,12 @@ export class UpdateCall__Inputs {
     return this._call.inputValues[4].value.toAddress();
   }
 
-  get _signature(): Bytes {
+  get _signature1(): Bytes {
     return this._call.inputValues[5].value.toBytes();
+  }
+
+  get _signature2(): Bytes {
+    return this._call.inputValues[6].value.toBytes();
   }
 }
 
@@ -1036,48 +1091,6 @@ export class UpdateCall__Outputs {
   _call: UpdateCall;
 
   constructor(call: UpdateCall) {
-    this._call = call;
-  }
-}
-
-export class UpdateDirectCall extends ethereum.Call {
-  get inputs(): UpdateDirectCall__Inputs {
-    return new UpdateDirectCall__Inputs(this);
-  }
-
-  get outputs(): UpdateDirectCall__Outputs {
-    return new UpdateDirectCall__Outputs(this);
-  }
-}
-
-export class UpdateDirectCall__Inputs {
-  _call: UpdateDirectCall;
-
-  constructor(call: UpdateDirectCall) {
-    this._call = call;
-  }
-
-  get _shopId(): Bytes {
-    return this._call.inputValues[0].value.toBytes();
-  }
-
-  get _name(): string {
-    return this._call.inputValues[1].value.toString();
-  }
-
-  get _provideWaitTime(): BigInt {
-    return this._call.inputValues[2].value.toBigInt();
-  }
-
-  get _providePercent(): BigInt {
-    return this._call.inputValues[3].value.toBigInt();
-  }
-}
-
-export class UpdateDirectCall__Outputs {
-  _call: UpdateDirectCall;
-
-  constructor(call: UpdateDirectCall) {
     this._call = call;
   }
 }
