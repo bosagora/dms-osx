@@ -20,7 +20,8 @@ contract ShopCollection {
     /// @notice 검증자의 상태코드
     enum ShopStatus {
         INVALID,
-        ACTIVE
+        ACTIVE,
+        INACTIVE
     }
 
     /// @notice 상점의 데이터
@@ -46,11 +47,25 @@ contract ShopCollection {
     bytes32[] private items;
 
     /// @notice 상점이 추가될 때 발생되는 이벤트
-    event AddedShop(bytes32 shopId, string name, uint256 provideWaitTime, uint256 providePercent, address account);
+    event AddedShop(
+        bytes32 shopId,
+        string name,
+        uint256 provideWaitTime,
+        uint256 providePercent,
+        address account,
+        ShopStatus status
+    );
     /// @notice 상점의 정보가 변경될 때 발생되는 이벤트
-    event UpdatedShop(bytes32 shopId, string name, uint256 provideWaitTime, uint256 providePercent, address account);
-    /// @notice 상점의 정보가 삭제될 때 발생되는 이벤트
-    event RemovedShop(bytes32 shopId);
+    event UpdatedShop(
+        bytes32 shopId,
+        string name,
+        uint256 provideWaitTime,
+        uint256 providePercent,
+        address account,
+        ShopStatus status
+    );
+    /// @notice 상점의 정보가 변경될 때 발생되는 이벤트
+    event ChangedShopStatus(bytes32 shopId, ShopStatus status);
     /// @notice 상점의 포인트가 증가할 때 발생되는 이벤트
     event IncreasedProvidedPoint(bytes32 shopId, uint256 increase, uint256 total, string purchaseId);
     /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
@@ -65,10 +80,12 @@ contract ShopCollection {
 
     address public ledgerAddress;
     address public deployer;
+    address public certifierAddress;
     mapping(address => uint256) private nonce;
 
     /// @notice 생성자
-    constructor() {
+    constructor(address _certifierAddress) {
+        certifierAddress = _certifierAddress;
         ledgerAddress = address(0x00);
         deployer = msg.sender;
     }
@@ -96,65 +113,23 @@ contract ShopCollection {
     /// @notice 상점을 추가한다
     /// @param _shopId 상점 아이디
     /// @param _name 상점이름
-    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
-    /// @param _providePercent 구매금액에 대한 포인트 지급량
     /// @dev 중계서버를 통해서 호출됩니다.
-    function add(
-        bytes32 _shopId,
-        string calldata _name,
-        uint256 _provideWaitTime,
-        uint256 _providePercent,
-        address _account,
-        bytes calldata _signature
-    ) public {
-        bytes32 dataHash = keccak256(
-            abi.encode(_shopId, _name, _provideWaitTime, _providePercent, _account, nonce[_account])
-        );
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-
-        _add(_shopId, _name, _provideWaitTime, _providePercent, _account);
-    }
-
-    /// @notice 상점을 추가한다
-    /// @param _shopId 상점 아이디
-    /// @param _name 상점이름
-    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
-    /// @param _providePercent 구매금액에 대한 포인트 지급량
-    /// @dev 상점주에 의해 직접 호출됩니다.
-    function addDirect(
-        bytes32 _shopId,
-        string calldata _name,
-        uint256 _provideWaitTime,
-        uint256 _providePercent
-    ) public {
-        _add(_shopId, _name, _provideWaitTime, _providePercent, msg.sender);
-    }
-
-    /// @notice 상점을 추가한다
-    /// @param _shopId 상점 아이디
-    /// @param _name 상점이름
-    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
-    /// @param _providePercent 구매금액에 대한 포인트 지급량
-    function _add(
-        bytes32 _shopId,
-        string calldata _name,
-        uint256 _provideWaitTime,
-        uint256 _providePercent,
-        address _account
-    ) internal {
+    function add(bytes32 _shopId, string calldata _name, address _account, bytes calldata _signature) public {
         require(shops[_shopId].status == ShopStatus.INVALID, "1200");
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         ShopData memory data = ShopData({
             shopId: _shopId,
             name: _name,
-            provideWaitTime: _provideWaitTime,
-            providePercent: _providePercent,
+            provideWaitTime: 7 * 86400,
+            providePercent: 5,
             account: _account,
             providedPoint: 0,
             usedPoint: 0,
             settledPoint: 0,
             withdrawnPoint: 0,
-            status: ShopStatus.ACTIVE,
+            status: ShopStatus.INACTIVE,
             withdrawData: WithdrawData({ amount: 0, status: WithdrawStatus.CLOSE }),
             itemIndex: items.length,
             accountIndex: shopIdByAddress[_account].length
@@ -165,7 +140,8 @@ contract ShopCollection {
 
         nonce[_account]++;
 
-        emit AddedShop(_shopId, _name, _provideWaitTime, _providePercent, _account);
+        ShopData memory shop = shops[_shopId];
+        emit AddedShop(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.account, shop.status);
     }
 
     /// @notice 상점정보를 수정합니다
@@ -180,92 +156,57 @@ contract ShopCollection {
         uint256 _provideWaitTime,
         uint256 _providePercent,
         address _account,
-        bytes calldata _signature
+        bytes calldata _signature1,
+        bytes calldata _signature2
     ) public {
-        bytes32 dataHash = keccak256(
-            abi.encode(_shopId, _name, _provideWaitTime, _providePercent, _account, nonce[_account])
-        );
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-
-        _update(_shopId, _name, _provideWaitTime, _providePercent, _account);
-    }
-
-    /// @notice 상점정보를 수정합니다
-    /// @param _shopId 상점 아이디
-    /// @param _name 상점이름
-    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
-    /// @param _providePercent 구매금액에 대한 포인트 지급량
-    /// @dev 상점주에 의해 직접 호출됩니다.
-    function updateDirect(
-        bytes32 _shopId,
-        string calldata _name,
-        uint256 _provideWaitTime,
-        uint256 _providePercent
-    ) public {
-        _update(_shopId, _name, _provideWaitTime, _providePercent, msg.sender);
-    }
-
-    function _update(
-        bytes32 _shopId,
-        string calldata _name,
-        uint256 _provideWaitTime,
-        uint256 _providePercent,
-        address _account
-    ) internal {
         require(shops[_shopId].status != ShopStatus.INVALID, "1201");
         require(shops[_shopId].account == _account, "1050");
+
+        bytes32 dataHash1 = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account, "1501");
+
+        bytes32 dataHash2 = keccak256(abi.encode(_shopId, certifierAddress, nonce[certifierAddress]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == certifierAddress, "1501");
 
         shops[_shopId].name = _name;
         shops[_shopId].provideWaitTime = _provideWaitTime;
         shops[_shopId].providePercent = _providePercent;
 
         nonce[_account]++;
+        nonce[certifierAddress]++;
 
-        emit UpdatedShop(_shopId, _name, _provideWaitTime, _providePercent, _account);
+        ShopData memory shop = shops[_shopId];
+        emit UpdatedShop(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.account, shop.status);
     }
 
-    /// @notice 상점정보를 삭제합니다
+    /// @notice 상점상태를 수정합니다
     /// @param _shopId 상점 아이디
+    /// @param _status 상점의 상태
     /// @dev 중계서버를 통해서 호출됩니다.
-    function remove(bytes32 _shopId, address _account, bytes calldata _signature) public {
-        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-
-        _remove(_shopId, _account);
-    }
-
-    /// @notice 상점정보를 삭제합니다
-    /// @param _shopId 상점 아이디
-    /// @dev 상점주에 의해 직접 호출됩니다.
-    function removeDirect(bytes32 _shopId) public {
-        _remove(_shopId, msg.sender);
-    }
-
-    function _remove(bytes32 _shopId, address _account) internal {
+    function changeStatus(
+        bytes32 _shopId,
+        ShopStatus _status,
+        address _account,
+        bytes calldata _signature1,
+        bytes calldata _signature2
+    ) public {
+        require(_status != ShopStatus.INVALID, "1201");
         require(shops[_shopId].status != ShopStatus.INVALID, "1201");
         require(shops[_shopId].account == _account, "1050");
 
-        uint256 index = shops[_shopId].itemIndex;
-        uint256 last = items.length - 1;
-        if (index != last) {
-            items[index] = items[last];
-            shops[items[index]].itemIndex = index;
-            items.pop();
-        }
+        bytes32 dataHash1 = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account, "1501");
 
-        index = shops[_shopId].accountIndex;
-        last = shopIdByAddress[_account].length - 1;
-        if (index != last) {
-            shopIdByAddress[_account][index] = shopIdByAddress[_account][last];
-            shops[shopIdByAddress[_account][index]].accountIndex = index;
-            shopIdByAddress[_account].pop();
-        }
+        bytes32 dataHash2 = keccak256(abi.encode(_shopId, certifierAddress, nonce[certifierAddress]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == certifierAddress, "1501");
 
-        delete shops[_shopId];
+        shops[_shopId].status = _status;
 
         nonce[_account]++;
+        nonce[certifierAddress]++;
 
-        emit RemovedShop(_shopId);
+        ShopData memory shop = shops[_shopId];
+        emit ChangedShopStatus(shop.shopId, shop.status);
     }
 
     /// @notice 지갑주소로 등록한 상점의 아이디들을 리턴한다.
@@ -289,7 +230,7 @@ contract ShopCollection {
         string calldata _purchaseId,
         bytes32 _paymentId
     ) public onlyLedger {
-        if (shops[_shopId].status != ShopStatus.INVALID) {
+        if (shops[_shopId].status == ShopStatus.ACTIVE) {
             shops[_shopId].usedPoint += _amount;
             emit IncreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId, _paymentId);
         }
@@ -297,7 +238,7 @@ contract ShopCollection {
 
     /// @notice 사용된 총 마일지리를 빼준다
     function subUsedPoint(bytes32 _shopId, uint256 _amount, string calldata _purchaseId) public onlyLedger {
-        if (shops[_shopId].status != ShopStatus.INVALID) {
+        if (shops[_shopId].status == ShopStatus.ACTIVE) {
             if (shops[_shopId].usedPoint >= _amount) {
                 shops[_shopId].usedPoint -= _amount;
                 emit DecreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId);
@@ -307,7 +248,7 @@ contract ShopCollection {
 
     /// @notice 정산된 총 마일지리를 누적한다
     function addSettledPoint(bytes32 _shopId, uint256 _amount, string calldata _purchaseId) public onlyLedger {
-        if (shops[_shopId].status != ShopStatus.INVALID) {
+        if (shops[_shopId].status == ShopStatus.ACTIVE) {
             shops[_shopId].settledPoint += _amount;
             emit IncreasedSettledPoint(_shopId, _amount, shops[_shopId].settledPoint, _purchaseId);
         }
@@ -356,6 +297,7 @@ contract ShopCollection {
     /// @param _amount 인출금
     /// @dev 중계서버를 통해서 상점주의 서명을 가지고 호출됩니다.
     function openWithdrawal(bytes32 _shopId, uint256 _amount, address _account, bytes calldata _signature) public {
+        require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
@@ -367,6 +309,7 @@ contract ShopCollection {
     /// @param _amount 인출금
     /// @dev 상점주에 의해 직접 호출됩니다.
     function openWithdrawalDirect(bytes32 _shopId, uint256 _amount) public {
+        require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
         _openWithdrawal(_shopId, _amount, msg.sender);
     }
 
@@ -389,6 +332,7 @@ contract ShopCollection {
     /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
     /// @param _shopId 상점아이디
     function closeWithdrawal(bytes32 _shopId, address _account, bytes calldata _signature) public {
+        require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
@@ -398,6 +342,7 @@ contract ShopCollection {
     /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
     /// @param _shopId 상점아이디
     function closeWithdrawalDirect(bytes32 _shopId) public {
+        require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
         _closeWithdrawal(_shopId, msg.sender);
     }
 
