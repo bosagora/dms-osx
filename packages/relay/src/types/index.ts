@@ -58,10 +58,11 @@ export interface LoyaltyPaymentTaskData {
 }
 
 export enum TaskResultType {
-    NEW = "new",
-    CANCEL = "cancel",
-    UPDATE = "update",
-    STATUS = "status",
+    NEW = "pay_new",
+    CANCEL = "pay_cancel",
+    ADD = "shop_add",
+    UPDATE = "shop_update",
+    STATUS = "shop_status",
 }
 
 export enum TaskResultCode {
@@ -192,7 +193,7 @@ export class ResponseMessage {
         ["2024", "The status code for this payment cannot process closing"],
         ["2033", "The task ID is not exist"],
         ["2040", "The status code for this task cannot be approved"],
-        ["4000", "This payment denied by user"],
+        ["4000", "Denied by user"],
         ["5000", "Smart Contract Error"],
         ["6000", "Server Error"],
         ["7000", "Timeout period expired"],

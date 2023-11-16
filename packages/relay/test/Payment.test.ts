@@ -995,12 +995,15 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 
+            let oldBalance: BigNumber;
+            let oldShopInfo: any;
+
             it("Endpoint POST /v1/payment/cancel/approval - true", async () => {
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
-                const oldBalance = await ledgerContract.pointBalanceOf(responseItem.data.data.account);
-                const oldShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
+                oldBalance = await ledgerContract.pointBalanceOf(responseItem.data.data.account);
+                oldShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
 
                 const nonce = await ledgerContract.nonceOf(shopData[purchaseOfLoyalty.shopIndex].wallet.address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
@@ -1026,15 +1029,6 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL);
-
-                const newBalance = await ledgerContract.pointBalanceOf(users[purchaseOfLoyalty.userIndex].address);
-                assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalPoint)));
-
-                const newShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
-                assert.deepStrictEqual(
-                    newShopInfo.usedPoint,
-                    oldShopInfo.usedPoint.sub(BigNumber.from(responseItem.data.data.paidPoint))
-                );
             });
 
             it("Endpoint POST /v1/payment/cancel/close", async () => {
@@ -1049,6 +1043,19 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                );
+
+                const newBalance = await ledgerContract.pointBalanceOf(users[purchaseOfLoyalty.userIndex].address);
+                assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalPoint)));
+
+                const newShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
+                assert.deepStrictEqual(
+                    newShopInfo.usedPoint,
+                    oldShopInfo.usedPoint.sub(BigNumber.from(responseItem.data.data.paidPoint))
+                );
             });
         });
     });
