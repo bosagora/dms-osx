@@ -680,7 +680,8 @@ contract Ledger {
                 shopCollection.subUsedPoint(
                     loyaltyPayments[_paymentId].shopId,
                     loyaltyPayments[_paymentId].paidPoint,
-                    loyaltyPayments[_paymentId].purchaseId
+                    loyaltyPayments[_paymentId].purchaseId,
+                    _paymentId
                 );
                 emit LoyaltyPaymentEvent(
                     loyaltyPayments[_paymentId],
@@ -694,7 +695,8 @@ contract Ledger {
                 shopCollection.subUsedPoint(
                     loyaltyPayments[_paymentId].shopId,
                     loyaltyPayments[_paymentId].paidPoint,
-                    loyaltyPayments[_paymentId].purchaseId
+                    loyaltyPayments[_paymentId].purchaseId,
+                    _paymentId
                 );
                 emit LoyaltyPaymentEvent(
                     loyaltyPayments[_paymentId],

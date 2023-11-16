@@ -71,7 +71,7 @@ contract ShopCollection {
     /// @notice 사용자의 포인트가 증가할 때 발생되는 이벤트
     event IncreasedUsedPoint(bytes32 shopId, uint256 increase, uint256 total, string purchaseId, bytes32 paymentId);
     /// @notice 사용자의 포인트가 감소할 때 발생되는 이벤트
-    event DecreasedUsedPoint(bytes32 shopId, uint256 increase, uint256 total, string purchaseId);
+    event DecreasedUsedPoint(bytes32 shopId, uint256 increase, uint256 total, string purchaseId, bytes32 paymentId);
     /// @notice 정산된 마일리가 증가할 때 발생되는 이벤트
     event IncreasedSettledPoint(bytes32 shopId, uint256 increase, uint256 total, string purchaseId);
 
@@ -237,11 +237,16 @@ contract ShopCollection {
     }
 
     /// @notice 사용된 총 마일지리를 빼준다
-    function subUsedPoint(bytes32 _shopId, uint256 _amount, string calldata _purchaseId) public onlyLedger {
+    function subUsedPoint(
+        bytes32 _shopId,
+        uint256 _amount,
+        string calldata _purchaseId,
+        bytes32 _paymentId
+    ) public onlyLedger {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             if (shops[_shopId].usedPoint >= _amount) {
                 shops[_shopId].usedPoint -= _amount;
-                emit DecreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId);
+                emit DecreasedUsedPoint(_shopId, _amount, shops[_shopId].usedPoint, _purchaseId, _paymentId);
             }
         }
     }
