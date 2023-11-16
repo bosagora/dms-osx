@@ -25,7 +25,7 @@ import { BigNumber, Wallet } from "ethers";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 import { INotificationEventHandler } from "../src/delegator/NotificationSender";
-import { LoyaltyPaymentTaskStatus, LoyaltyType, ContractShopStatus } from "../src/types";
+import { ContractShopStatus, LoyaltyPaymentTaskStatus, LoyaltyType } from "../src/types";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 // tslint:disable-next-line:no-var-requires
@@ -823,6 +823,7 @@ describe("Test of Server", function () {
                 userIndex: 0,
             };
             const amountOfLoyalty = Amount.make(purchaseOfLoyalty.amount, 18).value;
+            let totalPoint: BigNumber;
 
             it("Save Purchase Data", async () => {
                 const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
@@ -970,10 +971,25 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                totalPoint = BigNumber.from(response.data.data.totalPoint);
             });
 
             it("Waiting", async () => {
                 await ContractUtils.delay(2000);
+            });
+
+            it("Check user's balance", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/user")
+                    .filename("balance")
+                    .addQuery("account", users[purchase.userIndex].address)
+                    .toString();
+                const response = await client.get(url);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.balance, pointAmount.sub(totalPoint).toString());
             });
 
             it("Endpoint POST /v1/payment/cancel/open", async () => {
@@ -1057,6 +1073,20 @@ describe("Test of Server", function () {
                     oldShopInfo.usedPoint.sub(BigNumber.from(responseItem.data.data.paidPoint))
                 );
             });
+
+            it("Check user's balance", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/user")
+                    .filename("balance")
+                    .addQuery("account", users[purchase.userIndex].address)
+                    .toString();
+                const response = await client.get(url);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
+            });
         });
     });
 
@@ -1139,6 +1169,7 @@ describe("Test of Server", function () {
                 userIndex: 0,
             };
             const amountOfLoyalty = Amount.make(purchaseOfLoyalty.amount, 18).value;
+            let totalPoint: BigNumber;
 
             it("Save Purchase Data", async () => {
                 const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
@@ -1286,10 +1317,25 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                totalPoint = BigNumber.from(response.data.data.totalPoint);
             });
 
             it("Waiting", async () => {
                 await ContractUtils.delay(2000);
+            });
+
+            it("Check user's balance", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/user")
+                    .filename("balance")
+                    .addQuery("account", users[purchase.userIndex].address)
+                    .toString();
+                const response = await client.get(url);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.balance, pointAmount.sub(totalPoint).toString());
             });
 
             it("Endpoint POST /v1/payment/cancel/open", async () => {
@@ -1352,6 +1398,20 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+            });
+
+            it("Check user's balance", async () => {
+                const url = URI(serverURL)
+                    .directory("/v1/payment/user")
+                    .filename("balance")
+                    .addQuery("account", users[purchase.userIndex].address)
+                    .toString();
+                const response = await client.get(url);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.balance, pointAmount.sub(totalPoint).toString());
             });
         });
     });
