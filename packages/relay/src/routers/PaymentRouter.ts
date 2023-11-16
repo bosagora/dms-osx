@@ -716,7 +716,7 @@ export class PaymentRouter {
                             await this.sendPaymentResult(
                                 TaskResultType.NEW,
                                 TaskResultCode.SUCCESS,
-                                "The payment has been successfully completed",
+                                "Success",
                                 this.getCallBackResponse(item)
                             );
                         }
@@ -744,7 +744,7 @@ export class PaymentRouter {
                     await this.sendPaymentResult(
                         TaskResultType.NEW,
                         TaskResultCode.DENIED,
-                        "The payment denied by user",
+                        "Denied by user",
                         this.getCallBackResponse(item)
                     );
                 }
@@ -1094,7 +1094,7 @@ export class PaymentRouter {
                             await this.sendPaymentResult(
                                 TaskResultType.CANCEL,
                                 TaskResultCode.SUCCESS,
-                                "The cancellation has been successfully completed.",
+                                "Success",
                                 this.getCallBackResponse(item)
                             );
                         }
@@ -1122,7 +1122,7 @@ export class PaymentRouter {
                     await this.sendPaymentResult(
                         TaskResultType.CANCEL,
                         TaskResultCode.DENIED,
-                        "The payment denied by user.",
+                        "Denied by user",
                         this.getCallBackResponse(item)
                     );
                 }
@@ -1322,21 +1322,21 @@ export class PaymentRouter {
             res.timestamp = parsedLog.args.payment.timestamp;
             res.loyaltyType = parsedLog.args.payment.loyaltyType;
             res.paidPoint =
-                parsedLog.args.loyaltyType === LoyaltyType.POINT
+                parsedLog.args.payment.loyaltyType === LoyaltyType.POINT
                     ? BigNumber.from(parsedLog.args.payment.paidPoint)
                     : BigNumber.from(0);
             res.paidToken =
-                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
+                parsedLog.args.payment.loyaltyType === LoyaltyType.TOKEN
                     ? BigNumber.from(parsedLog.args.payment.paidToken)
                     : BigNumber.from(0);
             res.paidValue = BigNumber.from(parsedLog.args.payment.paidValue);
 
             res.feePoint =
-                parsedLog.args.loyaltyType === LoyaltyType.POINT
+                parsedLog.args.payment.loyaltyType === LoyaltyType.POINT
                     ? BigNumber.from(parsedLog.args.payment.feePoint)
                     : BigNumber.from(0);
             res.feeToken =
-                parsedLog.args.loyaltyType === LoyaltyType.TOKEN
+                parsedLog.args.payment.loyaltyType === LoyaltyType.TOKEN
                     ? BigNumber.from(parsedLog.args.payment.feeToken)
                     : BigNumber.from(0);
             res.feeValue = BigNumber.from(parsedLog.args.payment.feeValue);
@@ -1358,13 +1358,21 @@ export class PaymentRouter {
         message: string,
         data: PaymentResultData
     ) {
-        const client = new HTTPClient();
-        await client.post(this._config.relay.callbackEndpoint, {
-            accessKey: this._config.relay.callbackAccessKey,
-            type,
-            code,
-            message,
-            data,
-        });
+        try {
+            const client = new HTTPClient();
+            await client.post(this._config.relay.callbackEndpoint, {
+                accessKey: this._config.relay.callbackAccessKey,
+                type,
+                code,
+                message,
+                data,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                logger.error(`sendPaymentResult : ${error.message}`);
+            } else {
+                logger.error(`sendPaymentResult : ${JSON.stringify(error)}`);
+            }
+        }
     }
 }

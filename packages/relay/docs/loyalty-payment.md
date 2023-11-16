@@ -527,7 +527,7 @@
 | 필드 1    | 필드 2        | 유형   | 필수 | 설명                                                                                                                                                                                                           |
 | --------- | ------------- | ------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | accessKey |               | string | Yes  | 비밀키                                                                                                                                                                                                         |
-| type      |               | string | Yes  | "new": 결제요청<br/>"cancel":취소요청                                                                                                                                                                          |
+| type      |               | string | Yes  | "pay_new": 결제요청<br/>"pay_cancel":취소요청                                                                                                                                                                  |
 | code      |               | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃                                                                                                                           |
 | message   |               | string | Yes  | 응답 메세지                                                                                                                                                                                                    |
 | data      | paymentId     | string | Yes  | 결제 아이디                                                                                                                                                                                                    |
@@ -558,17 +558,17 @@
 
 ```json
 {
-    "accessKey": "9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
-    "type": "new",
+    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
+    "type": "pay_new",
     "code": 0,
-    "message": "The payment has been successfully completed.",
+    "message": "Success",
     "data": {
-        "paymentId": "0x644a5568445869656a16b67ab82894bbe7fb40e984bc5bff90002aa40177292f",
+        "paymentId": "0x04785fda06b5e8c61bc857884b66663ed55bf61269508656a5cc7e5df5a7510b",
         "purchaseId": "P000002",
         "amount": "10000000000000000000",
         "currency": "krw",
-        "account": "0x53801Bf69Cb9B6Ad205BAc9134766807551F26BC",
-        "shopId": "0x5b2eaa90dbb877356c28cf13fe9263b1e749abeb78f031a4b35fa63c7d30e5db",
+        "shopId": "0x62f131c124c10dd7023e2d1a98ac8aa4c925137207118178d0267d2079447a65",
+        "account": "0x2793111915DA87B03F90ee0Cb6E0709A8514891F",
         "loyaltyType": 0,
         "paidPoint": "10000000000000000000",
         "paidToken": "0",
@@ -578,7 +578,8 @@
         "feeValue": "500000000000000000",
         "totalPoint": "10500000000000000000",
         "totalToken": "0",
-        "totalValue": "10500000000000000000"
+        "totalValue": "10500000000000000000",
+        "paymentStatus": 4
     }
 }
 ```
@@ -587,17 +588,17 @@
 
 ```json
 {
-    "accessKey": "9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
-    "type": "new",
+    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
+    "type": "pay_new",
     "code": 4000,
-    "message": "The payment denied by user.",
+    "message": "Denied by user",
     "data": {
-        "paymentId": "0x6c16826fdbf4659b9fb69c016211875d2959a4a2a52ff3735e667b4f4c52d0f7",
+        "paymentId": "0x9aa18cfb0df5e528f0415fb1aeea2b2454508655314bf58b91f96e4502b22828",
         "purchaseId": "P000002",
         "amount": "10000000000000000000",
         "currency": "krw",
-        "shopId": "0xe4d1c86a0c76478076028d440cf542ebf300e1d7a82f59a666ff5a2205d9836c",
-        "account": "0x53801Bf69Cb9B6Ad205BAc9134766807551F26BC",
+        "shopId": "0x7f67cd5291da2f283ca5bad25c836fa76f3855cc892e55984ead1af46b2db38a",
+        "account": "0x3beF528430a09b12a52ea65F3cBcdCb96444E7d2",
         "loyaltyType": 0,
         "paidPoint": "10000000000000000000",
         "paidToken": "0",
@@ -607,7 +608,8 @@
         "feeValue": "500000000000000000",
         "totalPoint": "10500000000000000000",
         "totalToken": "0",
-        "totalValue": "10500000000000000000"
+        "totalValue": "10500000000000000000",
+        "paymentStatus": 3
     }
 }
 ```
@@ -616,17 +618,17 @@
 
 ```json
 {
-    "accessKey": "9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
-    "type": "cancel",
+    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
+    "type": "pay_cancel",
     "code": 0,
-    "message": "The cancellation has been successfully completed.",
+    "message": "Success",
     "data": {
-        "paymentId": "0x644a5568445869656a16b67ab82894bbe7fb40e984bc5bff90002aa40177292f",
+        "paymentId": "0x491c07d0fee5eb7d129e21d9c818fb19f1c80603b519bf79ed42e486d8019bfc",
         "purchaseId": "P000002",
         "amount": "10000000000000000000",
         "currency": "krw",
-        "account": "0x53801Bf69Cb9B6Ad205BAc9134766807551F26BC",
-        "shopId": "0x5b2eaa90dbb877356c28cf13fe9263b1e749abeb78f031a4b35fa63c7d30e5db",
+        "shopId": "0x270e6da973370b647972531e965e27879211092f748e8382faa48de43e37055d",
+        "account": "0x2793111915DA87B03F90ee0Cb6E0709A8514891F",
         "loyaltyType": 0,
         "paidPoint": "10000000000000000000",
         "paidToken": "0",
@@ -636,7 +638,8 @@
         "feeValue": "500000000000000000",
         "totalPoint": "10500000000000000000",
         "totalToken": "0",
-        "totalValue": "10500000000000000000"
+        "totalValue": "10500000000000000000",
+        "paymentStatus": 9
     }
 }
 ```
@@ -645,17 +648,17 @@
 
 ```json
 {
-    "accessKey": "9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
-    "type": "cancel",
+    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
+    "type": "pay_cancel",
     "code": 4000,
-    "message": "The cancellation denied by user.",
+    "message": "Denied by user",
     "data": {
-        "paymentId": "0x50f8aaf014a40b93a1c8aa9c0f2ed5ff01f5c2ad646722b45f175bdbfc0d1846",
+        "paymentId": "0x61fc70b3a919aab586898fcfcc76e266e386c5a66a605a03d7569f5bd0ff7458",
         "purchaseId": "P000002",
         "amount": "10000000000000000000",
         "currency": "krw",
-        "shopId": "0xac4aa3ae5cd9a0f585274092db07b836681b6493453697a5fa6a4569e7e5f32d",
-        "account": "0x53801Bf69Cb9B6Ad205BAc9134766807551F26BC",
+        "shopId": "0xf14d74201ab85a04e1f56cb43884592f9656b624100bf71313084076a9661112",
+        "account": "0x2793111915DA87B03F90ee0Cb6E0709A8514891F",
         "loyaltyType": 0,
         "paidPoint": "10000000000000000000",
         "paidToken": "0",
@@ -665,7 +668,8 @@
         "feeValue": "500000000000000000",
         "totalPoint": "10500000000000000000",
         "totalToken": "0",
-        "totalValue": "10500000000000000000"
+        "totalValue": "10500000000000000000",
+        "paymentStatus": 8
     }
 }
 ```
@@ -753,7 +757,7 @@
 | 필드 1    | 필드 2          | 유형   | 필수 | 설명                                                                                 |
 | --------- | --------------- | ------ | ---- | ------------------------------------------------------------------------------------ | --- |
 | accessKey |                 | string | Yes  | 비밀키                                                                               |
-| type      |                 | string | Yes  | "update": 정보수정<br/>"status":상태수정                                             |
+| type      |                 | string | Yes  | "shop_add": 추가<br/>"shop_update": 정보수정<br/>"shop_status":상태수정              |
 | code      |                 | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃 |
 | message   |                 | string | Yes  | 응답 메세지                                                                          |
 | data      | taskId          | string | Yes  | 처리 아이디                                                                          |
@@ -762,40 +766,68 @@
 | data      | provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                               |
 | data      | providePercent  | int    | Yes  | 적립비율\*100                                                                        |
 | data      | status          | int    | Yes  | 활성상태(1:활성, 2:비활성)                                                           |     |
+| data      | account         | string | Yes  | 상점주의 지갑주소                                                                    |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
 ### 5.4. 콜백 상점용 엔드포인트의 응답 데이터의 예시
 
+#### 상점 정보가 추가되었을 때의 응답
+
 ```json
 {
-    "accessKey": "9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
-    "type": "update",
+    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
+    "type": "shop_add",
     "code": 0,
     "message": "Success",
     "data": {
-        "taskId": "0xb3c3172b8d1167f05d63df43a30e6e1b26674d6ca803a7085a5c9584a1f6fde0",
-        "shopId": "0xb8f52b4a0eaf3df50da590642aea92dda53f1d74770dfd3d1e238d1d150c950f",
-        "name": "새로운 이름",
-        "provideWaitTime": 86400,
-        "providePercent": 10,
-        "status": 2
+        "taskId": "",
+        "shopId": "0xb2980bfac07826f2f93bea8434b569a2a458cbbd39b812a062ddcd7d1fa8fff9",
+        "name": "Shop 5",
+        "provideWaitTime": 5,
+        "providePercent": 5,
+        "status": 2,
+        "account": "0x5b9aD6ad05c0fC423B34C1EaF2FF67C47F02E0D1"
     }
 }
 ```
 
+#### 상점 정보가 변경되었을 때의 응답
+
 ```json
 {
-    "type": "status",
+    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
+    "type": "shop_update",
     "code": 0,
     "message": "Success",
     "data": {
-        "taskId": "0x3b4a374e8cefc043e435054245560967c58cb7c17b7237f4672f96c00003b52d",
-        "shopId": "0xe9a2b83b3cc19c2da7d954d4901d6b3c59a7784a2457f6b5e6f7d9e76f6e7483",
+        "taskId": "0x005423085d89ebc3edea3f8dd6bc4cfff0446c7393d22bf2de9f81c6f24e8ad0",
+        "shopId": "0xb29991db39fc61c96b5048b9d8863dbe40d556e1ae29c758c48468ffe3ecabad",
         "name": "새로운 이름",
         "provideWaitTime": 86400,
         "providePercent": 10,
-        "status": 1
+        "status": 2,
+        "account": "0x1956F0c574ee588efd4759948a40611613C87Bc6"
+    }
+}
+```
+
+#### 상점의 상태가 변경되었을 때의 응답
+
+```json
+{
+    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
+    "type": "shop_status",
+    "code": 0,
+    "message": "Success",
+    "data": {
+        "taskId": "0x5510311afd173081a0511559ed950634217e29c81f55a62f57bd4c3e434cfb89",
+        "shopId": "0xb29991db39fc61c96b5048b9d8863dbe40d556e1ae29c758c48468ffe3ecabad",
+        "name": "새로운 이름",
+        "provideWaitTime": 86400,
+        "providePercent": 10,
+        "status": 1,
+        "account": "0x1956F0c574ee588efd4759948a40611613C87Bc6"
     }
 }
 ```
@@ -937,7 +969,7 @@
 | provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                        |
 | providePercent  | int    | Yes  | 적립비율\*100                                                                 |
 | status          | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                          |
-| account         | string | Yes  | 상점주의 월렛주소                                                             |
+| account         | string | Yes  | 상점주의 지갑주소                                                             |
 | taskStatus      | int    | Yes  | 처리상태<br/>1 : 시작<br/>2 : 승인<br/>3 : 거부<br/>4 : 완료<br/>5 : 타임아웃 |
 | timestamp       | int    | Yes  | 접수 시간                                                                     |
 
@@ -1042,7 +1074,7 @@
 | 2024 | 지불에 대한 상태코드는 종료처리를 할 수 없습니다<br/>The status code for this payment cannot process closing                                      |
 | 2033 | 작업아이디가 존재하지 않습니다<br/>The task ID is not exist                                                                                       |
 | 2040 | 작업에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this task cannot be approved                                                 |
-| 4000 | 사용자에 의해 지불이 거부되었습니다<br/>This payment denied by user                                                                               |
+| 4000 | 사용자에 의해 거부되었습니다<br/>Denied by user                                                                                                   |
 | 5000 | 스마트컨트랙트 실행중 오류가 발생했습니다<br/>Smart Contract Error                                                                                |
 | 6000 | 내부서버에서 오류가 발생했습니다<br/>Server Error                                                                                                 |
 | 7000 | 처리시간 초과오류입니다(45초)<br/>Timeout period expired                                                                                          |

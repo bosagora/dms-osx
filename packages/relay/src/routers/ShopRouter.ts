@@ -133,9 +133,7 @@ export class ShopRouter {
             ],
             this.shop_add.bind(this)
         );
-
         this.app.get("/v1/shop/task", [query("taskId").exists()], this.shop_task.bind(this));
-
         this.app.post(
             "/v1/shop/update/create",
             [
@@ -246,7 +244,20 @@ export class ShopRouter {
             const tx = await contract.connect(signerItem.signer).add(shopId, name, account, signature);
 
             logger.http(`TxHash(/v1/shop/add): ${tx.hash}`);
-            return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
+            res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
+
+            const event = await this.waitAndAddEvent(contract, tx);
+            if (event !== undefined) {
+                await this.sendTaskResult(TaskResultType.ADD, TaskResultCode.SUCCESS, "Success", {
+                    taskId: "",
+                    shopId: event.shopId,
+                    name: event.name,
+                    provideWaitTime: BigNumber.from(event.providePercent).toNumber(),
+                    providePercent: BigNumber.from(event.providePercent).toNumber(),
+                    status: event.status,
+                    account: event.account,
+                });
+            }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/add : ${msg.error.message}`);
@@ -321,7 +332,7 @@ export class ShopRouter {
 
             const shopInfo = await (await this.getShopContract()).shopOf(shopId);
             if (shopInfo.status !== ContractShopStatus.INVALID) {
-                const taskId = await ContractUtils.getTaskId(shopId);
+                const taskId = ContractUtils.getTaskId(shopId);
 
                 const item: ShopTaskData = {
                     taskId,
@@ -531,7 +542,7 @@ export class ShopRouter {
             const status: number = Number(String(req.body.status).trim());
             const shopInfo = await (await this.getShopContract()).shopOf(shopId);
             if (shopInfo.status !== 0) {
-                const taskId = await ContractUtils.getTaskId(shopId);
+                const taskId = ContractUtils.getTaskId(shopId);
 
                 const item: ShopTaskData = {
                     taskId,
@@ -795,7 +806,28 @@ export class ShopRouter {
             provideWaitTime: item.provideWaitTime,
             providePercent: item.providePercent,
             status: item.status,
+            account: item.account,
         };
+    }
+
+    private async waitAndAddEvent(
+        contract: ShopCollection,
+        tx: ContractTransaction
+    ): Promise<ContractShopUpdateEvent | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, contract.interface, "AddedShop");
+        if (log !== undefined) {
+            const parsedLog = contract.interface.parseLog(log);
+
+            return {
+                shopId: parsedLog.args.shopId,
+                name: parsedLog.args.name,
+                provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
+                providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
+                account: parsedLog.args.account,
+                status: parsedLog.args.status,
+            };
+        } else return undefined;
     }
 
     private async waitAndUpdateEvent(
@@ -833,14 +865,22 @@ export class ShopRouter {
         } else return undefined;
     }
 
-    private async sendTaskResult(type: TaskResultType, code: TaskResultCode, message: string, data: PaymentResultData) {
-        const client = new HTTPClient();
-        await client.post(this._config.relay.callbackEndpoint, {
-            accessKey: this._config.relay.callbackAccessKey,
-            type,
-            code,
-            message,
-            data,
-        });
+    private async sendTaskResult(type: TaskResultType, code: TaskResultCode, message: string, data: any) {
+        try {
+            const client = new HTTPClient();
+            await client.post(this._config.relay.callbackEndpoint, {
+                accessKey: this._config.relay.callbackAccessKey,
+                type,
+                code,
+                message,
+                data,
+            });
+        } catch (error) {
+            if (error instanceof Error) {
+                logger.error(`sendTaskResult : ${error.message}`);
+            } else {
+                logger.error(`sendTaskResult : ${JSON.stringify(error)}`);
+            }
+        }
     }
 }
