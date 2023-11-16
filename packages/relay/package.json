@@ -63,7 +63,7 @@
         "chai-http": "^4.3.7",
         "cors": "^2.8.5",
         "del-osx-artifacts": "^1.1.1",
-        "dms-osx-artifacts": "^1.1.9",
+        "dms-osx-artifacts": "^1.1.10",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
         "ethers": "^5.7.0",
