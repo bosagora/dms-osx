@@ -39,6 +39,9 @@ scheduler:
     - name: approval
       enable: true
       expression: "*/1 * * * * *"
+    - name: close
+      enable: true
+      expression: "*/10 * * * * *"
 
 relay:
   managerKeys:
@@ -53,6 +56,7 @@ relay:
   callbackAccessKey: "${CALLBACK_ACCESS_KEY}"
   paymentTimeoutSecond: 45
   approvalSecond: 3
+  forcedCloseSecond: 300
 
 contracts:
   tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"

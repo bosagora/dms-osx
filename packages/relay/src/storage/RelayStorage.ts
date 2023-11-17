@@ -390,4 +390,82 @@ export class RelayStorage extends Storage {
                 });
         });
     }
+
+    public getDelayedNewPayments(): Promise<LoyaltyPaymentTaskData[]> {
+        return new Promise<LoyaltyPaymentTaskData[]>(async (resolve, reject) => {
+            this.queryForMapper("payment", "getDelayedNewPayments", {})
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                paymentId: m.paymentId,
+                                purchaseId: m.purchaseId,
+                                amount: BigNumber.from(m.amount),
+                                currency: m.currency,
+                                shopId: m.shopId,
+                                account: m.account,
+                                loyaltyType: m.loyaltyType,
+                                paidPoint: BigNumber.from(m.paidPoint),
+                                paidToken: BigNumber.from(m.paidToken),
+                                paidValue: BigNumber.from(m.paidValue),
+                                feePoint: BigNumber.from(m.feePoint),
+                                feeToken: BigNumber.from(m.feeToken),
+                                feeValue: BigNumber.from(m.feeValue),
+                                totalPoint: BigNumber.from(m.totalPoint),
+                                totalToken: BigNumber.from(m.totalToken),
+                                totalValue: BigNumber.from(m.totalValue),
+                                paymentStatus: m.paymentStatus,
+                                openNewTimestamp: m.openNewTimestamp,
+                                closeNewTimestamp: m.closeNewTimestamp,
+                                openCancelTimestamp: m.openCancelTimestamp,
+                                closeCancelTimestamp: m.closeCancelTimestamp,
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getDelayedCancelPayments(): Promise<LoyaltyPaymentTaskData[]> {
+        return new Promise<LoyaltyPaymentTaskData[]>(async (resolve, reject) => {
+            this.queryForMapper("payment", "getDelayedCancelPayments", {})
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                paymentId: m.paymentId,
+                                purchaseId: m.purchaseId,
+                                amount: BigNumber.from(m.amount),
+                                currency: m.currency,
+                                shopId: m.shopId,
+                                account: m.account,
+                                loyaltyType: m.loyaltyType,
+                                paidPoint: BigNumber.from(m.paidPoint),
+                                paidToken: BigNumber.from(m.paidToken),
+                                paidValue: BigNumber.from(m.paidValue),
+                                feePoint: BigNumber.from(m.feePoint),
+                                feeToken: BigNumber.from(m.feeToken),
+                                feeValue: BigNumber.from(m.feeValue),
+                                totalPoint: BigNumber.from(m.totalPoint),
+                                totalToken: BigNumber.from(m.totalToken),
+                                totalValue: BigNumber.from(m.totalValue),
+                                paymentStatus: m.paymentStatus,
+                                openNewTimestamp: m.openNewTimestamp,
+                                closeNewTimestamp: m.closeNewTimestamp,
+                                openCancelTimestamp: m.openCancelTimestamp,
+                                closeCancelTimestamp: m.closeCancelTimestamp,
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
 }
