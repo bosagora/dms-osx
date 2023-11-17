@@ -1,5 +1,6 @@
 import { Amount } from "../src/common/Amount";
 import { RelayStorage } from "../src/storage/RelayStorage";
+import { ContractShopStatus } from "../src/types";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
@@ -10,7 +11,6 @@ import {
     ValidatorCollection,
 } from "../typechain-types";
 import { TestClient, TestServer } from "./helper/Utility";
-import { ContractShopStatus } from "../src/types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";

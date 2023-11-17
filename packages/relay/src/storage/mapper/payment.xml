@@ -106,4 +106,8 @@
             "closeCancelTimestamp" = ${value}
         WHERE "paymentId" = #{paymentId}
     </update>
+
+    <select id="getPaymentsForType">
+        SELECT * FROM payments WHERE "paymentStatus" = ${paymentStatus};
+    </select>
 </mapper>

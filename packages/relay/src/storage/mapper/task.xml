@@ -61,4 +61,9 @@
             "timestamp" = ${value}
         WHERE "taskId" = #{taskId}
     </update>
+
+    <select id="getTasksForType">
+        SELECT * FROM tasks WHERE "type" = #{type};
+    </select>
+
 </mapper>

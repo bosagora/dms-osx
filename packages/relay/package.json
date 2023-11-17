@@ -21,7 +21,8 @@
         "test:Config": "hardhat test test/Config.test.ts",
         "test:Shop": "hardhat test test/Shop.test.ts",
         "test:ShopWithdraw": "hardhat test test/ShopWithdraw.test.ts",
-        "test:Payment": "hardhat test test/Payment.test.ts"
+        "test:Payment": "hardhat test test/Payment.test.ts",
+        "test:Approval": "hardhat test test/Approval.test.ts"
     },
     "repository": {
         "type": "git",

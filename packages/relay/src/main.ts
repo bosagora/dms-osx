@@ -4,29 +4,15 @@ import { DefaultServer } from "./DefaultServer";
 import { RelayStorage } from "./storage/RelayStorage";
 import { ContractUtils } from "./utils/ContractUtils";
 
+import { ApprovalScheduler } from "./scheduler/ApprovalScheduler";
+import { Scheduler } from "./scheduler/Scheduler";
+
 let server: DefaultServer;
 
 async function main() {
     // Create with the arguments and read from file
     const config = Config.createWithArgument();
 
-    // Now configure the logger with the expected transports
-    switch (process.env.NODE_ENV) {
-        case "test":
-            // Logger is silent, do nothing
-            break;
-
-        case "development":
-            // Only use the console log
-            if (config.logging.console) logger.add(Logger.defaultConsoleTransport());
-            break;
-
-        case "production":
-        default:
-            // Read the config file and potentially use both
-            // logger.add(Logger.defaultFileTransport(config.logging.folder));
-            if (config.logging.console) logger.add(Logger.defaultConsoleTransport());
-    }
     logger.transports.forEach((tp) => {
         tp.level = config.logging.level;
     });
@@ -37,7 +23,15 @@ async function main() {
     await ContractUtils.delay(3000);
     const storage = await RelayStorage.make(config.database);
 
-    server = new DefaultServer(config, storage);
+    const schedulers: Scheduler[] = [];
+    if (config.scheduler.enable) {
+        const scheduler = config.scheduler.getScheduler("approval");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new ApprovalScheduler(scheduler.expression));
+        }
+    }
+
+    server = new DefaultServer(config, storage, schedulers);
     return server.start().catch((error: any) => {
         // handle specific listen errors with friendly messages
         switch (error.code) {

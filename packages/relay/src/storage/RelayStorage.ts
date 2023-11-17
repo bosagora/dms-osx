@@ -6,7 +6,13 @@ import { BigNumber } from "ethers";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
-import { LoyaltyPaymentTaskData, LoyaltyPaymentTaskStatus, ShopTaskData, ShopTaskStatus } from "../types";
+import {
+    LoyaltyPaymentTaskData,
+    LoyaltyPaymentTaskStatus,
+    ShopTaskData,
+    ShopTaskStatus,
+    TaskResultType,
+} from "../types";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -310,6 +316,73 @@ export class RelayStorage extends Storage {
             })
                 .then(() => {
                     return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getPaymentsForType(paymentStatus: LoyaltyPaymentTaskStatus): Promise<LoyaltyPaymentTaskData[]> {
+        return new Promise<LoyaltyPaymentTaskData[]>(async (resolve, reject) => {
+            this.queryForMapper("payment", "getPaymentsForType", { paymentStatus })
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                paymentId: m.paymentId,
+                                purchaseId: m.purchaseId,
+                                amount: BigNumber.from(m.amount),
+                                currency: m.currency,
+                                shopId: m.shopId,
+                                account: m.account,
+                                loyaltyType: m.loyaltyType,
+                                paidPoint: BigNumber.from(m.paidPoint),
+                                paidToken: BigNumber.from(m.paidToken),
+                                paidValue: BigNumber.from(m.paidValue),
+                                feePoint: BigNumber.from(m.feePoint),
+                                feeToken: BigNumber.from(m.feeToken),
+                                feeValue: BigNumber.from(m.feeValue),
+                                totalPoint: BigNumber.from(m.totalPoint),
+                                totalToken: BigNumber.from(m.totalToken),
+                                totalValue: BigNumber.from(m.totalValue),
+                                paymentStatus: m.paymentStatus,
+                                openNewTimestamp: m.openNewTimestamp,
+                                closeNewTimestamp: m.closeNewTimestamp,
+                                openCancelTimestamp: m.openCancelTimestamp,
+                                closeCancelTimestamp: m.closeCancelTimestamp,
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getTasksForType(type: TaskResultType): Promise<ShopTaskData[]> {
+        return new Promise<ShopTaskData[]>(async (resolve, reject) => {
+            this.queryForMapper("task", "getTasksForType", { type })
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                taskId: m.taskId,
+                                type: m.type,
+                                shopId: m.shopId,
+                                account: m.account,
+                                name: m.name,
+                                provideWaitTime: m.provideWaitTime,
+                                providePercent: m.providePercent,
+                                status: m.status,
+                                taskStatus: m.taskStatus,
+                                timestamp: m.timestamp,
+                            };
+                        })
+                    );
                 })
                 .catch((reason) => {
                     if (reason instanceof Error) return reject(reason);
