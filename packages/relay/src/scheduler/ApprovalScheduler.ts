@@ -43,6 +43,24 @@ export class ApprovalScheduler extends Scheduler {
         this._wallets = [];
         this._wallets.push(...(JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[]));
         this._wallets.push(...(JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[]));
+        for (const wallet of this._wallets) {
+            wallet.address = wallet.address.toLowerCase();
+        }
+        this._wallets.sort((a, b) => a.address.localeCompare(b.address));
+    }
+
+    private findWallet(findAddress: string): IWalletData | undefined {
+        let left: number = 0;
+        let right: number = this._wallets.length - 1;
+        let mid: number;
+        const address = findAddress.toLowerCase();
+        while (left <= right) {
+            mid = Math.floor((left + right) / 2);
+            if (this._wallets[mid].address === address) return this._wallets[mid];
+            if (this._wallets[mid].address.localeCompare(address) < 0) left = mid + 1;
+            else right = mid - 1;
+        }
+        return undefined;
     }
 
     private get config(): Config {
@@ -111,7 +129,7 @@ export class ApprovalScheduler extends Scheduler {
         const payments = await this.storage.getPaymentsForType(LoyaltyPaymentTaskStatus.OPENED_NEW);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < AUTO_APPROVAL_TIME) continue;
-            const wallet = this._wallets.find((m) => m.address === payment.account);
+            const wallet = this.findWallet(payment.account);
             if (wallet !== undefined) {
                 const nonce = await (await this.getLedgerContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
@@ -151,7 +169,7 @@ export class ApprovalScheduler extends Scheduler {
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < AUTO_APPROVAL_TIME) continue;
             const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
-            const wallet = this._wallets.find((m) => m.address === shopInfo.account);
+            const wallet = this.findWallet(shopInfo.account);
             if (wallet !== undefined) {
                 const nonce = await (await this.getLedgerContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
@@ -187,7 +205,7 @@ export class ApprovalScheduler extends Scheduler {
         const tasks = await this.storage.getTasksForType(TaskResultType.UPDATE);
         for (const task of tasks) {
             if (ContractUtils.getTimeStamp() - task.timestamp < AUTO_APPROVAL_TIME) continue;
-            const wallet = this._wallets.find((m) => m.address === task.account);
+            const wallet = this.findWallet(task.account);
             if (wallet !== undefined) {
                 const w = new Wallet(wallet.privateKey);
 
@@ -220,7 +238,7 @@ export class ApprovalScheduler extends Scheduler {
         const tasks = await this.storage.getTasksForType(TaskResultType.STATUS);
         for (const task of tasks) {
             if (ContractUtils.getTimeStamp() - task.timestamp < AUTO_APPROVAL_TIME) continue;
-            const wallet = this._wallets.find((m) => m.address === task.account);
+            const wallet = this.findWallet(task.account);
             if (wallet !== undefined) {
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);

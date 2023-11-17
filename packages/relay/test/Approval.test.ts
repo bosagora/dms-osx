@@ -354,7 +354,7 @@ describe("Test of Server", function () {
             }
         });
 
-        context("Test of payment", () => {
+        it("Test of payment", async () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000002",
                 timestamp: 1672844500,
@@ -476,7 +476,7 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Test of shop update", () => {
+        it("Test of shop update", async () => {
             let taskId: string;
             it("Create New Task for updating shop's information", async () => {
                 const url = URI(serverURL).directory("/v1/shop/update").filename("create").toString();
@@ -511,7 +511,7 @@ describe("Test of Server", function () {
             });
         });
 
-        context("Test of shop status", () => {
+        it("Test of shop status", async () => {
             let taskId: string;
             it("Create New Task for updating shop's status", async () => {
                 const url = URI(serverURL).directory("/v1/shop/status").filename("create").toString();
