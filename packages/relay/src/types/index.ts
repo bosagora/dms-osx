@@ -155,6 +155,23 @@ export interface ContractShopStatusEvent {
     status: ContractShopStatus;
 }
 
+export interface IShopData {
+    shopId: string;
+    name: string;
+    provideWaitTime: number;
+    providePercent: number;
+    address: string;
+    privateKey: string;
+}
+
+export interface IUserData {
+    idx: number;
+    phone: string;
+    address: string;
+    privateKey: string;
+    loyaltyType: number;
+}
+
 export class ResponseMessage {
     static messages: Map<string, string> = new Map([
         ["0000", "Success"],

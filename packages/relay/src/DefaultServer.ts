@@ -6,6 +6,7 @@ import { DefaultRouter } from "./routers/DefaultRouter";
 import { LedgerRouter } from "./routers/LedgerRouter";
 import { PaymentRouter } from "./routers/PaymentRouter";
 import { ShopRouter } from "./routers/ShopRouter";
+import { Scheduler } from "./scheduler/Scheduler";
 import { WebService } from "./service/WebService";
 
 import { RelaySigners } from "./contract/Signers";
@@ -18,6 +19,7 @@ export class DefaultServer extends WebService {
      * @private
      */
     private readonly config: Config;
+    protected schedules: Scheduler[] = [];
 
     public readonly defaultRouter: DefaultRouter;
     public readonly ledgerRouter: LedgerRouter;
@@ -31,9 +33,10 @@ export class DefaultServer extends WebService {
      * Constructor
      * @param config Configuration
      * @param storage
+     * @param schedules
      * @param handler
      */
-    constructor(config: Config, storage: RelayStorage, handler?: INotificationEventHandler) {
+    constructor(config: Config, storage: RelayStorage, schedules?: Scheduler[], handler?: INotificationEventHandler) {
         super(config.server.port, config.server.address);
 
         this.config = config;
@@ -44,6 +47,16 @@ export class DefaultServer extends WebService {
         this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
         this.shopRouter = new ShopRouter(this, this.config, this.storage, this.relaySigners, this.sender);
         this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners, this.sender);
+
+        if (schedules) {
+            schedules.forEach((m) => this.schedules.push(m));
+            this.schedules.forEach((m) =>
+                m.setOption({
+                    config: this.config,
+                    storage: this.storage,
+                })
+            );
+        }
     }
 
     /**
@@ -61,11 +74,15 @@ export class DefaultServer extends WebService {
         this.shopRouter.registerRoutes();
         this.paymentRouter.registerRoutes();
 
+        for (const m of this.schedules) await m.start();
+
         return super.start();
     }
 
     public stop(): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
+            for (const m of this.schedules) await m.stop();
+            for (const m of this.schedules) await m.waitForStop();
             if (this.server != null) {
                 this.server.close((err?) => {
                     if (err) reject(err);

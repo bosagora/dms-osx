@@ -35,6 +35,11 @@ export class Config implements IConfig {
      */
     public logging: LoggingConfig;
 
+    /**
+     * Scheduler
+     */
+    public scheduler: SchedulerConfig;
+
     public relay: RelayConfig;
 
     public contracts: ContractsConfig;
@@ -46,6 +51,7 @@ export class Config implements IConfig {
         this.server = new ServerConfig();
         this.database = new DatabaseConfig();
         this.logging = new LoggingConfig();
+        this.scheduler = new SchedulerConfig();
         this.relay = new RelayConfig();
         this.contracts = new ContractsConfig();
     }
@@ -93,6 +99,7 @@ export class Config implements IConfig {
         this.server.readFromObject(cfg.server);
         this.database.readFromObject(cfg.database);
         this.logging.readFromObject(cfg.logging);
+        this.scheduler.readFromObject(cfg.scheduler);
         this.relay.readFromObject(cfg.relay);
         this.contracts.readFromObject(cfg.contracts);
     }
@@ -434,6 +441,62 @@ export class LoggingConfig implements ILoggingConfig {
 }
 
 /**
+ * Information on the scheduler.
+ */
+export class SchedulerConfig implements ISchedulerConfig {
+    /**
+     * Whether the scheduler is used or not
+     */
+    public enable: boolean;
+
+    /**
+     * Container for scheduler items
+     */
+    public items: ISchedulerItemConfig[];
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        const defaults = SchedulerConfig.defaultValue();
+        this.enable = defaults.enable;
+        this.items = defaults.items;
+    }
+
+    /**
+     * Returns default value
+     */
+    public static defaultValue(): ISchedulerConfig {
+        return {
+            enable: false,
+            items: [
+                {
+                    name: "node",
+                    enable: false,
+                    interval: 1,
+                },
+            ],
+        } as unknown as ISchedulerConfig;
+    }
+
+    /**
+     * Reads from Object
+     * @param config The object of ILoggingConfig
+     */
+    public readFromObject(config: ISchedulerConfig) {
+        this.enable = false;
+        this.items = [];
+        if (config === undefined) return;
+        if (config.enable !== undefined) this.enable = config.enable;
+        if (config.items !== undefined) this.items = config.items;
+    }
+
+    public getScheduler(name: string): ISchedulerItemConfig | undefined {
+        return this.items.find((m) => m.name === name);
+    }
+}
+
+/**
  * The interface of server config
  */
 export interface IServerConfig {
@@ -528,6 +591,47 @@ export interface IContractsConfig {
 }
 
 /**
+ * The interface of Scheduler Item Config
+ */
+export interface ISchedulerItemConfig {
+    /**
+     * Name
+     */
+    name: string;
+
+    /**
+     * Whether it's used or not
+     */
+    enable: boolean;
+
+    /**
+     * Execution cycle (seconds)
+     */
+    expression: string;
+}
+
+/**
+ * The interface of Scheduler Config
+ */
+export interface ISchedulerConfig {
+    /**
+     * Whether the scheduler is used or not
+     */
+    enable: boolean;
+
+    /**
+     * Container for scheduler items
+     */
+    items: ISchedulerItemConfig[];
+
+    /**
+     * Find the scheduler item with your name
+     * @param name The name of the scheduler item
+     */
+    getScheduler(name: string): ISchedulerItemConfig | undefined;
+}
+
+/**
  * The interface of main config
  */
 export interface IConfig {
@@ -545,6 +649,11 @@ export interface IConfig {
      * Logging config
      */
     logging: ILoggingConfig;
+
+    /**
+     * Scheduler
+     */
+    scheduler: ISchedulerConfig;
 
     relay: IRelayConfig;
 

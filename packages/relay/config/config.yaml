@@ -30,6 +30,16 @@ logging:
   # Default to false
   console: true
 
+################################################################################
+##                             Scheduler options                              ##
+################################################################################
+scheduler:
+  enable: true
+  items:
+    - name: approval
+      enable: true
+      expression: "*/1 * * * * *"
+
 relay:
   managerKeys:
     - "${MANAGER_KEY1}"

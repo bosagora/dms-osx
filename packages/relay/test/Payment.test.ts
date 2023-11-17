@@ -2440,7 +2440,7 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            server = new TestServer(config, storage, mobilePhone);
+            server = new TestServer(config, storage, undefined, mobilePhone);
         });
 
         before("Start TestServer", async () => {
