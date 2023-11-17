@@ -5,6 +5,7 @@ import { RelayStorage } from "./storage/RelayStorage";
 import { ContractUtils } from "./utils/ContractUtils";
 
 import { ApprovalScheduler } from "./scheduler/ApprovalScheduler";
+import { CloseScheduler } from "./scheduler/CloseScheduler";
 import { Scheduler } from "./scheduler/Scheduler";
 
 let server: DefaultServer;
@@ -25,9 +26,13 @@ async function main() {
 
     const schedulers: Scheduler[] = [];
     if (config.scheduler.enable) {
-        const scheduler = config.scheduler.getScheduler("approval");
+        let scheduler = config.scheduler.getScheduler("approval");
         if (scheduler && scheduler.enable) {
             schedulers.push(new ApprovalScheduler(scheduler.expression));
+        }
+        scheduler = config.scheduler.getScheduler("close");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new CloseScheduler(scheduler.expression));
         }
     }
 

@@ -22,7 +22,8 @@
         "test:Shop": "hardhat test test/Shop.test.ts",
         "test:ShopWithdraw": "hardhat test test/ShopWithdraw.test.ts",
         "test:Payment": "hardhat test test/Payment.test.ts",
-        "test:Approval": "hardhat test test/Approval.test.ts"
+        "test:Approval": "hardhat test test/Approval.test.ts",
+        "test:ForcedClose": "hardhat test test/ForcedClose.test.ts"
     },
     "repository": {
         "type": "git",
