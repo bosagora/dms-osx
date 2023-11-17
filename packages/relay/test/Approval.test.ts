@@ -270,6 +270,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.approvalSecond = 2;
         });
 
         before("Create TestServer", async () => {
@@ -277,11 +278,7 @@ describe("Test of Server", function () {
             storage = await RelayStorage.make(config.database);
 
             const schedulers: Scheduler[] = [];
-            const scheduler = config.scheduler.getScheduler("approval");
-            if (scheduler && scheduler.enable) {
-                schedulers.push(new ApprovalScheduler(scheduler.expression));
-            }
-
+            schedulers.push(new ApprovalScheduler("*/1 * * * * *"));
             server = new TestServer(config, storage, schedulers);
         });
 
@@ -354,7 +351,7 @@ describe("Test of Server", function () {
             }
         });
 
-        it("Test of payment", async () => {
+        context("Test of payment", async () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000002",
                 timestamp: 1672844500,
@@ -390,7 +387,7 @@ describe("Test of Server", function () {
                 paymentId = response.data.data.paymentId;
             });
 
-            it("Waiting", async () => {
+            it("...Waiting", async () => {
                 await ContractUtils.delay(3000);
             });
 
@@ -456,7 +453,7 @@ describe("Test of Server", function () {
                 );
             });
 
-            it("Waiting", async () => {
+            it("...Waiting", async () => {
                 await ContractUtils.delay(2000);
             });
 
@@ -476,7 +473,7 @@ describe("Test of Server", function () {
             });
         });
 
-        it("Test of shop update", async () => {
+        context("Test of shop update", async () => {
             let taskId: string;
             it("Create New Task for updating shop's information", async () => {
                 const url = URI(serverURL).directory("/v1/shop/update").filename("create").toString();
@@ -511,7 +508,7 @@ describe("Test of Server", function () {
             });
         });
 
-        it("Test of shop status", async () => {
+        context("Test of shop status", async () => {
             let taskId: string;
             it("Create New Task for updating shop's status", async () => {
                 const url = URI(serverURL).directory("/v1/shop/status").filename("create").toString();

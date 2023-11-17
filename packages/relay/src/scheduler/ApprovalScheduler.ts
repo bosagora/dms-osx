@@ -15,8 +15,6 @@ import axios from "axios";
 import { Wallet } from "ethers";
 import URI from "urijs";
 
-const AUTO_APPROVAL_TIME = 2;
-
 export interface IWalletData {
     address: string;
     privateKey: string;
@@ -128,7 +126,7 @@ export class ApprovalScheduler extends Scheduler {
     private async onNewPayment() {
         const payments = await this.storage.getPaymentsForType(LoyaltyPaymentTaskStatus.OPENED_NEW);
         for (const payment of payments) {
-            if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < AUTO_APPROVAL_TIME) continue;
+            if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(payment.account);
             if (wallet !== undefined) {
                 const nonce = await (await this.getLedgerContract()).nonceOf(wallet.address);
@@ -167,7 +165,7 @@ export class ApprovalScheduler extends Scheduler {
     private async onCancelPayment() {
         const payments = await this.storage.getPaymentsForType(LoyaltyPaymentTaskStatus.OPENED_CANCEL);
         for (const payment of payments) {
-            if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < AUTO_APPROVAL_TIME) continue;
+            if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < this.config.relay.approvalSecond) continue;
             const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
             const wallet = this.findWallet(shopInfo.account);
             if (wallet !== undefined) {
@@ -204,7 +202,7 @@ export class ApprovalScheduler extends Scheduler {
     private async onUpdateTask() {
         const tasks = await this.storage.getTasksForType(TaskResultType.UPDATE);
         for (const task of tasks) {
-            if (ContractUtils.getTimeStamp() - task.timestamp < AUTO_APPROVAL_TIME) continue;
+            if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);
             if (wallet !== undefined) {
                 const w = new Wallet(wallet.privateKey);
@@ -237,7 +235,7 @@ export class ApprovalScheduler extends Scheduler {
     private async onStatusTask() {
         const tasks = await this.storage.getTasksForType(TaskResultType.STATUS);
         for (const task of tasks) {
-            if (ContractUtils.getTimeStamp() - task.timestamp < AUTO_APPROVAL_TIME) continue;
+            if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);
             if (wallet !== undefined) {
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);

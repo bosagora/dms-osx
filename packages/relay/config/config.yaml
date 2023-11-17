@@ -52,6 +52,7 @@ relay:
   callbackEndpoint: "${CALLBACK_ENDPOINT}"
   callbackAccessKey: "${CALLBACK_ACCESS_KEY}"
   paymentTimeoutSecond: 45
+  approvalSecond: 3
 
 contracts:
   tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"

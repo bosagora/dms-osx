@@ -872,6 +872,10 @@ export class PaymentRouter {
                         })
                     );
                 } else {
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
+                    item.closeNewTimestamp = ContractUtils.getTimeStamp();
+                    await this._storage.updatePayment(item);
+
                     res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
             }
@@ -1251,6 +1255,9 @@ export class PaymentRouter {
                         })
                     );
                 } else {
+                    item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
+                    item.closeCancelTimestamp = ContractUtils.getTimeStamp();
+                    await this._storage.updatePayment(item);
                     return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
             }
