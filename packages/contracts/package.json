@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-artifacts",
-    "version": "1.1.10",
+    "version": "1.1.11",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"
@@ -22,7 +22,8 @@
         "test:Validator": "hardhat test test/00-ValidatorCollection.test.ts",
         "test:CurrencyRate": "hardhat test test/01-CurrencyRate.test.ts",
         "test:ShopCollection": "hardhat test test/02-ShopCollection.test.ts",
-        "test:Ledger": "hardhat test test/03-Ledger.test.ts"
+        "test:CertifierCollection": "hardhat test test/03-CertifierCollection.test.ts",
+        "test:Ledger": "hardhat test test/04-Ledger.test.ts"
     },
     "repository": {
         "type": "git",

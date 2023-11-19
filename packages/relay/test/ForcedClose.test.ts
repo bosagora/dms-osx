@@ -3,6 +3,7 @@ import { Config } from "../src/common/Config";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
+    CertifierCollection,
     CurrencyRate,
     Ledger,
     PhoneLinkCollection,
@@ -24,15 +25,7 @@ import { BigNumber, Wallet } from "ethers";
 
 import { ApprovalScheduler } from "../src/scheduler/ApprovalScheduler";
 import { Scheduler } from "../src/scheduler/Scheduler";
-import {
-    ContractShopStatus,
-    IShopData,
-    IUserData,
-    LoyaltyPaymentTaskStatus,
-    LoyaltyType,
-    ShopTaskStatus,
-    TaskResultType,
-} from "../src/types";
+import { ContractShopStatus, IShopData, IUserData, LoyaltyPaymentTaskStatus, LoyaltyType } from "../src/types";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 import fs from "fs";
@@ -71,6 +64,7 @@ describe("Test of Server", function () {
     let linkCollectionContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopCollection: ShopCollection;
+    let certifierCollection: CertifierCollection;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -133,9 +127,23 @@ describe("Test of Server", function () {
         await currencyRateContract.connect(validators[0]).set("point", multiple);
     };
 
+    const deployCertifierCollection = async () => {
+        const factory = await hre.ethers.getContractFactory("CertifierCollection");
+        certifierCollection = (await factory.connect(deployer).deploy(certifier.address)) as CertifierCollection;
+        await certifierCollection.deployed();
+        await certifierCollection.deployTransaction.wait();
+        await certifierCollection.connect(certifier).grantCertifier(relay1.address);
+        await certifierCollection.connect(certifier).grantCertifier(relay2.address);
+        await certifierCollection.connect(certifier).grantCertifier(relay3.address);
+        await certifierCollection.connect(certifier).grantCertifier(relay4.address);
+        await certifierCollection.connect(certifier).grantCertifier(relay5.address);
+    };
+
     const deployShopCollection = async () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifier.address)) as ShopCollection;
+        shopCollection = (await shopCollectionFactory
+            .connect(deployer)
+            .deploy(certifierCollection.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -167,6 +175,7 @@ describe("Test of Server", function () {
                     shop.providePercent,
                     shop.address,
                     signature1,
+                    certifier.address,
                     signature2
                 );
         }
@@ -184,7 +193,14 @@ describe("Test of Server", function () {
             );
             await shopCollection
                 .connect(deployer)
-                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.address, signature1, signature2);
+                .changeStatus(
+                    shop.shopId,
+                    ContractShopStatus.ACTIVE,
+                    shop.address,
+                    signature1,
+                    certifier.address,
+                    signature2
+                );
         }
     };
 
@@ -196,7 +212,7 @@ describe("Test of Server", function () {
                 foundation.address,
                 settlements.address,
                 fee.address,
-                certifier.address,
+                certifierCollection.address,
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
@@ -214,6 +230,7 @@ describe("Test of Server", function () {
         await depositValidators();
         await deployPhoneLinkCollection();
         await deployCurrencyRate();
+        await deployCertifierCollection();
         await deployShopCollection();
         await deployLedger();
     };
@@ -567,7 +584,7 @@ describe("Test of Server", function () {
                 await ContractUtils.delay(10000);
             });
 
-            it("...Check Payment Status - REPLY_COMPLETED_CANCEL", async () => {
+            it("...Check Payment Status - CLOSED_NEW", async () => {
                 const response = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
@@ -611,7 +628,7 @@ describe("Test of Server", function () {
                 await ContractUtils.delay(10000);
             });
 
-            it("...Check Payment Status - REPLY_COMPLETED_CANCEL", async () => {
+            it("...Check Payment Status - CLOSED_CANCEL", async () => {
                 const response = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );

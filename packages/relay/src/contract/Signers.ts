@@ -40,7 +40,7 @@ export class RelaySigners {
         let done = false;
 
         const startTime = ContractUtils.getTimeStamp();
-        while (done) {
+        while (!done) {
             for (signerItem of this._signers) {
                 if (!signerItem.using) {
                     signerItem.using = true;
@@ -48,6 +48,7 @@ export class RelaySigners {
                     break;
                 }
             }
+            if (done) break;
             if (ContractUtils.getTimeStamp() - startTime > 10) break;
             await ContractUtils.delay(1000);
         }

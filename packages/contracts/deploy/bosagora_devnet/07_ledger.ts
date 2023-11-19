@@ -36,6 +36,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
     const currencyRateContractAddress = await getContractAddress("CurrencyRate", hre);
     const shopContractAddress = await getContractAddress("ShopCollection", hre);
+    const certifierCollectionAddress = await getContractAddress("CertifierCollection", hre);
 
     const deployResult = await deploy("Ledger", {
         from: deployer,
@@ -43,7 +44,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             foundation,
             settlements,
             fee,
-            certifier,
+            certifierCollectionAddress,
             tokenContractAddress,
             validatorContractAddress,
             linkCollectionContractAddress,

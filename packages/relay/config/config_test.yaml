@@ -45,13 +45,18 @@ scheduler:
 
 relay:
   managerKeys:
-    - "${MANAGER_KEY1}"
-    - "${MANAGER_KEY2}"
-    - "${MANAGER_KEY3}"
-    - "${MANAGER_KEY4}"
-    - "${MANAGER_KEY5}"
+    - "${CERTIFIER01}"
+    - "${CERTIFIER02}"
+    - "${CERTIFIER03}"
+    - "${CERTIFIER04}"
+    - "${CERTIFIER05}"
+    - "${CERTIFIER06}"
+    - "${CERTIFIER07}"
+    - "${CERTIFIER08}"
+    - "${CERTIFIER09}"
+    - "${CERTIFIER10}"
   accessKey: "${ACCESS_KEY}"
-  certifier: "${CERTIFIER_KEY}"
+  certifier: "${CERTIFIER}"
   callbackEndpoint: "${CALLBACK_ENDPOINT}"
   callbackAccessKey: "${CALLBACK_ACCESS_KEY}"
   paymentTimeoutSecond: 45

@@ -23,7 +23,8 @@
         "test:ShopWithdraw": "hardhat test test/ShopWithdraw.test.ts",
         "test:Payment": "hardhat test test/Payment.test.ts",
         "test:Approval": "hardhat test test/Approval.test.ts",
-        "test:ForcedClose": "hardhat test test/ForcedClose.test.ts"
+        "test:ForcedClose": "hardhat test test/ForcedClose.test.ts",
+        "test:RunServer": "npx hardhat run scripts/integrated/RunServer.ts"
     },
     "repository": {
         "type": "git",
@@ -65,7 +66,7 @@
         "chai-http": "^4.3.7",
         "cors": "^2.8.5",
         "del-osx-artifacts": "^1.1.2",
-        "dms-osx-artifacts": "^1.1.10",
+        "dms-osx-artifacts": "^1.1.11",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
         "ethers": "^5.7.0",

@@ -8,6 +8,7 @@ import "del-osx-artifacts/contracts/PhoneLinkCollection.sol";
 import "./ValidatorCollection.sol";
 import "./CurrencyRate.sol";
 import "./ShopCollection.sol";
+import "./CertifierCollection.sol";
 
 /// @notice 포인트와 토큰의 원장
 contract Ledger {
@@ -98,6 +99,7 @@ contract Ledger {
     PhoneLinkCollection private linkCollection;
     CurrencyRate private currencyRate;
     ShopCollection private shopCollection;
+    CertifierCollection private certifierCollection;
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event SavedPurchase(
@@ -200,12 +202,12 @@ contract Ledger {
         linkCollection = PhoneLinkCollection(_linkCollectionAddress);
         currencyRate = CurrencyRate(_currencyRateAddress);
         shopCollection = ShopCollection(_shopCollectionAddress);
+        certifierCollection = CertifierCollection(certifierAddress);
         fee = MAX_FEE;
 
         loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
         loyaltyTypes[settlementAccount] = LoyaltyType.TOKEN;
         loyaltyTypes[feeAccount] = LoyaltyType.TOKEN;
-        loyaltyTypes[certifierAddress] = LoyaltyType.TOKEN;
 
         temporaryAddress = address(0x0);
     }
@@ -470,20 +472,22 @@ contract Ledger {
 
     /// @notice 로얄티(포인트/토큰)을 사용하여 구매요청을 종료 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    function closeNewLoyaltyPayment(bytes32 _paymentId, bool _confirm, bytes calldata _signature) public {
+    function closeNewLoyaltyPayment(
+        bytes32 _paymentId,
+        bool _confirm,
+        address _account,
+        bytes calldata _signature
+    ) public {
         require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_PAYMENT, "1531");
-        bytes32 dataHash = keccak256(
-            abi.encode(
-                _paymentId,
-                loyaltyPayments[_paymentId].purchaseId,
-                _confirm,
-                certifierAddress,
-                nonce[certifierAddress]
-            )
-        );
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == certifierAddress, "1501");
 
-        nonce[certifierAddress]++;
+        require(certifierCollection.isCertifier(_account), "1505");
+
+        bytes32 dataHash = keccak256(
+            abi.encode(_paymentId, loyaltyPayments[_paymentId].purchaseId, _confirm, _account, nonce[_account])
+        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1504");
+
+        nonce[_account]++;
 
         if (loyaltyTypes[loyaltyPayments[_paymentId].account] == LoyaltyType.POINT) {
             _closeNewLoyaltyPaymentPoint(_paymentId, _confirm);
@@ -655,20 +659,21 @@ contract Ledger {
 
     /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 종료하는 함수
     /// @dev 사용자가 중계서버를 통해서 호출됩니다.
-    function closeCancelLoyaltyPayment(bytes32 _paymentId, bool _confirm, bytes calldata _signature) public {
+    function closeCancelLoyaltyPayment(
+        bytes32 _paymentId,
+        bool _confirm,
+        address _account,
+        bytes calldata _signature
+    ) public {
         require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_CANCEL, "1533");
-        bytes32 dataHash = keccak256(
-            abi.encode(
-                _paymentId,
-                loyaltyPayments[_paymentId].purchaseId,
-                _confirm,
-                certifierAddress,
-                nonce[certifierAddress]
-            )
-        );
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == certifierAddress, "1501");
+        require(certifierCollection.isCertifier(_account), "1505");
 
-        nonce[certifierAddress]++;
+        bytes32 dataHash = keccak256(
+            abi.encode(_paymentId, loyaltyPayments[_paymentId].purchaseId, _confirm, _account, nonce[_account])
+        );
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1504");
+
+        nonce[_account]++;
 
         if (_confirm) {
             loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_CANCEL;
