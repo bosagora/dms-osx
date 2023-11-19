@@ -141,6 +141,116 @@ function getAccounts() {
     }
 
     if (
+        process.env.CERTIFIER01 !== undefined &&
+        process.env.CERTIFIER01.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER01)
+    ) {
+        accounts.push(process.env.CERTIFIER01);
+    } else {
+        process.env.CERTIFIER01 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER01);
+    }
+
+    if (
+        process.env.CERTIFIER02 !== undefined &&
+        process.env.CERTIFIER02.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER02)
+    ) {
+        accounts.push(process.env.CERTIFIER02);
+    } else {
+        process.env.CERTIFIER02 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER02);
+    }
+
+    if (
+        process.env.CERTIFIER03 !== undefined &&
+        process.env.CERTIFIER03.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER03)
+    ) {
+        accounts.push(process.env.CERTIFIER03);
+    } else {
+        process.env.CERTIFIER03 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER03);
+    }
+
+    if (
+        process.env.CERTIFIER04 !== undefined &&
+        process.env.CERTIFIER04.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER04)
+    ) {
+        accounts.push(process.env.CERTIFIER04);
+    } else {
+        process.env.CERTIFIER04 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER04);
+    }
+
+    if (
+        process.env.CERTIFIER05 !== undefined &&
+        process.env.CERTIFIER05.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER05)
+    ) {
+        accounts.push(process.env.CERTIFIER05);
+    } else {
+        process.env.CERTIFIER05 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER05);
+    }
+
+    if (
+        process.env.CERTIFIER06 !== undefined &&
+        process.env.CERTIFIER06.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER06)
+    ) {
+        accounts.push(process.env.CERTIFIER06);
+    } else {
+        process.env.CERTIFIER06 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER06);
+    }
+
+    if (
+        process.env.CERTIFIER07 !== undefined &&
+        process.env.CERTIFIER07.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER07)
+    ) {
+        accounts.push(process.env.CERTIFIER07);
+    } else {
+        process.env.CERTIFIER07 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER07);
+    }
+
+    if (
+        process.env.CERTIFIER08 !== undefined &&
+        process.env.CERTIFIER08.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER08)
+    ) {
+        accounts.push(process.env.CERTIFIER08);
+    } else {
+        process.env.CERTIFIER08 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER08);
+    }
+
+    if (
+        process.env.CERTIFIER09 !== undefined &&
+        process.env.CERTIFIER09.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER09)
+    ) {
+        accounts.push(process.env.CERTIFIER09);
+    } else {
+        process.env.CERTIFIER09 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER09);
+    }
+
+    if (
+        process.env.CERTIFIER10 !== undefined &&
+        process.env.CERTIFIER10.trim() !== "" &&
+        reg_bytes64.test(process.env.CERTIFIER10)
+    ) {
+        accounts.push(process.env.CERTIFIER10);
+    } else {
+        process.env.CERTIFIER10 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.CERTIFIER10);
+    }
+
+    if (
         process.env.LINK_VALIDATOR1 !== undefined &&
         process.env.LINK_VALIDATOR1.trim() !== "" &&
         reg_bytes64.test(process.env.LINK_VALIDATOR1)
@@ -273,14 +383,44 @@ const config = {
         certifier: {
             default: 10,
         },
-        linkValidator1: {
+        certifier01: {
             default: 11,
         },
-        linkValidator2: {
+        certifier02: {
             default: 12,
         },
-        linkValidator3: {
+        certifier03: {
             default: 13,
+        },
+        certifier04: {
+            default: 14,
+        },
+        certifier05: {
+            default: 15,
+        },
+        certifier06: {
+            default: 16,
+        },
+        certifier07: {
+            default: 17,
+        },
+        certifier08: {
+            default: 18,
+        },
+        certifier09: {
+            default: 19,
+        },
+        certifier10: {
+            default: 20,
+        },
+        linkValidator1: {
+            default: 21,
+        },
+        linkValidator2: {
+            default: 22,
+        },
+        linkValidator3: {
+            default: 23,
         },
     },
     gasReporter: {

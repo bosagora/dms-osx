@@ -1260,8 +1260,12 @@ export class CloseCancelLoyaltyPaymentCall__Inputs {
     return this._call.inputValues[1].value.toBoolean();
   }
 
+  get _account(): Address {
+    return this._call.inputValues[2].value.toAddress();
+  }
+
   get _signature(): Bytes {
-    return this._call.inputValues[2].value.toBytes();
+    return this._call.inputValues[3].value.toBytes();
   }
 }
 
@@ -1298,8 +1302,12 @@ export class CloseNewLoyaltyPaymentCall__Inputs {
     return this._call.inputValues[1].value.toBoolean();
   }
 
+  get _account(): Address {
+    return this._call.inputValues[2].value.toAddress();
+  }
+
   get _signature(): Bytes {
-    return this._call.inputValues[2].value.toBytes();
+    return this._call.inputValues[3].value.toBytes();
   }
 }
 

@@ -316,11 +316,11 @@ export class RelayConfig implements IRelayConfig {
     public static defaultValue(): IRelayConfig {
         return {
             managerKeys: [
-                process.env.MANAGER_KEY1 || "",
-                process.env.MANAGER_KEY2 || "",
-                process.env.MANAGER_KEY3 || "",
-                process.env.MANAGER_KEY4 || "",
-                process.env.MANAGER_KEY5 || "",
+                process.env.CERTIFIER01 || "",
+                process.env.CERTIFIER02 || "",
+                process.env.CERTIFIER03 || "",
+                process.env.CERTIFIER04 || "",
+                process.env.CERTIFIER01 || "",
             ],
             accessKey: process.env.ACCESS_SECRET || "",
             certifierKey: process.env.CERTIFIER_KEY || "",

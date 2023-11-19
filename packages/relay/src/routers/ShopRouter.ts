@@ -428,11 +428,11 @@ export class ShopRouter {
                 }
 
                 if (approval) {
-                    const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
+                    const certifier = signerItem.signer;
                     const signature2 = await ContractUtils.signShop(
                         certifier,
                         item.shopId,
-                        await contract.nonceOf(certifier.address)
+                        await contract.nonceOf(await certifier.getAddress())
                     );
 
                     try {
@@ -445,6 +445,7 @@ export class ShopRouter {
                                 item.providePercent,
                                 item.account,
                                 signature,
+                                await certifier.getAddress(),
                                 signature2
                             );
 
@@ -644,17 +645,24 @@ export class ShopRouter {
 
                 if (approval) {
                     const contract = await this.getShopContract();
-                    const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
+                    const certifier = signerItem.signer;
                     const signature2 = await ContractUtils.signShop(
                         certifier,
                         item.shopId,
-                        await contract.nonceOf(certifier.address)
+                        await contract.nonceOf(await certifier.getAddress())
                     );
 
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .changeStatus(item.shopId, item.status, item.account, signature, signature2);
+                            .changeStatus(
+                                item.shopId,
+                                item.status,
+                                item.account,
+                                signature,
+                                await certifier.getAddress(),
+                                signature2
+                            );
 
                         item.taskStatus = ShopTaskStatus.CONFIRMED;
                         await this._storage.updateTaskStatus(item.taskId, item.taskStatus);

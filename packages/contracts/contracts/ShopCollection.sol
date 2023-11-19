@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "./CertifierCollection.sol";
 
 /// @notice 상점컬랙션
 contract ShopCollection {
@@ -83,9 +84,13 @@ contract ShopCollection {
     address public certifierAddress;
     mapping(address => uint256) private nonce;
 
+    CertifierCollection private certifierCollection;
+
     /// @notice 생성자
     constructor(address _certifierAddress) {
         certifierAddress = _certifierAddress;
+        certifierCollection = CertifierCollection(certifierAddress);
+
         ledgerAddress = address(0x00);
         deployer = msg.sender;
     }
@@ -155,28 +160,37 @@ contract ShopCollection {
         string calldata _name,
         uint256 _provideWaitTime,
         uint256 _providePercent,
-        address _account,
+        address _account1,
         bytes calldata _signature1,
+        address _account2,
         bytes calldata _signature2
     ) public {
-        require(shops[_shopId].status != ShopStatus.INVALID, "1201");
-        require(shops[_shopId].account == _account, "1050");
+        bytes32 id = _shopId;
+        require(shops[id].status != ShopStatus.INVALID, "1201");
+        require(shops[id].account == _account1, "1050");
 
-        bytes32 dataHash1 = keccak256(abi.encode(_shopId, _account, nonce[_account]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account, "1501");
+        bytes32 dataHash1 = keccak256(abi.encode(id, _account1, nonce[_account1]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account1, "1501");
 
-        bytes32 dataHash2 = keccak256(abi.encode(_shopId, certifierAddress, nonce[certifierAddress]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == certifierAddress, "1501");
+        require(certifierCollection.isCertifier(_account2), "1505");
+        bytes32 dataHash2 = keccak256(abi.encode(id, _account2, nonce[_account2]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == _account2, "1504");
 
-        shops[_shopId].name = _name;
-        shops[_shopId].provideWaitTime = _provideWaitTime;
-        shops[_shopId].providePercent = _providePercent;
+        shops[id].name = _name;
+        shops[id].provideWaitTime = _provideWaitTime;
+        shops[id].providePercent = _providePercent;
 
-        nonce[_account]++;
-        nonce[certifierAddress]++;
+        nonce[_account1]++;
+        nonce[_account2]++;
 
-        ShopData memory shop = shops[_shopId];
-        emit UpdatedShop(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.account, shop.status);
+        emit UpdatedShop(
+            shops[id].shopId,
+            shops[id].name,
+            shops[id].provideWaitTime,
+            shops[id].providePercent,
+            shops[id].account,
+            shops[id].status
+        );
     }
 
     /// @notice 상점상태를 수정합니다
@@ -186,27 +200,29 @@ contract ShopCollection {
     function changeStatus(
         bytes32 _shopId,
         ShopStatus _status,
-        address _account,
+        address _account1,
         bytes calldata _signature1,
+        address _account2,
         bytes calldata _signature2
     ) public {
+        bytes32 id = _shopId;
         require(_status != ShopStatus.INVALID, "1201");
-        require(shops[_shopId].status != ShopStatus.INVALID, "1201");
-        require(shops[_shopId].account == _account, "1050");
+        require(shops[id].status != ShopStatus.INVALID, "1201");
+        require(shops[id].account == _account1, "1050");
 
-        bytes32 dataHash1 = keccak256(abi.encode(_shopId, _account, nonce[_account]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account, "1501");
+        bytes32 dataHash1 = keccak256(abi.encode(id, _account1, nonce[_account1]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account1, "1501");
 
-        bytes32 dataHash2 = keccak256(abi.encode(_shopId, certifierAddress, nonce[certifierAddress]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == certifierAddress, "1501");
+        require(certifierCollection.isCertifier(_account2), "1505");
+        bytes32 dataHash2 = keccak256(abi.encode(id, _account2, nonce[_account2]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == _account2, "1504");
 
-        shops[_shopId].status = _status;
+        shops[id].status = _status;
 
-        nonce[_account]++;
-        nonce[certifierAddress]++;
+        nonce[_account1]++;
+        nonce[_account2]++;
 
-        ShopData memory shop = shops[_shopId];
-        emit ChangedShopStatus(shop.shopId, shop.status);
+        emit ChangedShopStatus(shops[id].shopId, shops[id].status);
     }
 
     /// @notice 지갑주소로 등록한 상점의 아이디들을 리턴한다.

@@ -2,6 +2,7 @@ import { ContractShopStatus } from "../src/types";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
+    CertifierCollection,
     CurrencyRate,
     Ledger,
     PhoneLinkCollection,
@@ -90,6 +91,7 @@ describe("Test for Ledger", () => {
     let linkCollectionContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopCollection: ShopCollection;
+    let certifierCollection: CertifierCollection;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -149,9 +151,18 @@ describe("Test for Ledger", () => {
         await currencyRateContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
     };
 
+    const deployCertifierCollection = async () => {
+        const factory = await hre.ethers.getContractFactory("CertifierCollection");
+        certifierCollection = (await factory.connect(deployer).deploy(certifier.address)) as CertifierCollection;
+        await certifierCollection.deployed();
+        await certifierCollection.deployTransaction.wait();
+    };
+
     const deployShopCollection = async () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifier.address)) as ShopCollection;
+        shopCollection = (await shopCollectionFactory
+            .connect(deployer)
+            .deploy(certifierCollection.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -164,7 +175,7 @@ describe("Test for Ledger", () => {
                 foundation.address,
                 settlements.address,
                 fee.address,
-                certifier.address,
+                certifierCollection.address,
                 tokenContract.address,
                 validatorContract.address,
                 linkCollectionContract.address,
@@ -204,6 +215,7 @@ describe("Test for Ledger", () => {
                     elem.providePercent,
                     elem.wallet.address,
                     signature1,
+                    certifier.address,
                     signature2
                 );
         }
@@ -221,7 +233,14 @@ describe("Test for Ledger", () => {
             );
             await shopCollection
                 .connect(relay)
-                .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature1, signature2);
+                .changeStatus(
+                    elem.shopId,
+                    ContractShopStatus.ACTIVE,
+                    elem.wallet.address,
+                    signature1,
+                    certifier.address,
+                    signature2
+                );
         }
     };
 
@@ -240,6 +259,7 @@ describe("Test for Ledger", () => {
         await depositValidators();
         await deployLinkCollection();
         await deployCurrencyRate();
+        await deployCertifierCollection();
         await deployShopCollection();
         await deployLedger();
         await addShopData(shopData);
@@ -1254,10 +1274,9 @@ describe("Test for Ledger", () => {
                     true,
                     nonce2
                 );
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2)).to.emit(
-                    ledgerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 expect(newFeeBalance).to.deep.equal(oldFeeBalance.add(feeToken));
@@ -1336,10 +1355,9 @@ describe("Test for Ledger", () => {
                     true,
                     nonce2
                 );
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2)).to.emit(
-                    ledgerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const newFeeBalance2 = await ledgerContract.tokenBalanceOf(fee.address);
                 expect(newFeeBalance2.toString()).to.deep.equal(oldFeeBalance.add(feeToken).toString());
@@ -1374,7 +1392,9 @@ describe("Test for Ledger", () => {
                     nonce2
                 );
                 await expect(
-                    ledgerContract.connect(relay).closeCancelLoyaltyPayment(paymentId, true, signature2)
+                    ledgerContract
+                        .connect(relay)
+                        .closeCancelLoyaltyPayment(paymentId, true, certifier.address, signature2)
                 ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const newBalance2 = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
@@ -1521,10 +1541,9 @@ describe("Test for Ledger", () => {
                     true,
                     nonce2
                 );
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2)).to.emit(
-                    ledgerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
@@ -1613,10 +1632,9 @@ describe("Test for Ledger", () => {
                     true,
                     nonce2
                 );
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2)).to.emit(
-                    ledgerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
@@ -1656,7 +1674,9 @@ describe("Test for Ledger", () => {
                     nonce2
                 );
                 await expect(
-                    ledgerContract.connect(relay).closeCancelLoyaltyPayment(paymentId, true, signature2)
+                    ledgerContract
+                        .connect(relay)
+                        .closeCancelLoyaltyPayment(paymentId, true, certifier.address, signature2)
                 ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
@@ -2135,7 +2155,9 @@ describe("Test for Ledger", () => {
                     true,
                     nonce2
                 );
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2))
+                await expect(
+                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
+                )
                     .to.emit(ledgerContract, "LoyaltyPaymentEvent")
                     .to.emit(ledgerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
@@ -2230,10 +2252,9 @@ describe("Test for Ledger", () => {
                     true,
                     nonce2
                 );
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, signature2)).to.emit(
-                    ledgerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);

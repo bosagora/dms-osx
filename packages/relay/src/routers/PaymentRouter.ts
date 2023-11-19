@@ -787,19 +787,23 @@ export class PaymentRouter {
                     item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW
                 ) {
                     const contract = await this.getLedgerContract();
-                    const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
                     const signature = await ContractUtils.signLoyaltyClosePayment(
-                        certifier,
+                        signerItem.signer,
                         paymentId,
                         item.purchaseId,
                         true,
-                        await contract.nonceOf(certifier.address)
+                        await contract.nonceOf(await signerItem.signer.getAddress())
                     );
 
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .closeNewLoyaltyPayment(item.paymentId, true, signature);
+                            .closeNewLoyaltyPayment(
+                                item.paymentId,
+                                true,
+                                await signerItem.signer.getAddress(),
+                                signature
+                            );
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {
@@ -1170,19 +1174,23 @@ export class PaymentRouter {
                     item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
                 ) {
                     const contract = await this.getLedgerContract();
-                    const certifier = new hre.ethers.Wallet(this._config.relay.certifierKey);
                     const signature = await ContractUtils.signLoyaltyClosePayment(
-                        certifier,
+                        signerItem.signer,
                         paymentId,
                         item.purchaseId,
                         true,
-                        await contract.nonceOf(certifier.address)
+                        await contract.nonceOf(await signerItem.signer.getAddress())
                     );
 
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .closeCancelLoyaltyPayment(item.paymentId, true, signature);
+                            .closeCancelLoyaltyPayment(
+                                item.paymentId,
+                                true,
+                                await signerItem.signer.getAddress(),
+                                signature
+                            );
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {

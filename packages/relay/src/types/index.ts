@@ -191,6 +191,7 @@ export class ResponseMessage {
         ["1501", "Invalid signature"],
         ["1502", "Unregistered phone number"],
         ["1503", "Does not match registered wallet address"],
+        ["1504", "Invalid certifier signature"],
         ["1510", "Insufficient foundation balance"],
         ["1511", "Insufficient balance"],
         ["1512", "Not allowed deposit"],

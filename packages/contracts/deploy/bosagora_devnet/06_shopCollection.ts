@@ -19,9 +19,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deploy } = deployments;
     const { deployer, owner, certifier } = await getNamedAccounts();
 
+    const certifierCollectionAddress = await getContractAddress("CertifierCollection", hre);
+
     const deployResult = await deploy("ShopCollection", {
         from: deployer,
-        args: [certifier],
+        args: [certifierCollectionAddress],
         log: true,
     });
 
@@ -67,6 +69,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                     shop.providePercent,
                     shop.address,
                     signature1,
+                    certifier,
                     signature2
                 );
             console.log(`Update shop data (tx: ${tx2.hash})...`);
@@ -84,7 +87,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             );
             const tx3 = await contract
                 .connect(await ethers.getSigner(owner))
-                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.address, signature3, signature4);
+                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.address, signature3, certifier, signature4);
             console.log(`Change shop status (tx: ${tx3.hash})...`);
             await tx3.wait();
         }

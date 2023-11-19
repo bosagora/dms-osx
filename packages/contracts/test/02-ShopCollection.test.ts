@@ -1,6 +1,6 @@
 import { ContractShopStatus } from "../src/types";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { ShopCollection } from "../typechain-types";
+import { CertifierCollection, ShopCollection } from "../typechain-types";
 
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
@@ -36,6 +36,7 @@ describe("Test for ShopCollection", () => {
 
     const shopWallets: Wallet[] = [shop1, shop2, shop3, shop4, shop5];
     let shopCollection: ShopCollection;
+    let certifierCollection: CertifierCollection;
 
     interface IShopData {
         shopId: string;
@@ -98,8 +99,17 @@ describe("Test for ShopCollection", () => {
     ];
 
     before(async () => {
+        const certifierFactory = await hre.ethers.getContractFactory("CertifierCollection");
+        certifierCollection = (await certifierFactory
+            .connect(deployer)
+            .deploy(certifier.address)) as CertifierCollection;
+        await certifierCollection.deployed();
+        await certifierCollection.deployTransaction.wait();
+
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifier.address)) as ShopCollection;
+        shopCollection = (await shopCollectionFactory
+            .connect(deployer)
+            .deploy(certifierCollection.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     });
@@ -155,6 +165,7 @@ describe("Test for ShopCollection", () => {
                     elem.providePercent,
                     elem.wallet.address,
                     signature1,
+                    certifier.address,
                     signature2
                 )
         )
@@ -190,7 +201,14 @@ describe("Test for ShopCollection", () => {
             await expect(
                 shopCollection
                     .connect(elem.wallet)
-                    .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature1, signature2)
+                    .changeStatus(
+                        elem.shopId,
+                        ContractShopStatus.ACTIVE,
+                        elem.wallet.address,
+                        signature1,
+                        certifier.address,
+                        signature2
+                    )
             )
                 .to.emit(shopCollection, "ChangedShopStatus")
                 .withNamedArgs({
