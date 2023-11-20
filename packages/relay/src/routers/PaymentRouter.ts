@@ -796,23 +796,11 @@ export class PaymentRouter {
                     item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW
                 ) {
                     const contract = await this.getLedgerContract();
-                    const signature = await ContractUtils.signLoyaltyClosePayment(
-                        signerItem.signer,
-                        paymentId,
-                        item.purchaseId,
-                        confirm,
-                        await contract.nonceOf(await signerItem.signer.getAddress())
-                    );
 
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .closeNewLoyaltyPayment(
-                                item.paymentId,
-                                confirm,
-                                await signerItem.signer.getAddress(),
-                                signature
-                            );
+                            .closeNewLoyaltyPayment(item.paymentId, confirm);
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {
@@ -1193,23 +1181,11 @@ export class PaymentRouter {
                     item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
                 ) {
                     const contract = await this.getLedgerContract();
-                    const signature = await ContractUtils.signLoyaltyClosePayment(
-                        signerItem.signer,
-                        paymentId,
-                        item.purchaseId,
-                        confirm,
-                        await contract.nonceOf(await signerItem.signer.getAddress())
-                    );
 
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .closeCancelLoyaltyPayment(
-                                item.paymentId,
-                                confirm,
-                                await signerItem.signer.getAddress(),
-                                signature
-                            );
+                            .closeCancelLoyaltyPayment(item.paymentId, confirm);
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {

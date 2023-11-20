@@ -99,6 +99,7 @@ async function main() {
                         URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                         {
                             accessKey: config.relay.accessKey,
+                            confirm: true,
                             paymentId,
                         }
                     );
@@ -155,6 +156,7 @@ async function main() {
                         URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                         {
                             accessKey: config.relay.accessKey,
+                            confirm: true,
                             paymentId,
                         }
                     );
