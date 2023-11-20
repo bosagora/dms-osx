@@ -4,7 +4,7 @@
 server:
   # Address to which we bind (default: 127.0.0.1)
   address: "${HOST_IP}"
-  # Port on which we bind (default: 3000)
+  # Port on which we bind (default: 7070)
   port: "${HOST_PORT}"
 
 ################################################################################

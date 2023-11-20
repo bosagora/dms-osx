@@ -73,9 +73,8 @@ export class CloseScheduler extends Scheduler {
                         paymentId: payment.paymentId,
                     }
                 );
-                logger.info(response.data.code);
                 if (response.data.error !== undefined) {
-                    logger.info(`${response.data.code} - ${response.data.error.message}`);
+                    logger.warn(`CloseScheduler.onNewPayment: ${response.data.code} - ${response.data.error.message}`);
                 }
             } catch (e) {
                 //
@@ -100,9 +99,10 @@ export class CloseScheduler extends Scheduler {
                         paymentId: payment.paymentId,
                     }
                 );
-                logger.info(response.data.code);
                 if (response.data.error !== undefined) {
-                    logger.info(`${response.data.code} - ${response.data.error.message}`);
+                    logger.warn(
+                        `CloseScheduler.onCancelPayment: ${response.data.code} - ${response.data.error.message}`
+                    );
                 }
             } catch (e) {
                 //

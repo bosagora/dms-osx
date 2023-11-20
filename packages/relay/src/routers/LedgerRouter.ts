@@ -10,7 +10,7 @@ import * as hre from "hardhat";
 import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { RelayStorage } from "../storage/RelayStorage";
-import { ResponseMessage } from "../types";
+import { ResponseMessage } from "../utils/Errors";
 
 export class LedgerRouter {
     /**

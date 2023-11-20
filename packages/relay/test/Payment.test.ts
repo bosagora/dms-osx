@@ -374,6 +374,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
         before("Create TestServer", async () => {
@@ -798,6 +799,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
         before("Create TestServer", async () => {
@@ -1149,6 +1151,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
         before("Create TestServer", async () => {
@@ -1477,6 +1480,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
         before("Create TestServer", async () => {
@@ -1711,6 +1715,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
         before("Create TestServer", async () => {
@@ -2053,6 +2058,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
         before("Create TestServer", async () => {
@@ -2476,6 +2482,7 @@ describe("Test of Server", function () {
                 relay5.privateKey,
             ];
             config.relay.certifierKey = certifier.privateKey;
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
         before("Create TestServer", async () => {

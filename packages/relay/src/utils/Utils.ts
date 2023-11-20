@@ -74,6 +74,16 @@ export class Utils {
         if (value.substring(0, 2).toLowerCase() === "0x") return value.substring(2);
         else return value;
     }
+
+    public static getTimeStamp(): number {
+        return Math.floor(new Date().getTime() / 1000);
+    }
+
+    public static delay(interval: number): Promise<void> {
+        return new Promise<void>((resolve, _) => {
+            setTimeout(resolve, interval);
+        });
+    }
 }
 
 /**

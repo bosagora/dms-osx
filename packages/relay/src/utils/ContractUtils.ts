@@ -70,6 +70,7 @@ export class ContractUtils {
     private static find2_message = "reverted with reason string";
     private static find2_length = ContractUtils.find2_message.length;
     public static cacheEVMError(root: any): string {
+        const reasons: string[] = [];
         let error = root;
         while (error !== undefined) {
             if (error.reason) {
@@ -78,15 +79,19 @@ export class ContractUtils {
                 let message: string;
                 if (idx >= 0) {
                     message = reason.substring(idx + ContractUtils.find1_length).trim();
-                    return message;
+                    reasons.push(message);
                 }
                 idx = reason.indexOf(ContractUtils.find2_message);
                 if (idx >= 0) {
                     message = reason.substring(idx + ContractUtils.find2_length).trim();
-                    return message;
+                    reasons.push(message);
                 }
             }
             error = error.error;
+        }
+
+        if (reasons.length > 0) {
+            return reasons[0];
         }
 
         if (root.message) {
@@ -99,12 +104,7 @@ export class ContractUtils {
     public static isErrorOfEVM(error: any): boolean {
         while (error !== undefined) {
             if (error.reason) {
-                const reason = String(error.reason);
-                if (
-                    reason.indexOf(ContractUtils.find1_message) >= 0 ||
-                    reason.indexOf(ContractUtils.find2_message) >= 0
-                )
-                    return true;
+                return true;
             }
             error = error.error;
         }
