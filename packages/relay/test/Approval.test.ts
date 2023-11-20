@@ -432,6 +432,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -487,6 +488,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );

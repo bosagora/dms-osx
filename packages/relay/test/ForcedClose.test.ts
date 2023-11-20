@@ -260,10 +260,12 @@ describe("Test of Server", function () {
         before("Load User & Shop", async () => {
             const users = JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[];
             const userIdx = Math.floor(Math.random() * users.length);
+            while (userData.length > 0) userData.pop();
             userData.push(users[userIdx]);
 
             const shops = JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[];
             const shopIdx = Math.floor(Math.random() * shops.length);
+            while (shopData.length > 0) shopData.pop();
             shopData.push(shops[shopIdx]);
         });
 
@@ -422,10 +424,12 @@ describe("Test of Server", function () {
         before("Load User & Shop", async () => {
             const users = JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[];
             const userIdx = Math.floor(Math.random() * users.length);
+            while (userData.length > 0) userData.pop();
             userData.push(users[userIdx]);
 
             const shops = JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[];
             const shopIdx = Math.floor(Math.random() * shops.length);
+            while (shopData.length > 0) shopData.pop();
             shopData.push(shops[shopIdx]);
         });
 
@@ -580,15 +584,21 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
             });
 
-            it("...Waiting", async () => {
-                await ContractUtils.delay(10000);
+            it("Close New Payment", async () => {
+                const url = URI(serverURL).directory("/v1/payment/new").filename("close").toString();
+                const params = {
+                    accessKey: config.relay.accessKey,
+                    confirm: true,
+                    paymentId,
+                };
+                const response = await client.post(url, params);
+                assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
+                assert.ok(response.data.data !== undefined);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
             });
 
-            it("...Check Payment Status - CLOSED_NEW", async () => {
-                const response = await client.get(
-                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
-                );
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
+            it("...Waiting", async () => {
+                await ContractUtils.delay(3000);
             });
 
             it("Open Cancel Payment", async () => {
@@ -632,7 +642,7 @@ describe("Test of Server", function () {
                 const response = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.FAILED_CANCEL);
             });
         });
     });

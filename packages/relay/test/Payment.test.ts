@@ -758,6 +758,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -989,6 +990,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -1077,6 +1079,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -1335,6 +1338,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -1416,13 +1420,14 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.FAILED_CANCEL);
             });
 
             it("Check user's balance", async () => {
@@ -1663,6 +1668,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -1885,6 +1891,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -1972,6 +1979,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -2222,6 +2230,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
@@ -2303,13 +2312,14 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
                         accessKey: config.relay.accessKey,
+                        confirm: true,
                         paymentId,
                     }
                 );
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.FAILED_CANCEL);
             });
 
             it("Check user's balance", async () => {
@@ -2572,6 +2582,7 @@ describe("Test of Server", function () {
                 URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                 {
                     accessKey: config.relay.accessKey,
+                    confirm: true,
                     paymentId,
                 }
             );
@@ -2615,6 +2626,7 @@ describe("Test of Server", function () {
                 URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                 {
                     accessKey: config.relay.accessKey,
+                    confirm: true,
                     paymentId,
                 }
             );

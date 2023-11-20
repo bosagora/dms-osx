@@ -69,6 +69,7 @@ export class CloseScheduler extends Scheduler {
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
                         accessKey: this.config.relay.accessKey,
+                        confirm: false,
                         paymentId: payment.paymentId,
                     }
                 );
@@ -95,6 +96,7 @@ export class CloseScheduler extends Scheduler {
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
                         accessKey: this.config.relay.accessKey,
+                        confirm: false,
                         paymentId: payment.paymentId,
                     }
                 );
