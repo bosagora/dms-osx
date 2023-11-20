@@ -537,17 +537,7 @@ describe("Test for ShopCollection", () => {
                 expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
-                const nonce2 = await ledgerContract.nonceOf(certifier.address);
-                const signature2 = await ContractUtils.signLoyaltyClosePayment(
-                    certifier,
-                    paymentId,
-                    purchase.purchaseId,
-                    true,
-                    nonce2
-                );
-                await expect(
-                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
-                )
+                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true))
                     .to.emit(ledgerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
                         account: settlements.address,
@@ -660,17 +650,10 @@ describe("Test for ShopCollection", () => {
                 expect(paymentData.paidToken).to.deep.equal(tokenAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
-                const nonce2 = await ledgerContract.nonceOf(certifier.address);
-                const signature2 = await ContractUtils.signLoyaltyClosePayment(
-                    certifier,
-                    paymentId,
-                    purchase.purchaseId,
-                    true,
-                    nonce2
+                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
+                    ledgerContract,
+                    "LoyaltyPaymentEvent"
                 );
-                await expect(
-                    ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true, certifier.address, signature2)
-                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
                 expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);
