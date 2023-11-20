@@ -715,7 +715,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
             });
 
             it("Waiting", async () => {
@@ -978,7 +978,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
             });
 
             it("Waiting", async () => {
@@ -1071,7 +1071,10 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL);
+                assert.deepStrictEqual(
+                    response.data.data.paymentStatus,
+                    LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
+                );
             });
 
             it("Endpoint POST /v1/payment/cancel/close", async () => {
@@ -1326,7 +1329,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
             });
 
             it("Waiting", async () => {
@@ -1879,7 +1882,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
             });
 
             it("Waiting", async () => {
@@ -1971,7 +1974,10 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL);
+                assert.deepStrictEqual(
+                    response.data.data.paymentStatus,
+                    LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
+                );
             });
 
             it("Endpoint POST /v1/payment/cancel/close", async () => {
@@ -2218,7 +2224,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
+                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
             });
 
             it("Waiting", async () => {
@@ -2403,7 +2409,7 @@ describe("Test of Server", function () {
                         assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
                     }
                 } else if (title === "KIOS 결제 취소 요청") {
                     const searchString = "결제 아이디 : ";
@@ -2437,7 +2443,7 @@ describe("Test of Server", function () {
                         assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL);
+                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL);
                     }
                 }
             },
