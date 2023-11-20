@@ -26,7 +26,7 @@ import { BigNumber, Wallet } from "ethers";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 import { INotificationEventHandler } from "../src/delegator/NotificationSender";
-import { ContractShopStatus, LoyaltyPaymentTaskStatus, LoyaltyType } from "../src/types";
+import { ContractShopStatus, LoyaltyPaymentTaskStatus, ContractLoyaltyType } from "../src/types";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 // tslint:disable-next-line:no-var-requires
@@ -475,7 +475,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
             });
 
@@ -493,7 +493,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
                 assert.deepStrictEqual(response.data.data.paidPoint, Amount.make(1000).toString());
                 assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
@@ -521,7 +521,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -535,7 +535,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.amount, amountOfLoyalty.toString());
             });
 
@@ -622,7 +622,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -900,7 +900,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
             });
 
@@ -918,7 +918,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
                 assert.deepStrictEqual(response.data.data.paidPoint, Amount.make(1000).toString());
                 assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
@@ -946,7 +946,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -1015,7 +1015,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.sub(totalPoint).toString());
             });
 
@@ -1034,7 +1034,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 
@@ -1112,7 +1112,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
             });
         });
@@ -1248,7 +1248,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
             });
 
@@ -1266,7 +1266,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
                 assert.deepStrictEqual(response.data.data.paidPoint, Amount.make(1000).toString());
                 assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
@@ -1294,7 +1294,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -1363,7 +1363,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.sub(totalPoint).toString());
             });
 
@@ -1382,7 +1382,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 
@@ -1440,7 +1440,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.balance, pointAmount.sub(totalPoint).toString());
             });
         });
@@ -1590,7 +1590,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
             });
 
@@ -1612,7 +1612,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -1627,7 +1627,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
             });
 
             it("Endpoint POST /v1/payment/new/approval", async () => {
@@ -1825,7 +1825,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
             });
 
@@ -1847,7 +1847,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -1916,7 +1916,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.sub(totalToken).toString());
             });
 
@@ -1935,7 +1935,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 
@@ -2013,7 +2013,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
             });
         });
@@ -2164,7 +2164,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.toString());
             });
 
@@ -2186,7 +2186,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -2255,7 +2255,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.sub(totalToken).toString());
             });
 
@@ -2274,7 +2274,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 
@@ -2332,7 +2332,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.balance, tokenAmount.sub(totalToken).toString());
             });
         });
@@ -2545,7 +2545,7 @@ describe("Test of Server", function () {
 
             assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
-            assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+            assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
             assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
         });
 
@@ -2566,7 +2566,7 @@ describe("Test of Server", function () {
             assert.ok(response.data.data !== undefined);
 
             assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-            assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+            assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
 
             paymentId = response.data.data.paymentId;
         });
@@ -2611,7 +2611,7 @@ describe("Test of Server", function () {
             assert.deepStrictEqual(response.data.data.paymentId, paymentId);
             assert.deepStrictEqual(response.data.data.purchaseId, purchaseOfLoyalty.purchaseId);
             assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-            assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.POINT);
+            assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
             assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
         });
 

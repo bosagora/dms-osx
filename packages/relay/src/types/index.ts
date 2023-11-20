@@ -1,11 +1,11 @@
 import { BigNumber } from "ethers";
 import { ContractUtils } from "../utils/ContractUtils";
 
-export enum LoyaltyType {
+export enum ContractLoyaltyType {
     POINT,
     TOKEN,
 }
-export enum WithdrawStatus {
+export enum ContractWithdrawStatus {
     CLOSE,
     OPEN,
 }
@@ -14,6 +14,51 @@ export enum ContractShopStatus {
     INVALID,
     ACTIVE,
     INACTIVE,
+}
+
+export enum ContractLoyaltyPaymentStatus {
+    INVALID,
+    OPENED_PAYMENT,
+    CLOSED_PAYMENT,
+    FAILED_PAYMENT,
+    OPENED_CANCEL,
+    CLOSED_CANCEL,
+    FAILED_CANCEL,
+}
+
+export interface ContractLoyaltyPaymentEvent {
+    paymentId: string;
+    purchaseId: string;
+    currency: string;
+    shopId: string;
+    account: string;
+    timestamp: BigNumber;
+    loyaltyType: number;
+    paidPoint: BigNumber;
+    paidToken: BigNumber;
+    paidValue: BigNumber;
+    feePoint: BigNumber;
+    feeToken: BigNumber;
+    feeValue: BigNumber;
+    totalPoint: BigNumber;
+    totalToken: BigNumber;
+    totalValue: BigNumber;
+    status: number;
+    balance: BigNumber;
+}
+
+export interface ContractShopUpdateEvent {
+    shopId: string;
+    name: string;
+    provideWaitTime: number;
+    providePercent: number;
+    account: string;
+    status: ContractShopStatus;
+}
+
+export interface ContractShopStatusEvent {
+    shopId: string;
+    status: ContractShopStatus;
 }
 
 export enum LoyaltyPaymentTaskStatus {
@@ -40,7 +85,7 @@ export interface LoyaltyPaymentTaskData {
     currency: string;
     shopId: string;
     account: string;
-    loyaltyType: LoyaltyType;
+    loyaltyType: ContractLoyaltyType;
 
     paidPoint: BigNumber;
     paidToken: BigNumber;
@@ -100,27 +145,6 @@ export interface PaymentResultData {
     closeCancelTimestamp?: number;
 }
 
-export interface ContractLoyaltyPaymentEvent {
-    paymentId: string;
-    purchaseId: string;
-    currency: string;
-    shopId: string;
-    account: string;
-    timestamp: BigNumber;
-    loyaltyType: number;
-    paidPoint: BigNumber;
-    paidToken: BigNumber;
-    paidValue: BigNumber;
-    feePoint: BigNumber;
-    feeToken: BigNumber;
-    feeValue: BigNumber;
-    totalPoint: BigNumber;
-    totalToken: BigNumber;
-    totalValue: BigNumber;
-    status: number;
-    balance: BigNumber;
-}
-
 export enum ShopTaskStatus {
     NULL,
     OPENED,
@@ -141,20 +165,6 @@ export interface ShopTaskData {
     account: string;
     taskStatus: ShopTaskStatus;
     timestamp: number;
-}
-
-export interface ContractShopUpdateEvent {
-    shopId: string;
-    name: string;
-    provideWaitTime: number;
-    providePercent: number;
-    account: string;
-    status: ContractShopStatus;
-}
-
-export interface ContractShopStatusEvent {
-    shopId: string;
-    status: ContractShopStatus;
 }
 
 export interface IShopData {
@@ -211,6 +221,11 @@ export class ResponseMessage {
         ["2020", "The status code for this payment cannot be approved"],
         ["2022", "The status code for this payment cannot be cancel"],
         ["2024", "The status code for this payment cannot process closing"],
+        ["2025", "This payment has already been approved"],
+        ["2026", "This payment has already been closed"],
+        ["2027", "This payment has already been approved and failed"],
+        ["2028", "The status code for this payment cannot be denied"],
+        ["2029", "This payment has forced to close"],
         ["2033", "The task ID is not exist"],
         ["2040", "The status code for this task cannot be approved"],
         ["4000", "Denied by user"],

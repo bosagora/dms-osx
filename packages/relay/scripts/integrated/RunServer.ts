@@ -3,7 +3,6 @@ import { Config } from "../../src/common/Config";
 import { ApprovalScheduler } from "../../src/scheduler/ApprovalScheduler";
 import { Scheduler } from "../../src/scheduler/Scheduler";
 import { RelayStorage } from "../../src/storage/RelayStorage";
-import { LoyaltyPaymentTaskStatus, LoyaltyType } from "../../src/types";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import { TestClient, TestServer } from "../../test/helper/Utility";
 import { ContractDeployer, Deployment, depositAmount, shopData, userData } from "./helper/ContractDeployer";

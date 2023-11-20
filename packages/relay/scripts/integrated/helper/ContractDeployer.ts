@@ -568,7 +568,8 @@ export class ContractDeployer {
         await certifierCollection.deployed();
         await certifierCollection.deployTransaction.wait();
         for (const w of relay) {
-            await certifierCollection.connect(certifier).grantCertifier(w.address);
+            const tx = await certifierCollection.connect(certifier).grantCertifier(w.address);
+            await tx.wait();
         }
         return certifierCollection;
     }

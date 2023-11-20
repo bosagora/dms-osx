@@ -26,11 +26,11 @@ import { BigNumber, Wallet } from "ethers";
 import { ApprovalScheduler } from "../src/scheduler/ApprovalScheduler";
 import { Scheduler } from "../src/scheduler/Scheduler";
 import {
+    ContractLoyaltyType,
     ContractShopStatus,
     IShopData,
     IUserData,
     LoyaltyPaymentTaskStatus,
-    LoyaltyType,
     ShopTaskStatus,
     TaskResultType,
 } from "../src/types";
@@ -406,7 +406,7 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, userData[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_NEW);
 
                 paymentId = response.data.data.paymentId;
@@ -461,7 +461,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchase.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, userData[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, LoyaltyType.TOKEN);
+                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 

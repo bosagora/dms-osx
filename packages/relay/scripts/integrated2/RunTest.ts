@@ -1,27 +1,33 @@
 import { Amount } from "../../src/common/Amount";
 import { Config } from "../../src/common/Config";
-import { ContractLoyaltyType, LoyaltyPaymentTaskStatus } from "../../src/types";
+import { ContractLoyaltyType, IShopData, IUserData, LoyaltyPaymentTaskStatus } from "../../src/types";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import { TestClient } from "../../test/helper/Utility";
-import { ContractDeployer, shopData, userData } from "./helper/ContractDeployer";
 
 import * as path from "path";
 import { URL } from "url";
 
 import * as assert from "assert";
+import fs from "fs";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
 
+export const userData: IUserData[] = [];
+
+export const shopData: IShopData[] = [];
+
 async function main() {
-    let serverURL: URL;
+    let relayEndpoint: URL;
     let config: Config;
 
     console.log("Test auto approval");
     {
-        console.log("Deploy");
+        console.log("Load data");
         {
-            ContractDeployer.LoadData();
+            const users = JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[];
+            userData.push(...users.filter((m) => m.loyaltyType === 1));
+            shopData.push(...(JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[]));
         }
 
         console.log("Create Config");
@@ -32,11 +38,12 @@ async function main() {
 
         console.log("Create TestServer");
         {
-            serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
+            relayEndpoint = new URL(`http://127.0.0.1:3000`);
         }
 
-        const shopIndex = Math.floor(Math.random() * shopData.length);
         const userIndex = Math.floor(Math.random() * userData.length);
+        const shopIndex = Math.floor(Math.random() * shopData.length);
+
         console.log("Test of payment");
         {
             const MAX_COUNT = 1000;
@@ -55,7 +62,7 @@ async function main() {
                 let paymentId: string;
                 console.log("Open New Payment");
                 {
-                    const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
+                    const url = URI(relayEndpoint).directory("/v1/payment/new").filename("open").toString();
 
                     const params = {
                         accessKey: config.relay.accessKey,
@@ -81,7 +88,7 @@ async function main() {
                 {
                     while (true) {
                         const response = await client.get(
-                            URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                            URI(relayEndpoint).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                         );
                         if (response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
                         await ContractUtils.delay(1000);
@@ -96,7 +103,7 @@ async function main() {
                 console.log("Close New Payment");
                 {
                     const response = await client.post(
-                        URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                        URI(relayEndpoint).directory("/v1/payment/new").filename("close").toString(),
                         {
                             accessKey: config.relay.accessKey,
                             confirm: true,
@@ -116,7 +123,7 @@ async function main() {
 
                 console.log("Open Cancel Payment");
                 {
-                    const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
+                    const url = URI(relayEndpoint).directory("/v1/payment/cancel").filename("open").toString();
 
                     const params = {
                         accessKey: config.relay.accessKey,
@@ -138,7 +145,7 @@ async function main() {
                 {
                     while (true) {
                         const response = await client.get(
-                            URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                            URI(relayEndpoint).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                         );
                         if (response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL) break;
                         await ContractUtils.delay(1000);
@@ -153,7 +160,7 @@ async function main() {
                 console.log("Close Cancel Payment");
                 {
                     const response = await client.post(
-                        URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
+                        URI(relayEndpoint).directory("/v1/payment/cancel").filename("close").toString(),
                         {
                             accessKey: config.relay.accessKey,
                             confirm: true,
