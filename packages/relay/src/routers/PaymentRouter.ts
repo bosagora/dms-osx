@@ -701,20 +701,6 @@ export class PaymentRouter {
                                 account: item.account,
                                 signature,
                             });
-                            item.paymentStatus = LoyaltyPaymentTaskStatus.CONFIRMED_NEW;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                            res.status(200).json(
-                                this.makeResponseData(0, {
-                                    paymentId: item.paymentId,
-                                    purchaseId: item.purchaseId,
-                                    amount: item.amount.toString(),
-                                    currency: item.currency,
-                                    shopId: item.shopId,
-                                    account: item.account,
-                                    paymentStatus: item.paymentStatus,
-                                    txHash: tx.hash,
-                                })
-                            );
 
                             const event = await this.waitPaymentLoyalty(contract, tx);
                             if (event !== undefined) {
@@ -727,6 +713,19 @@ export class PaymentRouter {
                                     TaskResultCode.SUCCESS,
                                     "Success",
                                     this.getCallBackResponse(item)
+                                );
+
+                                res.status(200).json(
+                                    this.makeResponseData(0, {
+                                        paymentId: item.paymentId,
+                                        purchaseId: item.purchaseId,
+                                        amount: item.amount.toString(),
+                                        currency: item.currency,
+                                        shopId: item.shopId,
+                                        account: item.account,
+                                        paymentStatus: item.paymentStatus,
+                                        txHash: tx.hash,
+                                    })
                                 );
                             }
                         } catch (error) {
@@ -1118,20 +1117,6 @@ export class PaymentRouter {
                             const tx = await contract
                                 .connect(signerItem.signer)
                                 .openCancelLoyaltyPayment(item.paymentId, signature);
-                            item.paymentStatus = LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                            res.status(200).json(
-                                this.makeResponseData(0, {
-                                    paymentId: item.paymentId,
-                                    purchaseId: item.purchaseId,
-                                    amount: item.amount.toString(),
-                                    currency: item.currency,
-                                    shopId: item.shopId,
-                                    account: item.account,
-                                    paymentStatus: item.paymentStatus,
-                                    txHash: tx.hash,
-                                })
-                            );
 
                             const event = await this.waitPaymentLoyalty(contract, tx);
                             if (event !== undefined) {
@@ -1144,6 +1129,19 @@ export class PaymentRouter {
                                     TaskResultCode.SUCCESS,
                                     "Success",
                                     this.getCallBackResponse(item)
+                                );
+
+                                res.status(200).json(
+                                    this.makeResponseData(0, {
+                                        paymentId: item.paymentId,
+                                        purchaseId: item.purchaseId,
+                                        amount: item.amount.toString(),
+                                        currency: item.currency,
+                                        shopId: item.shopId,
+                                        account: item.account,
+                                        paymentStatus: item.paymentStatus,
+                                        txHash: tx.hash,
+                                    })
                                 );
                             }
                         } catch (error) {
