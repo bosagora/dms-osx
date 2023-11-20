@@ -13,11 +13,11 @@ import {
     LoyaltyPaymentTaskData,
     LoyaltyPaymentTaskStatus,
     PaymentResultData,
-    ResponseMessage,
     TaskResultCode,
     TaskResultType,
 } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
+import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
 import { Validation } from "../validation";
 

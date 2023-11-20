@@ -6,7 +6,7 @@ import * as dotenv from "dotenv";
 import { utils, Wallet } from "ethers";
 import "hardhat-gas-reporter";
 // tslint:disable-next-line:no-submodule-imports
-import { HardhatUserConfig, task } from "hardhat/config";
+import { task } from "hardhat/config";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
 import "solidity-coverage";

@@ -143,17 +143,23 @@ export class ApprovalScheduler extends Scheduler {
                 const serverURL = `http://localhost:${this.config.server.port}`;
                 const client = axios.create();
                 try {
-                    const response = await client.post(
-                        URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
-                        {
-                            paymentId: payment.paymentId,
-                            approval: true,
-                            signature,
-                        }
+                    const response1 = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", payment.paymentId).toString()
                     );
-                    logger.info(response.data.code);
-                    if (response.data.error !== undefined) {
-                        logger.info(`${response.data.code} - ${response.data.error.message}`);
+                    if (response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_NEW) {
+                        const response = await client.post(
+                            URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
+                            {
+                                paymentId: payment.paymentId,
+                                approval: true,
+                                signature,
+                            }
+                        );
+                        if (response.data.error !== undefined) {
+                            logger.warn(
+                                `ApprovalScheduler.onNewPayment: ${response.data.code} - ${response.data.error.message}`
+                            );
+                        }
                     }
                 } catch (e) {
                     //
@@ -180,17 +186,23 @@ export class ApprovalScheduler extends Scheduler {
                 const serverURL = `http://localhost:${this.config.server.port}`;
                 const client = axios.create();
                 try {
-                    const response = await client.post(
-                        URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString(),
-                        {
-                            paymentId: payment.paymentId,
-                            approval: true,
-                            signature,
-                        }
+                    const response1 = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", payment.paymentId).toString()
                     );
-                    logger.info(response.data.code);
-                    if (response.data.error !== undefined) {
-                        logger.info(`${response.data.code} - ${response.data.error.message}`);
+                    if (response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_CANCEL) {
+                        const response = await client.post(
+                            URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString(),
+                            {
+                                paymentId: payment.paymentId,
+                                approval: true,
+                                signature,
+                            }
+                        );
+                        if (response.data.error !== undefined) {
+                            logger.warn(
+                                `ApprovalScheduler.onCancelPayment: ${response.data.code} - ${response.data.error.message}`
+                            );
+                        }
                     }
                 } catch (e) {
                     //
@@ -221,9 +233,10 @@ export class ApprovalScheduler extends Scheduler {
                             signature,
                         }
                     );
-                    logger.info(response.data.code);
                     if (response.data.error !== undefined) {
-                        logger.info(`${response.data.code} - ${response.data.error.message}`);
+                        logger.warn(
+                            `ApprovalScheduler.onUpdateTask: ${response.data.code} - ${response.data.error.message}`
+                        );
                     }
                 } catch (e) {
                     //
@@ -252,9 +265,10 @@ export class ApprovalScheduler extends Scheduler {
                             signature,
                         }
                     );
-                    logger.info(response.data.code);
                     if (response.data.error !== undefined) {
-                        logger.info(`${response.data.code} - ${response.data.error.message}`);
+                        logger.warn(
+                            `ApprovalScheduler.onStatusTask: ${response.data.code} - ${response.data.error.message}`
+                        );
                     }
                 } catch (e) {
                     //

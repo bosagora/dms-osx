@@ -1,8 +1,11 @@
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: "env/.env" });
+
 import { Amount } from "../../src/common/Amount";
 import { Config } from "../../src/common/Config";
 import { ContractLoyaltyType, IShopData, IUserData, LoyaltyPaymentTaskStatus } from "../../src/types";
-import { ContractUtils } from "../../src/utils/ContractUtils";
-import { TestClient } from "../../test/helper/Utility";
+import { HTTPClient, Utils } from "../../src/utils/Utils";
 
 import * as path from "path";
 import { URL } from "url";
@@ -38,20 +41,24 @@ async function main() {
 
         console.log("Create TestServer");
         {
-            relayEndpoint = new URL(`http://127.0.0.1:3000`);
+            relayEndpoint = new URL(`http://127.0.0.1:7070`);
         }
 
-        const userIndex = Math.floor(Math.random() * userData.length);
+        const userIndex =
+            process.argv[2] !== undefined && Number(process.argv[2]) > 0
+                ? Number(process.argv[2])
+                : Math.floor(Math.random() * userData.length);
         const shopIndex = Math.floor(Math.random() * shopData.length);
+
+        console.log(`User index: ${userIndex}, Account: ${userData[userIndex].address}`);
 
         console.log("Test of payment");
         {
             const MAX_COUNT = 1000;
             for (let idx = 0; idx < MAX_COUNT; idx++) {
-                const client = new TestClient();
+                const client = new HTTPClient();
                 const purchase = {
                     purchaseId: "P00" + idx.toString().padStart(4, "0"),
-                    timestamp: ContractUtils.getTimeStamp(),
                     amount: 10,
                     currency: "krw",
                     shopIndex,
@@ -86,18 +93,20 @@ async function main() {
 
                 console.log("...Check Payment Status - REPLY_COMPLETED_NEW");
                 {
+                    const start = Utils.getTimeStamp();
                     while (true) {
                         const response = await client.get(
                             URI(relayEndpoint).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                         );
                         if (response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
-                        await ContractUtils.delay(1000);
+                        await Utils.delay(1000);
+                        if (Utils.getTimeStamp() - start > 60) break;
                     }
                 }
 
                 console.log("...Waiting");
                 {
-                    await ContractUtils.delay(2000);
+                    await Utils.delay(2000);
                 }
 
                 console.log("Close New Payment");
@@ -114,11 +123,6 @@ async function main() {
                     assert.deepStrictEqual(response.data.code, 0);
                     assert.ok(response.data.data !== undefined);
                     assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
-                }
-
-                console.log("...Waiting");
-                {
-                    await ContractUtils.delay(2000);
                 }
 
                 console.log("Open Cancel Payment");
@@ -143,18 +147,20 @@ async function main() {
 
                 console.log("...Check Payment Status - REPLY_COMPLETED_CANCEL");
                 {
+                    const start = Utils.getTimeStamp();
                     while (true) {
                         const response = await client.get(
                             URI(relayEndpoint).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                         );
                         if (response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL) break;
-                        await ContractUtils.delay(1000);
+                        await Utils.delay(1000);
+                        if (Utils.getTimeStamp() - start > 60) break;
                     }
                 }
 
                 console.log("...Waiting");
                 {
-                    await ContractUtils.delay(2000);
+                    await Utils.delay(2000);
                 }
 
                 console.log("Close Cancel Payment");

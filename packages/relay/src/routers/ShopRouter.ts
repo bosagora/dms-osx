@@ -17,13 +17,12 @@ import {
     ContractShopStatus,
     ContractShopStatusEvent,
     ContractShopUpdateEvent,
-    PaymentResultData,
-    ResponseMessage,
     ShopTaskData,
     ShopTaskStatus,
     TaskResultCode,
     TaskResultType,
 } from "../types";
+import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
 
 export class ShopRouter {

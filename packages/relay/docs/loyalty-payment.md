@@ -1040,47 +1040,52 @@
 
 ## 8. 응답 코드와 메세지
 
-| 코드 | 메세지                                                                                                                                            |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0000 | 성공<br/>Success                                                                                                                                  |
-| 1000 | 트랜잭션을 보낸자가 검증자가 아닙니다<br/>Sender is not validator                                                                                 |
-| 1001 | 검증자가 활성화 되지 않았습니다<br/>Validator is not active                                                                                       |
-| 1002 | 검증자가 이미 활성화 되었습니다<br/>Validator is already active                                                                                   |
-| 1003 | 검증자가 이미 존재합니다<br/>Validator is already exist                                                                                           |
-| 1010 | 마지막 검증자를 제거할 수 없습니다<br/>The last validator cannot be removed                                                                       |
-| 1020 | 예치가 허용되지 않습니다<br/>Not allowed deposit                                                                                                  |
-| 1050 | 트랜잭션을 보낸자는 인증되지 않은 자입니다<br/>Sender is not authorized to execute                                                                |
-| 1200 | 상점아이디가 이미 존재합니다<br/>The shop ID already exists                                                                                       |
-| 1201 | 상점아이디가 존재하지 않습니다<br/>The shop ID is not exists                                                                                      |
-| 1220 | 인출자금이 부족합니다<br/>Insufficient withdrawal amount                                                                                          |
-| 1221 | 인출을 이미신청하셨니다<br/>Withdrawal is already opened                                                                                          |
-| 1222 | 인출이 신청하지 않았습니다<br/>Withdrawal is not opened                                                                                           |
-| 1501 | 잘못된 서명입니다<br/>Invalid signature                                                                                                           |
-| 1502 | 등록되지 않은 전화번호입니다<br/>Unregistered phone number                                                                                        |
-| 1503 | 등록된 지갑주소와 동일하지 않습니다<br/>Does not match registered wallet address                                                                  |
-| 1510 | 재단의 잔고가 부족합니다<br/>Insufficient foundation balance                                                                                      |
-| 1511 | 사용자의 잔고가 부족합니다<br/>Insufficient balance                                                                                               |
-| 1512 | 예치을 허용하지 않았습니다<br/>Not allowed deposit                                                                                                |
-| 1513 | 수수료 계정 또는 재단 계정의 잔고가 부족합니다<br/>Insufficient fee or foundation balance                                                         |
-| 1520 | 로열티 종류가 토큰입니다<br/>Loyalty type is not TOKEN                                                                                            |
-| 1521 | 잘못된 값을 입력했습니다<br/>Invalid value entered                                                                                                |
-| 1530 | 지불아이디가 이미 사용중입니다<br/>The payment ID already exists                                                                                  |
-| 1531 | 지불아이디에 대응하는 상태값이 진행중이지 않습니다<br/>The status of the payment corresponding to the payment ID is not in progress               |
+| 코드   | 메세지                                                                                                                       |
+|------|---------------------------------------------------------------------------------------------------------------------------|
+| 0000 | 성공<br/>Success                                                                                                            |
+| 1000 | 트랜잭션을 보낸자가 검증자가 아닙니다<br/>Sender is not validator                                                                          |
+| 1001 | 검증자가 활성화 되지 않았습니다<br/>Validator is not active                                                                             |
+| 1002 | 검증자가 이미 활성화 되었습니다<br/>Validator is already active                                                                         |
+| 1003 | 검증자가 이미 존재합니다<br/>Validator is already exist                                                                              |
+| 1010 | 마지막 검증자를 제거할 수 없습니다<br/>The last validator cannot be removed                                                              |
+| 1020 | 예치가 허용되지 않습니다<br/>Not allowed deposit                                                                                     |
+| 1050 | 트랜잭션을 보낸자는 인증되지 않은 자입니다<br/>Sender is not authorized to execute                                                           |
+| 1200 | 상점아이디가 이미 존재합니다<br/>The shop ID already exists                                                                            |
+| 1201 | 상점아이디가 존재하지 않습니다<br/>The shop ID is not exists                                                                            |
+| 1220 | 인출자금이 부족합니다<br/>Insufficient withdrawal amount                                                                            |
+| 1221 | 인출을 이미신청하셨니다<br/>Withdrawal is already opened                                                                             |
+| 1222 | 인출이 신청하지 않았습니다<br/>Withdrawal is not opened                                                                               |
+| 1501 | 잘못된 서명입니다<br/>Invalid signature                                                                                           |
+| 1502 | 등록되지 않은 전화번호입니다<br/>Unregistered phone number                                                                             |
+| 1503 | 등록된 지갑주소와 동일하지 않습니다<br/>Does not match registered wallet address                                                          |
+| 1505 | 등록되지 않는 인증자입니다<br/>Sender is not authorized certifier                                                                     |
+| 1510 | 재단의 잔고가 부족합니다<br/>Insufficient foundation balance                                                                         |
+| 1511 | 사용자의 잔고가 부족합니다<br/>Insufficient balance                                                                                   |
+| 1512 | 예치을 허용하지 않았습니다<br/>Not allowed deposit                                                                                    |
+| 1513 | 수수료 계정 또는 재단 계정의 잔고가 부족합니다<br/>Insufficient fee or foundation balance                                                     |
+| 1520 | 로열티 종류가 토큰입니다<br/>Loyalty type is not TOKEN                                                                               |
+| 1521 | 잘못된 값을 입력했습니다<br/>Invalid value entered                                                                                   |
+| 1530 | 지불아이디가 이미 사용중입니다<br/>The payment ID already exists                                                                        |
+| 1531 | 지불아이디에 대응하는 상태값이 진행중이지 않습니다<br/>The status of the payment corresponding to the payment ID is not in progress              |
 | 1532 | 지불아이디에 대응하는 상태값이 취소가능하지 않습니다<br/>The status of the payment corresponding to the payment ID is not a cancellable condition |
-| 1533 | 지불아이디에 대응하는 상태값이 취소중이 아닙니다<br/>The status of the payment corresponding to the payment ID is not being cancelled             |
-| 1534 | 지불에 대한 취소가능 기간이 만료되었습니다<br/>The period for cancellation of payment has expired                                                 |
-| 2001 | 파라메타의 검증에 실패하였습니다<br/>Failed to check the validity of parameters                                                                   |
-| 2002 | 엑세스키가 유효하지 않습니다<br/>The access key entered is not valid                                                                              |
-| 2003 | 지불아이디가 존재하지 않습니다<br/>The payment ID is not exist                                                                                    |
-| 2020 | 지불에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this payment cannot be approved                                              |
-| 2022 | 지불에 대한 상태코드는 취소를 할 수 없습니다<br/>The status code for this payment cannot be cancel                                                |
-| 2024 | 지불에 대한 상태코드는 종료처리를 할 수 없습니다<br/>The status code for this payment cannot process closing                                      |
-| 2033 | 작업아이디가 존재하지 않습니다<br/>The task ID is not exist                                                                                       |
-| 2040 | 작업에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this task cannot be approved                                                 |
-| 4000 | 사용자에 의해 거부되었습니다<br/>Denied by user                                                                                                   |
-| 5000 | 스마트컨트랙트 실행중 오류가 발생했습니다<br/>Smart Contract Error                                                                                |
-| 6000 | 내부서버에서 오류가 발생했습니다<br/>Server Error                                                                                                 |
-| 7000 | 처리시간 초과오류입니다(45초)<br/>Timeout period expired                                                                                          |
+| 1533 | 지불아이디에 대응하는 상태값이 취소중이 아닙니다<br/>The status of the payment corresponding to the payment ID is not being cancelled           |
+| 1534 | 지불에 대한 취소가능 기간이 만료되었습니다<br/>The period for cancellation of payment has expired                                            |
+| 2001 | 파라메타의 검증에 실패하였습니다<br/>Failed to check the validity of parameters                                                          |
+| 2002 | 엑세스키가 유효하지 않습니다<br/>The access key entered is not valid                                                                   |
+| 2003 | 지불아이디가 존재하지 않습니다<br/>The payment ID is not exist                                                                          |
+| 2020 | 지불에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this payment cannot be approved                                         |
+| 2022 | 지불에 대한 상태코드는 취소를 할 수 없습니다<br/>The status code for this payment cannot be cancel                                           |
+| 2024 | 지불에 대한 상태코드는 종료처리를 할 수 없습니다<br/>The status code for this payment cannot process closing                                   |
+| 2025 | 해당 지불은 이미 종료되었습니다<br/>This payment has already been closed                                                                |
+| 2027 | 해당 지불은 이미 승인후 실패처리되었습니다.<br/>This payment has already been approved and failed                                            |
+| 2028 | 지불에 대한 상태코드는 거부 할 수 없습니다<br/>The status code for this payment cannot be denied                                            |
+| 2029 | 해당 지불은 강제종료되었습니다<br/>This payment has forced to close                                                                     |
+| 2033 | 작업아이디가 존재하지 않습니다<br/>The task ID is not exist                                                                             |
+| 2040 | 작업에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this task cannot be approved                                            |
+| 4000 | 사용자에 의해 거부되었습니다<br/>Denied by user                                                                                        |
+| 5000 | 스마트컨트랙트 실행중 오류가 발생했습니다<br/>Smart Contract Error                                                                           |
+| 6000 | 내부서버에서 오류가 발생했습니다<br/>Server Error                                                                                        |
+| 7000 | 처리시간 초과오류입니다(45초)<br/>Timeout period expired                                                                              |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
