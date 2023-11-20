@@ -65,33 +65,48 @@ export class ContractUtils {
     public static BufferToString(data: Buffer): string {
         return "0x" + data.toString("hex");
     }
+    private static find1_message = "execution reverted:";
+    private static find1_length = ContractUtils.find1_message.length;
+    private static find2_message = "reverted with reason string";
+    private static find2_length = ContractUtils.find2_message.length;
+    public static cacheEVMError(root: any): string {
+        let error = root;
+        while (error !== undefined) {
+            if (error.reason !== undefined) {
+                let idx = error.reason.indexOf(ContractUtils.find1_message);
+                let message: string;
+                if (idx >= 0) {
+                    message = error.reason.substring(idx + ContractUtils.find1_length).trim();
+                    return message;
+                }
+                idx = error.reason.indexOf(ContractUtils.find2_message);
+                if (idx >= 0) {
+                    message = error.reason.substring(idx + ContractUtils.find2_length).trim();
+                    return message;
+                }
+            }
+            error = error.error;
+        }
 
-    private static find_message = "reverted with reason string";
-    private static find_length = ContractUtils.find_message.length;
-    public static cacheEVMError(error: any): string {
-        if (error instanceof Error) {
-            const idx = error.message.indexOf(ContractUtils.find_message);
-            const message =
-                idx >= 0
-                    ? error.message
-                          .substring(idx + ContractUtils.find_length)
-                          .replace(/['|"]/gi, "")
-                          .trim()
-                    : error.message;
-            return message;
-        } else if (error.message) {
-            return error.message;
+        if (root.message) {
+            return root.message;
         } else {
-            return error.toString();
+            return root.toString();
         }
     }
 
     public static isErrorOfEVM(error: any): boolean {
-        if (error instanceof Error) {
-            const idx = error.message.indexOf(ContractUtils.find_message);
-            if (idx >= 0) return true;
-            else return false;
-        } else return false;
+        while (error !== undefined) {
+            if (error.reason !== undefined) {
+                if (
+                    error.message.indexOf(ContractUtils.find1_message) >= 0 ||
+                    error.message.indexOf(ContractUtils.find2_message) >= 0
+                )
+                    return true;
+            }
+            error = error.error;
+        }
+        return false;
     }
 
     public static getRequestId(emailHash: string, address: string, nonce: BigNumberish): string {

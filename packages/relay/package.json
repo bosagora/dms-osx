@@ -13,6 +13,7 @@
         "start:hardhat": "NODE_ENV=production hardhat run src/main.ts",
         "start:mainnet": "NODE_ENV=production hardhat run src/main.ts --network mainnet",
         "start:testnet": "NODE_ENV=production hardhat run src/main.ts --network testnet",
+        "start:devnet": "NODE_ENV=production hardhat run src/main.ts --network devnet",
         "start:localhost": "NODE_ENV=production hardhat run src/main.ts --network localhost",
         "start": "NODE_ENV=production hardhat run src/main.ts --network production_net",
         "formatting:check": "prettier '**/*.{json,sol,ts,js}' -c",

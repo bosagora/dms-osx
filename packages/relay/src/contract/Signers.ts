@@ -74,6 +74,8 @@ export class RelaySigners {
      * @private
      */
     public releaseSigner(signer: ISignerItem) {
-        signer.using = false;
+        setTimeout(() => {
+            signer.using = false;
+        }, 2000);
     }
 }
