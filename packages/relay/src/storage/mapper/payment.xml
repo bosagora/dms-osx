@@ -115,6 +115,6 @@
         SELECT * FROM payments WHERE "paymentStatus" in (1,2,3,4);
     </select>
     <select id="getDelayedCancelPayments">
-        SELECT * FROM payments WHERE "paymentStatus" in (6,7,8,9);
+        SELECT * FROM payments WHERE "paymentStatus" in (7,8,9,10);
     </select>
 </mapper>

@@ -370,7 +370,7 @@
 | totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
 | totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
 | openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
 | closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
 | openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
@@ -394,10 +394,11 @@
 
 #### - 입력 파라메타들
 
-| 파라메타명 | 유형   | 필수 | 설명        |
-| ---------- | ------ | ---- | ----------- |
-| accessKey  | string | Yes  | 비밀키      |
-| paymentId  | string | Yes  | 지불 아이디 |
+| 파라메타명     | 유형      | 필수 | 설명                                  |
+|-----------|---------| ---- |-------------------------------------|
+| accessKey | string  | Yes  | 비밀키                                 |
+| confirm   | boolean | Yes  | 정상 또는 취소 여부 (true: 정상처리, false: 취소) |
+| paymentId | string  | Yes  | 지불 아이디                              |
 
 #### - 결과
 
@@ -419,7 +420,7 @@
 | totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
 | totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
 | openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
 | closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
 | openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
@@ -446,29 +447,29 @@
 
 #### - 결과
 
-| 필드명               | 유형   | 필수 | 설명                                                                                                                                                                                                           |
-| -------------------- | ------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| paymentId            | string | Yes  | 지불 아이디                                                                                                                                                                                                    |
-| purchaseId           | string | Yes  | 구매 아이디                                                                                                                                                                                                    |
-| amount               | string | Yes  | 상품가격 (소수점이하 18자리로 표시된 문자, 소수점 포함하지 않음)                                                                                                                                               |
-| currency             | string | Yes  | 환률코드(usd, krw, the9, point...)                                                                                                                                                                             |
-| shopId               | string | Yes  | 상점 아이디                                                                                                                                                                                                    |
-| account              | string | Yes  | 월렛주소                                                                                                                                                                                                       |
-| loyaltyType          | int    | Yes  | 적립되는 로열티의 종류(0: Point, 1: Token)                                                                                                                                                                     |
-| paidPoint            | string | Yes  | (예상)지불될 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                         |
-| paidToken            | string | Yes  | (예상)지불될 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                           |
-| paidValue            | string | Yes  | 지불될 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                 |
-| feePoint             | string | Yes  | (예상)수수료 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                         |
-| feeToken             | string | Yes  | (예상)수수료 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                           |
-| feeValue             | string | Yes  | 수수료 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                 |
-| totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
-| totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
-| totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
-| openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
-| openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
-| closeCancelTimestamp | int    | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                                                                 |
+| 필드명               | 유형   | 필수 | 설명                                                                                                                                                      |
+| -------------------- | ------ | ---- |---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| paymentId            | string | Yes  | 지불 아이디                                                                                                                                                  |
+| purchaseId           | string | Yes  | 구매 아이디                                                                                                                                                  |
+| amount               | string | Yes  | 상품가격 (소수점이하 18자리로 표시된 문자, 소수점 포함하지 않음)                                                                                                                  |
+| currency             | string | Yes  | 환률코드(usd, krw, the9, point...)                                                                                                                          |
+| shopId               | string | Yes  | 상점 아이디                                                                                                                                                  |
+| account              | string | Yes  | 월렛주소                                                                                                                                                    |
+| loyaltyType          | int    | Yes  | 적립되는 로열티의 종류(0: Point, 1: Token)                                                                                                                        |
+| paidPoint            | string | Yes  | (예상)지불될 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                   |
+| paidToken            | string | Yes  | (예상)지불될 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                    |
+| paidValue            | string | Yes  | 지불될 포인트 또는 토큰의 currency 단위의 가치                                                                                                                          |
+| feePoint             | string | Yes  | (예상)수수료 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                   |
+| feeToken             | string | Yes  | (예상)수수료 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                    |
+| feeValue             | string | Yes  | 수수료 포인트 또는 토큰의 currency 단위의 가치                                                                                                                          |
+| totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                    |
+| totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                     |
+| totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                           |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
+| openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                       |
+| closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                       |
+| openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                       |
+| closeCancelTimestamp | int    | Yes  | 취소결제 완료 명령어 접수 시간                                                                                                                                       |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -484,10 +485,11 @@
 
 #### - 입력 파라메타들
 
-| 파라메타명 | 유형   | 필수 | 설명        |
-| ---------- | ------ | ---- | ----------- |
-| accessKey  | string | Yes  | 비밀키      |
-| paymentId  | string | Yes  | 지불 아이디 |
+| 파라메타명 | 유형   | 필수 | 설명                                  |
+| ---------- | ------ | ---- |-------------------------------------|
+| accessKey  | string | Yes  | 비밀키                                 |
+| confirm   | boolean | Yes  | 정상 또는 취소 여부 (true: 정상처리, false: 취소) |
+| paymentId  | string | Yes  | 지불 아이디                              |
 
 #### - 결과
 
@@ -509,7 +511,7 @@
 | totalPoint           | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                                                                                                           |
 | totalToken           | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                                                                                             |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
 | openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                                                                                                                 |
 | closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                                                                                                                 |
 | openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                                                                                                                 |
@@ -524,29 +526,30 @@
 [1.1. 시퀀스 다이어그램](#11-신규결제에-대한-사용자가-승인-했을-때-과정) 의 11번에서 사용된다.
 [1.3. 시퀀스 다이어그램](#13-취소결제에-대한-상점주가-승인-했을-때-과정) 의 7번에서 사용된다.
 
-| 필드 1    | 필드 2        | 유형   | 필수 | 설명                                                                                                                                                                                                           |
-| --------- | ------------- | ------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| accessKey |               | string | Yes  | 비밀키                                                                                                                                                                                                         |
-| type      |               | string | Yes  | "pay_new": 결제요청<br/>"pay_cancel":취소요청                                                                                                                                                                  |
-| code      |               | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃                                                                                                                           |
-| message   |               | string | Yes  | 응답 메세지                                                                                                                                                                                                    |
-| data      | paymentId     | string | Yes  | 결제 아이디                                                                                                                                                                                                    |
-| data      | purchaseId    | string | Yes  | 구매 아이디                                                                                                                                                                                                    |
-| data      | amount        | string | Yes  | 상품가격                                                                                                                                                                                                       |
-| data      | currency      | string | Yes  | 환률코드                                                                                                                                                                                                       |
-| data      | shopId        | string | Yes  | 상점 아이디                                                                                                                                                                                                    |
-| data      | account       | string | Yes  | 월렛 주소                                                                                                                                                                                                      |
-| data      | loyaltyType   | int    | Yes  | 적립되는 로열티의 종류(0: Point, 1: Token)                                                                                                                                                                     |
-| data      | paidPoint     | string | Yes  | 지불될 포인트, loyaltyType가 0일때 유효한 값이다<br/>(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                      |
-| data      | paidToken     | string | Yes  | 지불될 토큰, loyaltyType가 1일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                             |
-| data      | paidValue     | string | Yes  | 지불될 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                 |
-| data      | feePoint      | string | Yes  | 수수료 포인트, loyaltyType가 0일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                           |
-| data      | feeToken      | string | Yes  | 수수료 토큰, loyaltyType가 1일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                             |
-| data      | feeValue      | string | Yes  | 수수료 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                 |
-| data      | totalPoint    | string | Yes  | 전체 포인트, loyaltyType가 0일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                             |
-| data      | totalToken    | string | Yes  | 전체 토큰, loyaltyType가 1일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                               |
-| data      | totalValue    | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
-| data      | paymentStatus | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, <br/>6: 취소결제접수, 7:취소결제승인, 8:취소결제거부, 9:취소결제결과응답, 10:취소결제완료, 11:타이아웃) |
+| 필드 1    | 필드 2            | 유형   | 필수 | 설명                                                                                                                                                                                                           |
+| --------- |-----------------| ------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| accessKey |                 | string | Yes  | 비밀키                                                                                                                                                                                                         |
+| type      |                 | string | Yes  | "pay_new": 결제요청<br/>"pay_cancel":취소요청                                                                                                                                                                  |
+| code      |                 | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃                                                                                                                           |
+| message   |                 | string | Yes  | 응답 메세지                                                                                                                                                                                                    |
+| data      | paymentId       | string | Yes  | 결제 아이디                                                                                                                                                                                                    |
+| data      | purchaseId      | string | Yes  | 구매 아이디                                                                                                                                                                                                    |
+| data      | amount          | string | Yes  | 상품가격                                                                                                                                                                                                       |
+| data      | currency        | string | Yes  | 환률코드                                                                                                                                                                                                       |
+| data      | shopId          | string | Yes  | 상점 아이디                                                                                                                                                                                                    |
+| data      | account         | string | Yes  | 월렛 주소                                                                                                                                                                                                      |
+| data      | loyaltyType     | int    | Yes  | 적립되는 로열티의 종류(0: Point, 1: Token)                                                                                                                                                                     |
+| data      | paidPoint       | string | Yes  | 지불될 포인트, loyaltyType가 0일때 유효한 값이다<br/>(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                      |
+| data      | paidToken       | string | Yes  | 지불될 토큰, loyaltyType가 1일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                             |
+| data      | paidValue       | string | Yes  | 지불될 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                 |
+| data      | feePoint        | string | Yes  | 수수료 포인트, loyaltyType가 0일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                           |
+| data      | feeToken        | string | Yes  | 수수료 토큰, loyaltyType가 1일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                             |
+| data      | feeValue        | string | Yes  | 수수료 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                 |
+| data      | totalPoint      | string | Yes  | 전체 포인트, loyaltyType가 0일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                             |
+| data      | totalToken      | string | Yes  | 전체 토큰, loyaltyType가 1일때 유효한 값이다(결제요청 성공시:지불된값, 결제요청 실패시:예상값, 취소시: 지불된값)                                                                                               |
+| data      | totalValue      | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                                                                                                   |
+| data      | paymentStatus   | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
+
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
@@ -639,7 +642,7 @@
         "totalPoint": "10500000000000000000",
         "totalToken": "0",
         "totalValue": "10500000000000000000",
-        "paymentStatus": 9
+        "paymentStatus": 10
     }
 }
 ```
@@ -669,7 +672,7 @@
         "totalPoint": "10500000000000000000",
         "totalToken": "0",
         "totalValue": "10500000000000000000",
-        "paymentStatus": 8
+        "paymentStatus": 9
     }
 }
 ```
@@ -868,7 +871,7 @@
 | totalPoint           | string | Yes  | 전체 포인트, loyaltyType가 0일때 유효한 값이다                                                                               |
 | totalToken           | string | Yes  | 전체 토큰, loyaltyType가 1일때 유효한 값이다                                                                                 |
 | totalValue           | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                                                                                 |
-| paymentStatus        | int    | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ): |
+| paymentStatus        | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
 | openNewTimestamp     | int    | Yes  | 신규결제 생성 명령어 접수 시간                                                                                               |
 | closeNewTimestamp    | int    | Yes  | 신규결제 완료 명령어 접수 시간                                                                                               |
 | openCancelTimestamp  | int    | Yes  | 취소결제 생성 명령어 접수 시간                                                                                               |
@@ -904,7 +907,7 @@
 | currency      | string | Yes  | 환률코드(usd, krw, the9, point...)                                                                                           |
 | shopId        | string | Yes  | 상점 아이디                                                                                                                  |
 | account       | string | Yes  | 월렛주소                                                                                                                     |
-| paymentStatus | int    | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ): |
+| paymentStatus | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
 | txHash        | string | Yes  | 트랜잭션 해시                                                                                                                |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
@@ -937,7 +940,7 @@
 | currency      | string | Yes  | 환률코드(usd, krw, the9, point...)                                                                                          |
 | shopId        | string | Yes  | 상점 아이디                                                                                                                 |
 | account       | string | Yes  | 월렛주소                                                                                                                    |
-| paymentStatus | int    | Yes  | 처리상태 (1: 결제접수, 2: 결제승인, 3: 결제거부, 4: 결제완료, 5: 취소접수, 6:취소승인, 7:취소거부, 8:취소완료, 9:타이아웃 ) |
+| paymentStatus | int    | Yes  | 처리상태 <br/>(1: 신규결제접수, 2: 신규결제승인, 3: 신규결제거부, 4: 신규결제결과응답, 5:신규결제완료, 6:신규결제실패, 7: 취소결제접수, 8:취소결제승인, 9:취소결제거부, 10:취소결제결과응답, 11:취소결제완료, 12:취소결제실패, 13:타이아웃) |
 | txHash        | string | Yes  | 트랜잭션 해시                                                                                                               |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
