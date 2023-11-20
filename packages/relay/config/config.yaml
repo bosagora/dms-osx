@@ -38,7 +38,7 @@ scheduler:
   items:
     - name: approval
       enable: true
-      expression: "*/1 * * * * *"
+      expression: "*/3 * * * * *"
     - name: close
       enable: true
       expression: "*/10 * * * * *"
