@@ -72,16 +72,17 @@ export class ContractUtils {
     public static cacheEVMError(root: any): string {
         let error = root;
         while (error !== undefined) {
-            if (error.reason !== undefined) {
-                let idx = error.reason.indexOf(ContractUtils.find1_message);
+            if (error.reason) {
+                const reason = String(error.reason);
+                let idx = reason.indexOf(ContractUtils.find1_message);
                 let message: string;
                 if (idx >= 0) {
-                    message = error.reason.substring(idx + ContractUtils.find1_length).trim();
+                    message = reason.substring(idx + ContractUtils.find1_length).trim();
                     return message;
                 }
-                idx = error.reason.indexOf(ContractUtils.find2_message);
+                idx = reason.indexOf(ContractUtils.find2_message);
                 if (idx >= 0) {
-                    message = error.reason.substring(idx + ContractUtils.find2_length).trim();
+                    message = reason.substring(idx + ContractUtils.find2_length).trim();
                     return message;
                 }
             }
@@ -97,10 +98,11 @@ export class ContractUtils {
 
     public static isErrorOfEVM(error: any): boolean {
         while (error !== undefined) {
-            if (error.reason !== undefined) {
+            if (error.reason) {
+                const reason = String(error.reason);
                 if (
-                    error.message.indexOf(ContractUtils.find1_message) >= 0 ||
-                    error.message.indexOf(ContractUtils.find2_message) >= 0
+                    reason.indexOf(ContractUtils.find1_message) >= 0 ||
+                    reason.indexOf(ContractUtils.find2_message) >= 0
                 )
                     return true;
             }

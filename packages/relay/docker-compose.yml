@@ -14,8 +14,8 @@ services:
       ]
     environment:
       POSTGRES_PASSWORD: 12345678
-      POSTGRES_USER: root
-      POSTGRES_DB: relay
+      POSTGRES_USER: agora
+      POSTGRES_DB: postgres
       PGDATA: /postgresql/data
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
     volumes:
