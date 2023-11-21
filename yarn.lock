@@ -424,6 +424,13 @@
   dependencies:
     "@ethersproject/logger" "^5.7.0"
 
+"@ethersproject/networks@npm:boa-networks@5.7.2":
+  version "5.7.2"
+  resolved "https://registry.yarnpkg.com/boa-networks/-/boa-networks-5.7.2.tgz#eb8f8c1d27f10f1bfd987c25898116376d85e44f"
+  integrity sha512-vIowYIROUFXTjSB2W+ouxVCHtLAbe/w1Aff314rGtgIZgPcsmSLP056RWi5Iu0jyX/fU6YDs9w5lJ+rNCsmbgQ==
+  dependencies:
+    "@ethersproject/logger" "^5.7.0"
+
 "@ethersproject/pbkdf2@5.7.0", "@ethersproject/pbkdf2@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/pbkdf2/-/pbkdf2-5.7.0.tgz#d2267d0a1f6e123f3771007338c47cccd83d3102"
@@ -3838,6 +3845,42 @@ ethers@^5.7.0, ethers@^5.7.1:
     "@ethersproject/keccak256" "5.7.0"
     "@ethersproject/logger" "5.7.0"
     "@ethersproject/networks" "5.7.1"
+    "@ethersproject/pbkdf2" "5.7.0"
+    "@ethersproject/properties" "5.7.0"
+    "@ethersproject/providers" "5.7.2"
+    "@ethersproject/random" "5.7.0"
+    "@ethersproject/rlp" "5.7.0"
+    "@ethersproject/sha2" "5.7.0"
+    "@ethersproject/signing-key" "5.7.0"
+    "@ethersproject/solidity" "5.7.0"
+    "@ethersproject/strings" "5.7.0"
+    "@ethersproject/transactions" "5.7.0"
+    "@ethersproject/units" "5.7.0"
+    "@ethersproject/wallet" "5.7.0"
+    "@ethersproject/web" "5.7.1"
+    "@ethersproject/wordlists" "5.7.0"
+
+"ethers@npm:boa-ethers2@^5.7.9":
+  version "5.7.9"
+  resolved "https://registry.yarnpkg.com/boa-ethers2/-/boa-ethers2-5.7.9.tgz#b84ecd2d9370918a700d16dea35533740ca96d71"
+  integrity sha512-TWmkAAwQuFjxSSJpbDgOIqpMS5EuCwNIsSxxPF31DxQnle1jX98UoAcEt2++/sLD3Zy2fB2pyhseD1e6zATClg==
+  dependencies:
+    "@ethersproject/abi" "5.7.0"
+    "@ethersproject/abstract-provider" "5.7.0"
+    "@ethersproject/abstract-signer" "5.7.0"
+    "@ethersproject/address" "5.7.0"
+    "@ethersproject/base64" "5.7.0"
+    "@ethersproject/basex" "5.7.0"
+    "@ethersproject/bignumber" "5.7.0"
+    "@ethersproject/bytes" "5.7.0"
+    "@ethersproject/constants" "5.7.0"
+    "@ethersproject/contracts" "5.7.0"
+    "@ethersproject/hash" "5.7.0"
+    "@ethersproject/hdnode" "5.7.0"
+    "@ethersproject/json-wallets" "5.7.0"
+    "@ethersproject/keccak256" "5.7.0"
+    "@ethersproject/logger" "5.7.0"
+    "@ethersproject/networks" "npm:boa-networks@5.7.2"
     "@ethersproject/pbkdf2" "5.7.0"
     "@ethersproject/properties" "5.7.0"
     "@ethersproject/providers" "5.7.2"
