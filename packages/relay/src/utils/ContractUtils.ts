@@ -1,4 +1,3 @@
-import * as crypto from "crypto";
 import { BigNumberish, BytesLike, ethers, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
@@ -8,22 +7,11 @@ import { Log } from "@ethersproject/providers";
 import { id } from "@ethersproject/hash";
 import { ContractReceipt } from "@ethersproject/contracts";
 import { Interface } from "@ethersproject/abi";
+import { randomBytes } from "@ethersproject/random";
 
 export class ContractUtils {
     public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {
         return receipt.logs.find((log) => log.topics[0] === id(iface.getEvent(eventName).format("sighash")));
-    }
-
-    /**
-     * It generates hash values.
-     * @param data The source data
-     */
-    public static sha256(data: Buffer): Buffer {
-        return crypto.createHash("sha256").update(data).digest();
-    }
-
-    public static sha256String(data: string): string {
-        return ContractUtils.BufferToString(crypto.createHash("sha256").update(Buffer.from(data.trim())).digest());
     }
 
     /**
@@ -114,7 +102,7 @@ export class ContractUtils {
     public static getRequestId(emailHash: string, address: string, nonce: BigNumberish): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "address", "uint256", "bytes32"],
-            [emailHash, address, nonce, crypto.randomBytes(32)]
+            [emailHash, address, nonce, randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }
@@ -249,7 +237,7 @@ export class ContractUtils {
     public static getShopId(account: string): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["address", "bytes32"],
-            [account, crypto.randomBytes(32)]
+            [account, randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }
@@ -390,7 +378,7 @@ export class ContractUtils {
     public static getPaymentId(account: string, nonce: BigNumberish): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["address", "uint256", "bytes32"],
-            [account, nonce, crypto.randomBytes(32)]
+            [account, nonce, randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }
@@ -398,7 +386,7 @@ export class ContractUtils {
     public static getTaskId(shopId: string): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["bytes32", "uint256", "bytes32", "bytes32"],
-            [shopId, ContractUtils.getTimeStamp(), crypto.randomBytes(32), crypto.randomBytes(32)]
+            [shopId, ContractUtils.getTimeStamp(), randomBytes(32), randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }

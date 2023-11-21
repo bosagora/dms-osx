@@ -1,23 +1,10 @@
 import "@nomiclabs/hardhat-ethers";
-import * as crypto from "crypto";
 import { BigNumberish, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
 
 export class ContractUtils {
-    /**
-     * It generates hash values.
-     * @param data The source data
-     */
-    public static sha256(data: Buffer): Buffer {
-        return crypto.createHash("sha256").update(data).digest();
-    }
-
-    public static sha256String(data: string): string {
-        return ContractUtils.BufferToString(crypto.createHash("sha256").update(Buffer.from(data.trim())).digest());
-    }
-
     /**
      * Convert hexadecimal strings into Buffer.
      * @param hex The hexadecimal string
@@ -94,7 +81,7 @@ export class ContractUtils {
     public static getShopId(account: string): string {
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["address", "bytes32"],
-            [account, crypto.randomBytes(32)]
+            [account, hre.ethers.utils.randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
     }
