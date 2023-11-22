@@ -63,7 +63,7 @@
     </update>
 
     <select id="getTasksForType">
-        SELECT * FROM tasks WHERE "type" = #{type};
+        SELECT * FROM tasks WHERE "type" = #{type} AND "taskStatus" = ${taskStatus};
     </select>
 
 </mapper>

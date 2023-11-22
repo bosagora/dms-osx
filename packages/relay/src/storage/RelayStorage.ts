@@ -363,9 +363,9 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getTasksForType(type: TaskResultType): Promise<ShopTaskData[]> {
+    public getTasksForType(type: TaskResultType, taskStatus: ShopTaskStatus): Promise<ShopTaskData[]> {
         return new Promise<ShopTaskData[]>(async (resolve, reject) => {
-            this.queryForMapper("task", "getTasksForType", { type })
+            this.queryForMapper("task", "getTasksForType", { type, taskStatus })
                 .then((result) => {
                     resolve(
                         result.rows.map((m) => {
