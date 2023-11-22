@@ -1,7 +1,7 @@
 import "@nomiclabs/hardhat-ethers";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
-import { IShopData, IUserData, LoyaltyPaymentTaskStatus, TaskResultType } from "../types/index";
+import { IShopData, IUserData, LoyaltyPaymentTaskStatus, ShopTaskStatus, TaskResultType } from "../types/index";
 import { Scheduler } from "./Scheduler";
 
 import { Ledger, ShopCollection, Token } from "../../typechain-types";
@@ -212,7 +212,7 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onUpdateTask() {
-        const tasks = await this.storage.getTasksForType(TaskResultType.UPDATE);
+        const tasks = await this.storage.getTasksForType(TaskResultType.UPDATE, ShopTaskStatus.OPENED);
         for (const task of tasks) {
             if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);
@@ -246,7 +246,7 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onStatusTask() {
-        const tasks = await this.storage.getTasksForType(TaskResultType.STATUS);
+        const tasks = await this.storage.getTasksForType(TaskResultType.STATUS, ShopTaskStatus.OPENED);
         for (const task of tasks) {
             if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);

@@ -1063,7 +1063,7 @@
 | 1511 | 사용자의 잔고가 부족합니다<br/>Insufficient balance                                                                                   |
 | 1512 | 예치을 허용하지 않았습니다<br/>Not allowed deposit                                                                                    |
 | 1513 | 수수료 계정 또는 재단 계정의 잔고가 부족합니다<br/>Insufficient fee or foundation balance                                                     |
-| 1520 | 로열티 종류가 토큰입니다<br/>Loyalty type is not TOKEN                                                                               |
+| 1520 | 로열티 종류가 토큰가 아닙니다. 토큰만이 인출과 예치가 가능합니다.<br/>Loyalty type is not TOKEN                                                       |
 | 1521 | 잘못된 값을 입력했습니다<br/>Invalid value entered                                                                                   |
 | 1530 | 지불아이디가 이미 사용중입니다<br/>The payment ID already exists                                                                        |
 | 1531 | 지불아이디에 대응하는 상태값이 진행중이지 않습니다<br/>The status of the payment corresponding to the payment ID is not in progress              |
