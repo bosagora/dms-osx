@@ -386,7 +386,7 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.CONFIRMED);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
             });
 
             it("Waiting", async () => {
@@ -466,7 +466,7 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.CONFIRMED);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
             });
 
             it("Waiting", async () => {

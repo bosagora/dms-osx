@@ -347,7 +347,16 @@ export class ShopRouter {
                 };
                 await this._storage.postTask(item);
 
-                res.status(200).json(
+                /// 사용자에게 푸쉬 메세지 발송
+                const title = "KIOS 상점 정보 변경 요청";
+                const contents: string[] = [];
+                contents.push(`상점이름 : ${item.name}`);
+                contents.push(`작업아이디 : ${item.taskId}`);
+                contents.push(`적립비율 : ${item.providePercent}`);
+                contents.push(`지연시간 : ${item.provideWaitTime}`);
+                this._sender.send(title, contents.join("\n"));
+
+                return res.status(200).json(
                     this.makeResponseData(0, {
                         taskId: item.taskId,
                         shopId: item.shopId,
@@ -358,17 +367,8 @@ export class ShopRouter {
                         timestamp: item.timestamp,
                     })
                 );
-
-                /// 사용자에게 푸쉬 메세지 발송
-                const title = "KIOS 상점 정보 변경 요청";
-                const contents: string[] = [];
-                contents.push(`상점이름 : ${item.name}`);
-                contents.push(`작업아이디 : ${item.taskId}`);
-                contents.push(`적립비율 : ${item.providePercent}`);
-                contents.push(`지연시간 : ${item.provideWaitTime}`);
-                this._sender.send(title, contents.join("\n"));
             } else {
-                res.status(200).json(ResponseMessage.getErrorMessage("1201"));
+                return res.status(200).json(ResponseMessage.getErrorMessage("1201"));
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
@@ -412,7 +412,6 @@ export class ShopRouter {
 
                 if (ContractUtils.getTimeStamp() - item.timestamp > this._config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
-                    res.status(200).json(data);
 
                     item.taskStatus = ShopTaskStatus.TIMEOUT;
                     await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
@@ -423,7 +422,8 @@ export class ShopRouter {
                         data.error.message,
                         this.getCallBackResponse(item)
                     );
-                    return;
+
+                    return res.status(200).json(data);
                 }
 
                 if (approval) {
@@ -451,19 +451,6 @@ export class ShopRouter {
                         item.taskStatus = ShopTaskStatus.CONFIRMED;
                         await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
 
-                        res.status(200).json(
-                            this.makeResponseData(0, {
-                                taskId: item.taskId,
-                                shopId: item.shopId,
-                                name: item.name,
-                                provideWaitTime: item.provideWaitTime,
-                                providePercent: item.providePercent,
-                                taskStatus: item.taskStatus,
-                                timestamp: item.timestamp,
-                                txHash: tx.hash,
-                            })
-                        );
-
                         const event = await this.waitAndUpdateEvent(contract, tx);
                         if (event !== undefined) {
                             item.name = event.name;
@@ -479,6 +466,21 @@ export class ShopRouter {
                                 "Success",
                                 this.getCallBackResponse(item)
                             );
+
+                            return res.status(200).json(
+                                this.makeResponseData(0, {
+                                    taskId: item.taskId,
+                                    shopId: item.shopId,
+                                    name: item.name,
+                                    provideWaitTime: item.provideWaitTime,
+                                    providePercent: item.providePercent,
+                                    taskStatus: item.taskStatus,
+                                    timestamp: item.timestamp,
+                                    txHash: tx.hash,
+                                })
+                            );
+                        } else {
+                            return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
                         }
                     } catch (error) {
                         const msg = ResponseMessage.getEVMErrorMessage(error);
@@ -489,7 +491,14 @@ export class ShopRouter {
                     item.taskStatus = ShopTaskStatus.DENIED;
                     await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
 
-                    res.status(200).json(
+                    await this.sendTaskResult(
+                        TaskResultType.UPDATE,
+                        TaskResultCode.DENIED,
+                        "Denied by user",
+                        this.getCallBackResponse(item)
+                    );
+
+                    return res.status(200).json(
                         this.makeResponseData(0, {
                             taskId: item.taskId,
                             shopId: item.shopId,
@@ -499,13 +508,6 @@ export class ShopRouter {
                             taskStatus: item.taskStatus,
                             timestamp: item.timestamp,
                         })
-                    );
-
-                    await this.sendTaskResult(
-                        TaskResultType.UPDATE,
-                        TaskResultCode.DENIED,
-                        "Denied by user",
-                        this.getCallBackResponse(item)
                     );
                 }
             }
@@ -558,7 +560,15 @@ export class ShopRouter {
                 };
                 await this._storage.postTask(item);
 
-                res.status(200).json(
+                /// 사용자에게 푸쉬 메세지 발송
+                const title = "KIOS 상점 상태 변경 요청";
+                const contents: string[] = [];
+                contents.push(`상점 이름 : ${item.name}`);
+                contents.push(`상태 : ${item.status}`);
+                contents.push(`처리 아이디 : ${item.taskId}`);
+                this._sender.send(title, contents.join("\n"));
+
+                return res.status(200).json(
                     this.makeResponseData(0, {
                         taskId: item.taskId,
                         shopId: item.shopId,
@@ -567,18 +577,10 @@ export class ShopRouter {
                         timestamp: item.timestamp,
                     })
                 );
-
-                /// 사용자에게 푸쉬 메세지 발송
-                const title = "KIOS 상점 상태 변경 요청";
-                const contents: string[] = [];
-                contents.push(`상점 이름 : ${item.name}`);
-                contents.push(`상태 : ${item.status}`);
-                contents.push(`처리 아이디 : ${item.taskId}`);
-                this._sender.send(title, contents.join("\n"));
             } else {
-                res.status(200).json(
-                    this.makeResponseData(0, undefined, { message: "존재하지 않는 상점 아이디입니다" })
-                );
+                return res
+                    .status(200)
+                    .json(this.makeResponseData(0, undefined, { message: "존재하지 않는 상점 아이디입니다" }));
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
@@ -628,7 +630,6 @@ export class ShopRouter {
 
                 if (ContractUtils.getTimeStamp() - item.timestamp > this._config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
-                    res.status(200).json(data);
 
                     item.taskStatus = ShopTaskStatus.TIMEOUT;
                     await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
@@ -639,7 +640,7 @@ export class ShopRouter {
                         data.error.message,
                         this.getCallBackResponse(item)
                     );
-                    return;
+                    return res.status(200).json(data);
                 }
 
                 if (approval) {
@@ -666,17 +667,6 @@ export class ShopRouter {
                         item.taskStatus = ShopTaskStatus.CONFIRMED;
                         await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
 
-                        res.status(200).json(
-                            this.makeResponseData(0, {
-                                taskId: item.taskId,
-                                shopId: item.shopId,
-                                status: item.status,
-                                taskStatus: item.taskStatus,
-                                timestamp: item.timestamp,
-                                txHash: tx.hash,
-                            })
-                        );
-
                         const event = await this.waitAndChangeStatusEvent(contract, tx);
                         if (event !== undefined) {
                             item.status = event.status;
@@ -689,6 +679,19 @@ export class ShopRouter {
                                 "Success",
                                 this.getCallBackResponse(item)
                             );
+
+                            return res.status(200).json(
+                                this.makeResponseData(0, {
+                                    taskId: item.taskId,
+                                    shopId: item.shopId,
+                                    status: item.status,
+                                    taskStatus: item.taskStatus,
+                                    timestamp: item.timestamp,
+                                    txHash: tx.hash,
+                                })
+                            );
+                        } else {
+                            return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
                         }
                     } catch (error) {
                         const msg = ResponseMessage.getEVMErrorMessage(error);
@@ -699,7 +702,14 @@ export class ShopRouter {
                     item.taskStatus = ShopTaskStatus.DENIED;
                     await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
 
-                    res.status(200).json(
+                    await this.sendTaskResult(
+                        TaskResultType.STATUS,
+                        TaskResultCode.DENIED,
+                        "Denied by user",
+                        this.getCallBackResponse(item)
+                    );
+
+                    return res.status(200).json(
                         this.makeResponseData(0, {
                             taskId: item.taskId,
                             shopId: item.shopId,
@@ -707,13 +717,6 @@ export class ShopRouter {
                             taskStatus: item.taskStatus,
                             timestamp: item.timestamp,
                         })
-                    );
-
-                    await this.sendTaskResult(
-                        TaskResultType.STATUS,
-                        TaskResultCode.DENIED,
-                        "Denied by user",
-                        this.getCallBackResponse(item)
                     );
                 }
             }
