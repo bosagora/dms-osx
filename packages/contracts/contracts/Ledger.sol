@@ -361,6 +361,10 @@ contract Ledger {
         nonce[_account]++;
 
         emit ChangedToPayablePoint(_phone, _account, amount, value, pointBalances[_account]);
+
+        if (loyaltyTypes[_account] == LoyaltyType.TOKEN) {
+            _exchangePointToToken(_account);
+        }
     }
 
     /// @notice 이용할 수 있는 지불 아이디 인지 알려준다.
@@ -816,22 +820,26 @@ contract Ledger {
     function _changeToLoyaltyToken(address _account) internal {
         if (loyaltyTypes[_account] != LoyaltyType.TOKEN) {
             loyaltyTypes[_account] = LoyaltyType.TOKEN;
-            uint256 amountPoint;
-            uint256 amountToken;
-            if (pointBalances[_account] > 0) {
-                amountPoint = pointBalances[_account];
-                amountToken = convertPointToToken(amountPoint);
-                require(tokenBalances[foundationAccount] >= amountToken, "1510");
-                tokenBalances[_account] += amountToken;
-                tokenBalances[foundationAccount] -= amountToken;
-                pointBalances[_account] = 0;
-            } else {
-                amountPoint = 0;
-                amountToken = 0;
-            }
-            nonce[_account]++;
-            emit ChangedToLoyaltyToken(_account, amountToken, amountPoint, tokenBalances[_account]);
+            _exchangePointToToken(_account);
         }
+    }
+
+    function _exchangePointToToken(address _account) internal {
+        uint256 amountPoint;
+        uint256 amountToken;
+        if (pointBalances[_account] > 0) {
+            amountPoint = pointBalances[_account];
+            amountToken = convertPointToToken(amountPoint);
+            require(tokenBalances[foundationAccount] >= amountToken, "1510");
+            tokenBalances[_account] += amountToken;
+            tokenBalances[foundationAccount] -= amountToken;
+            pointBalances[_account] = 0;
+        } else {
+            amountPoint = 0;
+            amountToken = 0;
+        }
+        nonce[_account]++;
+        emit ChangedToLoyaltyToken(_account, amountToken, amountPoint, tokenBalances[_account]);
     }
 
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.
