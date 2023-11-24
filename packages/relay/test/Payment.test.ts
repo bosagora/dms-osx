@@ -169,22 +169,15 @@ describe("Test of Server", function () {
                 shop.shopId,
                 await shopCollection.nonceOf(shop.wallet.address)
             );
-            const signature2 = ContractUtils.signShop(
-                certifier,
-                shop.shopId,
-                await shopCollection.nonceOf(certifier.address)
-            );
             await shopCollection
-                .connect(deployer)
+                .connect(certifier)
                 .update(
                     shop.shopId,
                     shop.name,
                     shop.provideWaitTime,
                     shop.providePercent,
                     shop.wallet.address,
-                    signature1,
-                    certifier.address,
-                    signature2
+                    signature1
                 );
         }
 
@@ -194,21 +187,9 @@ describe("Test of Server", function () {
                 shop.shopId,
                 await shopCollection.nonceOf(shop.wallet.address)
             );
-            const signature2 = ContractUtils.signShop(
-                certifier,
-                shop.shopId,
-                await shopCollection.nonceOf(certifier.address)
-            );
             await shopCollection
-                .connect(deployer)
-                .changeStatus(
-                    shop.shopId,
-                    ContractShopStatus.ACTIVE,
-                    shop.wallet.address,
-                    signature1,
-                    certifier.address,
-                    signature2
-                );
+                .connect(certifier)
+                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.wallet.address, signature1);
         }
     };
 

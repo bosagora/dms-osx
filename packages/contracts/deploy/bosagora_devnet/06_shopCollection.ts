@@ -54,24 +54,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 shop.shopId,
                 await contract.nonceOf(shop.address)
             );
-            const signature2 = ContractUtils.signShop(
-                await ethers.getSigner(certifier),
-                shop.shopId,
-                await contract.nonceOf(certifier)
-            );
-
             const tx2 = await contract
-                .connect(await ethers.getSigner(owner))
-                .update(
-                    shop.shopId,
-                    shop.name,
-                    shop.provideWaitTime,
-                    shop.providePercent,
-                    shop.address,
-                    signature1,
-                    certifier,
-                    signature2
-                );
+                .connect(await ethers.getSigner(certifier))
+                .update(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.address, signature1);
             console.log(`Update shop data (tx: ${tx2.hash})...`);
             await tx2.wait();
 
@@ -80,14 +65,9 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
                 shop.shopId,
                 await contract.nonceOf(shop.address)
             );
-            const signature4 = ContractUtils.signShop(
-                await ethers.getSigner(certifier),
-                shop.shopId,
-                await contract.nonceOf(certifier)
-            );
             const tx3 = await contract
-                .connect(await ethers.getSigner(owner))
-                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.address, signature3, certifier, signature4);
+                .connect(await ethers.getSigner(certifier))
+                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.address, signature3);
             console.log(`Change shop status (tx: ${tx3.hash})...`);
             await tx3.wait();
         }

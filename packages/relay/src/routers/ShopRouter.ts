@@ -427,13 +427,6 @@ export class ShopRouter {
                 }
 
                 if (approval) {
-                    const certifier = signerItem.signer;
-                    const signature2 = await ContractUtils.signShop(
-                        certifier,
-                        item.shopId,
-                        await contract.nonceOf(await certifier.getAddress())
-                    );
-
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
@@ -443,9 +436,7 @@ export class ShopRouter {
                                 item.provideWaitTime,
                                 item.providePercent,
                                 item.account,
-                                signature,
-                                await certifier.getAddress(),
-                                signature2
+                                signature
                             );
 
                         item.taskStatus = ShopTaskStatus.CONFIRMED;
@@ -645,24 +636,10 @@ export class ShopRouter {
 
                 if (approval) {
                     const contract = await this.getShopContract();
-                    const certifier = signerItem.signer;
-                    const signature2 = await ContractUtils.signShop(
-                        certifier,
-                        item.shopId,
-                        await contract.nonceOf(await certifier.getAddress())
-                    );
-
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .changeStatus(
-                                item.shopId,
-                                item.status,
-                                item.account,
-                                signature,
-                                await certifier.getAddress(),
-                                signature2
-                            );
+                            .changeStatus(item.shopId, item.status, item.account, signature);
 
                         item.taskStatus = ShopTaskStatus.CONFIRMED;
                         await this._storage.updateTaskStatus(item.taskId, item.taskStatus);

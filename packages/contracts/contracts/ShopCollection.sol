@@ -160,28 +160,23 @@ contract ShopCollection {
         string calldata _name,
         uint256 _provideWaitTime,
         uint256 _providePercent,
-        address _account1,
-        bytes calldata _signature1,
-        address _account2,
-        bytes calldata _signature2
+        address _account,
+        bytes calldata _signature
     ) public {
         bytes32 id = _shopId;
         require(shops[id].status != ShopStatus.INVALID, "1201");
-        require(shops[id].account == _account1, "1050");
+        require(shops[id].account == _account, "1050");
 
-        bytes32 dataHash1 = keccak256(abi.encode(id, _account1, nonce[_account1]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account1, "1501");
+        require(certifierCollection.isCertifier(msg.sender), "1505");
 
-        require(certifierCollection.isCertifier(_account2), "1505");
-        bytes32 dataHash2 = keccak256(abi.encode(id, _account2, nonce[_account2]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == _account2, "1504");
+        bytes32 dataHash = keccak256(abi.encode(id, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         shops[id].name = _name;
         shops[id].provideWaitTime = _provideWaitTime;
         shops[id].providePercent = _providePercent;
 
-        nonce[_account1]++;
-        nonce[_account2]++;
+        nonce[_account]++;
 
         emit UpdatedShop(
             shops[id].shopId,
@@ -197,30 +192,20 @@ contract ShopCollection {
     /// @param _shopId 상점 아이디
     /// @param _status 상점의 상태
     /// @dev 중계서버를 통해서 호출됩니다.
-    function changeStatus(
-        bytes32 _shopId,
-        ShopStatus _status,
-        address _account1,
-        bytes calldata _signature1,
-        address _account2,
-        bytes calldata _signature2
-    ) public {
+    function changeStatus(bytes32 _shopId, ShopStatus _status, address _account, bytes calldata _signature) public {
         bytes32 id = _shopId;
         require(_status != ShopStatus.INVALID, "1201");
         require(shops[id].status != ShopStatus.INVALID, "1201");
-        require(shops[id].account == _account1, "1050");
+        require(shops[id].account == _account, "1050");
 
-        bytes32 dataHash1 = keccak256(abi.encode(id, _account1, nonce[_account1]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature1) == _account1, "1501");
+        require(certifierCollection.isCertifier(msg.sender), "1505");
 
-        require(certifierCollection.isCertifier(_account2), "1505");
-        bytes32 dataHash2 = keccak256(abi.encode(id, _account2, nonce[_account2]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature2) == _account2, "1504");
+        bytes32 dataHash = keccak256(abi.encode(id, _account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         shops[id].status = _status;
 
-        nonce[_account1]++;
-        nonce[_account2]++;
+        nonce[_account]++;
 
         emit ChangedShopStatus(shops[id].shopId, shops[id].status);
     }

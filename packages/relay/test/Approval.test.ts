@@ -168,23 +168,9 @@ describe("Test of Server", function () {
                 shop.shopId,
                 await shopCollection.nonceOf(shop.address)
             );
-            const signature2 = ContractUtils.signShop(
-                certifier,
-                shop.shopId,
-                await shopCollection.nonceOf(certifier.address)
-            );
             await shopCollection
-                .connect(deployer)
-                .update(
-                    shop.shopId,
-                    shop.name,
-                    shop.provideWaitTime,
-                    shop.providePercent,
-                    shop.address,
-                    signature1,
-                    certifier.address,
-                    signature2
-                );
+                .connect(certifier)
+                .update(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.address, signature1);
         }
 
         for (const shop of shops) {
@@ -193,21 +179,9 @@ describe("Test of Server", function () {
                 shop.shopId,
                 await shopCollection.nonceOf(shop.address)
             );
-            const signature2 = ContractUtils.signShop(
-                certifier,
-                shop.shopId,
-                await shopCollection.nonceOf(certifier.address)
-            );
             await shopCollection
-                .connect(deployer)
-                .changeStatus(
-                    shop.shopId,
-                    ContractShopStatus.ACTIVE,
-                    shop.address,
-                    signature1,
-                    certifier.address,
-                    signature2
-                );
+                .connect(certifier)
+                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.address, signature1);
         }
     };
 
