@@ -145,28 +145,21 @@ describe("Test for ShopCollection", () => {
         elem.name = "New Shop";
         elem.provideWaitTime = 86400 * 7;
         elem.providePercent = 10;
-        const signature1 = ContractUtils.signShop(
+        const signature = ContractUtils.signShop(
             elem.wallet,
             elem.shopId,
             await shopCollection.nonceOf(elem.wallet.address)
         );
-        const signature2 = ContractUtils.signShop(
-            certifier,
-            elem.shopId,
-            await shopCollection.nonceOf(certifier.address)
-        );
         await expect(
             shopCollection
-                .connect(relay)
+                .connect(certifier)
                 .update(
                     elem.shopId,
                     elem.name,
                     elem.provideWaitTime,
                     elem.providePercent,
                     elem.wallet.address,
-                    signature1,
-                    certifier.address,
-                    signature2
+                    signature
                 )
         )
             .to.emit(shopCollection, "UpdatedShop")
@@ -188,27 +181,15 @@ describe("Test for ShopCollection", () => {
 
     it("Change status", async () => {
         for (const elem of shopData) {
-            const signature1 = ContractUtils.signShop(
+            const signature = ContractUtils.signShop(
                 elem.wallet,
                 elem.shopId,
                 await shopCollection.nonceOf(elem.wallet.address)
             );
-            const signature2 = ContractUtils.signShop(
-                certifier,
-                elem.shopId,
-                await shopCollection.nonceOf(certifier.address)
-            );
             await expect(
                 shopCollection
-                    .connect(elem.wallet)
-                    .changeStatus(
-                        elem.shopId,
-                        ContractShopStatus.ACTIVE,
-                        elem.wallet.address,
-                        signature1,
-                        certifier.address,
-                        signature2
-                    )
+                    .connect(certifier)
+                    .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature)
             )
                 .to.emit(shopCollection, "ChangedShopStatus")
                 .withNamedArgs({

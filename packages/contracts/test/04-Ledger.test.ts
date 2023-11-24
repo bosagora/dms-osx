@@ -205,22 +205,15 @@ describe("Test for Ledger", () => {
                 elem.shopId,
                 await shopCollection.nonceOf(elem.wallet.address)
             );
-            const signature2 = ContractUtils.signShop(
-                certifier,
-                elem.shopId,
-                await shopCollection.nonceOf(certifier.address)
-            );
             await shopCollection
-                .connect(relay)
+                .connect(certifier)
                 .update(
                     elem.shopId,
                     elem.name,
                     elem.provideWaitTime,
                     elem.providePercent,
                     elem.wallet.address,
-                    signature1,
-                    certifier.address,
-                    signature2
+                    signature1
                 );
         }
 
@@ -230,21 +223,9 @@ describe("Test for Ledger", () => {
                 elem.shopId,
                 await shopCollection.nonceOf(elem.wallet.address)
             );
-            const signature2 = ContractUtils.signShop(
-                certifier,
-                elem.shopId,
-                await shopCollection.nonceOf(certifier.address)
-            );
             await shopCollection
-                .connect(relay)
-                .changeStatus(
-                    elem.shopId,
-                    ContractShopStatus.ACTIVE,
-                    elem.wallet.address,
-                    signature1,
-                    certifier.address,
-                    signature2
-                );
+                .connect(certifier)
+                .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature1);
         }
     };
 
