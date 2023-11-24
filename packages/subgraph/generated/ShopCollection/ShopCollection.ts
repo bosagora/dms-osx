@@ -804,20 +804,12 @@ export class ChangeStatusCall__Inputs {
     return this._call.inputValues[1].value.toI32();
   }
 
-  get _account1(): Address {
+  get _account(): Address {
     return this._call.inputValues[2].value.toAddress();
   }
 
-  get _signature1(): Bytes {
+  get _signature(): Bytes {
     return this._call.inputValues[3].value.toBytes();
-  }
-
-  get _account2(): Address {
-    return this._call.inputValues[4].value.toAddress();
-  }
-
-  get _signature2(): Bytes {
-    return this._call.inputValues[5].value.toBytes();
   }
 }
 
@@ -1078,20 +1070,12 @@ export class UpdateCall__Inputs {
     return this._call.inputValues[3].value.toBigInt();
   }
 
-  get _account1(): Address {
+  get _account(): Address {
     return this._call.inputValues[4].value.toAddress();
   }
 
-  get _signature1(): Bytes {
+  get _signature(): Bytes {
     return this._call.inputValues[5].value.toBytes();
-  }
-
-  get _account2(): Address {
-    return this._call.inputValues[6].value.toAddress();
-  }
-
-  get _signature2(): Bytes {
-    return this._call.inputValues[7].value.toBytes();
   }
 }
 
