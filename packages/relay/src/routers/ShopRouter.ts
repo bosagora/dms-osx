@@ -243,7 +243,6 @@ export class ShopRouter {
             const tx = await contract.connect(signerItem.signer).add(shopId, name, account, signature);
 
             logger.http(`TxHash(/v1/shop/add): ${tx.hash}`);
-            res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
 
             const event = await this.waitAndAddEvent(contract, tx);
             if (event !== undefined) {
@@ -256,6 +255,9 @@ export class ShopRouter {
                     status: event.status,
                     account: event.account,
                 });
+                return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
+            } else {
+                return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);

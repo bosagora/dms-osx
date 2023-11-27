@@ -69,6 +69,6 @@ export class FakerCallbackServer {
     private async callback(req: express.Request, res: express.Response) {
         console.log(JSON.stringify(req.body));
         this.responseData.push(req.body);
-        res.status(200).json(this.makeResponseData(200, { message: "OK" }, undefined));
+        res.status(200).json(this.makeResponseData(0, { message: "OK" }, undefined));
     }
 }
