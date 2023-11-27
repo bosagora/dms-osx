@@ -541,7 +541,7 @@ export class PaymentRouter {
                 feePoint = paidPoint.mul(feeRate).div(100);
                 totalPoint = paidPoint.add(feePoint);
                 if (totalPoint.gt(balance)) {
-                    return res.status(200).json(this.makeResponseData(401, null, { message: "Insufficient balance" }));
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
                 }
                 paidToken = BigNumber.from(0);
                 feeToken = BigNumber.from(0);
@@ -554,7 +554,7 @@ export class PaymentRouter {
                 feeToken = paidToken.mul(feeRate).div(100);
                 totalToken = paidToken.add(feeToken);
                 if (totalToken.gt(balance)) {
-                    return res.status(200).json(this.makeResponseData(401, null, { message: "Insufficient balance" }));
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
                 }
                 paidPoint = BigNumber.from(0);
                 feePoint = BigNumber.from(0);
