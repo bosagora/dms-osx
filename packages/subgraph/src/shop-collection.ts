@@ -13,6 +13,13 @@ import { Shop, ShopTradeHistory } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { AmountUnit, NullBytes32 } from "./utils";
 
+enum PageType {
+    NONE = 0,
+    PROVIDE_USE = 1,
+    SETTLEMENT = 2,
+    WITHDRAW = 3,
+}
+
 enum ShopAction {
     NONE = 0,
     PROVIDED = 1,
@@ -82,6 +89,7 @@ export function handleChangedShopStatus(event: ChangedShopStatusEvent): void {
 export function handleIncreasedSettledPoint(event: IncreasedSettledPointEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
+    entity.pageType = PageType.SETTLEMENT;
     entity.action = ShopAction.SETTLED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
@@ -115,6 +123,7 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
 
     entity.shopId = event.params.shopId;
+    entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.PROVIDED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
@@ -147,6 +156,7 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
 export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
+    entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.USED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
@@ -180,6 +190,7 @@ export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
 export function handleDecreasedUsedPoint(event: DecreasedUsedPointEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
+    entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.USED;
     entity.cancel = true;
     entity.increase = event.params.increase.div(AmountUnit);
@@ -213,6 +224,7 @@ export function handleDecreasedUsedPoint(event: DecreasedUsedPointEvent): void {
 export function handleOpenedWithdrawal(event: OpenedWithdrawalEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
+    entity.pageType = PageType.WITHDRAW;
     entity.action = ShopAction.OPEN_WITHDRAWN;
     entity.cancel = false;
     entity.increase = event.params.amount.div(AmountUnit);
@@ -244,6 +256,7 @@ export function handleOpenedWithdrawal(event: OpenedWithdrawalEvent): void {
 export function handleClosedWithdrawal(event: ClosedWithdrawalEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
+    entity.pageType = PageType.WITHDRAW;
     entity.action = ShopAction.CLOSE_WITHDRAWN;
     entity.cancel = false;
     entity.increase = event.params.amount.div(AmountUnit);
