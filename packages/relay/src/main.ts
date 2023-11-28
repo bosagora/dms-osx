@@ -6,6 +6,7 @@ import { ContractUtils } from "./utils/ContractUtils";
 
 import { ApprovalScheduler } from "./scheduler/ApprovalScheduler";
 import { CloseScheduler } from "./scheduler/CloseScheduler";
+import { WatchScheduler } from "./scheduler/WatchScheduler";
 import { Scheduler } from "./scheduler/Scheduler";
 
 let server: DefaultServer;
@@ -33,6 +34,10 @@ async function main() {
         scheduler = config.scheduler.getScheduler("close");
         if (scheduler && scheduler.enable) {
             schedulers.push(new CloseScheduler(scheduler.expression));
+        }
+        scheduler = config.scheduler.getScheduler("watch");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new WatchScheduler(scheduler.expression));
         }
     }
 

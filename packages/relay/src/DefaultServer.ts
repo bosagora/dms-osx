@@ -54,6 +54,7 @@ export class DefaultServer extends WebService {
                 m.setOption({
                     config: this.config,
                     storage: this.storage,
+                    signers: this.relaySigners,
                 })
             );
         }

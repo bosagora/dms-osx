@@ -42,6 +42,9 @@ scheduler:
     - name: close
       enable: true
       expression: "*/10 * * * * *"
+    - name: watch
+      enable: true
+      expression: "*/1 * * * * *"
 
 relay:
   managerKeys:

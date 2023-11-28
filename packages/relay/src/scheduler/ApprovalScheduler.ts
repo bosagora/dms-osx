@@ -124,7 +124,7 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onNewPayment() {
-        const payments = await this.storage.getPaymentsForType(LoyaltyPaymentTaskStatus.OPENED_NEW);
+        const payments = await this.storage.getPaymentsStatusOf([LoyaltyPaymentTaskStatus.OPENED_NEW]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(payment.account);
@@ -169,7 +169,7 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onCancelPayment() {
-        const payments = await this.storage.getPaymentsForType(LoyaltyPaymentTaskStatus.OPENED_CANCEL);
+        const payments = await this.storage.getPaymentsStatusOf([LoyaltyPaymentTaskStatus.OPENED_CANCEL]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < this.config.relay.approvalSecond) continue;
             const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
@@ -212,13 +212,11 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onUpdateTask() {
-        const tasks = await this.storage.getTasksForType(TaskResultType.UPDATE, ShopTaskStatus.OPENED);
+        const tasks = await this.storage.getTasksStatusOf([TaskResultType.UPDATE], [ShopTaskStatus.OPENED]);
         for (const task of tasks) {
             if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);
             if (wallet !== undefined) {
-                const w = new Wallet(wallet.privateKey);
-
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);
 
@@ -246,7 +244,7 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onStatusTask() {
-        const tasks = await this.storage.getTasksForType(TaskResultType.STATUS, ShopTaskStatus.OPENED);
+        const tasks = await this.storage.getTasksStatusOf([TaskResultType.STATUS], [ShopTaskStatus.OPENED]);
         for (const task of tasks) {
             if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);

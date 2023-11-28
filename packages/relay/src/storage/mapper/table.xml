@@ -25,6 +25,14 @@
             "closeNewTimestamp"     INTEGER DEFAULT 0,
             "openCancelTimestamp"   INTEGER DEFAULT 0,
             "closeCancelTimestamp"  INTEGER DEFAULT 0,
+            "openNewTxId"           VARCHAR(66) DEFAULT '',
+            "openNewTxTime"         INTEGER DEFAULT 0,
+            "closeNewTxId"          VARCHAR(66) DEFAULT '',
+            "closeNewTxTime"        INTEGER DEFAULT 0,
+            "openCancelTxId"        VARCHAR(66) DEFAULT '',
+            "openCancelTxTime"      INTEGER DEFAULT 0,
+            "closeCancelTxId"       VARCHAR(66) DEFAULT '',
+            "closeCancelTxTime"     INTEGER DEFAULT 0,
             PRIMARY KEY ("paymentId")
         );
     </sql>
@@ -42,6 +50,8 @@
             "status"                INTEGER NOT NULL,
             "taskStatus"            INTEGER NOT NULL,
             "timestamp"             INTEGER DEFAULT 0,
+            "txId"                  VARCHAR(66) DEFAULT '',
+            "txTime"                INTEGER DEFAULT 0,
             PRIMARY KEY ("taskId")
         );
     </sql>

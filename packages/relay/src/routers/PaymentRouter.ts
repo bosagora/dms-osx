@@ -587,6 +587,14 @@ export class PaymentRouter {
                 closeNewTimestamp: 0,
                 openCancelTimestamp: 0,
                 closeCancelTimestamp: 0,
+                openNewTxId: "",
+                openNewTxTime: 0,
+                closeNewTxId: "",
+                closeNewTxTime: 0,
+                openCancelTxId: "",
+                openCancelTxTime: 0,
+                closeCancelTxId: "",
+                closeCancelTxTime: 0,
             };
             await this._storage.postPayment(item);
 
@@ -700,35 +708,32 @@ export class PaymentRouter {
                                 signature,
                             });
 
-                            const event = await this.waitPaymentLoyalty(contract, tx);
-                            if (event !== undefined) {
-                                item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW;
-                                this.updateEvent(event, item);
-                                await this._storage.updatePayment(item);
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
-                                await this.sendPaymentResult(
-                                    TaskResultType.NEW,
-                                    TaskResultCode.SUCCESS,
-                                    "Success",
-                                    this.getCallBackResponse(item)
-                                );
+                            item.openNewTxId = tx.hash;
+                            item.openNewTimestamp = ContractUtils.getTimeStamp();
+                            await this._storage.updateOpenNewTx(
+                                item.paymentId,
+                                item.openNewTxId,
+                                item.openNewTimestamp
+                            );
 
-                                return res.status(200).json(
-                                    this.makeResponseData(0, {
-                                        paymentId: item.paymentId,
-                                        purchaseId: item.purchaseId,
-                                        amount: item.amount.toString(),
-                                        currency: item.currency,
-                                        shopId: item.shopId,
-                                        account: item.account,
-                                        paymentStatus: item.paymentStatus,
-                                        txHash: tx.hash,
-                                    })
-                                );
-                            } else {
-                                return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
-                            }
+                            return res.status(200).json(
+                                this.makeResponseData(0, {
+                                    paymentId: item.paymentId,
+                                    purchaseId: item.purchaseId,
+                                    amount: item.amount.toString(),
+                                    currency: item.currency,
+                                    shopId: item.shopId,
+                                    account: item.account,
+                                    paymentStatus: item.paymentStatus,
+                                    txHash: tx.hash,
+                                })
+                            );
                         } catch (error) {
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                             const msg = ResponseMessage.getEVMErrorMessage(error);
                             logger.error(`POST /v1/payment/new/approval : ${msg.error.message}`);
                             return res.status(200).json(msg);
@@ -845,7 +850,10 @@ export class PaymentRouter {
                         );
                     } else if (
                         item.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_NEW ||
-                        item.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_NEW ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_CONFIRMED_TX ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.FAILED_NEW
@@ -1119,35 +1127,32 @@ export class PaymentRouter {
                                 .connect(signerItem.signer)
                                 .openCancelLoyaltyPayment(item.paymentId, signature);
 
-                            const event = await this.waitPaymentLoyalty(contract, tx);
-                            if (event !== undefined) {
-                                item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL;
-                                this.updateEvent(event, item);
-                                await this._storage.updatePayment(item);
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
-                                await this.sendPaymentResult(
-                                    TaskResultType.CANCEL,
-                                    TaskResultCode.SUCCESS,
-                                    "Success",
-                                    this.getCallBackResponse(item)
-                                );
+                            item.openCancelTxId = tx.hash;
+                            item.openCancelTimestamp = ContractUtils.getTimeStamp();
+                            await this._storage.updateOpenCancelTx(
+                                item.paymentId,
+                                item.openCancelTxId,
+                                item.openCancelTimestamp
+                            );
 
-                                return res.status(200).json(
-                                    this.makeResponseData(0, {
-                                        paymentId: item.paymentId,
-                                        purchaseId: item.purchaseId,
-                                        amount: item.amount.toString(),
-                                        currency: item.currency,
-                                        shopId: item.shopId,
-                                        account: item.account,
-                                        paymentStatus: item.paymentStatus,
-                                        txHash: tx.hash,
-                                    })
-                                );
-                            } else {
-                                return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
-                            }
+                            return res.status(200).json(
+                                this.makeResponseData(0, {
+                                    paymentId: item.paymentId,
+                                    purchaseId: item.purchaseId,
+                                    amount: item.amount.toString(),
+                                    currency: item.currency,
+                                    shopId: item.shopId,
+                                    account: item.account,
+                                    paymentStatus: item.paymentStatus,
+                                    txHash: tx.hash,
+                                })
+                            );
                         } catch (error) {
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                             const msg = ResponseMessage.getEVMErrorMessage(error);
                             logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
                             return res.status(200).json(msg);
@@ -1265,7 +1270,10 @@ export class PaymentRouter {
                         );
                     } else if (
                         item.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_CANCEL ||
-                        item.paymentStatus === LoyaltyPaymentTaskStatus.CONFIRMED_CANCEL ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_CONFIRMED_TX ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.FAILED_CANCEL

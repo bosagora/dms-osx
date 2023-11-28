@@ -74,6 +74,14 @@ export class RelayStorage extends Storage {
                 closeNewTimestamp: item.closeNewTimestamp,
                 openCancelTimestamp: item.openCancelTimestamp,
                 closeCancelTimestamp: item.closeCancelTimestamp,
+                openNewTxId: item.openNewTxId,
+                openNewTxTime: item.openNewTxTime,
+                closeNewTxId: item.closeNewTxId,
+                closeNewTxTime: item.closeNewTxTime,
+                openCancelTxId: item.openCancelTxId,
+                openCancelTxTime: item.openCancelTxTime,
+                closeCancelTxId: item.closeCancelTxId,
+                closeCancelTxTime: item.closeCancelTxTime,
             })
                 .then(() => {
                     return resolve();
@@ -113,6 +121,14 @@ export class RelayStorage extends Storage {
                             closeNewTimestamp: m.closeNewTimestamp,
                             openCancelTimestamp: m.openCancelTimestamp,
                             closeCancelTimestamp: m.closeCancelTimestamp,
+                            openNewTxId: m.openNewTxId,
+                            openNewTxTime: m.openNewTxTime,
+                            closeNewTxId: m.closeNewTxId,
+                            closeNewTxTime: m.closeNewTxTime,
+                            openCancelTxId: m.openCancelTxId,
+                            openCancelTxTime: m.openCancelTxTime,
+                            closeCancelTxId: m.closeCancelTxId,
+                            closeCancelTxTime: m.closeCancelTxTime,
                         });
                     } else {
                         return resolve(undefined);
@@ -259,6 +275,8 @@ export class RelayStorage extends Storage {
                             status: m.status,
                             taskStatus: m.taskStatus,
                             timestamp: m.timestamp,
+                            txId: m.txId,
+                            txTime: m.txTime,
                         });
                     } else {
                         return resolve(undefined);
@@ -324,48 +342,9 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getPaymentsForType(paymentStatus: LoyaltyPaymentTaskStatus): Promise<LoyaltyPaymentTaskData[]> {
-        return new Promise<LoyaltyPaymentTaskData[]>(async (resolve, reject) => {
-            this.queryForMapper("payment", "getPaymentsForType", { paymentStatus })
-                .then((result) => {
-                    resolve(
-                        result.rows.map((m) => {
-                            return {
-                                paymentId: m.paymentId,
-                                purchaseId: m.purchaseId,
-                                amount: BigNumber.from(m.amount),
-                                currency: m.currency,
-                                shopId: m.shopId,
-                                account: m.account,
-                                loyaltyType: m.loyaltyType,
-                                paidPoint: BigNumber.from(m.paidPoint),
-                                paidToken: BigNumber.from(m.paidToken),
-                                paidValue: BigNumber.from(m.paidValue),
-                                feePoint: BigNumber.from(m.feePoint),
-                                feeToken: BigNumber.from(m.feeToken),
-                                feeValue: BigNumber.from(m.feeValue),
-                                totalPoint: BigNumber.from(m.totalPoint),
-                                totalToken: BigNumber.from(m.totalToken),
-                                totalValue: BigNumber.from(m.totalValue),
-                                paymentStatus: m.paymentStatus,
-                                openNewTimestamp: m.openNewTimestamp,
-                                closeNewTimestamp: m.closeNewTimestamp,
-                                openCancelTimestamp: m.openCancelTimestamp,
-                                closeCancelTimestamp: m.closeCancelTimestamp,
-                            };
-                        })
-                    );
-                })
-                .catch((reason) => {
-                    if (reason instanceof Error) return reject(reason);
-                    return reject(new Error(reason));
-                });
-        });
-    }
-
-    public getTasksForType(type: TaskResultType, taskStatus: ShopTaskStatus): Promise<ShopTaskData[]> {
+    public getTasksStatusOf(type: TaskResultType[], status: ShopTaskStatus[]): Promise<ShopTaskData[]> {
         return new Promise<ShopTaskData[]>(async (resolve, reject) => {
-            this.queryForMapper("task", "getTasksForType", { type, taskStatus })
+            this.queryForMapper("task", "getTasksStatusOf", { type, status })
                 .then((result) => {
                     resolve(
                         result.rows.map((m) => {
@@ -380,6 +359,8 @@ export class RelayStorage extends Storage {
                                 status: m.status,
                                 taskStatus: m.taskStatus,
                                 timestamp: m.timestamp,
+                                txId: m.txId,
+                                txTime: m.txTime,
                             };
                         })
                     );
@@ -391,9 +372,94 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getDelayedNewPayments(): Promise<LoyaltyPaymentTaskData[]> {
+    public updateTaskTx(taskId: string, txId: string, txTime: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("task", "updateTx", {
+                taskId,
+                txId,
+                txTime,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateOpenNewTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateOpenNewTx", {
+                paymentId,
+                txId,
+                txTime,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateCloseNewTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateCloseNewTx", {
+                paymentId,
+                txId,
+                txTime,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateOpenCancelTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateOpenCancelTx", {
+                paymentId,
+                txId,
+                txTime,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updateCloseCancelTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateCloseCancelTx", {
+                paymentId,
+                txId,
+                txTime,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getPaymentsStatusOf(statusList: LoyaltyPaymentTaskStatus[]): Promise<LoyaltyPaymentTaskData[]> {
         return new Promise<LoyaltyPaymentTaskData[]>(async (resolve, reject) => {
-            this.queryForMapper("payment", "getDelayedNewPayments", {})
+            this.queryForMapper("payment", "getPaymentsStatusOf", { status: statusList })
                 .then((result) => {
                     resolve(
                         result.rows.map((m) => {
@@ -419,45 +485,14 @@ export class RelayStorage extends Storage {
                                 closeNewTimestamp: m.closeNewTimestamp,
                                 openCancelTimestamp: m.openCancelTimestamp,
                                 closeCancelTimestamp: m.closeCancelTimestamp,
-                            };
-                        })
-                    );
-                })
-                .catch((reason) => {
-                    if (reason instanceof Error) return reject(reason);
-                    return reject(new Error(reason));
-                });
-        });
-    }
-
-    public getDelayedCancelPayments(): Promise<LoyaltyPaymentTaskData[]> {
-        return new Promise<LoyaltyPaymentTaskData[]>(async (resolve, reject) => {
-            this.queryForMapper("payment", "getDelayedCancelPayments", {})
-                .then((result) => {
-                    resolve(
-                        result.rows.map((m) => {
-                            return {
-                                paymentId: m.paymentId,
-                                purchaseId: m.purchaseId,
-                                amount: BigNumber.from(m.amount),
-                                currency: m.currency,
-                                shopId: m.shopId,
-                                account: m.account,
-                                loyaltyType: m.loyaltyType,
-                                paidPoint: BigNumber.from(m.paidPoint),
-                                paidToken: BigNumber.from(m.paidToken),
-                                paidValue: BigNumber.from(m.paidValue),
-                                feePoint: BigNumber.from(m.feePoint),
-                                feeToken: BigNumber.from(m.feeToken),
-                                feeValue: BigNumber.from(m.feeValue),
-                                totalPoint: BigNumber.from(m.totalPoint),
-                                totalToken: BigNumber.from(m.totalToken),
-                                totalValue: BigNumber.from(m.totalValue),
-                                paymentStatus: m.paymentStatus,
-                                openNewTimestamp: m.openNewTimestamp,
-                                closeNewTimestamp: m.closeNewTimestamp,
-                                openCancelTimestamp: m.openCancelTimestamp,
-                                closeCancelTimestamp: m.closeCancelTimestamp,
+                                openNewTxId: m.openNewTxId,
+                                openNewTxTime: m.openNewTxTime,
+                                closeNewTxId: m.closeNewTxId,
+                                closeNewTxTime: m.closeNewTxTime,
+                                openCancelTxId: m.openCancelTxId,
+                                openCancelTxTime: m.openCancelTxTime,
+                                closeCancelTxId: m.closeCancelTxId,
+                                closeCancelTxTime: m.closeCancelTxTime,
                             };
                         })
                     );

@@ -1,4 +1,4 @@
-import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
+import { ShopCollection } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
@@ -243,22 +243,35 @@ export class ShopRouter {
             const tx = await contract.connect(signerItem.signer).add(shopId, name, account, signature);
 
             logger.http(`TxHash(/v1/shop/add): ${tx.hash}`);
+            const taskId = ContractUtils.getTaskId(shopId);
+            const item: ShopTaskData = {
+                taskId,
+                type: TaskResultType.ADD,
+                shopId,
+                name,
+                provideWaitTime: 0,
+                providePercent: 0,
+                status: ContractShopStatus.INVALID,
+                account,
+                taskStatus: ShopTaskStatus.SENT_TX,
+                timestamp: ContractUtils.getTimeStamp(),
+                txId: tx.hash,
+                txTime: ContractUtils.getTimeStamp(),
+            };
+            await this._storage.postTask(item);
+            await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime);
 
-            const event = await this.waitAndAddEvent(contract, tx);
-            if (event !== undefined) {
-                await this.sendTaskResult(TaskResultType.ADD, TaskResultCode.SUCCESS, "Success", {
-                    taskId: "",
-                    shopId: event.shopId,
-                    name: event.name,
-                    provideWaitTime: BigNumber.from(event.providePercent).toNumber(),
-                    providePercent: BigNumber.from(event.providePercent).toNumber(),
-                    status: event.status,
-                    account: event.account,
-                });
-                return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
-            } else {
-                return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
-            }
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    taskId: item.taskId,
+                    shopId: item.shopId,
+                    name: item.name,
+                    account: item.account,
+                    taskStatus: item.taskStatus,
+                    timestamp: item.timestamp,
+                    txHash: tx.hash,
+                })
+            );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/add : ${msg.error.message}`);
@@ -346,6 +359,8 @@ export class ShopRouter {
                     account: shopInfo.account,
                     taskStatus: ShopTaskStatus.OPENED,
                     timestamp: ContractUtils.getTimeStamp(),
+                    txId: "",
+                    txTime: 0,
                 };
                 await this._storage.postTask(item);
 
@@ -441,41 +456,29 @@ export class ShopRouter {
                                 signature
                             );
 
-                        item.taskStatus = ShopTaskStatus.CONFIRMED;
+                        item.taskStatus = ShopTaskStatus.SENT_TX;
                         await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
 
-                        const event = await this.waitAndUpdateEvent(contract, tx);
-                        if (event !== undefined) {
-                            item.name = event.name;
-                            item.providePercent = event.providePercent;
-                            item.provideWaitTime = event.provideWaitTime;
-                            item.status = event.status;
-                            item.taskStatus = ShopTaskStatus.COMPLETED;
-                            await this._storage.updateTask(item);
+                        item.txId = tx.hash;
+                        item.txTime = ContractUtils.getTimeStamp();
+                        await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime);
 
-                            await this.sendTaskResult(
-                                TaskResultType.UPDATE,
-                                TaskResultCode.SUCCESS,
-                                "Success",
-                                this.getCallBackResponse(item)
-                            );
-
-                            return res.status(200).json(
-                                this.makeResponseData(0, {
-                                    taskId: item.taskId,
-                                    shopId: item.shopId,
-                                    name: item.name,
-                                    provideWaitTime: item.provideWaitTime,
-                                    providePercent: item.providePercent,
-                                    taskStatus: item.taskStatus,
-                                    timestamp: item.timestamp,
-                                    txHash: tx.hash,
-                                })
-                            );
-                        } else {
-                            return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
-                        }
+                        return res.status(200).json(
+                            this.makeResponseData(0, {
+                                taskId: item.taskId,
+                                shopId: item.shopId,
+                                name: item.name,
+                                provideWaitTime: item.provideWaitTime,
+                                providePercent: item.providePercent,
+                                taskStatus: item.taskStatus,
+                                timestamp: item.timestamp,
+                                txHash: item.txId,
+                            })
+                        );
                     } catch (error) {
+                        item.taskStatus = ShopTaskStatus.FAILED_TX;
+                        await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
+
                         const msg = ResponseMessage.getEVMErrorMessage(error);
                         logger.error(`POST /v1/shop/update/approval : ${msg.error.message}`);
                         return res.status(200).json(msg);
@@ -550,6 +553,8 @@ export class ShopRouter {
                     account: shopInfo.account,
                     taskStatus: ShopTaskStatus.OPENED,
                     timestamp: ContractUtils.getTimeStamp(),
+                    txId: "",
+                    txTime: 0,
                 };
                 await this._storage.postTask(item);
 
@@ -643,36 +648,27 @@ export class ShopRouter {
                             .connect(signerItem.signer)
                             .changeStatus(item.shopId, item.status, item.account, signature);
 
-                        item.taskStatus = ShopTaskStatus.CONFIRMED;
+                        item.taskStatus = ShopTaskStatus.SENT_TX;
                         await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
 
-                        const event = await this.waitAndChangeStatusEvent(contract, tx);
-                        if (event !== undefined) {
-                            item.status = event.status;
-                            item.taskStatus = ShopTaskStatus.COMPLETED;
-                            await this._storage.updateTask(item);
+                        item.txId = tx.hash;
+                        item.txTime = ContractUtils.getTimeStamp();
+                        await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime);
 
-                            await this.sendTaskResult(
-                                TaskResultType.STATUS,
-                                TaskResultCode.SUCCESS,
-                                "Success",
-                                this.getCallBackResponse(item)
-                            );
-
-                            return res.status(200).json(
-                                this.makeResponseData(0, {
-                                    taskId: item.taskId,
-                                    shopId: item.shopId,
-                                    status: item.status,
-                                    taskStatus: item.taskStatus,
-                                    timestamp: item.timestamp,
-                                    txHash: tx.hash,
-                                })
-                            );
-                        } else {
-                            return res.status(200).json(ResponseMessage.getErrorMessage("5000"));
-                        }
+                        return res.status(200).json(
+                            this.makeResponseData(0, {
+                                taskId: item.taskId,
+                                shopId: item.shopId,
+                                status: item.status,
+                                taskStatus: item.taskStatus,
+                                timestamp: item.timestamp,
+                                txHash: item.txId,
+                            })
+                        );
                     } catch (error) {
+                        item.taskStatus = ShopTaskStatus.FAILED_TX;
+                        await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
+
                         const msg = ResponseMessage.getEVMErrorMessage(error);
                         logger.error(`POST /v1/shop/status/approval : ${msg.error.message}`);
                         return res.status(200).json(msg);

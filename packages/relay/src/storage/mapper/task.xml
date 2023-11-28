@@ -62,8 +62,22 @@
         WHERE "taskId" = #{taskId}
     </update>
 
-    <select id="getTasksForType">
-        SELECT * FROM tasks WHERE "type" = #{type} AND "taskStatus" = ${taskStatus};
-    </select>
+    <update id="updateTx">
+        UPDATE tasks
+        SET
+            "txId" = #{txId},
+            "txTime" = ${txTime}
+        WHERE "taskId" = #{taskId}
+    </update>
 
+    <select id="getTasksStatusOf">
+        SELECT * FROM tasks WHERE "type" in
+        <foreach collection="type" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        AND "taskStatus" in
+        <foreach collection="status" item="item" index="index" open="(" close=")" separator=",">
+            ${item}
+        </foreach>;
+    </select>
 </mapper>

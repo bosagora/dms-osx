@@ -26,7 +26,9 @@ import { BigNumber, Wallet } from "ethers";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 import { INotificationEventHandler } from "../src/delegator/NotificationSender";
-import { ContractShopStatus, LoyaltyPaymentTaskStatus, ContractLoyaltyType } from "../src/types";
+import { Scheduler } from "../src/scheduler/Scheduler";
+import { WatchScheduler } from "../src/scheduler/WatchScheduler";
+import { ContractLoyaltyType, ContractShopStatus, LoyaltyPaymentTaskStatus } from "../src/types";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 // tslint:disable-next-line:no-var-requires
@@ -80,6 +82,7 @@ describe("Test of Server", function () {
     const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
 
+    const expression = "*/1 * * * * *";
     const deployToken = async () => {
         const tokenFactory = await hre.ethers.getContractFactory("Token");
         tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
@@ -361,7 +364,10 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            server = new TestServer(config, storage);
+
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler(expression));
+            server = new TestServer(config, storage, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -548,7 +554,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.DENIED_NEW);
             });
 
             it("Waiting", async () => {
@@ -697,11 +703,22 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX);
             });
 
-            it("Waiting", async () => {
-                await ContractUtils.delay(2000);
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
+            });
+
+            it("Check Response", async () => {
                 assert.deepStrictEqual(fakerCallbackServer.responseData.length, 2);
                 assert.deepStrictEqual(fakerCallbackServer.responseData[1].code, 0);
             });
@@ -747,7 +764,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
             });
         });
     });
@@ -787,6 +804,10 @@ describe("Test of Server", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             server = new TestServer(config, storage);
+
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler(expression));
+            server = new TestServer(config, storage, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -961,11 +982,19 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX);
             });
 
-            it("Waiting", async () => {
-                await ContractUtils.delay(2000);
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint POST /v1/payment/new/close", async () => {
@@ -980,7 +1009,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
                 totalPoint = BigNumber.from(response.data.data.totalPoint);
             });
 
@@ -1056,8 +1085,20 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(
                     response.data.data.paymentStatus,
-                    LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
+                    LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX
                 );
+            });
+
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint POST /v1/payment/cancel/close", async () => {
@@ -1072,7 +1113,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
 
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
@@ -1139,6 +1180,10 @@ describe("Test of Server", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             server = new TestServer(config, storage);
+
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler(expression));
+            server = new TestServer(config, storage, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1313,11 +1358,19 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX);
             });
 
-            it("Waiting", async () => {
-                await ContractUtils.delay(2000);
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint POST /v1/payment/new/close", async () => {
@@ -1332,7 +1385,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
                 totalPoint = BigNumber.from(response.data.data.totalPoint);
             });
 
@@ -1468,6 +1521,10 @@ describe("Test of Server", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             server = new TestServer(config, storage);
+
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler(expression));
+            server = new TestServer(config, storage, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1645,10 +1702,19 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX);
             });
 
-            it("Waiting", async () => {
-                await ContractUtils.delay(2000);
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint POST /v1/payment/new/close", async () => {
@@ -1663,7 +1729,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
             });
         });
     });
@@ -1703,6 +1769,10 @@ describe("Test of Server", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             server = new TestServer(config, storage);
+
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler(expression));
+            server = new TestServer(config, storage, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1868,11 +1938,19 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX);
             });
 
-            it("Waiting", async () => {
-                await ContractUtils.delay(2000);
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint POST /v1/payment/new/close", async () => {
@@ -1887,7 +1965,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
                 totalToken = BigNumber.from(response.data.data.totalToken);
             });
 
@@ -1962,8 +2040,20 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
                 assert.deepStrictEqual(
                     response.data.data.paymentStatus,
-                    LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
+                    LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX
                 );
+            });
+
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint POST /v1/payment/cancel/close", async () => {
@@ -1978,7 +2068,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
 
                 const responseItem = await client.get(
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
@@ -2046,6 +2136,10 @@ describe("Test of Server", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             server = new TestServer(config, storage);
+
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler(expression));
+            server = new TestServer(config, storage, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -2211,7 +2305,19 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX);
+            });
+
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Waiting", async () => {
@@ -2230,7 +2336,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
                 totalToken = BigNumber.from(response.data.data.totalToken);
             });
 
@@ -2312,7 +2418,7 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.FAILED_CANCEL);
+                assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.FAILED_CANCEL);
             });
 
             it("Check user's balance", async () => {
@@ -2396,7 +2502,10 @@ describe("Test of Server", function () {
                         assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
+                        assert.deepStrictEqual(
+                            response.data.data.paymentStatus,
+                            LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX
+                        );
                     }
                 } else if (title === "KIOS 결제 취소 요청") {
                     const searchString = "결제 아이디 : ";
@@ -2430,7 +2539,10 @@ describe("Test of Server", function () {
                         assert.deepStrictEqual(response.data.code, 0);
                         assert.ok(response.data.data !== undefined);
                         assert.ok(response.data.data.txHash !== undefined);
-                        assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL);
+                        assert.deepStrictEqual(
+                            response.data.data.paymentStatus,
+                            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX
+                        );
                     }
                 }
             },
@@ -2470,6 +2582,10 @@ describe("Test of Server", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             server = new TestServer(config, storage, undefined, mobilePhone);
+
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler(expression));
+            server = new TestServer(config, storage, schedulers, mobilePhone);
         });
 
         before("Start TestServer", async () => {
@@ -2565,8 +2681,19 @@ describe("Test of Server", function () {
             paymentId = response.data.data.paymentId;
         });
 
-        it("Waiting", async () => {
-            await ContractUtils.delay(6000);
+        it("...Waiting", async () => {
+            const t1 = ContractUtils.getTimeStamp();
+            while (true) {
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                );
+                if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                await ContractUtils.delay(1000);
+            }
+        });
+
+        it("Check Response", async () => {
             assert.deepStrictEqual(fakerCallbackServer.responseData.length, 1);
             assert.deepStrictEqual(fakerCallbackServer.responseData[0].code, 0);
         });
@@ -2583,7 +2710,7 @@ describe("Test of Server", function () {
 
             assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
-            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW);
+            assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
         });
 
         it("Waiting", async () => {
@@ -2609,8 +2736,19 @@ describe("Test of Server", function () {
             assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
         });
 
-        it("Waiting", async () => {
-            await ContractUtils.delay(6000);
+        it("...Waiting", async () => {
+            const t1 = ContractUtils.getTimeStamp();
+            while (true) {
+                const responseItem = await client.get(
+                    URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                );
+                if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL) break;
+                else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                await ContractUtils.delay(1000);
+            }
+        });
+
+        it("Check Response", async () => {
             assert.deepStrictEqual(fakerCallbackServer.responseData.length, 2);
             assert.deepStrictEqual(fakerCallbackServer.responseData[1].code, 0);
         });
@@ -2627,7 +2765,7 @@ describe("Test of Server", function () {
 
             assert.deepStrictEqual(response.data.code, 0);
             assert.ok(response.data.data !== undefined);
-            assert.ok(response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
+            assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_CANCEL);
         });
     });
 });
