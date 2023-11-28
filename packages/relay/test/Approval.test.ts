@@ -25,6 +25,7 @@ import { BigNumber, Wallet } from "ethers";
 
 import { ApprovalScheduler } from "../src/scheduler/ApprovalScheduler";
 import { Scheduler } from "../src/scheduler/Scheduler";
+import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import {
     ContractLoyaltyType,
     ContractShopStatus,
@@ -278,6 +279,7 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new ApprovalScheduler("*/1 * * * * *"));
+            schedulers.push(new WatchScheduler("*/1 * * * * *"));
             server = new TestServer(config, storage, schedulers);
         });
 
@@ -387,7 +389,15 @@ describe("Test of Server", function () {
             });
 
             it("...Waiting", async () => {
-                await ContractUtils.delay(3000);
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("...Check Payment Status - REPLY_COMPLETED_NEW", async () => {
@@ -440,7 +450,15 @@ describe("Test of Server", function () {
             });
 
             it("...Waiting", async () => {
-                await ContractUtils.delay(3000);
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
+                    );
+                    if (responseItem.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("...Check Payment Status - REPLY_COMPLETED_CANCEL", async () => {

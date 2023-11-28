@@ -8,6 +8,7 @@ import { ContractUtils } from "../utils/ContractUtils";
 
 import axios from "axios";
 import URI from "urijs";
+import { LoyaltyPaymentTaskStatus } from "../types";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
@@ -58,7 +59,15 @@ export class CloseScheduler extends Scheduler {
     }
 
     private async onNewPayment() {
-        const payments = await this.storage.getDelayedNewPayments();
+        const payments = await this.storage.getPaymentsStatusOf([
+            LoyaltyPaymentTaskStatus.OPENED_NEW,
+            LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_NEW_CONFIRMED_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX,
+            LoyaltyPaymentTaskStatus.DENIED_NEW,
+            LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW,
+        ]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.forcedCloseSecond) continue;
 
@@ -83,7 +92,15 @@ export class CloseScheduler extends Scheduler {
     }
 
     private async onCancelPayment() {
-        const payments = await this.storage.getDelayedCancelPayments();
+        const payments = await this.storage.getPaymentsStatusOf([
+            LoyaltyPaymentTaskStatus.OPENED_CANCEL,
+            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_CONFIRMED_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX,
+            LoyaltyPaymentTaskStatus.DENIED_CANCEL,
+            LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL,
+        ]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < this.config.relay.forcedCloseSecond)
                 continue;

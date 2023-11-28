@@ -88,15 +88,10 @@ async function main() {
                             );
                             if (response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW)
                                 break;
-                            await Utils.delay(2000);
+                            await Utils.delay(1000);
                             if (Utils.getTimeStamp() - start > 60) break;
                         }
                     }
-                }
-
-                console.log("...Waiting");
-                {
-                    await Utils.delay(2000);
                 }
 
                 console.log("Close New Payment");
@@ -164,15 +159,10 @@ async function main() {
                             );
                             if (response.data.data.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL)
                                 break;
-                            await Utils.delay(2000);
+                            await Utils.delay(1000);
                             if (Utils.getTimeStamp() - start > 60) break;
                         }
                     }
-                }
-
-                console.log("...Waiting");
-                {
-                    await Utils.delay(2000);
                 }
 
                 console.log("Close Cancel Payment");

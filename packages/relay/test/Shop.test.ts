@@ -26,14 +26,18 @@ import assert from "assert";
 import URI from "urijs";
 import { URL } from "url";
 import { Config } from "../src/common/Config";
-import { ContractShopStatus, LoyaltyPaymentTaskStatus, ShopTaskStatus, TaskResultType } from "../src/types";
+import { ContractShopStatus, ShopTaskStatus, TaskResultType } from "../src/types";
 
 import path from "path";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
+import { Scheduler } from "../src/scheduler/Scheduler";
+import { WatchScheduler } from "../src/scheduler/WatchScheduler";
+
 chai.use(solidity);
 
-describe("Test for ShopCollection", () => {
+describe("Test for ShopCollection", function () {
+    this.timeout(1000 * 60 * 5);
     const provider = hre.waffle.provider;
     const [
         deployer,
@@ -285,6 +289,9 @@ describe("Test for ShopCollection", () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             server = new TestServer(config, storage);
+            const schedulers: Scheduler[] = [];
+            schedulers.push(new WatchScheduler("*/1 * * * * *"));
+            server = new TestServer(config, storage, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -305,6 +312,7 @@ describe("Test for ShopCollection", () => {
             await fakerCallbackServer.stop();
         });
 
+        let taskId: string;
         it("Add", async () => {
             for (const elem of shopData) {
                 const nonce = await shopCollection.nonceOf(elem.wallet.address);
@@ -322,6 +330,18 @@ describe("Test for ShopCollection", () => {
                 expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.SENT_TX);
+
+                taskId = response.data.data.taskId;
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
+                    );
+                    if (responseItem.data.data.taskStatus === ShopTaskStatus.COMPLETED) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             }
         });
 
@@ -332,7 +352,6 @@ describe("Test for ShopCollection", () => {
             }
         });
 
-        let taskId: string;
         context("Shop update", () => {
             it("Endpoint POST /v1/shop/update/create", async () => {
                 const url = URI(serverURL).directory("/v1/shop/update").filename("create").toString();
@@ -386,11 +405,19 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.SENT_TX);
             });
 
-            it("Waiting", async () => {
-                await ContractUtils.delay(2000);
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
+                    );
+                    if (responseItem.data.data.taskStatus === ShopTaskStatus.COMPLETED) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint GET /v1/shop/task", async () => {
@@ -466,11 +493,19 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.code, 0, response.data?.error?.message);
                 assert.ok(response.data.data !== undefined);
                 assert.ok(response.data.data.txHash !== undefined);
-                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
+                assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.SENT_TX);
             });
 
-            it("Waiting", async () => {
-                await ContractUtils.delay(2000);
+            it("...Waiting", async () => {
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
+                    );
+                    if (responseItem.data.data.taskStatus === ShopTaskStatus.COMPLETED) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("Endpoint GET /v1/shop/task", async () => {

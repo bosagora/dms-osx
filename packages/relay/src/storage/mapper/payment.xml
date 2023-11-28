@@ -4,29 +4,29 @@
 
     <insert id="postPayment">
         INSERT INTO payments
-            (
-                "paymentId"             ,
-                "purchaseId"            ,
-                "amount"                ,
-                "currency"              ,
-                "shopId"                ,
-                "account"               ,
-                "loyaltyType"           ,
-                "paidPoint"             ,
-                "paidToken"             ,
-                "paidValue"             ,
-                "feePoint"              ,
-                "feeToken"              ,
-                "feeValue"              ,
-                "totalPoint"            ,
-                "totalToken"            ,
-                "totalValue"            ,
-                "paymentStatus"         ,
-                "openNewTimestamp"      ,
-                "closeNewTimestamp"      ,
-                "openCancelTimestamp"   ,
-                "closeCancelTimestamp"
-            )
+        (
+            "paymentId"             ,
+            "purchaseId"            ,
+            "amount"                ,
+            "currency"              ,
+            "shopId"                ,
+            "account"               ,
+            "loyaltyType"           ,
+            "paidPoint"             ,
+            "paidToken"             ,
+            "paidValue"             ,
+            "feePoint"              ,
+            "feeToken"              ,
+            "feeValue"              ,
+            "totalPoint"            ,
+            "totalToken"            ,
+            "totalValue"            ,
+            "paymentStatus"         ,
+            "openNewTimestamp"      ,
+            "closeNewTimestamp"      ,
+            "openCancelTimestamp"   ,
+            "closeCancelTimestamp"
+        )
         VALUES
             (
                 #{paymentId}        ,
@@ -51,7 +51,7 @@
                 ${openCancelTimestamp},
                 ${closeCancelTimestamp}
             )
-        ON CONFLICT ("paymentId")  DO NOTHING;
+            ON CONFLICT ("paymentId")  DO NOTHING;
     </insert>
 
     <select id="getPayment">
@@ -107,14 +107,42 @@
         WHERE "paymentId" = #{paymentId}
     </update>
 
-    <select id="getPaymentsForType">
-        SELECT * FROM payments WHERE "paymentStatus" = ${paymentStatus};
-    </select>
+    <update id="updateOpenNewTx">
+        UPDATE payments
+        SET
+            "openNewTxId" = #{txId},
+            "openNewTxTime" = ${txTime}
+        WHERE "paymentId" = #{paymentId}
+    </update>
 
-    <select id="getDelayedNewPayments">
-        SELECT * FROM payments WHERE "paymentStatus" in (1,2,3,4);
-    </select>
-    <select id="getDelayedCancelPayments">
-        SELECT * FROM payments WHERE "paymentStatus" in (7,8,9,10);
+    <update id="updateCloseNewTx">
+        UPDATE payments
+        SET
+            "closeNewTxId" = #{txId},
+            "closeNewTxTime" = ${txTime}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <update id="updateOpenCancelTx">
+        UPDATE payments
+        SET
+            "openCancelTxId" = #{txId},
+            "openCancelTxTime" = ${txTime}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <update id="updateCloseCancelTx">
+        UPDATE payments
+        SET
+            "closeCancelTxId" = #{txId},
+            "closeCancelTxTime" = ${txTime}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <select id="getPaymentsStatusOf">
+        SELECT * FROM payments WHERE "paymentStatus" in
+        <foreach collection="status" item="item" index="index" open="(" close=")" separator=",">
+            ${item}
+        </foreach>;
     </select>
 </mapper>

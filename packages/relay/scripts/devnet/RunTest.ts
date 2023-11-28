@@ -94,11 +94,6 @@ async function main() {
                     }
                 }
 
-                console.log("...Waiting");
-                {
-                    await Utils.delay(2000);
-                }
-
                 console.log("Close New Payment");
                 {
                     const response1 = await client.get(
@@ -168,11 +163,6 @@ async function main() {
                             if (Utils.getTimeStamp() - start > 60) break;
                         }
                     }
-                }
-
-                console.log("...Waiting");
-                {
-                    await Utils.delay(2000);
                 }
 
                 console.log("Close Cancel Payment");

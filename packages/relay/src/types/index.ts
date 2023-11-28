@@ -63,13 +63,19 @@ export interface ContractShopStatusEvent {
 export enum LoyaltyPaymentTaskStatus {
     NULL,
     OPENED_NEW,
-    CONFIRMED_NEW,
+    APPROVED_NEW_FAILED_TX,
+    APPROVED_NEW_SENT_TX,
+    APPROVED_NEW_CONFIRMED_TX,
+    APPROVED_NEW_REVERTED_TX,
     DENIED_NEW,
     REPLY_COMPLETED_NEW,
     CLOSED_NEW,
     FAILED_NEW,
     OPENED_CANCEL,
-    CONFIRMED_CANCEL,
+    APPROVED_CANCEL_FAILED_TX,
+    APPROVED_CANCEL_SENT_TX,
+    APPROVED_CANCEL_CONFIRMED_TX,
+    APPROVED_CANCEL_REVERTED_TX,
     DENIED_CANCEL,
     REPLY_COMPLETED_CANCEL,
     CLOSED_CANCEL,
@@ -97,10 +103,20 @@ export interface LoyaltyPaymentTaskData {
     totalValue: BigNumber;
 
     paymentStatus: LoyaltyPaymentTaskStatus;
+
     openNewTimestamp: number;
     closeNewTimestamp: number;
     openCancelTimestamp: number;
     closeCancelTimestamp: number;
+
+    openNewTxId: string;
+    openNewTxTime: number;
+    closeNewTxId: string;
+    closeNewTxTime: number;
+    openCancelTxId: string;
+    openCancelTxTime: number;
+    closeCancelTxId: string;
+    closeCancelTxTime: number;
 }
 
 export enum TaskResultType {
@@ -147,7 +163,9 @@ export interface PaymentResultData {
 export enum ShopTaskStatus {
     NULL,
     OPENED,
-    CONFIRMED,
+    FAILED_TX,
+    SENT_TX,
+    REVERTED_TX,
     DENIED,
     COMPLETED,
     TIMEOUT,
@@ -164,6 +182,8 @@ export interface ShopTaskData {
     account: string;
     taskStatus: ShopTaskStatus;
     timestamp: number;
+    txId: string;
+    txTime: number;
 }
 
 export interface IShopData {
