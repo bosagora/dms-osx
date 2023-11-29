@@ -14,6 +14,28 @@ type SavedPurchase @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
+type LoyaltyPaymentEvent @entity(immutable: true) {
+  id: Bytes!
+  paymentId: Bytes! # bytes32
+  purchaseId: String! # string
+  currency: String! # string
+  shopId: Bytes! # bytes32
+  account: Bytes! # address
+  timestamp: BigInt! # uint256
+  loyaltyType: Int! # uint8
+  paidPoint: BigInt! # uint256
+  paidToken: BigInt! # uint256
+  paidValue: BigInt! # uint256
+  feePoint: BigInt! # uint256
+  feeToken: BigInt! # uint256
+  feeValue: BigInt! # uint256
+  status: Int! # uint8
+  balance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
 type UserTradeHistory @entity(immutable: true) {
   id: Bytes!
   account: Bytes!

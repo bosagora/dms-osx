@@ -10,7 +10,13 @@ import {
     SavedPurchase as SavedPurchaseEvent,
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
-import { SavedPurchase, UserBalance, UserTradeHistory, UserUnPayableTradeHistory } from "../generated/schema";
+import {
+    SavedPurchase,
+    UserBalance,
+    UserTradeHistory,
+    UserUnPayableTradeHistory,
+    LoyaltyPaymentEvent,
+} from "../generated/schema";
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { AmountUnit, NullAccount, NullBytes32 } from "./utils";
 
@@ -85,6 +91,29 @@ export function handleProvidedToken(event: ProvidedTokenEvent): void {
 }
 
 export function handleLoyaltyPaymentEvent(event: LoyaltyPaymentEventEvent): void {
+    let entity = new LoyaltyPaymentEvent(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.paymentId = event.params.payment.paymentId;
+    entity.purchaseId = event.params.payment.purchaseId;
+    entity.currency = event.params.payment.currency;
+    entity.shopId = event.params.payment.shopId;
+    entity.account = event.params.payment.account;
+    entity.timestamp = event.params.payment.timestamp;
+    entity.loyaltyType = event.params.payment.loyaltyType;
+    entity.paidPoint = event.params.payment.paidPoint;
+    entity.paidToken = event.params.payment.paidToken;
+    entity.paidValue = event.params.payment.paidValue;
+    entity.feePoint = event.params.payment.feePoint;
+    entity.feeToken = event.params.payment.feeToken;
+    entity.feeValue = event.params.payment.feeValue;
+    entity.status = event.params.payment.status;
+    entity.balance = event.params.balance;
+
+    entity.blockNumber = event.block.number;
+    entity.blockTimestamp = event.block.timestamp;
+    entity.transactionHash = event.transaction.hash;
+
+    entity.save();
+
     handleLoyaltyPaymentEventForHistory(event);
 }
 
