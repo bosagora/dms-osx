@@ -3,6 +3,7 @@ import cors from "cors";
 import { Config } from "./common/Config";
 import { cors_options } from "./option/cors";
 import { DefaultRouter } from "./routers/DefaultRouter";
+import { ETCRouter } from "./routers/ETCRouter";
 import { LedgerRouter } from "./routers/LedgerRouter";
 import { PaymentRouter } from "./routers/PaymentRouter";
 import { ShopRouter } from "./routers/ShopRouter";
@@ -28,6 +29,7 @@ export class DefaultServer extends WebService {
     public readonly relaySigners: RelaySigners;
     public readonly storage: RelayStorage;
     private readonly sender: INotificationSender;
+    public readonly etcRouter: ETCRouter;
 
     /**
      * Constructor
@@ -47,6 +49,7 @@ export class DefaultServer extends WebService {
         this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
         this.shopRouter = new ShopRouter(this, this.config, this.storage, this.relaySigners, this.sender);
         this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners, this.sender);
+        this.etcRouter = new ETCRouter(this, this.config, this.storage);
 
         if (schedules) {
             schedules.forEach((m) => this.schedules.push(m));
@@ -74,6 +77,7 @@ export class DefaultServer extends WebService {
         this.ledgerRouter.registerRoutes();
         this.shopRouter.registerRoutes();
         this.paymentRouter.registerRoutes();
+        this.etcRouter.registerRoutes();
 
         for (const m of this.schedules) await m.start();
 

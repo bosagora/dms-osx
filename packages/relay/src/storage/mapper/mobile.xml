@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mobile">
+
+    <insert id="postMobile">
+        INSERT INTO mobiles
+            (
+                "account"                ,
+                "token"                  ,
+                "language"               ,
+                "os"
+            )
+        VALUES
+            (
+                #{account}               ,
+                #{token}                 ,
+                #{language}              ,
+                #{os}
+            )
+        ON CONFLICT ("account")
+        DO UPDATE
+        SET "token" = #{token},
+            "language" = #{language},
+            "os" = #{os};
+    </insert>
+
+    <select id="getMobile">
+        SELECT * FROM mobiles WHERE LOWER("account") = LOWER(#{account});
+    </select>
+</mapper>
