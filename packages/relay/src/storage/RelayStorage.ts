@@ -9,6 +9,7 @@ import path from "path";
 import {
     LoyaltyPaymentTaskData,
     LoyaltyPaymentTaskStatus,
+    MobileData,
     ShopTaskData,
     ShopTaskStatus,
     TaskResultType,
@@ -23,6 +24,7 @@ export class RelayStorage extends Storage {
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/table.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/payment.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/task.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/mobile.xml")]);
         this.createTables()
             .then(() => {
                 if (callback != null) callback(null);
@@ -496,6 +498,47 @@ export class RelayStorage extends Storage {
                             };
                         })
                     );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public postMobile(item: MobileData): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("mobile", "postMobile", {
+                account: item.account,
+                token: item.token,
+                language: item.language,
+                os: item.os,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getMobile(account: string): Promise<MobileData | undefined> {
+        return new Promise<MobileData | undefined>(async (resolve, reject) => {
+            this.queryForMapper("mobile", "getMobile", { account })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        const m = result.rows[0];
+                        return resolve({
+                            account: m.account,
+                            token: m.token,
+                            language: m.language,
+                            os: m.os,
+                        });
+                    } else {
+                        return resolve(undefined);
+                    }
                 })
                 .catch((reason) => {
                     if (reason instanceof Error) return reject(reason);

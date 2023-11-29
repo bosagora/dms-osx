@@ -56,14 +56,27 @@
         );
     </sql>
 
+    <sql id="mobiles">
+        CREATE TABLE IF NOT EXISTS mobiles
+        (
+            "account"               VARCHAR(42)  NOT NULL,
+            "token"                 VARCHAR(50) NOT NULL,
+            "language"              VARCHAR(3)   NOT NULL,
+            "os"                    VARCHAR(12)  NOT NULL,
+            PRIMARY KEY ("account")
+            );
+    </sql>
+
     <select id="create_table">
         <include refid="payments"/>
         <include refid="tasks"/>
+        <include refid="mobiles"/>
     </select>
 
     <select id="drop_table">
         DROP TABLE payments;
         DROP TABLE tasks;
+        DROP TABLE mobiles;
     </select>
 
 </mapper>

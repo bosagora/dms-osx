@@ -202,3 +202,10 @@ export interface IUserData {
     privateKey: string;
     loyaltyType: number;
 }
+
+export interface MobileData {
+    account: string;
+    token: string;
+    language: string;
+    os: string;
+}

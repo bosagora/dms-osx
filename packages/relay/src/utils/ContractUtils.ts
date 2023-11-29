@@ -421,4 +421,25 @@ export class ContractUtils {
         );
         return signer.signMessage(message);
     }
+
+    public static getMobileTokenMessage(address: string, token: string): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "address"], [token, address]);
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signMobileToken(signer: Signer, token: string): Promise<string> {
+        const message = ContractUtils.getMobileTokenMessage(await signer.getAddress(), token);
+        return signer.signMessage(message);
+    }
+
+    public static verifyMobileToken(account: string, token: string, signature: BytesLike): boolean {
+        const message = ContractUtils.getMobileTokenMessage(account, token);
+        let res: string;
+        try {
+            res = ethers.utils.verifyMessage(message, signature);
+        } catch (error) {
+            return false;
+        }
+        return res.toLowerCase() === account.toLowerCase();
+    }
 }

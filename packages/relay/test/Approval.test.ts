@@ -407,10 +407,6 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW);
             });
 
-            it("...Waiting", async () => {
-                await ContractUtils.delay(2000);
-            });
-
             it("Close New Payment", async () => {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
@@ -424,10 +420,6 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.CLOSED_NEW);
-            });
-
-            it("...Waiting", async () => {
-                await ContractUtils.delay(2000);
             });
 
             it("Open Cancel Payment", async () => {
@@ -471,10 +463,6 @@ describe("Test of Server", function () {
                 );
             });
 
-            it("...Waiting", async () => {
-                await ContractUtils.delay(2000);
-            });
-
             it("Close Cancel Payment", async () => {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
@@ -511,7 +499,15 @@ describe("Test of Server", function () {
             });
 
             it("...Waiting", async () => {
-                await ContractUtils.delay(3000);
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
+                    );
+                    if (responseItem.data.data.taskStatus === ShopTaskStatus.COMPLETED) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("...Check Shop Task Status - COMPLETED", async () => {
@@ -544,7 +540,15 @@ describe("Test of Server", function () {
             });
 
             it("...Waiting", async () => {
-                await ContractUtils.delay(3000);
+                const t1 = ContractUtils.getTimeStamp();
+                while (true) {
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
+                    );
+                    if (responseItem.data.data.taskStatus === ShopTaskStatus.COMPLETED) break;
+                    else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+                    await ContractUtils.delay(1000);
+                }
             });
 
             it("...Check Shop Task Status - COMPLETED", async () => {
