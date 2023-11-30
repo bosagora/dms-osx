@@ -13,6 +13,7 @@ export class ResponseMessage {
         ["1200", "The shop ID already exists"],
         ["1201", "The shop ID is not exists"],
         ["1202", "The shop is not activated"],
+        ["1211", "This exchange rate is not supported"],
         ["1220", "Insufficient withdrawal amount"],
         ["1221", "Withdrawal is already opened"],
         ["1222", "Withdrawal is not opened"],
