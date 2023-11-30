@@ -124,7 +124,7 @@ describe("Test of Server", function () {
         const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
         currencyRateContract = (await currencyRateFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as CurrencyRate;
+            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
         await currencyRateContract.deployed();
         await currencyRateContract.deployTransaction.wait();
         await currencyRateContract.connect(validators[0]).set(await tokenContract.symbol(), price);
@@ -146,7 +146,7 @@ describe("Test of Server", function () {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(certifierCollection.address)) as ShopCollection;
+            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -155,7 +155,9 @@ describe("Test of Server", function () {
         for (const shop of shops) {
             const nonce = await shopCollection.nonceOf(shop.wallet.address);
             const signature = await ContractUtils.signShop(shop.wallet, shop.shopId, nonce);
-            await shopCollection.connect(deployer).add(shop.shopId, shop.name, shop.wallet.address, signature);
+            await shopCollection
+                .connect(deployer)
+                .add(shop.shopId, shop.name, shop.currency, shop.wallet.address, signature);
         }
 
         for (const shop of shops) {
@@ -240,6 +242,7 @@ describe("Test of Server", function () {
     interface IShopData {
         shopId: string;
         name: string;
+        currency: string;
         provideWaitTime: number;
         providePercent: number;
         wallet: Wallet;
@@ -249,6 +252,7 @@ describe("Test of Server", function () {
         {
             shopId: "F000100",
             name: "Shop1",
+            currency: "krw",
             provideWaitTime: 0,
             providePercent: 10,
             wallet: shopWallets[0],
@@ -256,6 +260,7 @@ describe("Test of Server", function () {
         {
             shopId: "F000200",
             name: "Shop2",
+            currency: "krw",
             provideWaitTime: 0,
             providePercent: 20,
             wallet: shopWallets[1],
@@ -263,6 +268,7 @@ describe("Test of Server", function () {
         {
             shopId: "F000300",
             name: "Shop3",
+            currency: "krw",
             provideWaitTime: 0,
             providePercent: 20,
             wallet: shopWallets[2],
@@ -270,6 +276,7 @@ describe("Test of Server", function () {
         {
             shopId: "F000400",
             name: "Shop4",
+            currency: "krw",
             provideWaitTime: 0,
             providePercent: 20,
             wallet: shopWallets[3],
@@ -277,6 +284,7 @@ describe("Test of Server", function () {
         {
             shopId: "F000500",
             name: "Shop5",
+            currency: "krw",
             provideWaitTime: 0,
             providePercent: 20,
             wallet: shopWallets[4],

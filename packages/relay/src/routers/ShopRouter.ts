@@ -124,6 +124,7 @@ export class ShopRouter {
                     .exists()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("name").exists(),
+                body("currency").exists(),
                 body("account").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
@@ -233,6 +234,7 @@ export class ShopRouter {
         try {
             const shopId: string = String(req.body.shopId).trim();
             const name: string = String(req.body.name).trim();
+            const currency: string = String(req.body.currency).trim().toLowerCase();
             const account: string = String(req.body.account).trim();
             const signature: string = String(req.body.signature).trim(); // 서명
 
@@ -240,7 +242,7 @@ export class ShopRouter {
             if (!ContractUtils.verifyShop(shopId, await contract.nonceOf(account), account, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
-            const tx = await contract.connect(signerItem.signer).add(shopId, name, account, signature);
+            const tx = await contract.connect(signerItem.signer).add(shopId, name, currency, account, signature);
 
             logger.http(`TxHash(/v1/shop/add): ${tx.hash}`);
             const taskId = ContractUtils.getTaskId(shopId);
