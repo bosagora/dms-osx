@@ -12,17 +12,17 @@ contract CurrencyRate {
     uint256 public constant MULTIPLE = 1000000000;
     mapping(string => uint256) private prices;
 
-    ERC20 private token;
     ValidatorCollection private validatorCollection;
+    string private tokenSymbol;
 
     /// @notice 환률이 저장될 때 발생되는 이벤트
     event SetRate(string currency, uint256 rate);
 
     /// @notice 생성자
     /// @param _validatorAddress 검증자컬랙션의 주소
-    constructor(address _tokenAddress, address _validatorAddress) {
-        token = ERC20(_tokenAddress);
+    constructor(address _validatorAddress, string memory _tokenSymbol) {
         validatorCollection = ValidatorCollection(_validatorAddress);
+        tokenSymbol = _tokenSymbol;
 
         prices["krw"] = MULTIPLE;
         prices["point"] = MULTIPLE;
@@ -63,12 +63,12 @@ contract CurrencyRate {
 
     /// @notice 포인트를 토큰으로 환산한다.
     function convertPointToToken(uint256 amount) external view returns (uint256) {
-        return (amount * MULTIPLE) / _get(token.symbol());
+        return (amount * MULTIPLE) / _get(tokenSymbol);
     }
 
     /// @notice 토큰을 포인트로 환산한다.
     function convertTokenToPoint(uint256 amount) external view returns (uint256) {
-        return (amount * _get(token.symbol())) / MULTIPLE;
+        return (amount * _get(tokenSymbol)) / MULTIPLE;
     }
 
     /// @notice 화폐를 포인트로 환산한다.
@@ -83,7 +83,7 @@ contract CurrencyRate {
 
     /// @notice 화폐를 토큰으로 환산한다.
     function convertCurrencyToToken(uint256 _amount, string calldata _symbol) external view returns (uint256) {
-        return _convertCurrency(_amount, _symbol, token.symbol());
+        return _convertCurrency(_amount, _symbol, tokenSymbol);
     }
 
     /// @notice 화폐들을 환산한다.

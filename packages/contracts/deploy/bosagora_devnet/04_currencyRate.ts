@@ -5,7 +5,7 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { CurrencyRate, ValidatorCollection } from "../../typechain-types";
+import { CurrencyRate, Token, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
@@ -18,9 +18,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
 
+    const tokenContractAddress = await getContractAddress("Token", hre);
+    const tokenContract = (await ethers.getContractAt("Token", tokenContractAddress)) as Token;
+
     const deployResult = await deploy("CurrencyRate", {
         from: deployer,
-        args: [validatorContractAddress],
+        args: [validatorContractAddress, await tokenContract.symbol()],
         log: true,
     });
 

@@ -20,15 +20,15 @@ contract CertifierCollection is AccessControl {
         return hasRole(CERTIFIER_ROLE, account);
     }
 
-    function grantCertifier(address account) public {
+    function grantCertifier(address account) external {
         grantRole(CERTIFIER_ROLE, account);
     }
 
-    function revokeCertifier(address account) public {
+    function revokeCertifier(address account) external {
         revokeRole(CERTIFIER_ROLE, account);
     }
 
-    function renounceCertifier(address account) public {
+    function renounceCertifier(address account) external {
         renounceRole(CERTIFIER_ROLE, account);
     }
 }

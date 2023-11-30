@@ -38,6 +38,7 @@ interface IPurchaseData {
 interface IShopData {
     shopId: string;
     name: string;
+    currency: string;
     provideWaitTime: number;
     providePercent: number;
     wallet: Wallet;
@@ -147,7 +148,7 @@ describe("Test for Ledger", () => {
         const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
         currencyRateContract = (await currencyRateFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as CurrencyRate;
+            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
         await currencyRateContract.deployed();
         await currencyRateContract.deployTransaction.wait();
         await currencyRateContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
@@ -166,7 +167,7 @@ describe("Test for Ledger", () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(certifierCollection.address)) as ShopCollection;
+            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -196,7 +197,9 @@ describe("Test for Ledger", () => {
         for (const elem of shopData) {
             const nonce = await shopCollection.nonceOf(elem.wallet.address);
             const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
-            await shopCollection.connect(relay).add(elem.shopId, elem.name, elem.wallet.address, signature);
+            await shopCollection
+                .connect(relay)
+                .add(elem.shopId, elem.name, elem.currency, elem.wallet.address, signature);
         }
 
         for (const elem of shopData) {
@@ -338,6 +341,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop1",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[0],
@@ -345,6 +349,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop2",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 6,
                 wallet: shopWallets[1],
@@ -352,6 +357,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop3",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 7,
                 wallet: shopWallets[2],
@@ -359,6 +365,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop4",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 8,
                 wallet: shopWallets[3],
@@ -366,6 +373,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop5",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 9,
                 wallet: shopWallets[4],
@@ -373,6 +381,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop6",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 10,
                 wallet: shopWallets[5],
@@ -1829,6 +1838,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop1",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[0],
@@ -1836,6 +1846,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop2",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 6,
                 wallet: shopWallets[1],
@@ -1843,6 +1854,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop3",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 7,
                 wallet: shopWallets[2],
@@ -1850,6 +1862,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop4",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 8,
                 wallet: shopWallets[3],
@@ -1857,6 +1870,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop5",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 9,
                 wallet: shopWallets[4],
@@ -1864,6 +1878,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "",
                 name: "Shop6",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 10,
                 wallet: shopWallets[5],
@@ -2018,6 +2033,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000100",
                 name: "Shop1",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[0],
@@ -2025,6 +2041,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000200",
                 name: "Shop2",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[1],
@@ -2032,6 +2049,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000300",
                 name: "Shop3",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[2],
@@ -2039,6 +2057,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000400",
                 name: "Shop4",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[3],
@@ -2046,6 +2065,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000500",
                 name: "Shop5",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[4],
@@ -2053,6 +2073,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000600",
                 name: "Shop6",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[5],
@@ -2140,26 +2161,26 @@ describe("Test for Ledger", () => {
 
             it("Check shop data", async () => {
                 const shopInfo1 = await shopCollection.shopOf(shopData[0].shopId);
-                expect(shopInfo1.providedPoint).to.equal(
+                expect(shopInfo1.providedAmount).to.equal(
                     Amount.make(10000 * 3, 18)
                         .value.mul(shopData[0].providePercent)
                         .div(100)
                 );
 
                 const shopInfo2 = await shopCollection.shopOf(shopData[1].shopId);
-                expect(shopInfo2.providedPoint).to.equal(
+                expect(shopInfo2.providedAmount).to.equal(
                     Amount.make(10000 * 1, 18)
                         .value.mul(shopData[1].providePercent)
                         .div(100)
                 );
                 const shopInfo3 = await shopCollection.shopOf(shopData[2].shopId);
-                expect(shopInfo3.providedPoint).to.equal(
+                expect(shopInfo3.providedAmount).to.equal(
                     Amount.make(10000 * 1, 18)
                         .value.mul(shopData[2].providePercent)
                         .div(100)
                 );
                 const shopInfo4 = await shopCollection.shopOf(shopData[3].shopId);
-                expect(shopInfo4.providedPoint).to.equal(
+                expect(shopInfo4.providedAmount).to.equal(
                     Amount.make(10000 * 1, 18)
                         .value.mul(shopData[3].providePercent)
                         .div(100)
@@ -2216,9 +2237,9 @@ describe("Test for Ledger", () => {
                     });
 
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
-                expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(shopInfo.usedPoint).to.equal(Amount.make(300, 18).value);
-                expect(shopInfo.settledPoint).to.equal(Amount.make(200, 18).value);
+                expect(shopInfo.providedAmount).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo.usedAmount).to.equal(Amount.make(300, 18).value);
+                expect(shopInfo.settledAmount).to.equal(Amount.make(200, 18).value);
             });
         });
 
@@ -2299,11 +2320,11 @@ describe("Test for Ledger", () => {
                 );
 
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
-                expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(shopInfo2.usedPoint).to.equal(Amount.make(500, 18).value);
-                expect(shopInfo2.settledPoint).to.equal(Amount.make(400, 18).value);
+                expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value);
+                expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
 
-                const settledToken = shopInfo2.settledPoint.mul(multiple).div(price);
+                const settledToken = shopInfo2.settledAmount.mul(multiple).div(price);
                 expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
                 );
@@ -2455,6 +2476,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000100",
                 name: "Shop1",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[0],
@@ -2462,6 +2484,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000200",
                 name: "Shop2",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[1],
@@ -2469,6 +2492,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000300",
                 name: "Shop3",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[2],
@@ -2476,6 +2500,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000400",
                 name: "Shop4",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[3],
@@ -2483,6 +2508,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000500",
                 name: "Shop5",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[4],
@@ -2490,6 +2516,7 @@ describe("Test for Ledger", () => {
             {
                 shopId: "F000600",
                 name: "Shop6",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[5],
@@ -2588,26 +2615,26 @@ describe("Test for Ledger", () => {
 
             it("Check shop data", async () => {
                 const shopInfo1 = await shopCollection.shopOf(shopData[0].shopId);
-                expect(shopInfo1.providedPoint).to.equal(
+                expect(shopInfo1.providedAmount).to.equal(
                     Amount.make(10000 * 6, 18)
                         .value.mul(shopData[0].providePercent)
                         .div(100)
                 );
 
                 const shopInfo2 = await shopCollection.shopOf(shopData[1].shopId);
-                expect(shopInfo2.providedPoint).to.equal(
+                expect(shopInfo2.providedAmount).to.equal(
                     Amount.make(10000 * 1, 18)
                         .value.mul(shopData[1].providePercent)
                         .div(100)
                 );
                 const shopInfo3 = await shopCollection.shopOf(shopData[2].shopId);
-                expect(shopInfo3.providedPoint).to.equal(
+                expect(shopInfo3.providedAmount).to.equal(
                     Amount.make(10000 * 1, 18)
                         .value.mul(shopData[2].providePercent)
                         .div(100)
                 );
                 const shopInfo4 = await shopCollection.shopOf(shopData[3].shopId);
-                expect(shopInfo4.providedPoint).to.equal(
+                expect(shopInfo4.providedAmount).to.equal(
                     Amount.make(10000 * 1, 18)
                         .value.mul(shopData[3].providePercent)
                         .div(100)
