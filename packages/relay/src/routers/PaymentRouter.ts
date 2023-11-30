@@ -598,12 +598,26 @@ export class PaymentRouter {
             };
             await this._storage.postPayment(item);
 
-            /// 사용자에게 푸쉬 메세지 발송
-            const title = "KIOS 결제 승인 요청";
-            const contents: string[] = [];
-            contents.push(`결제 금액 : ${new Amount(item.amount, 18).toBOAString()}`);
-            contents.push(`결제 아이디 : ${item.paymentId}`);
-            this._sender.send(title, contents.join("\n"));
+            const shopContract = await this.getShopContract();
+            const shopInfo = await shopContract.shopOf(item.shopId);
+
+            const mobileData = await this._storage.getMobile(item.account);
+            if (mobileData !== undefined) {
+                /// 사용자에게 메세지 발송
+                const to = mobileData.token;
+                const title = "마일리지 사용 알림";
+                const contents: string[] = [];
+                const data = { type: "new", paymentId: item.paymentId };
+                contents.push(`구매처 : ${shopInfo.name}`);
+                contents.push(`구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)}`);
+                if (item.loyaltyType === ContractLoyaltyType.POINT)
+                    contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)}`);
+                else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 0)}`);
+
+                await this._sender.send(to, title, contents.join(", "), data);
+            } else {
+                if (!process.env.TESTING) logger.error("Can not found a mobile to send notifications to");
+            }
 
             return res.status(200).json(
                 this.makeResponseData(0, {
@@ -1023,11 +1037,24 @@ export class PaymentRouter {
                 item.openCancelTimestamp = ContractUtils.getTimeStamp();
                 await this._storage.updateOpenCancelTimestamp(item.paymentId, item.openCancelTimestamp);
 
-                const title = "KIOS 결제 취소 요청";
-                const contents: string[] = [];
-                contents.push(`결제 금액 : ${new Amount(item.amount, 18).toBOAString()}`);
-                contents.push(`결제 아이디 : ${item.paymentId}`);
-                this._sender.send(title, contents.join("\n"));
+                const shopContract = await this.getShopContract();
+                const shopInfo = await shopContract.shopOf(item.shopId);
+
+                const mobileData = await this._storage.getMobile(shopInfo.account);
+                if (mobileData !== undefined) {
+                    /// 상점주에게 메세지 발송
+                    const to = mobileData.token;
+                    const title = "마일리지 사용 취소 알림";
+                    const contents: string[] = [];
+                    const data = { type: "cancel", paymentId: item.paymentId };
+                    contents.push(`구매처 : ${shopInfo.name}`);
+                    contents.push(`구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)}`);
+                    if (item.loyaltyType === ContractLoyaltyType.POINT)
+                        contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)}`);
+                    else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 0)}`);
+
+                    await this._sender.send(to, title, contents.join(", "), data);
+                }
 
                 return res.status(200).json(
                     this.makeResponseData(0, {
