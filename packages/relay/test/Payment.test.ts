@@ -2466,84 +2466,70 @@ describe("Test of Server", function () {
         let paymentId: string;
 
         const mobilePhone: INotificationEventHandler = {
-            receive: async (title: string, body: string) => {
+            receive: async (to: string, title: string, body: string, data: any) => {
                 await ContractUtils.delay(1000);
-                if (title === "KIOS 결제 승인 요청") {
-                    const searchString = "결제 아이디 : ";
-                    const pos = body.lastIndexOf("결제 아이디 : ");
-                    if (pos > 0) {
-                        const receivedPaymentId = body.substring(pos + searchString.length).trim();
-                        const responseItem = await client.get(
-                            URI(serverURL)
-                                .directory("/v1/payment/item")
-                                .addQuery("paymentId", receivedPaymentId)
-                                .toString()
-                        );
-                        const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
-                        const signature = await ContractUtils.signLoyaltyNewPayment(
-                            users[purchaseOfLoyalty.userIndex],
-                            receivedPaymentId,
-                            responseItem.data.data.purchaseId,
-                            responseItem.data.data.amount,
-                            responseItem.data.data.currency,
-                            responseItem.data.data.shopId,
-                            nonce
-                        );
+                if (data.type === "new") {
+                    const receivedPaymentId = data.paymentId;
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", receivedPaymentId).toString()
+                    );
+                    const nonce = await ledgerContract.nonceOf(users[purchaseOfLoyalty.userIndex].address);
+                    const signature = await ContractUtils.signLoyaltyNewPayment(
+                        users[purchaseOfLoyalty.userIndex],
+                        receivedPaymentId,
+                        responseItem.data.data.purchaseId,
+                        responseItem.data.data.amount,
+                        responseItem.data.data.currency,
+                        responseItem.data.data.shopId,
+                        nonce
+                    );
 
-                        const response = await client.post(
-                            URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
-                            {
-                                paymentId: receivedPaymentId,
-                                approval: true,
-                                signature,
-                            }
-                        );
+                    const response = await client.post(
+                        URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
+                        {
+                            paymentId: receivedPaymentId,
+                            approval: true,
+                            signature,
+                        }
+                    );
 
-                        assert.deepStrictEqual(response.data.code, 0);
-                        assert.ok(response.data.data !== undefined);
-                        assert.ok(response.data.data.txHash !== undefined);
-                        assert.deepStrictEqual(
-                            response.data.data.paymentStatus,
-                            LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX
-                        );
-                    }
-                } else if (title === "KIOS 결제 취소 요청") {
-                    const searchString = "결제 아이디 : ";
-                    const pos = body.lastIndexOf("결제 아이디 : ");
-                    if (pos > 0) {
-                        const receivedPaymentId = body.substring(pos + searchString.length).trim();
-                        const responseItem = await client.get(
-                            URI(serverURL)
-                                .directory("/v1/payment/item")
-                                .addQuery("paymentId", receivedPaymentId)
-                                .toString()
-                        );
-                        const wallet = shopData[purchaseOfLoyalty.shopIndex].wallet;
-                        const nonce = await ledgerContract.nonceOf(wallet.address);
-                        const signature = await ContractUtils.signLoyaltyCancelPayment(
-                            wallet,
-                            receivedPaymentId,
-                            responseItem.data.data.purchaseId,
-                            nonce
-                        );
+                    assert.deepStrictEqual(response.data.code, 0);
+                    assert.ok(response.data.data !== undefined);
+                    assert.ok(response.data.data.txHash !== undefined);
+                    assert.deepStrictEqual(
+                        response.data.data.paymentStatus,
+                        LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX
+                    );
+                } else if (data.type === "cancel") {
+                    const receivedPaymentId = data.paymentId;
+                    const responseItem = await client.get(
+                        URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", receivedPaymentId).toString()
+                    );
+                    const wallet = shopData[purchaseOfLoyalty.shopIndex].wallet;
+                    const nonce = await ledgerContract.nonceOf(wallet.address);
+                    const signature = await ContractUtils.signLoyaltyCancelPayment(
+                        wallet,
+                        receivedPaymentId,
+                        responseItem.data.data.purchaseId,
+                        nonce
+                    );
 
-                        const response = await client.post(
-                            URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString(),
-                            {
-                                paymentId: receivedPaymentId,
-                                approval: true,
-                                signature,
-                            }
-                        );
+                    const response = await client.post(
+                        URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString(),
+                        {
+                            paymentId: receivedPaymentId,
+                            approval: true,
+                            signature,
+                        }
+                    );
 
-                        assert.deepStrictEqual(response.data.code, 0);
-                        assert.ok(response.data.data !== undefined);
-                        assert.ok(response.data.data.txHash !== undefined);
-                        assert.deepStrictEqual(
-                            response.data.data.paymentStatus,
-                            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX
-                        );
-                    }
+                    assert.deepStrictEqual(response.data.code, 0);
+                    assert.ok(response.data.data !== undefined);
+                    assert.ok(response.data.data.txHash !== undefined);
+                    assert.deepStrictEqual(
+                        response.data.data.paymentStatus,
+                        LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX
+                    );
                 }
             },
         };
@@ -2604,6 +2590,49 @@ describe("Test of Server", function () {
 
         after("Stop CallbackServer", async () => {
             await fakerCallbackServer.stop();
+        });
+
+        it("Register user's mobile token", async () => {
+            const param = {
+                account: users[purchaseOfLoyalty.userIndex].address,
+                token: "12345678901234567890123456789012345678901234567890",
+                language: "kr",
+                os: "iOS",
+                signature: "",
+            };
+
+            param.signature = await ContractUtils.signMobileToken(users[purchaseOfLoyalty.userIndex], param.token);
+
+            const response = await client.post(
+                URI(serverURL).directory("/v1/mobile").filename("register").toString(),
+                param
+            );
+            assert.deepStrictEqual(response.data.data.account, users[purchaseOfLoyalty.userIndex].address);
+            assert.deepStrictEqual(response.data.data.token, param.token);
+            assert.deepStrictEqual(response.data.data.language, param.language);
+            assert.deepStrictEqual(response.data.data.os, param.os);
+        });
+
+        it("Register shop owner mobile token", async () => {
+            const wallet = shopData[purchaseOfLoyalty.shopIndex].wallet;
+            const param = {
+                account: wallet.address,
+                token: "12345678901234567890123456789012345678901234567890",
+                language: "kr",
+                os: "iOS",
+                signature: "",
+            };
+
+            param.signature = await ContractUtils.signMobileToken(wallet, param.token);
+
+            const response = await client.post(
+                URI(serverURL).directory("/v1/mobile").filename("register").toString(),
+                param
+            );
+            assert.deepStrictEqual(response.data.data.account, wallet.address);
+            assert.deepStrictEqual(response.data.data.token, param.token);
+            assert.deepStrictEqual(response.data.data.language, param.language);
+            assert.deepStrictEqual(response.data.data.os, param.os);
         });
 
         it("Save Purchase Data", async () => {

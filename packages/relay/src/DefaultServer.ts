@@ -43,7 +43,7 @@ export class DefaultServer extends WebService {
 
         this.config = config;
         this.storage = storage;
-        this.sender = new NotificationSender(handler);
+        this.sender = new NotificationSender(this.config, handler);
         this.relaySigners = new RelaySigners(this.config);
         this.defaultRouter = new DefaultRouter(this);
         this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
