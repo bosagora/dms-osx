@@ -646,7 +646,7 @@ export class PaymentRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/new/open : ${msg.error.message}`);
+            logger.error(`POST /v1/payment/new/open : ${msg.error.message}`);
             return res.status(200).json(msg);
         }
     }
