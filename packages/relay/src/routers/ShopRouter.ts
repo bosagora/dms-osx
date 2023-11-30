@@ -364,14 +364,20 @@ export class ShopRouter {
                 };
                 await this._storage.postTask(item);
 
-                /// 사용자에게 푸쉬 메세지 발송
-                const title = "KIOS 상점 정보 변경 요청";
-                const contents: string[] = [];
-                contents.push(`상점이름 : ${item.name}`);
-                contents.push(`작업아이디 : ${item.taskId}`);
-                contents.push(`적립비율 : ${item.providePercent}`);
-                contents.push(`지연시간 : ${item.provideWaitTime}`);
-                this._sender.send(title, contents.join("\n"));
+                const mobileData = await this._storage.getMobile(item.account);
+                if (mobileData !== undefined) {
+                    /// 사용자에게 메세지 발송
+                    const to = mobileData.token;
+                    const title = "KIOS 상점 정보 변경 요청";
+                    const contents: string[] = [];
+                    const data = { type: "shop_update", taskId: item.taskId };
+                    contents.push(`상점이름 : ${item.name}`);
+                    contents.push(`적립비율(%) : ${item.providePercent}`);
+                    contents.push(`지연시간(초) : ${item.provideWaitTime}`);
+                    await this._sender.send(to, title, contents.join(", "), data);
+                } else {
+                    if (!process.env.TESTING) logger.error("Can not found a mobile to send notifications to");
+                }
 
                 return res.status(200).json(
                     this.makeResponseData(0, {
@@ -559,12 +565,19 @@ export class ShopRouter {
                 await this._storage.postTask(item);
 
                 /// 사용자에게 푸쉬 메세지 발송
-                const title = "KIOS 상점 상태 변경 요청";
-                const contents: string[] = [];
-                contents.push(`상점 이름 : ${item.name}`);
-                contents.push(`상태 : ${item.status}`);
-                contents.push(`처리 아이디 : ${item.taskId}`);
-                this._sender.send(title, contents.join("\n"));
+                const mobileData = await this._storage.getMobile(item.account);
+                if (mobileData !== undefined) {
+                    /// 사용자에게 메세지 발송
+                    const to = mobileData.token;
+                    const title = "KIOS 상점 상태 변경 요청";
+                    const contents: string[] = [];
+                    const data = { type: "shop_status", taskId: item.taskId };
+                    contents.push(`상점이름 : ${item.name}`);
+                    contents.push(`변경할 상태값 : ${item.status === ContractShopStatus.ACTIVE ? "활성" : "비활성"}`);
+                    await this._sender.send(to, title, contents.join(", "), data);
+                } else {
+                    if (!process.env.TESTING) logger.error("Can not found a mobile to send notifications to");
+                }
 
                 return res.status(200).json(
                     this.makeResponseData(0, {

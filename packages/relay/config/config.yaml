@@ -72,4 +72,4 @@ contracts:
   ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
   phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
   shopAddress : "${SHOP_CONTRACT_ADDRESS}"
-  currencyRateAddress: "$CURRENCY_RATE_CONTRACT_ADDRESS"
+  currencyRateAddress: "${CURRENCY_RATE_CONTRACT_ADDRESS}"
