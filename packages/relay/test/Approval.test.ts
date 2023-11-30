@@ -126,7 +126,7 @@ describe("Test of Server", function () {
         const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
         currencyRateContract = (await currencyRateFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as CurrencyRate;
+            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
         await currencyRateContract.deployed();
         await currencyRateContract.deployTransaction.wait();
         await currencyRateContract.connect(validators[0]).set(await tokenContract.symbol(), price);
@@ -151,7 +151,7 @@ describe("Test of Server", function () {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(certifierCollection.address)) as ShopCollection;
+            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -160,7 +160,7 @@ describe("Test of Server", function () {
         for (const shop of shops) {
             const nonce = await shopCollection.nonceOf(shop.address);
             const signature = await ContractUtils.signShop(new Wallet(shop.privateKey), shop.shopId, nonce);
-            await shopCollection.connect(deployer).add(shop.shopId, shop.name, shop.address, signature);
+            await shopCollection.connect(deployer).add(shop.shopId, shop.name, shop.currency, shop.address, signature);
         }
 
         for (const shop of shops) {

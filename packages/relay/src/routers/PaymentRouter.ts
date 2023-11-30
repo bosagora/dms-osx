@@ -366,10 +366,10 @@ export class PaymentRouter {
                 providePercent: info.provideWaitTime.toNumber(),
                 status: info.status,
                 account: info.account,
-                providedPoint: info.providedPoint.toString(),
-                usedPoint: info.usedPoint.toString(),
-                settledPoint: info.settledPoint.toString(),
-                withdrawnPoint: info.withdrawnPoint.toString(),
+                providedAmount: info.providedAmount.toString(),
+                usedAmount: info.usedAmount.toString(),
+                settledAmount: info.settledAmount.toString(),
+                withdrawnAmount: info.withdrawnAmount.toString(),
             };
             return res.status(200).json(this.makeResponseData(0, shopInfo));
         } catch (error: any) {

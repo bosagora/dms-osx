@@ -48,6 +48,7 @@ interface IPurchaseData {
 interface IShopData {
     shopId: string;
     name: string;
+    currency: string;
     provideWaitTime: number;
     providePercent: number;
     wallet: Wallet;
@@ -148,7 +149,7 @@ describe("Test for ShopCollection", () => {
         const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
         currencyRateContract = (await currencyRateFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as CurrencyRate;
+            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
         await currencyRateContract.deployed();
         await currencyRateContract.deployTransaction.wait();
         await currencyRateContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
@@ -166,7 +167,7 @@ describe("Test for ShopCollection", () => {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(certifierCollection.address)) as ShopCollection;
+            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -175,7 +176,9 @@ describe("Test for ShopCollection", () => {
         for (const shop of shops) {
             const nonce = await shopCollection.nonceOf(shop.wallet.address);
             const signature = await ContractUtils.signShop(shop.wallet, shop.shopId, nonce);
-            await shopCollection.connect(deployer).add(shop.shopId, shop.name, shop.wallet.address, signature);
+            await shopCollection
+                .connect(deployer)
+                .add(shop.shopId, shop.name, shop.currency, shop.wallet.address, signature);
         }
 
         for (const shop of shops) {
@@ -347,6 +350,7 @@ describe("Test for ShopCollection", () => {
             {
                 shopId: "F000100",
                 name: "Shop1",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[0],
@@ -354,6 +358,7 @@ describe("Test for ShopCollection", () => {
             {
                 shopId: "F000200",
                 name: "Shop2",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[1],
@@ -361,6 +366,7 @@ describe("Test for ShopCollection", () => {
             {
                 shopId: "F000300",
                 name: "Shop3",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[2],
@@ -368,6 +374,7 @@ describe("Test for ShopCollection", () => {
             {
                 shopId: "F000400",
                 name: "Shop4",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[3],
@@ -375,6 +382,7 @@ describe("Test for ShopCollection", () => {
             {
                 shopId: "F000500",
                 name: "Shop5",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[4],
@@ -382,6 +390,7 @@ describe("Test for ShopCollection", () => {
             {
                 shopId: "F000600",
                 name: "Shop6",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[5],
@@ -528,9 +537,9 @@ describe("Test for ShopCollection", () => {
                     .to.emit(ledgerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo = await shopCollection.shopOf(shop.shopId);
-                expect(shopInfo.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(shopInfo.usedPoint).to.equal(Amount.make(300, 18).value);
-                expect(shopInfo.settledPoint).to.equal(Amount.make(200, 18).value);
+                expect(shopInfo.providedAmount).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo.usedAmount).to.equal(Amount.make(300, 18).value);
+                expect(shopInfo.settledAmount).to.equal(Amount.make(200, 18).value);
             });
         });
 
@@ -637,11 +646,11 @@ describe("Test for ShopCollection", () => {
                 );
 
                 const shopInfo2 = await shopCollection.shopOf(shop.shopId);
-                expect(shopInfo2.providedPoint).to.equal(Amount.make(100, 18).value);
-                expect(shopInfo2.usedPoint).to.equal(Amount.make(500, 18).value);
-                expect(shopInfo2.settledPoint).to.equal(Amount.make(400, 18).value);
+                expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value);
+                expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value);
+                expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
 
-                const settledToken = shopInfo2.settledPoint.mul(multiple).div(price);
+                const settledToken = shopInfo2.settledAmount.mul(multiple).div(price);
                 expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
                 );
@@ -673,10 +682,10 @@ describe("Test for ShopCollection", () => {
                     providePercent: 0,
                     status: 1,
                     account: shopData[shopIndex].wallet.address,
-                    providedPoint: "100000000000000000000",
-                    usedPoint: "500000000000000000000",
-                    settledPoint: "400000000000000000000",
-                    withdrawnPoint: "0",
+                    providedAmount: "100000000000000000000",
+                    usedAmount: "500000000000000000000",
+                    settledAmount: "400000000000000000000",
+                    withdrawnAmount: "0",
                 });
             });
 
@@ -759,10 +768,10 @@ describe("Test for ShopCollection", () => {
                     providePercent: 0,
                     status: 1,
                     account: shopData[shopIndex].wallet.address,
-                    providedPoint: "100000000000000000000",
-                    usedPoint: "500000000000000000000",
-                    settledPoint: "400000000000000000000",
-                    withdrawnPoint: "400000000000000000000",
+                    providedAmount: "100000000000000000000",
+                    usedAmount: "500000000000000000000",
+                    settledAmount: "400000000000000000000",
+                    withdrawnAmount: "400000000000000000000",
                 });
             });
 

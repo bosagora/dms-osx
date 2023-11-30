@@ -129,7 +129,7 @@ describe("Test for ShopCollection", function () {
         const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
         currencyRateContract = (await currencyRateFactory
             .connect(deployer)
-            .deploy(validatorContract.address)) as CurrencyRate;
+            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
         await currencyRateContract.deployed();
         await currencyRateContract.deployTransaction.wait();
         await currencyRateContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
@@ -151,7 +151,7 @@ describe("Test for ShopCollection", function () {
         const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(certifierCollection.address)) as ShopCollection;
+            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };
@@ -200,6 +200,7 @@ describe("Test for ShopCollection", function () {
         interface IShopData {
             shopId: string;
             name: string;
+            currency: string;
             provideWaitTime: number;
             providePercent: number;
             wallet: Wallet;
@@ -209,6 +210,7 @@ describe("Test for ShopCollection", function () {
             {
                 shopId: "",
                 name: "Shop 1-1",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[0],
@@ -216,6 +218,7 @@ describe("Test for ShopCollection", function () {
             {
                 shopId: "",
                 name: "Shop 1-2",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[0],
@@ -223,6 +226,7 @@ describe("Test for ShopCollection", function () {
             {
                 shopId: "",
                 name: "Shop 2-1",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[1],
@@ -230,6 +234,7 @@ describe("Test for ShopCollection", function () {
             {
                 shopId: "",
                 name: "Shop 2-2",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[1],
@@ -237,6 +242,7 @@ describe("Test for ShopCollection", function () {
             {
                 shopId: "",
                 name: "Shop 3",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[2],
@@ -244,6 +250,7 @@ describe("Test for ShopCollection", function () {
             {
                 shopId: "",
                 name: "Shop 4",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[3],
@@ -251,6 +258,7 @@ describe("Test for ShopCollection", function () {
             {
                 shopId: "",
                 name: "Shop 5",
+                currency: "krw",
                 provideWaitTime: 0,
                 providePercent: 5,
                 wallet: shopWallets[4],
@@ -323,6 +331,7 @@ describe("Test for ShopCollection", function () {
                 const response = await client.post(url, {
                     shopId: elem.shopId,
                     name: elem.name,
+                    currency: elem.currency,
                     account: elem.wallet.address,
                     signature,
                 });
