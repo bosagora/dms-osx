@@ -20,10 +20,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const { deployer, owner, certifier } = await getNamedAccounts();
 
     const certifierCollectionAddress = await getContractAddress("CertifierCollection", hre);
+    const currencyRateContractAddress = await getContractAddress("CurrencyRate", hre);
 
     const deployResult = await deploy("ShopCollection", {
         from: deployer,
-        args: [certifierCollectionAddress],
+        args: [certifierCollectionAddress, currencyRateContractAddress],
         log: true,
     });
 
@@ -31,6 +32,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         interface IShopData {
             shopId: string;
             name: string;
+            currency: string;
             provideWaitTime: number;
             providePercent: number;
             address: string;
@@ -45,7 +47,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             const signature = ContractUtils.signShop(new Wallet(shop.privateKey, ethers.provider), shop.shopId, nonce);
             const tx = await contract
                 .connect(new Wallet(shop.privateKey, ethers.provider))
-                .add(shop.shopId, shop.name, shop.address, signature);
+                .add(shop.shopId, shop.name, shop.currency, shop.address, signature);
             console.log(`Add shop data (tx: ${tx.hash})...`);
             await tx.wait();
 
