@@ -2642,4 +2642,400 @@ describe("Test for Ledger", () => {
             });
         });
     });
+
+    context("Clearing for shops - Multi Currency", () => {
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: userWallets[0].address,
+                privateKey: userWallets[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: userWallets[1].address,
+                privateKey: userWallets[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: userWallets[2].address,
+                privateKey: userWallets[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: userWallets[3].address,
+                privateKey: userWallets[3].privateKey,
+            },
+            {
+                phone: "08201012341005",
+                address: userWallets[4].address,
+                privateKey: userWallets[4].privateKey,
+            },
+        ];
+
+        const purchaseData: IPurchaseData[] = [
+            {
+                purchaseId: "P000001",
+                timestamp: 1672844400,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000002",
+                timestamp: 1675522800,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 0,
+            },
+            {
+                purchaseId: "P000003",
+                timestamp: 1677942000,
+                amount: 10000,
+                method: 0,
+                currency: "krw",
+                shopIndex: 2,
+                userIndex: 0,
+            },
+        ];
+
+        const shopData: IShopData[] = [
+            {
+                shopId: "F000100",
+                name: "Shop1",
+                currency: "krw",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[0],
+            },
+            {
+                shopId: "F000200",
+                name: "Shop2",
+                currency: "usd",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[1],
+            },
+            {
+                shopId: "F000300",
+                name: "Shop3",
+                currency: "jpy",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[2],
+            },
+            {
+                shopId: "F000400",
+                name: "Shop4",
+                currency: "usd",
+                provideWaitTime: 0,
+                providePercent: 1,
+                wallet: shopWallets[3],
+            },
+        ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+            }
+        });
+
+        before("Deploy", async () => {
+            await deployToken();
+            await deployValidatorCollection();
+            await depositValidators();
+            await deployLinkCollection();
+            await deployCurrencyRate();
+            const symbol = await tokenContract.symbol();
+            let rate = BigNumber.from(100).mul(multiple);
+            await expect(currencyRateContract.connect(validatorWallets[0]).set(symbol, rate))
+                .to.emit(currencyRateContract, "SetRate")
+                .withNamedArgs({ rate });
+            rate = BigNumber.from(1000).mul(multiple);
+            await expect(currencyRateContract.connect(validatorWallets[0]).set("usd", rate))
+                .to.emit(currencyRateContract, "SetRate")
+                .withNamedArgs({ rate });
+
+            rate = BigNumber.from(10).mul(multiple);
+            await expect(currencyRateContract.connect(validatorWallets[0]).set("jpy", rate))
+                .to.emit(currencyRateContract, "SetRate")
+                .withNamedArgs({ rate });
+            await deployCertifierCollection();
+            await deployShopCollection();
+            await deployLedger();
+            await addShopData(shopData);
+            await prepareToken();
+        });
+
+        context("Save Purchase Data", () => {
+            it("Save Purchase Data", async () => {
+                for (const purchase of purchaseData) {
+                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const shop = shopData[purchase.shopIndex];
+                    const amt = purchaseAmount.mul(shop.providePercent).div(100);
+                    const userAccount = userData[purchase.userIndex].address.trim();
+                    await expect(
+                        ledgerContract.connect(validatorWallets[0]).savePurchase({
+                            purchaseId: purchase.purchaseId,
+                            timestamp: purchase.timestamp,
+                            amount: purchaseAmount,
+                            currency: purchase.currency.toLowerCase(),
+                            shopId: shopData[purchase.shopIndex].shopId,
+                            method: purchase.method,
+                            account: userAccount,
+                            phone: phoneHash,
+                        })
+                    )
+                        .to.emit(ledgerContract, "SavedPurchase")
+                        .withArgs(
+                            purchase.purchaseId,
+                            purchase.timestamp,
+                            purchaseAmount,
+                            purchase.currency.toLowerCase(),
+                            shopData[purchase.shopIndex].shopId,
+                            purchase.method,
+                            userAccount,
+                            phoneHash
+                        )
+                        .emit(ledgerContract, "ProvidedPoint")
+                        .withNamedArgs({
+                            account: userAccount,
+                            providedPoint: amt,
+                            providedValue: amt,
+                            purchaseId: purchase.purchaseId,
+                        });
+                }
+            });
+
+            it("Check balances", async () => {
+                const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
+                for (const purchase of purchaseData) {
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const key =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
+                    const oldValue = expected.get(key);
+
+                    const shop = shopData[purchase.shopIndex];
+                    const point = purchaseAmount.mul(shop.providePercent).div(100);
+
+                    if (oldValue !== undefined) expected.set(key, oldValue.add(point));
+                    else expected.set(key, point);
+                }
+                for (const key of expected.keys()) {
+                    expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                }
+            });
+
+            it("Check shop data", async () => {
+                for (let idx = 0; idx < 3; idx++) {
+                    const shop = shopData[idx];
+                    const shopInfo1 = await shopCollection.shopOf(shop.shopId);
+                    const rate = await currencyRateContract.get(shop.currency);
+                    const providedAmount = Amount.make(10000, 18).value.mul(shopData[0].providePercent).div(100);
+                    const exchangedAmount = providedAmount.mul(multiple).div(rate);
+                    expect(shopInfo1.providedAmount).to.equal(exchangedAmount);
+                }
+            });
+        });
+
+        context("Pay point", () => {
+            it("Pay point - Success", async () => {
+                const purchase = {
+                    purchaseId: "P000100",
+                    timestamp: 1672849000,
+                    amount: 100,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 3,
+                    userIndex: 0,
+                };
+
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyNewPayment(
+                    userWallets[purchase.userIndex],
+                    paymentId,
+                    purchase.purchaseId,
+                    purchaseAmount,
+                    purchase.currency,
+                    shop.shopId,
+                    nonce
+                );
+
+                await expect(
+                    ledgerContract.connect(relay).openNewLoyaltyPayment({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
+
+                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true))
+                    .to.emit(ledgerContract, "LoyaltyPaymentEvent")
+                    .to.emit(ledgerContract, "ProvidedTokenForSettlement")
+                    .withNamedArgs({
+                        account: settlements.address,
+                        shopId: shop.shopId,
+                        providedPoint: Amount.make(100, 18).value,
+                    });
+
+                const rate = await currencyRateContract.get(shop.currency);
+                const shopInfo = await shopCollection.shopOf(shop.shopId);
+                expect(shopInfo.providedAmount).to.equal(Amount.make(0, 18).value);
+                expect(shopInfo.usedAmount).to.equal(Amount.make(100, 18).value.mul(multiple).div(rate));
+                expect(shopInfo.settledAmount).to.equal(Amount.make(100, 18).value.mul(multiple).div(rate));
+            });
+        });
+
+        context("Change Loyalty Type", () => {
+            it("Change Loyalty Type (user: 0)", async () => {
+                const userIndex = 0;
+                await expect(
+                    ledgerContract
+                        .connect(userWallets[userIndex].connect(hre.waffle.provider))
+                        .changeToLoyaltyTokenDirect()
+                )
+                    .to.emit(ledgerContract, "ChangedToLoyaltyToken")
+                    .withNamedArgs({ account: userWallets[userIndex].address });
+            });
+        });
+
+        context("Deposit token", () => {
+            it("Deposit token - Success", async () => {
+                const userIndex = 0;
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[userIndex].address);
+                await tokenContract.connect(userWallets[userIndex]).approve(ledgerContract.address, amount.value);
+                await expect(ledgerContract.connect(userWallets[userIndex]).deposit(amount.value))
+                    .to.emit(ledgerContract, "Deposited")
+                    .withNamedArgs({
+                        account: userWallets[userIndex].address,
+                        depositedToken: amount.value,
+                        balanceToken: oldTokenBalance.add(amount.value),
+                    });
+                expect(await ledgerContract.tokenBalanceOf(userWallets[userIndex].address)).to.deep.equal(
+                    oldTokenBalance.add(amount.value)
+                );
+            });
+        });
+
+        context("Pay token", () => {
+            it("Pay token - Success", async () => {
+                const purchase: IPurchaseData = {
+                    purchaseId: "P000200",
+                    timestamp: 1672849000,
+                    amount: 500,
+                    method: 0,
+                    currency: "krw",
+                    shopIndex: 2,
+                    userIndex: 0,
+                };
+
+                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                const shop = shopData[purchase.shopIndex];
+                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const signature = await ContractUtils.signLoyaltyNewPayment(
+                    userWallets[purchase.userIndex],
+                    paymentId,
+                    purchase.purchaseId,
+                    purchaseAmount,
+                    purchase.currency,
+                    shop.shopId,
+                    nonce
+                );
+
+                await expect(
+                    ledgerContract.connect(relay).openNewLoyaltyPayment({
+                        paymentId,
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shop.shopId,
+                        account: userWallets[purchase.userIndex].address,
+                        signature,
+                    })
+                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
+
+                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
+                    ledgerContract,
+                    "LoyaltyPaymentEvent"
+                );
+
+                const rate = await currencyRateContract.get(shop.currency);
+                const shopInfo2 = await shopCollection.shopOf(shop.shopId);
+                expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value.mul(multiple).div(rate));
+                expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value.mul(multiple).div(rate));
+                expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value.mul(multiple).div(rate));
+            });
+        });
+
+        context("Withdrawal of settlement", () => {
+            const shopIndex = 2;
+            const shop = shopData[shopIndex];
+            let rate: BigNumber;
+            let amount2: BigNumber;
+            it("Check Settlement", async () => {
+                rate = await currencyRateContract.get(shop.currency);
+                amount2 = Amount.make(400, 18).value.mul(multiple).div(rate);
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(amount2);
+            });
+
+            it("Open Withdrawal", async () => {
+                const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
+                const signature = await ContractUtils.signShop(
+                    shopData[shopIndex].wallet,
+                    shopData[shopIndex].shopId,
+                    nonce
+                );
+                await expect(
+                    shopCollection
+                        .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
+                        .openWithdrawal(shop.shopId, amount2, shopData[shopIndex].wallet.address, signature)
+                )
+                    .to.emit(shopCollection, "OpenedWithdrawal")
+                    .withNamedArgs({
+                        shopId: shop.shopId,
+                        amount: amount2,
+                        account: shopWallets[shopIndex].address,
+                    });
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(amount2);
+            });
+
+            it("Close Withdrawal", async () => {
+                const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
+                const signature = await ContractUtils.signShop(
+                    shopData[shopIndex].wallet,
+                    shopData[shopIndex].shopId,
+                    nonce
+                );
+                await expect(
+                    shopCollection
+                        .connect(shopData[shopIndex].wallet.connect(hre.waffle.provider))
+                        .closeWithdrawal(shop.shopId, shopData[shopIndex].wallet.address, signature)
+                )
+                    .to.emit(shopCollection, "ClosedWithdrawal")
+                    .withNamedArgs({
+                        shopId: shop.shopId,
+                        amount: amount2,
+                        account: shopWallets[shopIndex].address,
+                    });
+                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                expect(withdrawalAmount).to.equal(0);
+            });
+        });
+    });
 });
