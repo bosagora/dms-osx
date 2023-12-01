@@ -181,8 +181,12 @@ export class LoyaltyPaymentEventPaymentStruct extends ethereum.Tuple {
     return this[12].toBigInt();
   }
 
+  get usedValueShop(): BigInt {
+    return this[13].toBigInt();
+  }
+
   get status(): i32 {
-    return this[13].toI32();
+    return this[14].toI32();
   }
 }
 
@@ -211,16 +215,20 @@ export class ProvidedPoint__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
+  get currency(): string {
+    return this._event.parameters[3].value.toString();
+  }
+
   get balancePoint(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
+    return this._event.parameters[4].value.toBigInt();
   }
 
   get purchaseId(): string {
-    return this._event.parameters[4].value.toString();
+    return this._event.parameters[5].value.toString();
   }
 
   get shopId(): Bytes {
-    return this._event.parameters[5].value.toBytes();
+    return this._event.parameters[6].value.toBytes();
   }
 }
 
@@ -249,16 +257,20 @@ export class ProvidedToken__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
+  get currency(): string {
+    return this._event.parameters[3].value.toString();
+  }
+
   get balanceToken(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
+    return this._event.parameters[4].value.toBigInt();
   }
 
   get purchaseId(): string {
-    return this._event.parameters[4].value.toString();
+    return this._event.parameters[5].value.toString();
   }
 
   get shopId(): Bytes {
-    return this._event.parameters[5].value.toBytes();
+    return this._event.parameters[6].value.toBytes();
   }
 }
 
@@ -291,12 +303,20 @@ export class ProvidedTokenForSettlement__Params {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get balanceToken(): BigInt {
+  get providedValue(): BigInt {
     return this._event.parameters[4].value.toBigInt();
   }
 
-  get purchaseId(): string {
+  get currency(): string {
     return this._event.parameters[5].value.toString();
+  }
+
+  get balanceToken(): BigInt {
+    return this._event.parameters[6].value.toBigInt();
+  }
+
+  get purchaseId(): string {
+    return this._event.parameters[7].value.toString();
   }
 }
 
@@ -325,16 +345,20 @@ export class ProvidedUnPayablePoint__Params {
     return this._event.parameters[2].value.toBigInt();
   }
 
+  get currency(): string {
+    return this._event.parameters[3].value.toString();
+  }
+
   get balancePoint(): BigInt {
-    return this._event.parameters[3].value.toBigInt();
+    return this._event.parameters[4].value.toBigInt();
   }
 
   get purchaseId(): string {
-    return this._event.parameters[4].value.toString();
+    return this._event.parameters[5].value.toString();
   }
 
   get shopId(): Bytes {
-    return this._event.parameters[5].value.toBytes();
+    return this._event.parameters[6].value.toBytes();
   }
 }
 
@@ -467,67 +491,18 @@ export class Ledger__loyaltyPaymentOfResultValue0Struct extends ethereum.Tuple {
     return this[12].toBigInt();
   }
 
+  get usedValueShop(): BigInt {
+    return this[13].toBigInt();
+  }
+
   get status(): i32 {
-    return this[13].toI32();
-  }
-}
-
-export class Ledger__purchaseOfResultValue0Struct extends ethereum.Tuple {
-  get purchaseId(): string {
-    return this[0].toString();
-  }
-
-  get timestamp(): BigInt {
-    return this[1].toBigInt();
-  }
-
-  get amount(): BigInt {
-    return this[2].toBigInt();
-  }
-
-  get currency(): string {
-    return this[3].toString();
-  }
-
-  get shopId(): Bytes {
-    return this[4].toBytes();
-  }
-
-  get method(): BigInt {
-    return this[5].toBigInt();
-  }
-
-  get account(): Address {
-    return this[6].toAddress();
-  }
-
-  get phone(): Bytes {
-    return this[7].toBytes();
+    return this[14].toI32();
   }
 }
 
 export class Ledger extends ethereum.SmartContract {
   static bind(address: Address): Ledger {
     return new Ledger("Ledger", address);
-  }
-
-  BASE_CURRENCY(): Bytes {
-    let result = super.call("BASE_CURRENCY", "BASE_CURRENCY():(bytes32)", []);
-
-    return result[0].toBytes();
-  }
-
-  try_BASE_CURRENCY(): ethereum.CallResult<Bytes> {
-    let result = super.tryCall(
-      "BASE_CURRENCY",
-      "BASE_CURRENCY():(bytes32)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
   MAX_FEE(): BigInt {
@@ -558,71 +533,6 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBytes());
-  }
-
-  NULL_CURRENCY(): Bytes {
-    let result = super.call("NULL_CURRENCY", "NULL_CURRENCY():(bytes32)", []);
-
-    return result[0].toBytes();
-  }
-
-  try_NULL_CURRENCY(): ethereum.CallResult<Bytes> {
-    let result = super.tryCall(
-      "NULL_CURRENCY",
-      "NULL_CURRENCY():(bytes32)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBytes());
-  }
-
-  certifierAddress(): Address {
-    let result = super.call(
-      "certifierAddress",
-      "certifierAddress():(address)",
-      []
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_certifierAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "certifierAddress",
-      "certifierAddress():(address)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
-  currencyRateAddress(): Address {
-    let result = super.call(
-      "currencyRateAddress",
-      "currencyRateAddress():(address)",
-      []
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_currencyRateAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "currencyRateAddress",
-      "currencyRateAddress():(address)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   fee(): BigInt {
@@ -701,35 +611,12 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 
-  linkCollectionAddress(): Address {
-    let result = super.call(
-      "linkCollectionAddress",
-      "linkCollectionAddress():(address)",
-      []
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_linkCollectionAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "linkCollectionAddress",
-      "linkCollectionAddress():(address)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
   loyaltyPaymentOf(
     _paymentId: Bytes
   ): Ledger__loyaltyPaymentOfResultValue0Struct {
     let result = super.call(
       "loyaltyPaymentOf",
-      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromFixedBytes(_paymentId)]
     );
 
@@ -743,7 +630,7 @@ export class Ledger extends ethereum.SmartContract {
   ): ethereum.CallResult<Ledger__loyaltyPaymentOfResultValue0Struct> {
     let result = super.tryCall(
       "loyaltyPaymentOf",
-      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromFixedBytes(_paymentId)]
     );
     if (result.reverted) {
@@ -818,79 +705,6 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  purchaseIdOf(_idx: BigInt): string {
-    let result = super.call("purchaseIdOf", "purchaseIdOf(uint256):(string)", [
-      ethereum.Value.fromUnsignedBigInt(_idx)
-    ]);
-
-    return result[0].toString();
-  }
-
-  try_purchaseIdOf(_idx: BigInt): ethereum.CallResult<string> {
-    let result = super.tryCall(
-      "purchaseIdOf",
-      "purchaseIdOf(uint256):(string)",
-      [ethereum.Value.fromUnsignedBigInt(_idx)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toString());
-  }
-
-  purchaseOf(_purchaseId: string): Ledger__purchaseOfResultValue0Struct {
-    let result = super.call(
-      "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,string,bytes32,uint32,address,bytes32))",
-      [ethereum.Value.fromString(_purchaseId)]
-    );
-
-    return changetype<Ledger__purchaseOfResultValue0Struct>(
-      result[0].toTuple()
-    );
-  }
-
-  try_purchaseOf(
-    _purchaseId: string
-  ): ethereum.CallResult<Ledger__purchaseOfResultValue0Struct> {
-    let result = super.tryCall(
-      "purchaseOf",
-      "purchaseOf(string):((string,uint256,uint256,string,bytes32,uint32,address,bytes32))",
-      [ethereum.Value.fromString(_purchaseId)]
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(
-      changetype<Ledger__purchaseOfResultValue0Struct>(value[0].toTuple())
-    );
-  }
-
-  purchasesLength(): BigInt {
-    let result = super.call(
-      "purchasesLength",
-      "purchasesLength():(uint256)",
-      []
-    );
-
-    return result[0].toBigInt();
-  }
-
-  try_purchasesLength(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall(
-      "purchasesLength",
-      "purchasesLength():(uint256)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   settlementAccount(): Address {
     let result = super.call(
       "settlementAccount",
@@ -905,29 +719,6 @@ export class Ledger extends ethereum.SmartContract {
     let result = super.tryCall(
       "settlementAccount",
       "settlementAccount():(address)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
-  shopCollectionAddress(): Address {
-    let result = super.call(
-      "shopCollectionAddress",
-      "shopCollectionAddress():(address)",
-      []
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_shopCollectionAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "shopCollectionAddress",
-      "shopCollectionAddress():(address)",
       []
     );
     if (result.reverted) {
@@ -953,21 +744,6 @@ export class Ledger extends ethereum.SmartContract {
       "temporaryAddress():(address)",
       []
     );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
-  }
-
-  tokenAddress(): Address {
-    let result = super.call("tokenAddress", "tokenAddress():(address)", []);
-
-    return result[0].toAddress();
-  }
-
-  try_tokenAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall("tokenAddress", "tokenAddress():(address)", []);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -1019,29 +795,6 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  validatorAddress(): Address {
-    let result = super.call(
-      "validatorAddress",
-      "validatorAddress():(address)",
-      []
-    );
-
-    return result[0].toAddress();
-  }
-
-  try_validatorAddress(): ethereum.CallResult<Address> {
-    let result = super.tryCall(
-      "validatorAddress",
-      "validatorAddress():(address)",
-      []
-    );
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 }
 

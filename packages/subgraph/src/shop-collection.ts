@@ -1,17 +1,17 @@
 import {
     AddedShop as AddedShopEvent,
     ChangedShopStatus as ChangedShopStatusEvent,
-    IncreasedSettledPoint as IncreasedSettledPointEvent,
-    IncreasedProvidedPoint as IncreasedProvidedPointEvent,
-    IncreasedUsedPoint as IncreasedUsedPointEvent,
-    DecreasedUsedPoint as DecreasedUsedPointEvent,
+    IncreasedSettledAmount as IncreasedSettledAmountEvent,
+    IncreasedProvidedAmount as IncreasedProvidedAmountEvent,
+    IncreasedUsedAmount as IncreasedUsedAmountEvent,
+    DecreasedUsedAmount as DecreasedUsedAmountEvent,
     UpdatedShop as UpdatedShopEvent,
     ClosedWithdrawal as ClosedWithdrawalEvent,
     OpenedWithdrawal as OpenedWithdrawalEvent,
 } from "../generated/ShopCollection/ShopCollection";
 import { Shop, ShopTradeHistory } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
-import { AmountUnit, NullBytes32 } from "./utils";
+import { AmountUnit } from "./utils";
 
 enum PageType {
     NONE = 0,
@@ -39,16 +39,17 @@ export function handleAddedShop(event: AddedShopEvent): void {
     let entity = new Shop(event.params.shopId);
 
     entity.name = event.params.name;
+    entity.currency = event.params.currency;
     entity.provideWaitTime = event.params.provideWaitTime;
     entity.providePercent = event.params.providePercent;
     entity.status = event.params.status;
     entity.account = event.params.account;
     entity.action = ShopDataAction.CREATED;
 
-    entity.providedPoint = BigInt.fromI32(0);
-    entity.usedPoint = BigInt.fromI32(0);
-    entity.settledPoint = BigInt.fromI32(0);
-    entity.withdrawnPoint = BigInt.fromI32(0);
+    entity.providedAmount = BigInt.fromI32(0);
+    entity.usedAmount = BigInt.fromI32(0);
+    entity.settledAmount = BigInt.fromI32(0);
+    entity.withdrawnAmount = BigInt.fromI32(0);
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -61,6 +62,7 @@ export function handleUpdatedShop(event: UpdatedShopEvent): void {
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
         shopEntity.name = event.params.name;
+        shopEntity.currency = event.params.currency;
         shopEntity.provideWaitTime = event.params.provideWaitTime;
         shopEntity.providePercent = event.params.providePercent;
         shopEntity.status = event.params.status;
@@ -86,30 +88,31 @@ export function handleChangedShopStatus(event: ChangedShopStatusEvent): void {
     }
 }
 
-export function handleIncreasedSettledPoint(event: IncreasedSettledPointEvent): void {
+export function handleIncreasedSettledAmount(event: IncreasedSettledAmountEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
     entity.pageType = PageType.SETTLEMENT;
     entity.action = ShopAction.SETTLED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.settledPoint = event.params.total.div(AmountUnit);
+    entity.settledAmount = event.params.total.div(AmountUnit);
+    entity.currency = event.params.currency;
     entity.purchaseId = event.params.purchaseId;
 
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
-        entity.providedPoint = shopEntity.providedPoint;
-        entity.usedPoint = shopEntity.usedPoint;
-        entity.withdrawnPoint = shopEntity.withdrawnPoint;
-        shopEntity.settledPoint = entity.settledPoint;
+        entity.providedAmount = shopEntity.providedAmount;
+        entity.usedAmount = shopEntity.usedAmount;
+        entity.withdrawnAmount = shopEntity.withdrawnAmount;
+        shopEntity.settledAmount = entity.settledAmount;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
         shopEntity.transactionHash = event.transaction.hash;
         shopEntity.save();
     } else {
-        entity.providedPoint = BigInt.fromI32(0);
-        entity.usedPoint = BigInt.fromI32(0);
-        entity.withdrawnPoint = BigInt.fromI32(0);
+        entity.providedAmount = BigInt.fromI32(0);
+        entity.usedAmount = BigInt.fromI32(0);
+        entity.withdrawnAmount = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -119,7 +122,7 @@ export function handleIncreasedSettledPoint(event: IncreasedSettledPointEvent): 
     entity.save();
 }
 
-export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent): void {
+export function handleIncreasedProvidedAmount(event: IncreasedProvidedAmountEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
 
     entity.shopId = event.params.shopId;
@@ -127,23 +130,24 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
     entity.action = ShopAction.PROVIDED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.providedPoint = event.params.total.div(AmountUnit);
+    entity.providedAmount = event.params.total.div(AmountUnit);
+    entity.currency = event.params.currency;
     entity.purchaseId = event.params.purchaseId;
 
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
-        entity.usedPoint = shopEntity.usedPoint;
-        entity.settledPoint = shopEntity.settledPoint;
-        entity.withdrawnPoint = shopEntity.withdrawnPoint;
-        shopEntity.providedPoint = entity.providedPoint;
+        entity.usedAmount = shopEntity.usedAmount;
+        entity.settledAmount = shopEntity.settledAmount;
+        entity.withdrawnAmount = shopEntity.withdrawnAmount;
+        shopEntity.providedAmount = entity.providedAmount;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
         shopEntity.transactionHash = event.transaction.hash;
         shopEntity.save();
     } else {
-        entity.usedPoint = BigInt.fromI32(0);
-        entity.settledPoint = BigInt.fromI32(0);
-        entity.withdrawnPoint = BigInt.fromI32(0);
+        entity.usedAmount = BigInt.fromI32(0);
+        entity.settledAmount = BigInt.fromI32(0);
+        entity.withdrawnAmount = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -153,31 +157,32 @@ export function handleIncreasedProvidedPoint(event: IncreasedProvidedPointEvent)
     entity.save();
 }
 
-export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
+export function handleIncreasedUsedAmount(event: IncreasedUsedAmountEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
     entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.USED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.usedPoint = event.params.total.div(AmountUnit);
+    entity.usedAmount = event.params.total.div(AmountUnit);
+    entity.currency = event.params.currency;
     entity.purchaseId = event.params.purchaseId;
     entity.paymentId = event.params.paymentId;
 
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
-        entity.providedPoint = shopEntity.providedPoint;
-        entity.settledPoint = shopEntity.settledPoint;
-        entity.withdrawnPoint = shopEntity.withdrawnPoint;
-        shopEntity.usedPoint = entity.usedPoint;
+        entity.providedAmount = shopEntity.providedAmount;
+        entity.settledAmount = shopEntity.settledAmount;
+        entity.withdrawnAmount = shopEntity.withdrawnAmount;
+        shopEntity.usedAmount = entity.usedAmount;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
         shopEntity.transactionHash = event.transaction.hash;
         shopEntity.save();
     } else {
-        entity.providedPoint = BigInt.fromI32(0);
-        entity.settledPoint = BigInt.fromI32(0);
-        entity.withdrawnPoint = BigInt.fromI32(0);
+        entity.providedAmount = BigInt.fromI32(0);
+        entity.settledAmount = BigInt.fromI32(0);
+        entity.withdrawnAmount = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -187,31 +192,32 @@ export function handleIncreasedUsedPoint(event: IncreasedUsedPointEvent): void {
     entity.save();
 }
 
-export function handleDecreasedUsedPoint(event: DecreasedUsedPointEvent): void {
+export function handleDecreasedUsedAmount(event: DecreasedUsedAmountEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
     entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.USED;
     entity.cancel = true;
     entity.increase = event.params.increase.div(AmountUnit);
-    entity.usedPoint = event.params.total.div(AmountUnit);
+    entity.usedAmount = event.params.total.div(AmountUnit);
+    entity.currency = event.params.currency;
     entity.purchaseId = event.params.purchaseId;
     entity.paymentId = event.params.paymentId;
 
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
-        entity.providedPoint = shopEntity.providedPoint;
-        entity.settledPoint = shopEntity.settledPoint;
-        entity.withdrawnPoint = shopEntity.withdrawnPoint;
-        shopEntity.usedPoint = entity.usedPoint;
+        entity.providedAmount = shopEntity.providedAmount;
+        entity.settledAmount = shopEntity.settledAmount;
+        entity.withdrawnAmount = shopEntity.withdrawnAmount;
+        shopEntity.usedAmount = entity.usedAmount;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
         shopEntity.transactionHash = event.transaction.hash;
         shopEntity.save();
     } else {
-        entity.providedPoint = BigInt.fromI32(0);
-        entity.settledPoint = BigInt.fromI32(0);
-        entity.withdrawnPoint = BigInt.fromI32(0);
+        entity.providedAmount = BigInt.fromI32(0);
+        entity.settledAmount = BigInt.fromI32(0);
+        entity.withdrawnAmount = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -228,22 +234,23 @@ export function handleOpenedWithdrawal(event: OpenedWithdrawalEvent): void {
     entity.action = ShopAction.OPEN_WITHDRAWN;
     entity.cancel = false;
     entity.increase = event.params.amount.div(AmountUnit);
+    entity.currency = event.params.currency;
 
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
-        entity.providedPoint = shopEntity.providedPoint;
-        entity.usedPoint = shopEntity.usedPoint;
-        entity.settledPoint = shopEntity.settledPoint;
-        entity.withdrawnPoint = shopEntity.withdrawnPoint;
+        entity.providedAmount = shopEntity.providedAmount;
+        entity.usedAmount = shopEntity.usedAmount;
+        entity.settledAmount = shopEntity.settledAmount;
+        entity.withdrawnAmount = shopEntity.withdrawnAmount;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
         shopEntity.transactionHash = event.transaction.hash;
         shopEntity.save();
     } else {
-        entity.providedPoint = BigInt.fromI32(0);
-        entity.settledPoint = BigInt.fromI32(0);
-        entity.usedPoint = BigInt.fromI32(0);
-        entity.withdrawnPoint = BigInt.fromI32(0);
+        entity.providedAmount = BigInt.fromI32(0);
+        entity.settledAmount = BigInt.fromI32(0);
+        entity.usedAmount = BigInt.fromI32(0);
+        entity.withdrawnAmount = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
@@ -260,22 +267,23 @@ export function handleClosedWithdrawal(event: ClosedWithdrawalEvent): void {
     entity.action = ShopAction.CLOSE_WITHDRAWN;
     entity.cancel = false;
     entity.increase = event.params.amount.div(AmountUnit);
-    entity.withdrawnPoint = event.params.total.div(AmountUnit);
+    entity.withdrawnAmount = event.params.total.div(AmountUnit);
+    entity.currency = event.params.currency;
 
     let shopEntity = Shop.load(event.params.shopId);
     if (shopEntity !== null) {
-        entity.providedPoint = shopEntity.providedPoint;
-        entity.settledPoint = shopEntity.settledPoint;
-        entity.usedPoint = shopEntity.usedPoint;
-        shopEntity.withdrawnPoint = entity.withdrawnPoint;
+        entity.providedAmount = shopEntity.providedAmount;
+        entity.settledAmount = shopEntity.settledAmount;
+        entity.usedAmount = shopEntity.usedAmount;
+        shopEntity.withdrawnAmount = entity.withdrawnAmount;
         shopEntity.blockNumber = event.block.number;
         shopEntity.blockTimestamp = event.block.timestamp;
         shopEntity.transactionHash = event.transaction.hash;
         shopEntity.save();
     } else {
-        entity.providedPoint = BigInt.fromI32(0);
-        entity.settledPoint = BigInt.fromI32(0);
-        entity.usedPoint = BigInt.fromI32(0);
+        entity.providedAmount = BigInt.fromI32(0);
+        entity.settledAmount = BigInt.fromI32(0);
+        entity.usedAmount = BigInt.fromI32(0);
     }
 
     entity.blockNumber = event.block.number;
