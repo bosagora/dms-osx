@@ -243,6 +243,7 @@ describe("Test for ShopCollection", () => {
                 .update(
                     elem.shopId,
                     elem.name,
+                    "usd",
                     elem.provideWaitTime,
                     elem.providePercent,
                     elem.wallet.address,
@@ -253,6 +254,7 @@ describe("Test for ShopCollection", () => {
             .withNamedArgs({
                 shopId: elem.shopId,
                 name: elem.name,
+                currency: "usd",
                 provideWaitTime: elem.provideWaitTime,
                 providePercent: elem.providePercent,
                 account: elem.wallet.address,

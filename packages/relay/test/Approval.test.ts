@@ -171,7 +171,15 @@ describe("Test of Server", function () {
             );
             await shopCollection
                 .connect(certifier)
-                .update(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.address, signature1);
+                .update(
+                    shop.shopId,
+                    shop.name,
+                    shop.currency,
+                    shop.provideWaitTime,
+                    shop.providePercent,
+                    shop.address,
+                    signature1
+                );
         }
 
         for (const shop of shops) {
@@ -488,6 +496,7 @@ describe("Test of Server", function () {
                     accessKey: config.relay.accessKey,
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
+                    currency: shopData[0].currency,
                     provideWaitTime: 86400,
                     providePercent: 10,
                 };

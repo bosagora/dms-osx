@@ -164,7 +164,15 @@ describe("Test of Server", function () {
             );
             await shopCollection
                 .connect(certifier)
-                .update(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.address, signature1);
+                .update(
+                    shop.shopId,
+                    shop.name,
+                    shop.currency,
+                    shop.provideWaitTime,
+                    shop.providePercent,
+                    shop.address,
+                    signature1
+                );
         }
 
         for (const shop of shops) {

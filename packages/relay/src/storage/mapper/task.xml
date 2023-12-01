@@ -10,6 +10,7 @@
                 "shopId"                ,
                 "account"               ,
                 "name"                  ,
+                "currency"              ,
                 "provideWaitTime"       ,
                 "providePercent"        ,
                 "status"                ,
@@ -23,6 +24,7 @@
                 #{shopId}               ,
                 #{account}              ,
                 #{name}                 ,
+                #{currency}             ,
                 ${provideWaitTime}      ,
                 ${providePercent}       ,
                 ${status}               ,
@@ -40,6 +42,7 @@
         UPDATE tasks
         SET
             "name"              = #{name},
+            "currency"          = #{currency},
             "provideWaitTime"   = ${provideWaitTime},
             "providePercent"    = ${providePercent},
             "status"            = ${status},
