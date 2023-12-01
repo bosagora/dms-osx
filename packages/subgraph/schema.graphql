@@ -46,6 +46,7 @@ type UserTradeHistory @entity(immutable: true) {
   amountPoint: BigInt!
   amountToken: BigInt!
   amountValue: BigInt!
+  currency: String
   balancePoint: BigInt!
   balanceToken: BigInt!
   purchaseId: String
@@ -87,10 +88,11 @@ type ShopTradeHistory @entity(immutable: true) {
   action: Int!
   cancel: Boolean!
   increase: BigInt! # uint256
-  providedPoint: BigInt!
-  usedPoint: BigInt!
-  settledPoint: BigInt!
-  withdrawnPoint: BigInt!
+  currency: String!
+  providedAmount: BigInt!
+  usedAmount: BigInt!
+  settledAmount: BigInt!
+  withdrawnAmount: BigInt!
   purchaseId: String
   paymentId: Bytes
 
@@ -103,16 +105,17 @@ type Shop @entity {
   id: Bytes! # shopId
 
   name: String! # string
+  currency: String!
   provideWaitTime: BigInt! # uint256
   providePercent: BigInt! # uint256
   status: Int!
   account: Bytes! # address
   action: Int!
 
-  providedPoint: BigInt!
-  usedPoint: BigInt!
-  settledPoint: BigInt!
-  withdrawnPoint: BigInt!
+  providedAmount: BigInt!
+  usedAmount: BigInt!
+  settledAmount: BigInt!
+  withdrawnAmount: BigInt!
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!

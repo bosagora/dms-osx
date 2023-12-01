@@ -36,15 +36,15 @@ dataSources:
           handler: handleChangedToPayablePoint
         - event: Deposited(address,uint256,uint256,uint256)
           handler: handleDeposited
-        - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
+        - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
           handler: handleLoyaltyPaymentEvent
-        - event: ProvidedPoint(address,uint256,uint256,uint256,string,bytes32)
+        - event: ProvidedPoint(address,uint256,uint256,string,uint256,string,bytes32)
           handler: handleProvidedPoint
-        - event: ProvidedToken(address,uint256,uint256,uint256,string,bytes32)
+        - event: ProvidedToken(address,uint256,uint256,string,uint256,string,bytes32)
           handler: handleProvidedToken
-        - event: ProvidedTokenForSettlement(address,bytes32,uint256,uint256,uint256,string)
+        - event: ProvidedTokenForSettlement(address,bytes32,uint256,uint256,uint256,string,uint256,string)
           handler: handleProvidedTokenForSettlement
-        - event: ProvidedUnPayablePoint(bytes32,uint256,uint256,uint256,string,bytes32)
+        - event: ProvidedUnPayablePoint(bytes32,uint256,uint256,string,uint256,string,bytes32)
           handler: handleProvidedUnPayablePoint
         - event: SavedPurchase(string,uint256,uint256,string,bytes32,uint32,address,bytes32)
           handler: handleSavedPurchase
@@ -67,32 +67,32 @@ dataSources:
         - AddedShop
         - ChangedShopStatus
         - ClosedWithdrawal
-        - DecreasedUsedPoint
-        - IncreasedProvidedPoint
-        - IncreasedSettledPoint
-        - IncreasedUsedPoint
+        - DecreasedUsedAmount
+        - IncreasedProvidedAmount
+        - IncreasedSettledAmount
+        - IncreasedUsedAmount
         - OpenedWithdrawal
         - UpdatedShop
       abis:
         - name: ShopCollection
           file: $DMS_OSX_MODULE/artifacts/contracts/ShopCollection.sol/ShopCollection.json
       eventHandlers:
-        - event: AddedShop(bytes32,string,uint256,uint256,address,uint8)
+        - event: AddedShop(bytes32,string,string,uint256,uint256,address,uint8)
           handler: handleAddedShop
         - event: ChangedShopStatus(bytes32,uint8)
           handler: handleChangedShopStatus
-        - event: ClosedWithdrawal(bytes32,uint256,uint256,address)
+        - event: ClosedWithdrawal(bytes32,uint256,uint256,string,address)
           handler: handleClosedWithdrawal
-        - event: DecreasedUsedPoint(bytes32,uint256,uint256,string,bytes32)
-          handler: handleDecreasedUsedPoint
-        - event: IncreasedProvidedPoint(bytes32,uint256,uint256,string)
-          handler: handleIncreasedProvidedPoint
-        - event: IncreasedSettledPoint(bytes32,uint256,uint256,string)
-          handler: handleIncreasedSettledPoint
-        - event: IncreasedUsedPoint(bytes32,uint256,uint256,string,bytes32)
-          handler: handleIncreasedUsedPoint
-        - event: OpenedWithdrawal(bytes32,uint256,address)
+        - event: DecreasedUsedAmount(bytes32,uint256,uint256,string,string,bytes32)
+          handler: handleDecreasedUsedAmount
+        - event: IncreasedProvidedAmount(bytes32,uint256,uint256,string,string)
+          handler: handleIncreasedProvidedAmount
+        - event: IncreasedSettledAmount(bytes32,uint256,uint256,string,string)
+          handler: handleIncreasedSettledAmount
+        - event: IncreasedUsedAmount(bytes32,uint256,uint256,string,string,bytes32)
+          handler: handleIncreasedUsedAmount
+        - event: OpenedWithdrawal(bytes32,uint256,string,address)
           handler: handleOpenedWithdrawal
-        - event: UpdatedShop(bytes32,string,uint256,uint256,address,uint8)
+        - event: UpdatedShop(bytes32,string,string,uint256,uint256,address,uint8)
           handler: handleUpdatedShop
       file: ./src/shop-collection.ts

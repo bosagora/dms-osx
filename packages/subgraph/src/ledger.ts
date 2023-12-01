@@ -250,6 +250,7 @@ export function handleSettlementForHistory(event: ProvidedTokenForSettlementEven
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = event.params.providedToken.div(AmountUnit);
     entity.amountValue = event.params.providedPoint.div(AmountUnit);
+    entity.currency = event.params.currency;
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.purchaseId;
@@ -332,6 +333,7 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.providedValue.div(AmountUnit);
+    entity.currency = event.params.currency;
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.purchaseId;
@@ -360,6 +362,7 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.providedToken.div(AmountUnit);
     entity.amountValue = event.params.providedValue.div(AmountUnit);
+    entity.currency = event.params.currency;
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.purchaseId;
@@ -450,6 +453,7 @@ export function handlePaidPointForHistory(event: LoyaltyPaymentEventEvent): void
     entity.amountPoint = event.params.payment.paidPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.currency = event.params.payment.currency;
     entity.balancePoint = event.params.balance.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.payment.purchaseId;
@@ -479,6 +483,7 @@ export function handlePaidTokenForHistory(event: LoyaltyPaymentEventEvent): void
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.payment.paidToken.div(AmountUnit);
     entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.currency = event.params.payment.currency;
     entity.balanceToken = event.params.balance.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.payment.purchaseId;
@@ -508,6 +513,7 @@ export function handleCanceledPointForHistory(event: LoyaltyPaymentEventEvent): 
     entity.amountPoint = event.params.payment.paidPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.currency = event.params.payment.currency;
     entity.balancePoint = event.params.balance.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = event.params.payment.purchaseId;
@@ -537,6 +543,7 @@ export function handleCanceledTokenForHistory(event: LoyaltyPaymentEventEvent): 
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.payment.paidToken.div(AmountUnit);
     entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.currency = event.params.payment.currency;
     entity.balanceToken = event.params.balance.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.payment.purchaseId;

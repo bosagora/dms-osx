@@ -623,6 +623,23 @@ export class UserTradeHistory extends Entity {
     this.set("amountValue", Value.fromBigInt(value));
   }
 
+  get currency(): string | null {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string | null) {
+    if (!value) {
+      this.unset("currency");
+    } else {
+      this.set("currency", Value.fromString(<string>value));
+    }
+  }
+
   get balancePoint(): BigInt {
     let value = this.get("balancePoint");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1123,8 +1140,21 @@ export class ShopTradeHistory extends Entity {
     this.set("increase", Value.fromBigInt(value));
   }
 
-  get providedPoint(): BigInt {
-    let value = this.get("providedPoint");
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
+  get providedAmount(): BigInt {
+    let value = this.get("providedAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1132,12 +1162,12 @@ export class ShopTradeHistory extends Entity {
     }
   }
 
-  set providedPoint(value: BigInt) {
-    this.set("providedPoint", Value.fromBigInt(value));
+  set providedAmount(value: BigInt) {
+    this.set("providedAmount", Value.fromBigInt(value));
   }
 
-  get usedPoint(): BigInt {
-    let value = this.get("usedPoint");
+  get usedAmount(): BigInt {
+    let value = this.get("usedAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1145,12 +1175,12 @@ export class ShopTradeHistory extends Entity {
     }
   }
 
-  set usedPoint(value: BigInt) {
-    this.set("usedPoint", Value.fromBigInt(value));
+  set usedAmount(value: BigInt) {
+    this.set("usedAmount", Value.fromBigInt(value));
   }
 
-  get settledPoint(): BigInt {
-    let value = this.get("settledPoint");
+  get settledAmount(): BigInt {
+    let value = this.get("settledAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1158,12 +1188,12 @@ export class ShopTradeHistory extends Entity {
     }
   }
 
-  set settledPoint(value: BigInt) {
-    this.set("settledPoint", Value.fromBigInt(value));
+  set settledAmount(value: BigInt) {
+    this.set("settledAmount", Value.fromBigInt(value));
   }
 
-  get withdrawnPoint(): BigInt {
-    let value = this.get("withdrawnPoint");
+  get withdrawnAmount(): BigInt {
+    let value = this.get("withdrawnAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1171,8 +1201,8 @@ export class ShopTradeHistory extends Entity {
     }
   }
 
-  set withdrawnPoint(value: BigInt) {
-    this.set("withdrawnPoint", Value.fromBigInt(value));
+  set withdrawnAmount(value: BigInt) {
+    this.set("withdrawnAmount", Value.fromBigInt(value));
   }
 
   get purchaseId(): string | null {
@@ -1303,6 +1333,19 @@ export class Shop extends Entity {
     this.set("name", Value.fromString(value));
   }
 
+  get currency(): string {
+    let value = this.get("currency");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set currency(value: string) {
+    this.set("currency", Value.fromString(value));
+  }
+
   get provideWaitTime(): BigInt {
     let value = this.get("provideWaitTime");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1368,8 +1411,8 @@ export class Shop extends Entity {
     this.set("action", Value.fromI32(value));
   }
 
-  get providedPoint(): BigInt {
-    let value = this.get("providedPoint");
+  get providedAmount(): BigInt {
+    let value = this.get("providedAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1377,12 +1420,12 @@ export class Shop extends Entity {
     }
   }
 
-  set providedPoint(value: BigInt) {
-    this.set("providedPoint", Value.fromBigInt(value));
+  set providedAmount(value: BigInt) {
+    this.set("providedAmount", Value.fromBigInt(value));
   }
 
-  get usedPoint(): BigInt {
-    let value = this.get("usedPoint");
+  get usedAmount(): BigInt {
+    let value = this.get("usedAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1390,12 +1433,12 @@ export class Shop extends Entity {
     }
   }
 
-  set usedPoint(value: BigInt) {
-    this.set("usedPoint", Value.fromBigInt(value));
+  set usedAmount(value: BigInt) {
+    this.set("usedAmount", Value.fromBigInt(value));
   }
 
-  get settledPoint(): BigInt {
-    let value = this.get("settledPoint");
+  get settledAmount(): BigInt {
+    let value = this.get("settledAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1403,12 +1446,12 @@ export class Shop extends Entity {
     }
   }
 
-  set settledPoint(value: BigInt) {
-    this.set("settledPoint", Value.fromBigInt(value));
+  set settledAmount(value: BigInt) {
+    this.set("settledAmount", Value.fromBigInt(value));
   }
 
-  get withdrawnPoint(): BigInt {
-    let value = this.get("withdrawnPoint");
+  get withdrawnAmount(): BigInt {
+    let value = this.get("withdrawnAmount");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -1416,8 +1459,8 @@ export class Shop extends Entity {
     }
   }
 
-  set withdrawnPoint(value: BigInt) {
-    this.set("withdrawnPoint", Value.fromBigInt(value));
+  set withdrawnAmount(value: BigInt) {
+    this.set("withdrawnAmount", Value.fromBigInt(value));
   }
 
   get blockNumber(): BigInt {
