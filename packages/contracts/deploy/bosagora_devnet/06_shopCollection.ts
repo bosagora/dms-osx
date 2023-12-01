@@ -58,7 +58,15 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             );
             const tx2 = await contract
                 .connect(await ethers.getSigner(certifier))
-                .update(shop.shopId, shop.name, shop.provideWaitTime, shop.providePercent, shop.address, signature1);
+                .update(
+                    shop.shopId,
+                    shop.name,
+                    shop.currency,
+                    shop.provideWaitTime,
+                    shop.providePercent,
+                    shop.address,
+                    signature1
+                );
             console.log(`Update shop data (tx: ${tx2.hash})...`);
             await tx2.wait();
 

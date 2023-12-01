@@ -63,6 +63,7 @@ contract ShopCollection {
     event UpdatedShop(
         bytes32 shopId,
         string name,
+        string currency,
         uint256 provideWaitTime,
         uint256 providePercent,
         address account,
@@ -191,6 +192,7 @@ contract ShopCollection {
     function update(
         bytes32 _shopId,
         string calldata _name,
+        string calldata _currency,
         uint256 _provideWaitTime,
         uint256 _providePercent,
         address _account,
@@ -198,6 +200,7 @@ contract ShopCollection {
     ) external {
         bytes32 id = _shopId;
         require(shops[id].status != ShopStatus.INVALID, "1201");
+        require(currencyRate.support(_currency), "1211");
         require(shops[id].account == _account, "1050");
 
         require(certifierCollection.isCertifier(msg.sender), "1505");
@@ -208,12 +211,32 @@ contract ShopCollection {
         shops[id].name = _name;
         shops[id].provideWaitTime = _provideWaitTime;
         shops[id].providePercent = _providePercent;
+        if (keccak256(abi.encodePacked(shops[id].currency)) != keccak256(abi.encodePacked(_currency))) {
+            shops[id].providedAmount = currencyRate.convertCurrency(
+                shops[id].providedAmount,
+                shops[id].currency,
+                _currency
+            );
+            shops[id].usedAmount = currencyRate.convertCurrency(shops[id].usedAmount, shops[id].currency, _currency);
+            shops[id].settledAmount = currencyRate.convertCurrency(
+                shops[id].settledAmount,
+                shops[id].currency,
+                _currency
+            );
+            shops[id].withdrawnAmount = currencyRate.convertCurrency(
+                shops[id].withdrawnAmount,
+                shops[id].currency,
+                _currency
+            );
+            shops[id].currency = _currency;
+        }
 
         nonce[_account]++;
 
         emit UpdatedShop(
             shops[id].shopId,
             shops[id].name,
+            shops[id].currency,
             shops[id].provideWaitTime,
             shops[id].providePercent,
             shops[id].account,

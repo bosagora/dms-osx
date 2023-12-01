@@ -49,6 +49,7 @@ export interface ContractLoyaltyPaymentEvent {
 export interface ContractShopUpdateEvent {
     shopId: string;
     name: string;
+    currency: string;
     provideWaitTime: number;
     providePercent: number;
     account: string;
@@ -176,6 +177,7 @@ export interface ShopTaskData {
     type: TaskResultType;
     shopId: string;
     name: string;
+    currency: string;
     provideWaitTime: number;
     providePercent: number;
     status: ContractShopStatus;

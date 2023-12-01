@@ -213,6 +213,7 @@ describe("Test for Ledger", () => {
                 .update(
                     elem.shopId,
                     elem.name,
+                    elem.currency,
                     elem.provideWaitTime,
                     elem.providePercent,
                     elem.wallet.address,

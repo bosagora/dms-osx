@@ -171,6 +171,7 @@ describe("Test of Server", function () {
                 .update(
                     shop.shopId,
                     shop.name,
+                    shop.currency,
                     shop.provideWaitTime,
                     shop.providePercent,
                     shop.wallet.address,

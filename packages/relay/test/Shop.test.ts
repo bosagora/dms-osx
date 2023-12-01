@@ -369,6 +369,7 @@ describe("Test for ShopCollection", function () {
                     accessKey: config.relay.accessKey,
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
+                    currency: shopData[0].currency,
                     provideWaitTime: 86400,
                     providePercent: 10,
                 };

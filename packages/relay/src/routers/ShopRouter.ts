@@ -143,6 +143,7 @@ export class ShopRouter {
                     .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("name").exists(),
+                body("currency").exists(),
                 body("provideWaitTime").exists().custom(Validation.isAmount),
                 body("providePercent").exists().custom(Validation.isAmount),
             ],
@@ -251,6 +252,7 @@ export class ShopRouter {
                 type: TaskResultType.ADD,
                 shopId,
                 name,
+                currency,
                 provideWaitTime: 0,
                 providePercent: 0,
                 status: ContractShopStatus.INVALID,
@@ -268,6 +270,7 @@ export class ShopRouter {
                     taskId: item.taskId,
                     shopId: item.shopId,
                     name: item.name,
+                    currency: item.currency,
                     account: item.account,
                     taskStatus: item.taskStatus,
                     timestamp: item.timestamp,
@@ -307,6 +310,7 @@ export class ShopRouter {
                     type: item.type,
                     shopId: item.shopId,
                     name: item.name,
+                    currency: item.currency,
                     provideWaitTime: item.provideWaitTime,
                     providePercent: item.providePercent,
                     status: item.status,
@@ -343,6 +347,7 @@ export class ShopRouter {
 
             const shopId: string = String(req.body.shopId).trim();
             const name: string = String(req.body.name).trim();
+            const currency: string = String(req.body.currency).trim().toLowerCase();
             const provideWaitTime: number = Number(String(req.body.provideWaitTime).trim());
             const providePercent: number = Number(String(req.body.providePercent).trim());
 
@@ -355,6 +360,7 @@ export class ShopRouter {
                     type: TaskResultType.UPDATE,
                     shopId,
                     name,
+                    currency,
                     provideWaitTime,
                     providePercent,
                     status: shopInfo.status,
@@ -386,6 +392,7 @@ export class ShopRouter {
                         taskId: item.taskId,
                         shopId: item.shopId,
                         name: item.name,
+                        currency: item.currency,
                         provideWaitTime: item.provideWaitTime,
                         providePercent: item.providePercent,
                         taskStatus: item.taskStatus,
@@ -458,6 +465,7 @@ export class ShopRouter {
                             .update(
                                 item.shopId,
                                 item.name,
+                                item.currency,
                                 item.provideWaitTime,
                                 item.providePercent,
                                 item.account,
@@ -476,6 +484,7 @@ export class ShopRouter {
                                 taskId: item.taskId,
                                 shopId: item.shopId,
                                 name: item.name,
+                                currency: item.currency,
                                 provideWaitTime: item.provideWaitTime,
                                 providePercent: item.providePercent,
                                 taskStatus: item.taskStatus,
@@ -507,6 +516,7 @@ export class ShopRouter {
                             taskId: item.taskId,
                             shopId: item.shopId,
                             name: item.name,
+                            currency: item.currency,
                             provideWaitTime: item.provideWaitTime,
                             providePercent: item.providePercent,
                             taskStatus: item.taskStatus,
@@ -555,6 +565,7 @@ export class ShopRouter {
                     type: TaskResultType.STATUS,
                     shopId,
                     name: shopInfo.name,
+                    currency: shopInfo.currency,
                     provideWaitTime: shopInfo.provideWaitTime.toNumber(),
                     providePercent: shopInfo.providePercent.toNumber(),
                     status,
@@ -803,6 +814,7 @@ export class ShopRouter {
             taskId: item.taskId,
             shopId: item.shopId,
             name: item.name,
+            currency: item.currency,
             provideWaitTime: item.provideWaitTime,
             providePercent: item.providePercent,
             status: item.status,
@@ -822,6 +834,7 @@ export class ShopRouter {
             return {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
+                currency: parsedLog.args.currency,
                 provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
                 providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
@@ -842,6 +855,7 @@ export class ShopRouter {
             return {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
+                currency: parsedLog.args.currency,
                 provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
                 providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
