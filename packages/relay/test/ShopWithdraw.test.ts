@@ -679,6 +679,7 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
+                    currency: "krw",
                     provideWaitTime: 0,
                     providePercent: 0,
                     status: 1,
@@ -765,6 +766,7 @@ describe("Test for ShopCollection", () => {
                 assert.deepStrictEqual(response.data.data, {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
+                    currency: "krw",
                     provideWaitTime: 0,
                     providePercent: 0,
                     status: 1,

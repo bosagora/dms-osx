@@ -337,6 +337,7 @@ export class WatchScheduler extends Scheduler {
                 if (event !== undefined) {
                     task.taskStatus = ShopTaskStatus.COMPLETED;
                     task.name = event.name;
+                    task.currency = event.currency;
                     task.providePercent = event.providePercent;
                     task.provideWaitTime = event.provideWaitTime;
                     task.status = event.status;
@@ -371,6 +372,7 @@ export class WatchScheduler extends Scheduler {
                 if (event !== undefined) {
                     task.taskStatus = ShopTaskStatus.COMPLETED;
                     task.name = event.name;
+                    task.currency = event.currency;
                     task.providePercent = event.providePercent;
                     task.provideWaitTime = event.provideWaitTime;
                     task.status = event.status;
@@ -438,6 +440,7 @@ export class WatchScheduler extends Scheduler {
             return {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
+                currency: parsedLog.args.currency,
                 provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
                 providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
@@ -458,6 +461,7 @@ export class WatchScheduler extends Scheduler {
             return {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
+                currency: parsedLog.args.currency,
                 provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
                 providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
@@ -486,6 +490,7 @@ export class WatchScheduler extends Scheduler {
             taskId: item.taskId,
             shopId: item.shopId,
             name: item.name,
+            currency: item.currency,
             provideWaitTime: item.provideWaitTime,
             providePercent: item.providePercent,
             status: item.status,
