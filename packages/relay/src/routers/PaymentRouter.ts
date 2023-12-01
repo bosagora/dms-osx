@@ -362,6 +362,7 @@ export class PaymentRouter {
             const shopInfo = {
                 shopId: info.shopId,
                 name: info.name,
+                currency: info.currency,
                 provideWaitTime: info.provideWaitTime.toNumber(),
                 providePercent: info.provideWaitTime.toNumber(),
                 status: info.status,
