@@ -9,7 +9,7 @@ import {
     ClosedWithdrawal as ClosedWithdrawalEvent,
     OpenedWithdrawal as OpenedWithdrawalEvent,
 } from "../generated/ShopCollection/ShopCollection";
-import { Shop, ShopTradeHistory } from "../generated/schema";
+import { Shop, ShopTradeHistory, ShopWithdraw, UserBalance } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { AmountUnit } from "./utils";
 
@@ -33,6 +33,11 @@ enum ShopDataAction {
     CREATED,
     UPDATED,
     REMOVED,
+}
+
+enum ShopWithdrawStatus {
+    CLOSE = 0,
+    OPEN = 1,
 }
 
 export function handleAddedShop(event: AddedShopEvent): void {
@@ -253,6 +258,29 @@ export function handleOpenedWithdrawal(event: OpenedWithdrawalEvent): void {
         entity.withdrawnAmount = BigInt.fromI32(0);
     }
 
+    let shopWithdrawEntity = ShopWithdraw.load(event.params.shopId);
+    if (shopWithdrawEntity !== null) {
+        shopWithdrawEntity.status = ShopWithdrawStatus.OPEN;
+        shopWithdrawEntity.withdrawId = event.params.withdrawId;
+        shopWithdrawEntity.amount = event.params.amount;
+        shopWithdrawEntity.currency = event.params.currency;
+        shopWithdrawEntity.account = event.params.account;
+        shopWithdrawEntity.blockNumber = event.block.number;
+        shopWithdrawEntity.blockTimestamp = event.block.timestamp;
+        shopWithdrawEntity.transactionHash = event.transaction.hash;
+        shopWithdrawEntity.save();
+    } else {
+        shopWithdrawEntity = new ShopWithdraw(event.params.shopId);
+        shopWithdrawEntity.withdrawId = event.params.withdrawId;
+        shopWithdrawEntity.amount = event.params.amount;
+        shopWithdrawEntity.currency = event.params.currency;
+        shopWithdrawEntity.account = event.params.account;
+        shopWithdrawEntity.blockNumber = event.block.number;
+        shopWithdrawEntity.blockTimestamp = event.block.timestamp;
+        shopWithdrawEntity.transactionHash = event.transaction.hash;
+        shopWithdrawEntity.save();
+    }
+
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
     entity.transactionHash = event.transaction.hash;
@@ -284,6 +312,14 @@ export function handleClosedWithdrawal(event: ClosedWithdrawalEvent): void {
         entity.providedAmount = BigInt.fromI32(0);
         entity.settledAmount = BigInt.fromI32(0);
         entity.usedAmount = BigInt.fromI32(0);
+    }
+
+    let shopWithdrawEntity = ShopWithdraw.load(event.params.shopId);
+    if (shopWithdrawEntity !== null) {
+        if (shopWithdrawEntity.withdrawId == event.params.withdrawId) {
+            shopWithdrawEntity.status = ShopWithdrawStatus.CLOSE;
+            shopWithdrawEntity.save();
+        }
     }
 
     entity.blockNumber = event.block.number;

@@ -106,6 +106,10 @@ export class ClosedWithdrawal__Params {
   get account(): Address {
     return this._event.parameters[4].value.toAddress();
   }
+
+  get withdrawId(): BigInt {
+    return this._event.parameters[5].value.toBigInt();
+  }
 }
 
 export class DecreasedUsedAmount extends ethereum.Event {
@@ -280,6 +284,10 @@ export class OpenedWithdrawal__Params {
   get account(): Address {
     return this._event.parameters[3].value.toAddress();
   }
+
+  get withdrawId(): BigInt {
+    return this._event.parameters[4].value.toBigInt();
+  }
 }
 
 export class UpdatedShop extends ethereum.Event {
@@ -385,12 +393,16 @@ export class ShopCollection__shopOfResultValue0Struct extends ethereum.Tuple {
 }
 
 export class ShopCollection__shopOfResultValue0WithdrawDataStruct extends ethereum.Tuple {
-  get amount(): BigInt {
+  get id(): BigInt {
     return this[0].toBigInt();
   }
 
+  get amount(): BigInt {
+    return this[1].toBigInt();
+  }
+
   get status(): i32 {
-    return this[1].toI32();
+    return this[2].toI32();
   }
 }
 
@@ -518,7 +530,7 @@ export class ShopCollection extends ethereum.SmartContract {
   shopOf(_shopId: Bytes): ShopCollection__shopOfResultValue0Struct {
     let result = super.call(
       "shopOf",
-      "shopOf(bytes32):((bytes32,string,string,uint256,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint8),uint256,uint256))",
+      "shopOf(bytes32):((bytes32,string,string,uint256,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint256,uint8),uint256,uint256))",
       [ethereum.Value.fromFixedBytes(_shopId)]
     );
 
@@ -532,7 +544,7 @@ export class ShopCollection extends ethereum.SmartContract {
   ): ethereum.CallResult<ShopCollection__shopOfResultValue0Struct> {
     let result = super.tryCall(
       "shopOf",
-      "shopOf(bytes32):((bytes32,string,string,uint256,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint8),uint256,uint256))",
+      "shopOf(bytes32):((bytes32,string,string,uint256,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint256,uint8),uint256,uint256))",
       [ethereum.Value.fromFixedBytes(_shopId)]
     );
     if (result.reverted) {
