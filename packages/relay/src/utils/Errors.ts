@@ -43,6 +43,7 @@ export class ResponseMessage {
         ["2027", "This payment has already been approved and failed"],
         ["2028", "The status code for this payment cannot be denied"],
         ["2029", "This payment has forced to close"],
+        ["2030", "This payment canceled"],
         ["2033", "The task ID is not exist"],
         ["2040", "The status code for this task cannot be approved"],
         ["4000", "Denied by user"],
