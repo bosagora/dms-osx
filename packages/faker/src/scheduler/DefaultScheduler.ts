@@ -42,13 +42,14 @@ export class DefaultScheduler extends Scheduler {
 
     private _purchaseIdx: number = 0;
 
-    private _users: IUserData[];
-    private _shops: IShopData[];
+    private _users: IUserData[] = [];
+    private _shops: IShopData[] = [];
 
     constructor(expression: string) {
         super(expression);
-        this._users = JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[];
-        this._shops = JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[];
+        this._users.push(...(JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[]));
+        this._users.push(...(JSON.parse(fs.readFileSync("./src/data/users_mobile.json", "utf8")) as IUserData[]));
+        this._shops.push(...(JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[]));
     }
 
     /**

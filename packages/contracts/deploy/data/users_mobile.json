@@ -1,0 +1,72 @@
+[
+    {
+        "idx": 0,
+        "phone": "08201010005000",
+        "address": "0x5650Cd3E6e8963B43d21fAe60ee7a03bCefCe766",
+        "privateKey": "0xb16f44bf95ff8d38f247fda10d0169f0b01aeb621eb0b84a50c4bd675362fbb8",
+        "loyaltyType": 0
+    },
+    {
+        "idx": 1,
+        "phone": "08201010005001",
+        "address": "0xB0FBfeceA23f95C2E34507EF1749aA979834BfAB",
+        "privateKey": "0x3ce10f1e575f6288d9a330a52efba9eadde2b3ca95d512324aa0adf2f12a6eee",
+        "loyaltyType": 0
+    },
+    {
+        "idx": 2,
+        "phone": "08201010005002",
+        "address": "0xf5eFcEd6dEaF09afb1fbe1E66ac86d370Bab0bf5",
+        "privateKey": "0xedb16b2820f0f3d48fdaf2b08a041509c9f978e7e0c98aeb292a8b126a794b6c",
+        "loyaltyType": 0
+    },
+    {
+        "idx": 3,
+        "phone": "08201010005003",
+        "address": "0x79ef881A6D74Adf584fBa246B3fdd5Fc8Ef2Faa6",
+        "privateKey": "0xac8bd49233c4a2c144394798d6ed0eddbb90e52a929a632cdbdd5da8213899e7",
+        "loyaltyType": 0
+    },
+    {
+        "idx": 4,
+        "phone": "08201010005004",
+        "address": "0xe06B52067c7bD475d98774e89Ff2a49dD0481677",
+        "privateKey": "0x3312c63106691e930cdd6c055655dc647f522230b5145ee30b156316f6081860",
+        "loyaltyType": 0
+    },
+    {
+        "idx": 5,
+        "phone": "08201010005005",
+        "address": "0x1a760E632c2C40e0e7e12b0A23E965372da6Af11",
+        "privateKey": "0x5a9c1261ee8b4a0ac8de3c7307eadbe9cc0fa3da665b5e589d08d0346a79a2ea",
+        "loyaltyType": 1
+    },
+    {
+        "idx": 6,
+        "phone": "08201010005006",
+        "address": "0x8439192178CA79A7295Fb000b40Ec65f17046D30",
+        "privateKey": "0x0f5c1bbaa6e473f620be8c83e8709547745677447686b48a61b2d0209a649ddd",
+        "loyaltyType": 1
+    },
+    {
+        "idx": 7,
+        "phone": "08201010005007",
+        "address": "0x74586E5B9BB8AA2c243acD2fBcA5481b266D7ACf",
+        "privateKey": "0xf2aec6788dc6c0f6f2eed45db5114519536e1fc9c8d8a3eb6c8d698ba3390f2c",
+        "loyaltyType": 1
+    },
+    {
+        "idx": 8,
+        "phone": "08201010005008",
+        "address": "0x62631968D8739b60eB13f959484811C3c1b12AA4",
+        "privateKey": "0x52a472ea526f5dd77e40660ed5caf846bc26bb0a9dfb97795da6619e5983bdd3",
+        "loyaltyType": 1
+    },
+    {
+        "idx": 9,
+        "phone": "08201010005009",
+        "address": "0xe2A15140F8638f87c2b62Dac8b6b961bcF32e32B",
+        "privateKey": "0x90743828f3f695ba9845f32f2a2108dc933febd7297aae5120189e0bca908b5e",
+        "loyaltyType": 1
+    }
+]
