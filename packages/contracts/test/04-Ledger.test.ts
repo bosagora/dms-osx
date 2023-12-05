@@ -3011,6 +3011,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         amount: amount2,
                         account: shopWallets[shopIndex].address,
+                        withdrawId: 1,
                     });
                 const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(amount2);
@@ -3033,6 +3034,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         amount: amount2,
                         account: shopWallets[shopIndex].address,
+                        withdrawId: 1,
                     });
                 const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(0);

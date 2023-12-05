@@ -121,3 +121,18 @@ type Shop @entity {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+
+type ShopWithdraw @entity(immutable: true) {
+  id: Bytes! # shopId
+
+  amount: BigInt! # uint256
+  currency: String! # string
+  account: Bytes! # address
+  withdrawId: BigInt! # uint256
+  status: Int!
+
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

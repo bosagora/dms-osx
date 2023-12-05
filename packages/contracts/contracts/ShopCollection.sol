@@ -15,6 +15,7 @@ contract ShopCollection {
     }
 
     struct WithdrawData {
+        uint256 id;
         uint256 amount;
         WithdrawStatus status;
     }
@@ -94,8 +95,15 @@ contract ShopCollection {
     /// @notice 정산된 마일리지가 증가할 때 발생되는 이벤트
     event IncreasedSettledAmount(bytes32 shopId, uint256 increase, uint256 total, string currency, string purchaseId);
 
-    event OpenedWithdrawal(bytes32 shopId, uint256 amount, string currency, address account);
-    event ClosedWithdrawal(bytes32 shopId, uint256 amount, uint256 total, string currency, address account);
+    event OpenedWithdrawal(bytes32 shopId, uint256 amount, string currency, address account, uint256 withdrawId);
+    event ClosedWithdrawal(
+        bytes32 shopId,
+        uint256 amount,
+        uint256 total,
+        string currency,
+        address account,
+        uint256 withdrawId
+    );
 
     address public ledgerAddress;
     address public deployer;
@@ -161,7 +169,7 @@ contract ShopCollection {
             settledAmount: 0,
             withdrawnAmount: 0,
             status: ShopStatus.INACTIVE,
-            withdrawData: WithdrawData({ amount: 0, status: WithdrawStatus.CLOSE }),
+            withdrawData: WithdrawData({ id: 0, amount: 0, status: WithdrawStatus.CLOSE }),
             itemIndex: items.length,
             accountIndex: shopIdByAddress[_account].length
         });
@@ -409,12 +417,13 @@ contract ShopCollection {
         require(_amount <= shop.settledAmount - shop.withdrawnAmount, "1220");
         require(shop.withdrawData.status == WithdrawStatus.CLOSE, "1221");
 
+        shops[_shopId].withdrawData.id++;
         shops[_shopId].withdrawData.amount = _amount;
         shops[_shopId].withdrawData.status = WithdrawStatus.OPEN;
 
         nonce[_account]++;
 
-        emit OpenedWithdrawal(_shopId, _amount, shops[_shopId].currency, _account);
+        emit OpenedWithdrawal(_shopId, _amount, shops[_shopId].currency, _account, shops[_shopId].withdrawData.id);
     }
 
     /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
@@ -451,7 +460,8 @@ contract ShopCollection {
             shops[_shopId].withdrawData.amount,
             shops[_shopId].withdrawnAmount,
             shops[_shopId].currency,
-            _account
+            _account,
+            shops[_shopId].withdrawData.id
         );
     }
 
