@@ -84,9 +84,36 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         )) as PhoneLinkCollection;
 
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
-        let idx = 0;
+
         for (const user of users) {
-            if (++idx % 2 === 1) continue;
+            if (user.loyaltyType === 1) {
+                const signer = new Wallet(user.privateKey).connect(ethers.provider);
+                const nonce = await ledgerContract.nonceOf(user.address);
+                const signature = ContractUtils.signLoyaltyType(signer, nonce);
+                const tx10 = await ledgerContract.connect(signer).changeToLoyaltyToken(user.address, signature);
+                console.log(`Deposit user's amount (tx: ${tx10.hash})...`);
+                await tx10.wait();
+
+                if ((await ledgerContract.connect(signer).loyaltyTypeOf(user.address)) === 1) {
+                    console.log(`Success changeToLoyaltyToken...`);
+                } else {
+                    console.error(`Fail changeToLoyaltyToken...`);
+                }
+
+                const balance = await tokenContract.balanceOf(user.address);
+                const depositedToken = balance.div(2);
+                const tx8 = await tokenContract.connect(signer).approve(ledgerContract.address, depositedToken);
+                console.log(`Approve user's amount (tx: ${tx8.hash})...`);
+                await tx8.wait();
+
+                const tx9 = await ledgerContract.connect(signer).deposit(depositedToken);
+                console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
+                await tx9.wait();
+            }
+        }
+
+        const users_mobile = JSON.parse(fs.readFileSync("./deploy/data/users_mobile.json", "utf8"));
+        for (const user of users_mobile) {
             const userAccount = ContractUtils.getPhoneHash(user.phone);
             if ((await linkCollectionContract.toAddress(userAccount)) !== user.address) {
                 const userNonce = await linkCollectionContract.nonceOf(user.address);
@@ -128,7 +155,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             }
         }
 
-        for (const user of users) {
+        for (const user of users_mobile) {
             if (user.loyaltyType === 1) {
                 const signer = new Wallet(user.privateKey).connect(ethers.provider);
                 const nonce = await ledgerContract.nonceOf(user.address);

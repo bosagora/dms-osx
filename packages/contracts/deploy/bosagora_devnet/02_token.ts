@@ -27,17 +27,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
         const contractAddress = await getContractAddress("Token", hre);
         const contract = (await ethers.getContractAt("Token", contractAddress)) as Token;
 
-        const assetAmount = Amount.make(10_000_000, 18);
+        const assetAmount = Amount.make(100_000_000, 18);
         const tx1 = await contract.connect(await ethers.getSigner(owner)).transfer(foundation, assetAmount.value);
         console.log(`Transfer token to foundation (tx: ${tx1.hash})...`);
         await tx1.wait();
 
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json"));
         const addresses = users.map((m: { address: string }) => m.address);
-        const userAmount = Amount.make(100_000, 18);
+        const userAmount = Amount.make(200_000, 18);
         const tx2 = await contract.connect(await ethers.getSigner(owner)).multiTransfer(addresses, userAmount.value);
         console.log(`Transfer token to users (tx: ${tx2.hash})...`);
         await tx2.wait();
+
+        const users_mobile = JSON.parse(fs.readFileSync("./deploy/data/users_mobile.json", "utf8"));
+        const addresses_mobile = users_mobile.map((m: { address: string }) => m.address);
+        const tx3 = await contract
+            .connect(await ethers.getSigner(owner))
+            .multiTransfer(addresses_mobile, userAmount.value);
+        console.log(`Transfer token to users (tx: ${tx3.hash})...`);
+        await tx3.wait();
     }
 };
 
