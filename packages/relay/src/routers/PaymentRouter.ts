@@ -869,7 +869,13 @@ export class PaymentRouter {
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_CONFIRMED_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX ||
-                        item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW
+                    ) {
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
+                        item.closeNewTimestamp = ContractUtils.getTimeStamp();
+                        await this._storage.updatePayment(item);
+                        return res.status(200).json(ResponseMessage.getErrorMessage("2030"));
+                    } else if (
                         item.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.FAILED_NEW
                     ) {
@@ -1302,7 +1308,13 @@ export class PaymentRouter {
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_CONFIRMED_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX ||
-                        item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL ||
+                        item.paymentStatus === LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL
+                    ) {
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
+                        item.closeCancelTimestamp = ContractUtils.getTimeStamp();
+                        await this._storage.updatePayment(item);
+                        return res.status(200).json(ResponseMessage.getErrorMessage("2030"));
+                    } else if (
                         item.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.FAILED_CANCEL
                     ) {
