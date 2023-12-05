@@ -129,6 +129,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onApproveNewPayment(payment: LoyaltyPaymentTaskData) {
+        logger.info("onApproveNewPayment");
         const contract = await this.getLedgerContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -164,6 +165,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onApproveCancelPayment(payment: LoyaltyPaymentTaskData) {
+        logger.info("onApproveCancelPayment");
         const contract = await this.getLedgerContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -328,6 +330,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onAddShop(task: ShopTaskData) {
+        logger.info("onAddShop");
         const contract = await this.getShopContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -363,6 +366,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onUpdateShop(task: ShopTaskData) {
+        logger.info("onUpdateShop");
         const contract = await this.getShopContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -398,6 +402,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onChangeStatusOfShop(task: ShopTaskData) {
+        logger.info("onChangeStatusOfShop");
         const contract = await this.getShopContract();
         const signerItem = await this.getRelaySigner();
         try {

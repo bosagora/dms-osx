@@ -723,9 +723,6 @@ export class PaymentRouter {
                                 signature,
                             });
 
-                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-
                             item.openNewTxId = tx.hash;
                             item.openNewTimestamp = ContractUtils.getTimeStamp();
                             await this._storage.updateOpenNewTx(
@@ -733,6 +730,9 @@ export class PaymentRouter {
                                 item.openNewTxId,
                                 item.openNewTimestamp
                             );
+
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                             return res.status(200).json(
                                 this.makeResponseData(0, {
@@ -1155,9 +1155,6 @@ export class PaymentRouter {
                                 .connect(signerItem.signer)
                                 .openCancelLoyaltyPayment(item.paymentId, signature);
 
-                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-
                             item.openCancelTxId = tx.hash;
                             item.openCancelTimestamp = ContractUtils.getTimeStamp();
                             await this._storage.updateOpenCancelTx(
@@ -1165,6 +1162,9 @@ export class PaymentRouter {
                                 item.openCancelTxId,
                                 item.openCancelTimestamp
                             );
+
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX;
+                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                             return res.status(200).json(
                                 this.makeResponseData(0, {
