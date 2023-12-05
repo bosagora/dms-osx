@@ -65,7 +65,7 @@ relay:
   paymentTimeoutSecond: 45
   approvalSecond: 3
   forcedCloseSecond: 300
-  expoAccessToken: ${EXPO_ACCESS_TOKEN}
+  expoAccessToken: "${EXPO_ACCESS_TOKEN}"
 
 contracts:
   tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"

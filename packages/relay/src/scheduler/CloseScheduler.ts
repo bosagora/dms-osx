@@ -70,6 +70,7 @@ export class CloseScheduler extends Scheduler {
         ]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.forcedCloseSecond) continue;
+            logger.info(`CloseScheduler.onNewPayment ${payment.paymentId}`);
 
             const serverURL = `http://localhost:${this.config.server.port}`;
             const client = axios.create();
@@ -104,6 +105,7 @@ export class CloseScheduler extends Scheduler {
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < this.config.relay.forcedCloseSecond)
                 continue;
+            logger.info(`CloseScheduler.onCancelPayment ${payment.paymentId}`);
 
             const serverURL = `http://localhost:${this.config.server.port}`;
             const client = axios.create();
