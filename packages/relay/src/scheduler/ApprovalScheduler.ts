@@ -127,6 +127,7 @@ export class ApprovalScheduler extends Scheduler {
         const payments = await this.storage.getPaymentsStatusOf([LoyaltyPaymentTaskStatus.OPENED_NEW]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.approvalSecond) continue;
+            logger.info(`ApprovalScheduler.onNewPayment ${payment.paymentId}`);
             const wallet = this.findWallet(payment.account);
             if (wallet !== undefined) {
                 const nonce = await (await this.getLedgerContract()).nonceOf(wallet.address);
@@ -172,6 +173,7 @@ export class ApprovalScheduler extends Scheduler {
         const payments = await this.storage.getPaymentsStatusOf([LoyaltyPaymentTaskStatus.OPENED_CANCEL]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < this.config.relay.approvalSecond) continue;
+            logger.info(`ApprovalScheduler.onCancelPayment ${payment.paymentId}`);
             const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
             const wallet = this.findWallet(shopInfo.account);
             if (wallet !== undefined) {

@@ -129,7 +129,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onApproveNewPayment(payment: LoyaltyPaymentTaskData) {
-        logger.info("onApproveNewPayment");
+        logger.info(`WatchScheduler.onApproveNewPayment ${payment.paymentId}`);
         const contract = await this.getLedgerContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -165,7 +165,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onApproveCancelPayment(payment: LoyaltyPaymentTaskData) {
-        logger.info("onApproveCancelPayment");
+        logger.info(`WatchScheduler.onApproveCancelPayment ${payment.paymentId}`);
         const contract = await this.getLedgerContract();
         const signerItem = await this.getRelaySigner();
         try {
