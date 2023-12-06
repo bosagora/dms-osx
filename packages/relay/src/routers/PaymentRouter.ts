@@ -696,9 +696,6 @@ export class PaymentRouter {
                 if (ContractUtils.getTimeStamp() - item.openNewTimestamp > this._config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
 
-                    item.paymentStatus = LoyaltyPaymentTaskStatus.TIMEOUT;
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-
                     await this.sendPaymentResult(
                         TaskResultType.NEW,
                         TaskResultCode.TIMEOUT,
@@ -1166,9 +1163,6 @@ export class PaymentRouter {
 
                 if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > this._config.relay.paymentTimeoutSecond) {
                     const msg = ResponseMessage.getErrorMessage("7000");
-
-                    item.paymentStatus = LoyaltyPaymentTaskStatus.TIMEOUT;
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                     await this.sendPaymentResult(
                         TaskResultType.CANCEL,

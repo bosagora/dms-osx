@@ -81,7 +81,6 @@ export enum LoyaltyPaymentTaskStatus {
     REPLY_COMPLETED_CANCEL = 57,
     CLOSED_CANCEL = 58,
     FAILED_CANCEL = 59,
-    TIMEOUT = 90,
 }
 
 export interface LoyaltyPaymentTaskData {
