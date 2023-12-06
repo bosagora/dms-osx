@@ -84,6 +84,13 @@
         UPDATE payments
         SET
             "paymentStatus" = ${paymentStatus}
+        WHERE "paymentId" = #{paymentId} AND "paymentStatus" <![CDATA[<]]> ${paymentStatus}
+    </update>
+
+    <update id="forcedUpdateStatus">
+        UPDATE payments
+        SET
+            "paymentStatus" = ${paymentStatus}
         WHERE "paymentId" = #{paymentId}
     </update>
 
@@ -91,12 +98,13 @@
         UPDATE payments
         SET
             "contractStatus" = ${contractStatus}
-        WHERE "paymentId" = #{paymentId}
+        WHERE "paymentId" = #{paymentId} AND ("contractStatus" <![CDATA[<]]> ${contractStatus}
     </update>
 
     <update id="updateCloseNewTimestamp">
         UPDATE payments
         SET
+            "paymentStatus" = ${paymentStatus},
             "closeNewTimestamp" = ${value}
         WHERE "paymentId" = #{paymentId}
     </update>
@@ -104,6 +112,7 @@
     <update id="updateOpenCancelTimestamp">
         UPDATE payments
         SET
+            "paymentStatus" = ${paymentStatus},
             "openCancelTimestamp" = ${value}
         WHERE "paymentId" = #{paymentId}
     </update>
@@ -111,6 +120,7 @@
     <update id="updateCloseCancelTimestamp">
         UPDATE payments
         SET
+            "paymentStatus" = ${paymentStatus},
             "closeCancelTimestamp" = ${value}
         WHERE "paymentId" = #{paymentId}
     </update>
@@ -119,32 +129,18 @@
         UPDATE payments
         SET
             "openNewTxId" = #{txId},
-            "openNewTxTime" = ${txTime}
-        WHERE "paymentId" = #{paymentId}
-    </update>
-
-    <update id="updateCloseNewTx">
-        UPDATE payments
-        SET
-            "closeNewTxId" = #{txId},
-            "closeNewTxTime" = ${txTime}
-        WHERE "paymentId" = #{paymentId}
+            "openNewTxTime" = ${txTime},
+            "paymentStatus" = ${paymentStatus}
+        WHERE "paymentId" = #{paymentId} AND "paymentStatus" <![CDATA[<]]> ${paymentStatus}
     </update>
 
     <update id="updateOpenCancelTx">
         UPDATE payments
         SET
             "openCancelTxId" = #{txId},
-            "openCancelTxTime" = ${txTime}
-        WHERE "paymentId" = #{paymentId}
-    </update>
-
-    <update id="updateCloseCancelTx">
-        UPDATE payments
-        SET
-            "closeCancelTxId" = #{txId},
-            "closeCancelTxTime" = ${txTime}
-        WHERE "paymentId" = #{paymentId}
+            "openCancelTxTime" = ${txTime},
+            "paymentStatus" = ${paymentStatus}
+        WHERE "paymentId" = #{paymentId} AND "paymentStatus" <![CDATA[<]]> ${paymentStatus}
     </update>
 
     <select id="getPaymentsStatusOf">

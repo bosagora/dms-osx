@@ -591,12 +591,8 @@ export class PaymentRouter {
                 closeCancelTimestamp: 0,
                 openNewTxId: "",
                 openNewTxTime: 0,
-                closeNewTxId: "",
-                closeNewTxTime: 0,
                 openCancelTxId: "",
                 openCancelTxTime: 0,
-                closeCancelTxId: "",
-                closeCancelTxTime: 0,
             };
             await this._storage.postPayment(item);
 
@@ -675,7 +671,11 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_NEW) {
+                if (
+                    item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_NEW &&
+                    item.paymentStatus !== LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX &&
+                    item.paymentStatus !== LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX
+                ) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
                 }
 
@@ -723,14 +723,13 @@ export class PaymentRouter {
 
                             item.openNewTxId = tx.hash;
                             item.openNewTimestamp = ContractUtils.getTimeStamp();
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX;
                             await this._storage.updateOpenNewTx(
                                 item.paymentId,
                                 item.openNewTxId,
-                                item.openNewTimestamp
+                                item.openNewTimestamp,
+                                item.paymentStatus
                             );
-
-                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                             return res.status(200).json(
                                 this.makeResponseData(0, {
@@ -746,20 +745,22 @@ export class PaymentRouter {
                             );
                         } catch (error) {
                             item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                            await this._storage.forcedUpdatePaymentStatus(item.paymentId, item.paymentStatus);
                             const msg = ResponseMessage.getEVMErrorMessage(error);
                             logger.error(`POST /v1/payment/new/approval : ${msg.error.message}`);
                             return res.status(200).json(msg);
                         }
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW;
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2025"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
-                        await this._storage.updatePayment(item);
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_PAYMENT) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
-                        await this._storage.updatePayment(item);
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2027"));
                     } else {
                         return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
@@ -832,7 +833,11 @@ export class PaymentRouter {
                     if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_NEW) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                         item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updatePayment(item);
+                        await this._storage.updateCloseNewTimestamp(
+                            item.paymentId,
+                            item.paymentStatus,
+                            item.closeNewTimestamp
+                        );
 
                         return res.status(200).json(
                             this.makeResponseData(0, {
@@ -870,7 +875,11 @@ export class PaymentRouter {
                         if (ContractUtils.getTimeStamp() - item.openNewTimestamp > timeout) {
                             item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                             item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                            await this._storage.updatePayment(item);
+                            await this._storage.updateCloseNewTimestamp(
+                                item.paymentId,
+                                item.paymentStatus,
+                                item.closeNewTimestamp
+                            );
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -905,7 +914,11 @@ export class PaymentRouter {
                     ) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                         item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updatePayment(item);
+                        await this._storage.updateCloseNewTimestamp(
+                            item.paymentId,
+                            item.paymentStatus,
+                            item.closeNewTimestamp
+                        );
                         return res.status(200).json(ResponseMessage.getErrorMessage("2029"));
                     } else {
                         return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
@@ -961,12 +974,20 @@ export class PaymentRouter {
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
                     item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                    await this._storage.updateCloseNewTimestamp(
+                        item.paymentId,
+                        item.paymentStatus,
+                        item.closeNewTimestamp
+                    );
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_PAYMENT) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                     item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                    await this._storage.updateCloseNewTimestamp(
+                        item.paymentId,
+                        item.paymentStatus,
+                        item.closeNewTimestamp
+                    );
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
@@ -1058,13 +1079,13 @@ export class PaymentRouter {
                 if (item.paymentStatus !== LoyaltyPaymentTaskStatus.CLOSED_NEW) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2022"));
                 }
-
                 item.paymentStatus = LoyaltyPaymentTaskStatus.OPENED_CANCEL;
-                await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-
                 item.openCancelTimestamp = ContractUtils.getTimeStamp();
-                await this._storage.updateOpenCancelTimestamp(item.paymentId, item.openCancelTimestamp);
-
+                await this._storage.updateOpenCancelTimestamp(
+                    item.paymentId,
+                    item.paymentStatus,
+                    item.openCancelTimestamp
+                );
                 const shopContract = await this.getShopContract();
                 const shopInfo = await shopContract.shopOf(item.shopId);
 
@@ -1138,7 +1159,11 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                if (item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_CANCEL) {
+                if (
+                    item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_CANCEL &&
+                    item.paymentStatus !== LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX &&
+                    item.paymentStatus !== LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX
+                ) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
                 }
 
@@ -1181,14 +1206,13 @@ export class PaymentRouter {
 
                             item.openCancelTxId = tx.hash;
                             item.openCancelTimestamp = ContractUtils.getTimeStamp();
+                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX;
                             await this._storage.updateOpenCancelTx(
                                 item.paymentId,
                                 item.openCancelTxId,
-                                item.openCancelTimestamp
+                                item.openCancelTimestamp,
+                                item.paymentStatus
                             );
-
-                            item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                             return res.status(200).json(
                                 this.makeResponseData(0, {
@@ -1210,14 +1234,16 @@ export class PaymentRouter {
                             return res.status(200).json(msg);
                         }
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL;
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2025"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
-                        await this._storage.updatePayment(item);
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
-                        await this._storage.updatePayment(item);
+                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2027"));
                     } else {
                         return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
@@ -1291,7 +1317,11 @@ export class PaymentRouter {
                     if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                         item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updatePayment(item);
+                        await this._storage.updateCloseCancelTimestamp(
+                            item.paymentId,
+                            item.paymentStatus,
+                            item.closeCancelTimestamp
+                        );
 
                         res.status(200).json(
                             this.makeResponseData(0, {
@@ -1329,7 +1359,11 @@ export class PaymentRouter {
                         if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > timeout) {
                             item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                             item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                            await this._storage.updatePayment(item);
+                            await this._storage.updateCloseCancelTimestamp(
+                                item.paymentId,
+                                item.paymentStatus,
+                                item.closeCancelTimestamp
+                            );
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1364,7 +1398,11 @@ export class PaymentRouter {
                     ) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                         item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updatePayment(item);
+                        await this._storage.updateCloseCancelTimestamp(
+                            item.paymentId,
+                            item.paymentStatus,
+                            item.closeCancelTimestamp
+                        );
                         return res.status(200).json(ResponseMessage.getErrorMessage("2029"));
                     } else {
                         return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
@@ -1420,12 +1458,20 @@ export class PaymentRouter {
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_CANCEL) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
                     item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                    await this._storage.updateCloseCancelTimestamp(
+                        item.paymentId,
+                        item.paymentStatus,
+                        item.closeCancelTimestamp
+                    );
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_PAYMENT) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                     item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                    await this._storage.updateCloseCancelTimestamp(
+                        item.paymentId,
+                        item.paymentStatus,
+                        item.closeCancelTimestamp
+                    );
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2024"));

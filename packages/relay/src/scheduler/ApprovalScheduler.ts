@@ -1,7 +1,14 @@
 import "@nomiclabs/hardhat-ethers";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
-import { IShopData, IUserData, LoyaltyPaymentTaskStatus, ShopTaskStatus, TaskResultType } from "../types/index";
+import {
+    ContractLoyaltyPaymentStatus,
+    IShopData,
+    IUserData,
+    LoyaltyPaymentTaskStatus,
+    ShopTaskStatus,
+    TaskResultType,
+} from "../types/index";
 import { Scheduler } from "./Scheduler";
 
 import { Ledger, ShopCollection, Token } from "../../typechain-types";
@@ -124,13 +131,22 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onNewPayment() {
-        const payments = await this.storage.getPaymentsStatusOf([LoyaltyPaymentTaskStatus.OPENED_NEW]);
+        const payments = await this.storage.getPaymentsStatusOf([
+            LoyaltyPaymentTaskStatus.OPENED_NEW,
+            LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX,
+        ]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.approvalSecond) continue;
+
+            const contract = await this.getLedgerContract();
+            const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
+            if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) continue;
+
             logger.info(`ApprovalScheduler.onNewPayment ${payment.paymentId}`);
             const wallet = this.findWallet(payment.account);
             if (wallet !== undefined) {
-                const nonce = await (await this.getLedgerContract()).nonceOf(wallet.address);
+                const nonce = await contract.nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
                     new Wallet(wallet.privateKey),
                     payment.paymentId,
@@ -147,7 +163,12 @@ export class ApprovalScheduler extends Scheduler {
                     const response1 = await client.get(
                         URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", payment.paymentId).toString()
                     );
-                    if (response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_NEW) {
+
+                    if (
+                        response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_NEW ||
+                        response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX ||
+                        response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX
+                    ) {
                         const response = await client.post(
                             URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
                             {
@@ -170,14 +191,23 @@ export class ApprovalScheduler extends Scheduler {
     }
 
     private async onCancelPayment() {
-        const payments = await this.storage.getPaymentsStatusOf([LoyaltyPaymentTaskStatus.OPENED_CANCEL]);
+        const payments = await this.storage.getPaymentsStatusOf([
+            LoyaltyPaymentTaskStatus.OPENED_CANCEL,
+            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX,
+            LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX,
+        ]);
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < this.config.relay.approvalSecond) continue;
+
+            const contract = await this.getLedgerContract();
+            const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
+            if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) continue;
+
             logger.info(`ApprovalScheduler.onCancelPayment ${payment.paymentId}`);
             const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
             const wallet = this.findWallet(shopInfo.account);
             if (wallet !== undefined) {
-                const nonce = await (await this.getLedgerContract()).nonceOf(wallet.address);
+                const nonce = await contract.nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
                     new Wallet(wallet.privateKey),
                     payment.paymentId,
@@ -191,7 +221,12 @@ export class ApprovalScheduler extends Scheduler {
                     const response1 = await client.get(
                         URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", payment.paymentId).toString()
                     );
-                    if (response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_CANCEL) {
+
+                    if (
+                        response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.OPENED_CANCEL ||
+                        response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX ||
+                        response1.data.data.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX
+                    ) {
                         const response = await client.post(
                             URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString(),
                             {

@@ -153,12 +153,12 @@ export class WatchScheduler extends Scheduler {
                     await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
                 } else {
                     payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX;
-                    await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
+                    await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
                 }
             }
         } catch (error) {
             payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX;
-            await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
+            await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
@@ -189,12 +189,12 @@ export class WatchScheduler extends Scheduler {
                     await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
                 } else {
                     payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX;
-                    await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
+                    await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
                 }
             }
         } catch (error) {
             payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX;
-            await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
+            await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
