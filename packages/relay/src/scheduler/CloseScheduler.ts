@@ -61,6 +61,8 @@ export class CloseScheduler extends Scheduler {
         try {
             await this.onNewPayment();
             await this.onCancelPayment();
+            await this.onCheckConsistencyOfNewPayment();
+            await this.onCheckConsistencyOfCancelPayment();
         } catch (error) {
             logger.error(`Failed to execute the CloseScheduler: ${error}`);
         }
@@ -164,7 +166,7 @@ export class CloseScheduler extends Scheduler {
                         URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                         {
                             accessKey: this.config.relay.accessKey,
-                            confirm: false,
+                            confirm: payment.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW,
                             paymentId: payment.paymentId,
                         }
                     );
@@ -193,15 +195,15 @@ export class CloseScheduler extends Scheduler {
             const contract = await this.getLedgerContract();
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
 
-            if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
+            if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {
                 const serverURL = `http://localhost:${this.config.server.port}`;
                 const client = axios.create();
                 try {
                     const response = await client.post(
-                        URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                        URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                         {
                             accessKey: this.config.relay.accessKey,
-                            confirm: false,
+                            confirm: payment.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL,
                             paymentId: payment.paymentId,
                         }
                     );
