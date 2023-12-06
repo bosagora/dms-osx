@@ -6,4 +6,5 @@ echo "TAG_NANE=$TAG_NANE"
 # docker buildx build --platform=linux/amd64,linux/arm64 -t bosagora/dms-osx-faker:"$TAG_NANE" -f Dockerfile --push .
 # docker buildx build --platform=linux/amd64,linux/arm64 -t bosagora/dms-osx-faker:latest -f Dockerfile --push .
 
-docker build -t bosagora/dms-osx-faker:"$TAG_NANE" -f Dockerfile --push .
+docker build -t bosagora/dms-osx-faker:"$TAG_NANE" -f Dockerfile .
+docker push bosagora/dms-osx-faker:"$TAG_NANE"
