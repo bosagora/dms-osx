@@ -103,6 +103,7 @@ export interface LoyaltyPaymentTaskData {
     totalValue: BigNumber;
 
     paymentStatus: LoyaltyPaymentTaskStatus;
+    contractStatus: ContractLoyaltyPaymentStatus;
 
     openNewTimestamp: number;
     closeNewTimestamp: number;

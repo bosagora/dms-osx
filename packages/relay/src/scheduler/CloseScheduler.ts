@@ -1,14 +1,16 @@
 import "@nomiclabs/hardhat-ethers";
+import { Ledger } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
-import { Scheduler } from "./Scheduler";
-
 import { RelayStorage } from "../storage/RelayStorage";
+import { ContractLoyaltyPaymentStatus, LoyaltyPaymentTaskStatus } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
+import { Scheduler } from "./Scheduler";
 
 import axios from "axios";
 import URI from "urijs";
-import { LoyaltyPaymentTaskStatus } from "../types";
+
+import * as hre from "hardhat";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
@@ -17,6 +19,12 @@ export class CloseScheduler extends Scheduler {
     private _config: Config | undefined;
 
     private _storage: RelayStorage | undefined;
+
+    /**
+     * 사용자의 원장 컨트랙트
+     * @private
+     */
+    private _ledgerContract: Ledger | undefined;
 
     constructor(expression: string) {
         super(expression);
@@ -125,6 +133,88 @@ export class CloseScheduler extends Scheduler {
                 }
             } catch (e) {
                 //
+            }
+        }
+    }
+
+    private async getLedgerContract(): Promise<Ledger> {
+        if (this._ledgerContract === undefined) {
+            const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
+            this._ledgerContract = ledgerFactory.attach(this.config.contracts.ledgerAddress);
+        }
+        return this._ledgerContract;
+    }
+
+    private async onCheckConsistencyOfNewPayment() {
+        const payments = await this.storage.getContractPaymentsStatusOf(
+            [ContractLoyaltyPaymentStatus.OPENED_PAYMENT],
+            [LoyaltyPaymentTaskStatus.CLOSED_NEW, LoyaltyPaymentTaskStatus.FAILED_NEW]
+        );
+        for (const payment of payments) {
+            logger.info(`CloseScheduler.onCheckConsistencyOfNewPayment ${payment.paymentId}`);
+
+            const contract = await this.getLedgerContract();
+            const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
+
+            if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
+                const serverURL = `http://localhost:${this.config.server.port}`;
+                const client = axios.create();
+                try {
+                    const response = await client.post(
+                        URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                        {
+                            accessKey: this.config.relay.accessKey,
+                            confirm: false,
+                            paymentId: payment.paymentId,
+                        }
+                    );
+                    if (response.data.error !== undefined) {
+                        logger.warn(
+                            `CloseScheduler.onCheckConsistencyOfNewPayment: ${response.data.code} - ${response.data.error.message}`
+                        );
+                    }
+                } catch (e) {
+                    //
+                }
+            } else {
+                await this.storage.updatePaymentContractStatus(payment.paymentId, loyaltyPaymentData.status);
+            }
+        }
+    }
+
+    private async onCheckConsistencyOfCancelPayment() {
+        const payments = await this.storage.getContractPaymentsStatusOf(
+            [ContractLoyaltyPaymentStatus.OPENED_CANCEL],
+            [LoyaltyPaymentTaskStatus.CLOSED_CANCEL, LoyaltyPaymentTaskStatus.FAILED_CANCEL]
+        );
+        for (const payment of payments) {
+            logger.info(`CloseScheduler.onCheckConsistencyOfCancelPayment ${payment.paymentId}`);
+
+            const contract = await this.getLedgerContract();
+            const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
+
+            if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
+                const serverURL = `http://localhost:${this.config.server.port}`;
+                const client = axios.create();
+                try {
+                    const response = await client.post(
+                        URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
+                        {
+                            accessKey: this.config.relay.accessKey,
+                            confirm: false,
+                            paymentId: payment.paymentId,
+                        }
+                    );
+                    if (response.data.error !== undefined) {
+                        logger.warn(
+                            `CloseScheduler.onCheckConsistencyOfCancelPayment: ${response.data.code} - ${response.data.error.message}`
+                        );
+                    }
+                } catch (e) {
+                    //
+                }
+            } else {
+                await this.storage.updatePaymentContractStatus(payment.paymentId, loyaltyPaymentData.status);
             }
         }
     }

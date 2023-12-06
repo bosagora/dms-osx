@@ -7,6 +7,7 @@ import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
 import {
+    ContractLoyaltyPaymentStatus,
     LoyaltyPaymentTaskData,
     LoyaltyPaymentTaskStatus,
     MobileData,
@@ -119,6 +120,7 @@ export class RelayStorage extends Storage {
                             totalToken: BigNumber.from(m.totalToken),
                             totalValue: BigNumber.from(m.totalValue),
                             paymentStatus: m.paymentStatus,
+                            contractStatus: m.contractStatus,
                             openNewTimestamp: m.openNewTimestamp,
                             closeNewTimestamp: m.closeNewTimestamp,
                             openCancelTimestamp: m.openCancelTimestamp,
@@ -157,6 +159,7 @@ export class RelayStorage extends Storage {
                 totalToken: item.totalToken.toString(),
                 totalValue: item.totalValue.toString(),
                 paymentStatus: item.paymentStatus,
+                contractStatus: item.contractStatus,
                 openNewTimestamp: item.openNewTimestamp,
                 closeNewTimestamp: item.closeNewTimestamp,
                 openCancelTimestamp: item.openCancelTimestamp,
@@ -177,6 +180,22 @@ export class RelayStorage extends Storage {
             this.queryForMapper("payment", "updateStatus", {
                 paymentId,
                 paymentStatus,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public updatePaymentContractStatus(paymentId: string, contractStatus: ContractLoyaltyPaymentStatus): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateContractStatus", {
+                paymentId,
+                contractStatus,
             })
                 .then(() => {
                     return resolve();
@@ -487,6 +506,58 @@ export class RelayStorage extends Storage {
                                 totalToken: BigNumber.from(m.totalToken),
                                 totalValue: BigNumber.from(m.totalValue),
                                 paymentStatus: m.paymentStatus,
+                                contractStatus: m.contractStatus,
+                                openNewTimestamp: m.openNewTimestamp,
+                                closeNewTimestamp: m.closeNewTimestamp,
+                                openCancelTimestamp: m.openCancelTimestamp,
+                                closeCancelTimestamp: m.closeCancelTimestamp,
+                                openNewTxId: m.openNewTxId,
+                                openNewTxTime: m.openNewTxTime,
+                                closeNewTxId: m.closeNewTxId,
+                                closeNewTxTime: m.closeNewTxTime,
+                                openCancelTxId: m.openCancelTxId,
+                                openCancelTxTime: m.openCancelTxTime,
+                                closeCancelTxId: m.closeCancelTxId,
+                                closeCancelTxTime: m.closeCancelTxTime,
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getContractPaymentsStatusOf(
+        contractStatusList: ContractLoyaltyPaymentStatus[],
+        paymentStatusList: LoyaltyPaymentTaskStatus[]
+    ): Promise<LoyaltyPaymentTaskData[]> {
+        return new Promise<LoyaltyPaymentTaskData[]>(async (resolve, reject) => {
+            this.queryForMapper("payment", "getContractPaymentsStatusOf", { contractStatusList, paymentStatusList })
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                paymentId: m.paymentId,
+                                purchaseId: m.purchaseId,
+                                amount: BigNumber.from(m.amount),
+                                currency: m.currency,
+                                shopId: m.shopId,
+                                account: m.account,
+                                loyaltyType: m.loyaltyType,
+                                paidPoint: BigNumber.from(m.paidPoint),
+                                paidToken: BigNumber.from(m.paidToken),
+                                paidValue: BigNumber.from(m.paidValue),
+                                feePoint: BigNumber.from(m.feePoint),
+                                feeToken: BigNumber.from(m.feeToken),
+                                feeValue: BigNumber.from(m.feeValue),
+                                totalPoint: BigNumber.from(m.totalPoint),
+                                totalToken: BigNumber.from(m.totalToken),
+                                totalValue: BigNumber.from(m.totalValue),
+                                paymentStatus: m.paymentStatus,
+                                contractStatus: m.contractStatus,
                                 openNewTimestamp: m.openNewTimestamp,
                                 closeNewTimestamp: m.closeNewTimestamp,
                                 openCancelTimestamp: m.openCancelTimestamp,
