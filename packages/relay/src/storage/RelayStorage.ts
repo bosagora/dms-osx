@@ -79,12 +79,8 @@ export class RelayStorage extends Storage {
                 closeCancelTimestamp: item.closeCancelTimestamp,
                 openNewTxId: item.openNewTxId,
                 openNewTxTime: item.openNewTxTime,
-                closeNewTxId: item.closeNewTxId,
-                closeNewTxTime: item.closeNewTxTime,
                 openCancelTxId: item.openCancelTxId,
                 openCancelTxTime: item.openCancelTxTime,
-                closeCancelTxId: item.closeCancelTxId,
-                closeCancelTxTime: item.closeCancelTxTime,
             })
                 .then(() => {
                     return resolve();
@@ -127,12 +123,8 @@ export class RelayStorage extends Storage {
                             closeCancelTimestamp: m.closeCancelTimestamp,
                             openNewTxId: m.openNewTxId,
                             openNewTxTime: m.openNewTxTime,
-                            closeNewTxId: m.closeNewTxId,
-                            closeNewTxTime: m.closeNewTxTime,
                             openCancelTxId: m.openCancelTxId,
                             openCancelTxTime: m.openCancelTxTime,
-                            closeCancelTxId: m.closeCancelTxId,
-                            closeCancelTxTime: m.closeCancelTxTime,
                         });
                     } else {
                         return resolve(undefined);
@@ -191,6 +183,22 @@ export class RelayStorage extends Storage {
         });
     }
 
+    public forcedUpdatePaymentStatus(paymentId: string, paymentStatus: LoyaltyPaymentTaskStatus): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "forcedUpdateStatus", {
+                paymentId,
+                paymentStatus,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
     public updatePaymentContractStatus(paymentId: string, contractStatus: ContractLoyaltyPaymentStatus): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateContractStatus", {
@@ -207,10 +215,15 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateCloseNewTimestamp(paymentId: string, value: number): Promise<any> {
+    public updateCloseNewTimestamp(
+        paymentId: string,
+        paymentStatus: LoyaltyPaymentTaskStatus,
+        value: number
+    ): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateCloseNewTimestamp", {
                 paymentId,
+                paymentStatus,
                 value,
             })
                 .then(() => {
@@ -223,10 +236,15 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateOpenCancelTimestamp(paymentId: string, value: number): Promise<any> {
+    public updateOpenCancelTimestamp(
+        paymentId: string,
+        paymentStatus: LoyaltyPaymentTaskStatus,
+        value: number
+    ): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateOpenCancelTimestamp", {
                 paymentId,
+                paymentStatus,
                 value,
             })
                 .then(() => {
@@ -239,10 +257,15 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateCloseCancelTimestamp(paymentId: string, value: number): Promise<any> {
+    public updateCloseCancelTimestamp(
+        paymentId: string,
+        paymentStatus: LoyaltyPaymentTaskStatus,
+        value: number
+    ): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateCloseCancelTimestamp", {
                 paymentId,
+                paymentStatus,
                 value,
             })
                 .then(() => {
@@ -414,12 +437,18 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateOpenNewTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+    public updateOpenNewTx(
+        paymentId: string,
+        txId: string,
+        txTime: number,
+        paymentStatus: LoyaltyPaymentTaskStatus
+    ): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateOpenNewTx", {
                 paymentId,
                 txId,
                 txTime,
+                paymentStatus,
             })
                 .then(() => {
                     return resolve();
@@ -431,12 +460,18 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateCloseNewTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+    public updateCloseNewTx(
+        paymentId: string,
+        txId: string,
+        txTime: number,
+        paymentStatus: LoyaltyPaymentTaskStatus
+    ): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateCloseNewTx", {
                 paymentId,
                 txId,
                 txTime,
+                paymentStatus,
             })
                 .then(() => {
                     return resolve();
@@ -448,12 +483,18 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateOpenCancelTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+    public updateOpenCancelTx(
+        paymentId: string,
+        txId: string,
+        txTime: number,
+        paymentStatus: LoyaltyPaymentTaskStatus
+    ): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateOpenCancelTx", {
                 paymentId,
                 txId,
                 txTime,
+                paymentStatus,
             })
                 .then(() => {
                     return resolve();
@@ -465,12 +506,18 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateCloseCancelTx(paymentId: string, txId: string, txTime: number): Promise<any> {
+    public updateCloseCancelTx(
+        paymentId: string,
+        txId: string,
+        txTime: number,
+        paymentStatus: LoyaltyPaymentTaskStatus
+    ): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("payment", "updateCloseCancelTx", {
                 paymentId,
                 txId,
                 txTime,
+                paymentStatus,
             })
                 .then(() => {
                     return resolve();
@@ -513,12 +560,8 @@ export class RelayStorage extends Storage {
                                 closeCancelTimestamp: m.closeCancelTimestamp,
                                 openNewTxId: m.openNewTxId,
                                 openNewTxTime: m.openNewTxTime,
-                                closeNewTxId: m.closeNewTxId,
-                                closeNewTxTime: m.closeNewTxTime,
                                 openCancelTxId: m.openCancelTxId,
                                 openCancelTxTime: m.openCancelTxTime,
-                                closeCancelTxId: m.closeCancelTxId,
-                                closeCancelTxTime: m.closeCancelTxTime,
                             };
                         })
                     );
@@ -564,12 +607,8 @@ export class RelayStorage extends Storage {
                                 closeCancelTimestamp: m.closeCancelTimestamp,
                                 openNewTxId: m.openNewTxId,
                                 openNewTxTime: m.openNewTxTime,
-                                closeNewTxId: m.closeNewTxId,
-                                closeNewTxTime: m.closeNewTxTime,
                                 openCancelTxId: m.openCancelTxId,
                                 openCancelTxTime: m.openCancelTxTime,
-                                closeCancelTxId: m.closeCancelTxId,
-                                closeCancelTxTime: m.closeCancelTxTime,
                             };
                         })
                     );
