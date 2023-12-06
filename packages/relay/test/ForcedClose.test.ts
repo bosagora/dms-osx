@@ -279,6 +279,7 @@ describe("Test of Server", function () {
             ];
             config.relay.certifierKey = certifier.privateKey;
             config.relay.forcedCloseSecond = 5;
+            config.relay.paymentTimeoutSecond = 2;
         });
 
         before("Create TestServer", async () => {

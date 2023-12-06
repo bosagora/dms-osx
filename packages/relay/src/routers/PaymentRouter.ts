@@ -584,6 +584,7 @@ export class PaymentRouter {
                 totalToken,
                 totalValue,
                 paymentStatus: LoyaltyPaymentTaskStatus.OPENED_NEW,
+                contractStatus: ContractLoyaltyPaymentStatus.INVALID,
                 openNewTimestamp: ContractUtils.getTimeStamp(),
                 closeNewTimestamp: 0,
                 openCancelTimestamp: 0,
@@ -1487,6 +1488,7 @@ export class PaymentRouter {
         item.totalPoint = event.totalPoint;
         item.totalToken = event.totalToken;
         item.totalValue = event.totalValue;
+        item.contractStatus = event.status;
     }
 
     private async waitPaymentLoyalty(

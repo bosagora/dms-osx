@@ -72,6 +72,7 @@
             "totalToken"            = #{totalToken},
             "totalValue"            = #{totalValue},
             "paymentStatus"         = ${paymentStatus},
+            "contractStatus"        = ${contractStatus},
             "openNewTimestamp"      = ${openNewTimestamp},
             "closeNewTimestamp"     = ${closeNewTimestamp},
             "openCancelTimestamp"   = ${openCancelTimestamp},
@@ -83,6 +84,13 @@
         UPDATE payments
         SET
             "paymentStatus" = ${paymentStatus}
+        WHERE "paymentId" = #{paymentId}
+    </update>
+
+    <update id="updateContractStatus">
+        UPDATE payments
+        SET
+            "contractStatus" = ${contractStatus}
         WHERE "paymentId" = #{paymentId}
     </update>
 
@@ -142,6 +150,20 @@
     <select id="getPaymentsStatusOf">
         SELECT * FROM payments WHERE "paymentStatus" in
         <foreach collection="status" item="item" index="index" open="(" close=")" separator=",">
+            ${item}
+        </foreach>;
+    </select>
+
+    <select id="getContractPaymentsStatusOf">
+        SELECT * FROM payments
+        WHERE
+        "contractStatus" in
+        <foreach collection="contractStatusList" item="item" index="index" open="(" close=")" separator=",">
+            ${item}
+        </foreach>
+        AND
+        "paymentStatus" in
+        <foreach collection="paymentStatusList" item="item" index="index" open="(" close=")" separator=",">
             ${item}
         </foreach>;
     </select>

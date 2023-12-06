@@ -238,6 +238,7 @@ export class WatchScheduler extends Scheduler {
         item.totalPoint = event.totalPoint;
         item.totalToken = event.totalToken;
         item.totalValue = event.totalValue;
+        item.contractStatus = event.status;
     }
 
     private async waitPaymentLoyalty(
