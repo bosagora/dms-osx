@@ -752,8 +752,6 @@ export class PaymentRouter {
                             return res.status(200).json(msg);
                         }
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
-                        item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW;
-                        await this._storage.updatePayment(item);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2025"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
@@ -971,10 +969,7 @@ export class PaymentRouter {
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else {
-                    item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
-                    item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                    return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
             }
         } catch (error: any) {
@@ -1215,8 +1210,6 @@ export class PaymentRouter {
                             return res.status(200).json(msg);
                         }
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {
-                        item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL;
-                        await this._storage.updatePayment(item);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2025"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
@@ -1435,10 +1428,7 @@ export class PaymentRouter {
                     await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else {
-                    item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
-                    item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
-                    return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
             }
         } catch (error: any) {
