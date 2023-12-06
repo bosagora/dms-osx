@@ -224,7 +224,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_add(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/add`);
+        logger.http(`POST /v1/shop/add ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -291,7 +291,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_task(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/shop/task`);
+        logger.http(`GET /v1/shop/task ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -332,7 +332,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_update_create(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/update/create`);
+        logger.http(`POST /v1/shop/update/create ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -415,7 +415,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_update_approval(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/update/approval`);
+        logger.http(`POST /v1/shop/update/approval ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -540,7 +540,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_status_create(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/status/create`);
+        logger.http(`POST /v1/shop/status/create ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -621,7 +621,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_status_approval(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/status/approval`);
+        logger.http(`POST /v1/shop/status/approval ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -736,7 +736,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_withdrawal_open(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/withdrawal/open`);
+        logger.http(`POST /v1/shop/withdrawal/open ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -776,7 +776,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_withdrawal_close(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/withdrawal/close`);
+        logger.http(`POST /v1/shop/withdrawal/close ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
