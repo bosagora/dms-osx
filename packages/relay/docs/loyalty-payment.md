@@ -1088,6 +1088,7 @@
 | 2027 | 해당 지불은 이미 승인후 실패처리되었습니다.<br/>This payment has already been approved and failed                                            |
 | 2028 | 지불에 대한 상태코드는 거부 할 수 없습니다<br/>The status code for this payment cannot be denied                                            |
 | 2029 | 해당 지불은 강제종료되었습니다<br/>This payment has forced to close                                                                     |
+| 2030 | 해당 지불은 승인 전이기 때문에 닫을 수 없습니다<br/>This payment cannot be closed before it is approved                                       |
 | 2033 | 작업아이디가 존재하지 않습니다<br/>The task ID is not exist                                                                             |
 | 2040 | 작업에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this task cannot be approved                                            |
 | 4000 | 사용자에 의해 거부되었습니다<br/>Denied by user                                                                                        |
