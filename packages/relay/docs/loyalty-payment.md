@@ -712,7 +712,7 @@
 | currency        | string | Yes  | 상점의 결제 통화                                                                                           |
 | provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                                                               |
 | providePercent  | int    | Yes  | 적립비율\*100                                                                                           |
-| taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 접수완료<br/>14 : 승인실패<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
+| taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 승인실패<br/>14 : 접수완료<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
 | timestamp       | int    | Yes  | 접수 시간                                                                                               |
 
 #### - 기타
@@ -746,7 +746,7 @@
 | taskId       | string | Yes  | 처리를 작업 아이디                                                            |
 | shopId       | string | Yes  | 상점 아이디                                                                   |
 | status       | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                          |
-| taskStatus   | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 접수완료<br/>14 : 승인실패<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
+| taskStatus   | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 승인실패<br/>14 : 접수완료<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
 | timestamp    | int    | Yes  | 접수 시간                                                                     |
 
 #### - 기타
@@ -980,7 +980,7 @@
 | providePercent  | int    | Yes  | 적립비율\*100                                                                                           |
 | status          | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                                                         |
 | account         | string | Yes  | 상점주의 지갑주소                                                                                           |
-| taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 접수완료<br/>14 : 승인실패<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
+| taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 승인실패<br/>14 : 접수완료<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
 | timestamp       | int    | Yes  | 접수 시간                                                                                               |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
@@ -1011,7 +1011,7 @@
 | currency        | string | Yes  | 상점의 결제 통화                                                                                           |
 | provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                                                               |
 | providePercent  | int    | Yes  | 적립비율\*100                                                                                           |
-| taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 접수완료<br/>14 : 승인실패<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
+| taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 승인실패<br/>14 : 접수완료<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
 | timestamp       | int    | Yes  | 접수 시간                                                                                               |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
@@ -1039,7 +1039,7 @@
 | taskId     | string | Yes  | 처리를 작업 아이디                                                            |
 | shopId     | string | Yes  | 상점 아이디                                                                   |
 | status     | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                          |
-| taskStatus | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 접수완료<br/>14 : 승인실패<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
+| taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 승인실패<br/>14 : 접수완료<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
 | timestamp  | int    | Yes  | 접수 시간                                                                     |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
