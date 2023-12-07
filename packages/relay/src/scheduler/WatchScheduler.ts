@@ -317,13 +317,14 @@ export class WatchScheduler extends Scheduler {
     ) {
         try {
             const client = new HTTPClient();
-            await client.post(this.config.relay.callbackEndpoint, {
+            const res = await client.post(this.config.relay.callbackEndpoint, {
                 accessKey: this.config.relay.callbackAccessKey,
                 type,
                 code,
                 message,
                 data,
             });
+            logger.info(res.data);
         } catch (error) {
             if (error instanceof Error) {
                 logger.error(`sendPaymentResult : ${error.message}`);
