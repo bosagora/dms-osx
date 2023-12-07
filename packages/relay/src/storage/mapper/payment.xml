@@ -77,7 +77,7 @@
             "closeNewTimestamp"     = ${closeNewTimestamp},
             "openCancelTimestamp"   = ${openCancelTimestamp},
             "closeCancelTimestamp"  = ${closeCancelTimestamp}
-        WHERE "paymentId" = #{paymentId}
+        WHERE "paymentId" = #{paymentId} AND "paymentStatus" <![CDATA[<]]> ${paymentStatus}
     </update>
 
     <update id="updateStatus">
@@ -98,7 +98,7 @@
         UPDATE payments
         SET
             "contractStatus" = ${contractStatus}
-        WHERE "paymentId" = #{paymentId} AND ("contractStatus" <![CDATA[<]]> ${contractStatus}
+        WHERE "paymentId" = #{paymentId} AND "contractStatus" <![CDATA[<]]> ${contractStatus}
     </update>
 
     <update id="updateCloseNewTimestamp">
