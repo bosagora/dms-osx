@@ -143,9 +143,9 @@ export class ApprovalScheduler extends Scheduler {
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) continue;
 
-            logger.info(`ApprovalScheduler.onNewPayment ${payment.paymentId}`);
             const wallet = this.findWallet(payment.account);
             if (wallet !== undefined) {
+                logger.info(`ApprovalScheduler.onNewPayment ${payment.paymentId}`);
                 const nonce = await contract.nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
                     new Wallet(wallet.privateKey),
@@ -203,10 +203,10 @@ export class ApprovalScheduler extends Scheduler {
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) continue;
 
-            logger.info(`ApprovalScheduler.onCancelPayment ${payment.paymentId}`);
             const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
             const wallet = this.findWallet(shopInfo.account);
             if (wallet !== undefined) {
+                logger.info(`ApprovalScheduler.onCancelPayment ${payment.paymentId}`);
                 const nonce = await contract.nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
                     new Wallet(wallet.privateKey),
@@ -254,6 +254,7 @@ export class ApprovalScheduler extends Scheduler {
             if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);
             if (wallet !== undefined) {
+                logger.info(`ApprovalScheduler.onUpdateTask ${task.taskId}`);
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);
 
@@ -286,6 +287,7 @@ export class ApprovalScheduler extends Scheduler {
             if (ContractUtils.getTimeStamp() - task.timestamp < this.config.relay.approvalSecond) continue;
             const wallet = this.findWallet(task.account);
             if (wallet !== undefined) {
+                logger.info(`ApprovalScheduler.onStatusTask ${task.taskId}`);
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);
 
