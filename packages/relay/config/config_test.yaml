@@ -5,7 +5,7 @@ server:
   # Address to which we bind (default: 127.0.0.1)
   address: "${HOST_IP}"
   # Port on which we bind (default: 7070)
-  port: "${HOST_PORT}"
+  port: 7777
 
 ################################################################################
 ##                               Database options                             ##
@@ -60,7 +60,7 @@ relay:
     - "${CERTIFIER10}"
   accessKey: "${ACCESS_KEY}"
   certifier: "${CERTIFIER}"
-  callbackEndpoint: "${CALLBACK_ENDPOINT}"
+  callbackEndpoint: "http://localhost:7777/callback"
   callbackAccessKey: "${CALLBACK_ACCESS_KEY}"
   paymentTimeoutSecond: 45
   approvalSecond: 3

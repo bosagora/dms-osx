@@ -48,20 +48,20 @@
             "status"            = ${status},
             "taskStatus"        = ${taskStatus},
             "timestamp"         = ${timestamp}
-        WHERE "taskId" = #{taskId}
+        WHERE "taskId" = #{taskId} AND "taskStatus" <![CDATA[<]]> ${taskStatus}
     </update>
 
     <update id="updateStatus">
         UPDATE tasks
         SET
             "taskStatus" = ${taskStatus}
-        WHERE "taskId" = #{taskId}
+        WHERE "taskId" = #{taskId} AND "taskStatus" <![CDATA[<]]> ${taskStatus}
     </update>
 
-    <update id="updateTimestamp">
+    <update id="forcedUpdateStatus">
         UPDATE tasks
         SET
-            "timestamp" = ${value}
+            "taskStatus" = ${taskStatus}
         WHERE "taskId" = #{taskId}
     </update>
 
@@ -69,8 +69,9 @@
         UPDATE tasks
         SET
             "txId" = #{txId},
-            "txTime" = ${txTime}
-        WHERE "taskId" = #{taskId}
+            "txTime" = ${txTime},
+            "taskStatus" = ${taskStatus}
+        WHERE "taskId" = #{taskId} AND "taskStatus" <![CDATA[<]]> ${taskStatus}
     </update>
 
     <select id="getTasksStatusOf">

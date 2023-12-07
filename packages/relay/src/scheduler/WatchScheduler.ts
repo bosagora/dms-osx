@@ -114,6 +114,7 @@ export class WatchScheduler extends Scheduler {
         return this._shopContract;
     }
 
+    /// region Payment
     private async onWatchPayment() {
         const payments = await this.storage.getPaymentsStatusOf([
             LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX,
@@ -331,7 +332,9 @@ export class WatchScheduler extends Scheduler {
             }
         }
     }
+    /// endregion
 
+    /// region Task
     private async onWatchTask() {
         const tasks = await this.storage.getTasksStatusOf(
             [TaskResultType.ADD, TaskResultType.UPDATE, TaskResultType.STATUS],
@@ -349,7 +352,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async onAddShop(task: ShopTaskData) {
-        logger.info("onAddShop");
+        logger.info(`WatchScheduler.onAddShop ${task.taskId}`);
         const contract = await this.getShopContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -373,19 +376,19 @@ export class WatchScheduler extends Scheduler {
                     );
                 } else {
                     task.taskStatus = ShopTaskStatus.REVERTED_TX;
-                    await this.storage.updateTaskStatus(task.taskId, task.taskStatus);
+                    await this.storage.forcedUpdateTaskStatus(task.taskId, task.taskStatus);
                 }
             }
         } catch (error) {
             task.taskStatus = ShopTaskStatus.REVERTED_TX;
-            await this.storage.updateTaskStatus(task.taskId, task.taskStatus);
+            await this.storage.forcedUpdateTaskStatus(task.taskId, task.taskStatus);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
     }
 
     private async onUpdateShop(task: ShopTaskData) {
-        logger.info("onUpdateShop");
+        logger.info(`WatchScheduler.onUpdateShop ${task.taskId}`);
         const contract = await this.getShopContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -409,19 +412,19 @@ export class WatchScheduler extends Scheduler {
                     );
                 } else {
                     task.taskStatus = ShopTaskStatus.REVERTED_TX;
-                    await this.storage.updateTaskStatus(task.taskId, task.taskStatus);
+                    await this.storage.forcedUpdateTaskStatus(task.taskId, task.taskStatus);
                 }
             }
         } catch (error) {
             task.taskStatus = ShopTaskStatus.REVERTED_TX;
-            await this.storage.updateTaskStatus(task.taskId, task.taskStatus);
+            await this.storage.forcedUpdateTaskStatus(task.taskId, task.taskStatus);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
     }
 
     private async onChangeStatusOfShop(task: ShopTaskData) {
-        logger.info("onChangeStatusOfShop");
+        logger.info(`WatchScheduler.onChangeStatusOfShop ${task.taskId}`);
         const contract = await this.getShopContract();
         const signerItem = await this.getRelaySigner();
         try {
@@ -441,12 +444,12 @@ export class WatchScheduler extends Scheduler {
                     );
                 } else {
                     task.taskStatus = ShopTaskStatus.REVERTED_TX;
-                    await this.storage.updateTaskStatus(task.taskId, task.taskStatus);
+                    await this.storage.forcedUpdateTaskStatus(task.taskId, task.taskStatus);
                 }
             }
         } catch (error) {
             task.taskStatus = ShopTaskStatus.REVERTED_TX;
-            await this.storage.updateTaskStatus(task.taskId, task.taskStatus);
+            await this.storage.forcedUpdateTaskStatus(task.taskId, task.taskStatus);
         } finally {
             this.releaseRelaySigner(signerItem);
         }
@@ -521,4 +524,5 @@ export class WatchScheduler extends Scheduler {
             account: item.account,
         };
     }
+    /// endregion
 }

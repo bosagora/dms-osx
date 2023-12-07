@@ -17,6 +17,7 @@ import {
     ContractShopStatus,
     ContractShopStatusEvent,
     ContractShopUpdateEvent,
+    LoyaltyPaymentTaskStatus,
     ShopTaskData,
     ShopTaskStatus,
     TaskResultCode,
@@ -239,13 +240,6 @@ export class ShopRouter {
             const account: string = String(req.body.account).trim();
             const signature: string = String(req.body.signature).trim(); // 서명
 
-            const contract = await this.getShopContract();
-            if (!ContractUtils.verifyShop(shopId, await contract.nonceOf(account), account, signature))
-                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
-
-            const tx = await contract.connect(signerItem.signer).add(shopId, name, currency, account, signature);
-
-            logger.http(`TxHash(/v1/shop/add): ${tx.hash}`);
             const taskId = ContractUtils.getTaskId(shopId);
             const item: ShopTaskData = {
                 taskId,
@@ -257,26 +251,46 @@ export class ShopRouter {
                 providePercent: 0,
                 status: ContractShopStatus.INVALID,
                 account,
-                taskStatus: ShopTaskStatus.SENT_TX,
+                taskStatus: ShopTaskStatus.OPENED,
                 timestamp: ContractUtils.getTimeStamp(),
-                txId: tx.hash,
-                txTime: ContractUtils.getTimeStamp(),
+                txId: "",
+                txTime: 0,
             };
             await this._storage.postTask(item);
-            await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime);
 
-            return res.status(200).json(
-                this.makeResponseData(0, {
-                    taskId: item.taskId,
-                    shopId: item.shopId,
-                    name: item.name,
-                    currency: item.currency,
-                    account: item.account,
-                    taskStatus: item.taskStatus,
-                    timestamp: item.timestamp,
-                    txHash: tx.hash,
-                })
-            );
+            try {
+                const contract = await this.getShopContract();
+                if (!ContractUtils.verifyShop(shopId, await contract.nonceOf(account), account, signature))
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+                const tx = await contract.connect(signerItem.signer).add(shopId, name, currency, account, signature);
+                logger.http(`TxHash(/v1/shop/add): ${tx.hash}`);
+
+                item.txId = tx.hash;
+                item.txTime = ContractUtils.getTimeStamp();
+                item.taskStatus = ShopTaskStatus.SENT_TX;
+                await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime, item.taskStatus);
+
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        taskId: item.taskId,
+                        shopId: item.shopId,
+                        name: item.name,
+                        currency: item.currency,
+                        account: item.account,
+                        taskStatus: item.taskStatus,
+                        timestamp: item.timestamp,
+                        txHash: tx.hash,
+                    })
+                );
+            } catch (error: any) {
+                item.taskStatus = ShopTaskStatus.FAILED_TX;
+                await this._storage.forcedUpdateTaskStatus(item.taskId, item.taskStatus);
+
+                const msg = ResponseMessage.getEVMErrorMessage(error);
+                logger.error(`POST /v1/shop/add : ${msg.error.message}`);
+                return res.status(200).json(msg);
+            }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/add : ${msg.error.message}`);
@@ -473,11 +487,9 @@ export class ShopRouter {
                             );
 
                         item.taskStatus = ShopTaskStatus.SENT_TX;
-                        await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
-
                         item.txId = tx.hash;
                         item.txTime = ContractUtils.getTimeStamp();
-                        await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime);
+                        await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime, item.taskStatus);
 
                         return res.status(200).json(
                             this.makeResponseData(0, {
@@ -494,7 +506,7 @@ export class ShopRouter {
                         );
                     } catch (error) {
                         item.taskStatus = ShopTaskStatus.FAILED_TX;
-                        await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
+                        await this._storage.forcedUpdateTaskStatus(item.taskId, item.taskStatus);
 
                         const msg = ResponseMessage.getEVMErrorMessage(error);
                         logger.error(`POST /v1/shop/update/approval : ${msg.error.message}`);
@@ -675,11 +687,9 @@ export class ShopRouter {
                             .changeStatus(item.shopId, item.status, item.account, signature);
 
                         item.taskStatus = ShopTaskStatus.SENT_TX;
-                        await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
-
                         item.txId = tx.hash;
                         item.txTime = ContractUtils.getTimeStamp();
-                        await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime);
+                        await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime, item.taskStatus);
 
                         return res.status(200).json(
                             this.makeResponseData(0, {
@@ -693,7 +703,7 @@ export class ShopRouter {
                         );
                     } catch (error) {
                         item.taskStatus = ShopTaskStatus.FAILED_TX;
-                        await this._storage.updateTaskStatus(item.taskId, item.taskStatus);
+                        await this._storage.forcedUpdateTaskStatus(item.taskId, item.taskStatus);
 
                         const msg = ResponseMessage.getEVMErrorMessage(error);
                         logger.error(`POST /v1/shop/status/approval : ${msg.error.message}`);
@@ -838,42 +848,6 @@ export class ShopRouter {
                 provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
                 providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
-                status: parsedLog.args.status,
-            };
-        } else return undefined;
-    }
-
-    private async waitAndUpdateEvent(
-        contract: ShopCollection,
-        tx: ContractTransaction
-    ): Promise<ContractShopUpdateEvent | undefined> {
-        const contractReceipt = await tx.wait();
-        const log = ContractUtils.findLog(contractReceipt, contract.interface, "UpdatedShop");
-        if (log !== undefined) {
-            const parsedLog = contract.interface.parseLog(log);
-
-            return {
-                shopId: parsedLog.args.shopId,
-                name: parsedLog.args.name,
-                currency: parsedLog.args.currency,
-                provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
-                providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
-                account: parsedLog.args.account,
-                status: parsedLog.args.status,
-            };
-        } else return undefined;
-    }
-
-    private async waitAndChangeStatusEvent(
-        contract: ShopCollection,
-        tx: ContractTransaction
-    ): Promise<ContractShopStatusEvent | undefined> {
-        const contractReceipt = await tx.wait();
-        const log = ContractUtils.findLog(contractReceipt, contract.interface, "ChangedShopStatus");
-        if (log !== undefined) {
-            const parsedLog = contract.interface.parseLog(log);
-            return {
-                shopId: parsedLog.args.shopId,
                 status: parsedLog.args.status,
             };
         } else return undefined;
