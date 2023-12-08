@@ -610,7 +610,7 @@ export class PaymentRouter {
                 contents.push(`구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)}`);
                 if (item.loyaltyType === ContractLoyaltyType.POINT)
                     contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)}`);
-                else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 0)}`);
+                else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)}`);
 
                 await this._sender.send(to, title, contents.join(", "), data);
             } else {
@@ -1100,7 +1100,7 @@ export class PaymentRouter {
                     contents.push(`구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)}`);
                     if (item.loyaltyType === ContractLoyaltyType.POINT)
                         contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)}`);
-                    else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 0)}`);
+                    else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)}`);
 
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
