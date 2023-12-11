@@ -1,7 +1,16 @@
 import { ContractShopStatus } from "../src/types";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { Certifier, CurrencyRate, Ledger, PhoneLinkCollection, Shop, Token, Validator } from "../typechain-types";
+import {
+    Certifier,
+    CurrencyRate,
+    Ledger,
+    LoyaltyProvider,
+    PhoneLinkCollection,
+    Shop,
+    Token,
+    Validator,
+} from "../typechain-types";
 
 import "@nomicfoundation/hardhat-ethers";
 import "@openzeppelin/hardhat-upgrades";
@@ -77,13 +86,14 @@ describe("Test for Ledger", () => {
         ContractUtils.getPhoneHash("08201012341005"),
         ContractUtils.getPhoneHash("08201012341006"),
     ];
+    let certifierContract: Certifier;
     let validatorContract: Validator;
     let tokenContract: Token;
     let ledgerContract: Ledger;
     let linkContract: PhoneLinkCollection;
     let currencyContract: CurrencyRate;
     let shopContract: Shop;
-    let certifierContract: Certifier;
+    let loyaltyProviderContract: LoyaltyProvider;
 
     const multiple = 1000000000n;
     const price = 150n * multiple;
@@ -160,17 +170,40 @@ describe("Test for Ledger", () => {
         await certifierContract.connect(certifier).grantCertifier(relay.address);
     };
 
+    const deployLoyaltyProvider = async () => {
+        const factory = await ethers.getContractFactory("LoyaltyProvider");
+        loyaltyProviderContract = (await upgrades.deployProxy(
+            factory.connect(deployer),
+            [
+                await validatorContract.getAddress(),
+                await linkContract.getAddress(),
+                await currencyContract.getAddress(),
+            ],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as LoyaltyProvider;
+        await loyaltyProviderContract.waitForDeployment();
+    };
+
     const deployShopCollection = async () => {
         const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
             factory.connect(deployer),
-            [await certifierContract.getAddress(), await currencyContract.getAddress()],
+            [
+                await certifierContract.getAddress(),
+                await currencyContract.getAddress(),
+                await loyaltyProviderContract.getAddress(),
+                await loyaltyProviderContract.getAddress(),
+            ],
             {
                 initializer: "initialize",
                 kind: "uups",
             }
         )) as unknown as Shop;
         await shopContract.waitForDeployment();
+        await loyaltyProviderContract.connect(deployer).setShop(await shopContract.getAddress());
     };
 
     const deployLedger = async () => {
@@ -187,6 +220,8 @@ describe("Test for Ledger", () => {
                 await linkContract.getAddress(),
                 await currencyContract.getAddress(),
                 await shopContract.getAddress(),
+                await loyaltyProviderContract.getAddress(),
+                await loyaltyProviderContract.getAddress(),
             ],
             {
                 initializer: "initialize",
@@ -194,7 +229,8 @@ describe("Test for Ledger", () => {
             }
         )) as unknown as Ledger;
         await ledgerContract.waitForDeployment();
-        await shopContract.connect(deployer).setLedgerAddress(await ledgerContract.getAddress());
+        await shopContract.connect(deployer).setLedger(await ledgerContract.getAddress());
+        await loyaltyProviderContract.connect(deployer).setLedger(await ledgerContract.getAddress());
     };
 
     const addShopData = async (shopData: IShopData[]) => {
@@ -253,6 +289,7 @@ describe("Test for Ledger", () => {
         await deployLinkCollection();
         await deployCurrencyRate();
         await deployCertifier();
+        await deployLoyaltyProvider();
         await deployShopCollection();
         await deployLedger();
         await addShopData(shopData);
@@ -413,7 +450,7 @@ describe("Test for Ledger", () => {
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
                     await expect(
-                        ledgerContract.connect(deployer).savePurchase({
+                        loyaltyProviderContract.connect(deployer).savePurchase({
                             purchaseId: purchase.purchaseId,
                             timestamp: purchase.timestamp,
                             amount: purchaseAmount,
@@ -439,7 +476,7 @@ describe("Test for Ledger", () => {
                             : AddressZero;
                     if (userAccount !== AddressZero) {
                         await expect(
-                            ledgerContract.connect(validatorWallets[0]).savePurchase({
+                            loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                                 purchaseId: purchase.purchaseId,
                                 timestamp: purchase.timestamp,
                                 amount: purchaseAmount,
@@ -450,7 +487,7 @@ describe("Test for Ledger", () => {
                                 phone: phoneHash,
                             })
                         )
-                            .to.emit(ledgerContract, "SavedPurchase")
+                            .to.emit(loyaltyProviderContract, "SavedPurchase")
                             .withArgs(
                                 purchase.purchaseId,
                                 purchase.timestamp,
@@ -464,7 +501,7 @@ describe("Test for Ledger", () => {
                             .emit(ledgerContract, "ProvidedPoint");
                     } else {
                         await expect(
-                            ledgerContract.connect(validatorWallets[0]).savePurchase({
+                            loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                                 purchaseId: purchase.purchaseId,
                                 timestamp: purchase.timestamp,
                                 amount: purchaseAmount,
@@ -475,7 +512,7 @@ describe("Test for Ledger", () => {
                                 phone: phoneHash,
                             })
                         )
-                            .to.emit(ledgerContract, "SavedPurchase")
+                            .to.emit(loyaltyProviderContract, "SavedPurchase")
                             .withArgs(
                                 purchase.purchaseId,
                                 purchase.timestamp,
@@ -537,7 +574,7 @@ describe("Test for Ledger", () => {
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -548,7 +585,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -602,7 +639,7 @@ describe("Test for Ledger", () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -613,7 +650,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -690,7 +727,7 @@ describe("Test for Ledger", () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -701,7 +738,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -750,7 +787,7 @@ describe("Test for Ledger", () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -761,7 +798,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -819,7 +856,7 @@ describe("Test for Ledger", () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -830,7 +867,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -875,7 +912,7 @@ describe("Test for Ledger", () => {
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -886,7 +923,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -940,7 +977,7 @@ describe("Test for Ledger", () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -951,7 +988,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -1029,7 +1066,7 @@ describe("Test for Ledger", () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -1040,7 +1077,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -1085,7 +1122,7 @@ describe("Test for Ledger", () => {
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
-                    ledgerContract.connect(validatorWallets[0]).savePurchase({
+                    loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -1096,7 +1133,7 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(loyaltyProviderContract, "SavedPurchase")
                     .withArgs(
                         purchase.purchaseId,
                         purchase.timestamp,
@@ -2008,7 +2045,7 @@ describe("Test for Ledger", () => {
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
                     await expect(
-                        ledgerContract.connect(validatorWallets[0]).savePurchase({
+                        loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                             purchaseId: purchase.purchaseId,
                             timestamp: purchase.timestamp,
                             amount: purchaseAmount,
@@ -2019,7 +2056,7 @@ describe("Test for Ledger", () => {
                             phone: phoneHash,
                         })
                     )
-                        .to.emit(ledgerContract, "SavedPurchase")
+                        .to.emit(loyaltyProviderContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
                             purchase.timestamp,
@@ -2428,7 +2465,7 @@ describe("Test for Ledger", () => {
                     const loyaltyPoint = (((purchaseAmount * rate) / multiple) * shop.providePercent) / 100n;
                     const loyaltyValue = (purchaseAmount * shop.providePercent) / 100n;
                     await expect(
-                        ledgerContract.connect(validatorWallets[0]).savePurchase({
+                        loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                             purchaseId: purchase.purchaseId,
                             timestamp: purchase.timestamp,
                             amount: purchaseAmount,
@@ -2439,7 +2476,7 @@ describe("Test for Ledger", () => {
                             phone: phoneHash,
                         })
                     )
-                        .to.emit(ledgerContract, "SavedPurchase")
+                        .to.emit(loyaltyProviderContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
                             purchase.timestamp,
@@ -2626,6 +2663,7 @@ describe("Test for Ledger", () => {
                 "SetRate"
             );
             await deployCertifier();
+            await deployLoyaltyProvider();
             await deployShopCollection();
             await deployLedger();
             await addShopData(shopData);
@@ -2641,7 +2679,7 @@ describe("Test for Ledger", () => {
                     const amt = (purchaseAmount * shop.providePercent) / 100n;
                     const userAccount = userData[purchase.userIndex].address.trim();
                     await expect(
-                        ledgerContract.connect(validatorWallets[0]).savePurchase({
+                        loyaltyProviderContract.connect(validatorWallets[0]).savePurchase({
                             purchaseId: purchase.purchaseId,
                             timestamp: purchase.timestamp,
                             amount: purchaseAmount,
@@ -2652,7 +2690,7 @@ describe("Test for Ledger", () => {
                             phone: phoneHash,
                         })
                     )
-                        .to.emit(ledgerContract, "SavedPurchase")
+                        .to.emit(loyaltyProviderContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
                             purchase.timestamp,

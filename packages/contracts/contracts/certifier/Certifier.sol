@@ -6,8 +6,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "../interfaces/ICertifier.sol";
 
-contract Certifier is Initializable, AccessControlUpgradeable, OwnableUpgradeable, UUPSUpgradeable {
+contract Certifier is Initializable, AccessControlUpgradeable, OwnableUpgradeable, UUPSUpgradeable, ICertifier {
     bytes32 public constant CERTIFIER_ADMIN_ROLE = keccak256("CERTIFIER_ADMIN_ROLE");
     bytes32 public constant CERTIFIER_ROLE = keccak256("CERTIFIER_ROLE");
 
@@ -22,15 +23,13 @@ contract Certifier is Initializable, AccessControlUpgradeable, OwnableUpgradeabl
         _grantRole(DEFAULT_ADMIN_ROLE, certifier);
         _grantRole(CERTIFIER_ADMIN_ROLE, certifier);
         _grantRole(CERTIFIER_ROLE, certifier);
-
-        __Ownable_init_unchained(_msgSender());
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override {
         require(_msgSender() == owner(), "Unauthorized access");
     }
 
-    function isCertifier(address account) public view returns (bool) {
+    function isCertifier(address account) external view virtual returns (bool) {
         return hasRole(CERTIFIER_ROLE, account);
     }
 

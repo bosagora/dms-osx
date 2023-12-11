@@ -7,9 +7,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./ValidatorStorage.sol";
+import "../interfaces/IValidator.sol";
 
 /// @notice 검증자들을 저장하는 컨트랙트
-contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IValidator {
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event AddedValidator(address validator, uint256 start, uint256 balance, Status status);
     /// @notice 자금이 입급될 때 발생되는 이벤트
@@ -105,16 +106,16 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
 
     /// @notice 등록된 검증자를 리턴한다.
     /// @param _idx 배열의 순번
-    function itemOf(uint256 _idx) public view virtual returns (address) {
+    function itemOf(uint256 _idx) external view virtual returns (address) {
         return items[_idx];
     }
 
     /// @notice 등록된 검증자의 수를 리턴합니다.
-    function itemsLength() public view virtual returns (uint256) {
+    function itemsLength() external view virtual returns (uint256) {
         return items.length;
     }
 
-    function isActiveValidator(address _account) public view virtual returns (bool) {
+    function isActiveValidator(address _account) external view virtual returns (bool) {
         ValidatorData memory item = validators[_account];
 
         if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
@@ -125,7 +126,12 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
     }
 
     /// @notice 유효한 검증자의 수를 리턴합니다.
-    function activeItemsLength() public view virtual returns (uint256) {
+    function activeItemsLength() external view virtual returns (uint256) {
+        return _activeItemsLength();
+    }
+
+    /// @notice 유효한 검증자의 수를 리턴합니다.
+    function _activeItemsLength() internal view virtual returns (uint256) {
         uint256 value = 0;
         for (uint256 i = 0; i < items.length; ++i) {
             ValidatorData memory item = validators[items[i]];
@@ -138,7 +144,7 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
 
     /// @notice 검증자의 데이타를 리턴합니다.
     /// @param _account 지갑주소
-    function validatorOf(address _account) public view virtual returns (ValidatorData memory) {
+    function validatorOf(address _account) external view virtual returns (ValidatorData memory) {
         return validators[_account];
     }
 
@@ -148,7 +154,7 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
         require(item.validator == _msgSender(), "1000");
         require(item.status == Status.ACTIVE && item.start <= block.timestamp, "1001");
 
-        require(activeItemsLength() > 1, "1010");
+        require(_activeItemsLength() > 1, "1010");
 
         validators[_msgSender()].status = Status.EXIT;
 

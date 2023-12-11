@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.20;
 
-import "../validator/Validator.sol";
+import "../interfaces/IValidator.sol";
 
 /// @notice 토큰 가격을 제공하는 스마트컨트랙트
 contract CurrencyStorage {
@@ -11,6 +11,6 @@ contract CurrencyStorage {
     uint256 public constant MULTIPLE = 1000000000;
     mapping(string => uint256) internal rates;
 
-    Validator internal validator;
+    IValidator internal validator;
     string internal tokenSymbol;
 }

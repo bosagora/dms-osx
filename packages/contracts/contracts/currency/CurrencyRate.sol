@@ -5,10 +5,11 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "../interfaces/ICurrencyRate.sol";
 import "./CurrencyStorage.sol";
 
 /// @notice 토큰 가격을 제공하는 스마트컨트랙트
-contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ICurrencyRate {
     /// @notice 환률이 저장될 때 발생되는 이벤트
     event SetRate(string currency, uint256 rate);
 
@@ -19,7 +20,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(_msgSender());
 
-        validator = Validator(_validator);
+        validator = IValidator(_validator);
         tokenSymbol = _tokenSymbol;
 
         rates["krw"] = MULTIPLE;
