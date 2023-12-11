@@ -3,19 +3,15 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "del-osx-artifacts-v2/contracts/PhoneLinkCollection.sol";
+import "del-osx-artifacts-v2/contracts/interfaces/IPhoneLinkCollection.sol";
 
-import "../certifier/Certifier.sol";
-import "../currency/CurrencyRate.sol";
-import "../validator/Validator.sol";
-import "../shop/Shop.sol";
+import "../interfaces/ICertifier.sol";
+import "../interfaces/ICurrencyRate.sol";
+import "../interfaces/IValidator.sol";
+import "../interfaces/IShop.sol";
+import "../interfaces/ILedger.sol";
 
 contract LedgerStorage {
-    enum LoyaltyType {
-        POINT,
-        TOKEN
-    }
-
     enum LoyaltyPaymentStatus {
         INVALID,
         OPENED_PAYMENT,
@@ -27,14 +23,13 @@ contract LedgerStorage {
     }
 
     /// @notice Hash value of a blank string
-    bytes32 public constant NULL = 0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c;
     uint32 public constant MAX_FEE = 5;
 
     mapping(bytes32 => uint256) internal unPayablePointBalances;
     mapping(address => uint256) internal pointBalances;
     mapping(address => uint256) internal tokenBalances;
     mapping(address => uint256) internal nonce;
-    mapping(address => LoyaltyType) internal loyaltyTypes;
+    mapping(address => ILedger.LoyaltyType) internal loyaltyTypes;
 
     struct LoyaltyPaymentData {
         bytes32 paymentId;
@@ -43,7 +38,7 @@ contract LedgerStorage {
         bytes32 shopId;
         address account;
         uint256 timestamp;
-        LoyaltyType loyaltyType;
+        ILedger.LoyaltyType loyaltyType;
         uint256 paidPoint;
         uint256 paidToken;
         uint256 paidValue;
@@ -58,13 +53,15 @@ contract LedgerStorage {
     address public foundationAccount;
     address public settlementAccount;
     address public feeAccount;
+    address public providerAddress;
+    address public consumerAddress;
     uint32 public fee;
     address public temporaryAddress;
 
+    IPhoneLinkCollection internal linkContract;
     IERC20 internal tokenContract;
-    Validator internal validatorContract;
-    PhoneLinkCollection internal linkContract;
-    CurrencyRate internal currencyRateContract;
-    Shop internal shopContract;
-    Certifier internal certifierContract;
+    IValidator internal validatorContract;
+    ICurrencyRate internal currencyRateContract;
+    IShop internal shopContract;
+    ICertifier internal certifierContract;
 }

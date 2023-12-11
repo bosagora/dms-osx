@@ -1,7 +1,7 @@
 import { ContractShopStatus } from "../src/types";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { Certifier, CurrencyRate, Shop, Token, Validator } from "../typechain-types";
+import { Certifier, CurrencyRate, LoyaltyProvider, Shop, Token, Validator } from "../typechain-types";
 
 import "@nomicfoundation/hardhat-ethers";
 import "@openzeppelin/hardhat-upgrades";
@@ -11,6 +11,8 @@ import assert from "assert";
 import { expect } from "chai";
 
 import { HardhatAccount } from "../src/HardhatAccount";
+
+import { AddressZero } from "@ethersproject/constants";
 
 describe("Test for Shop", () => {
     const accounts = HardhatAccount.keys.map((m) => new ethers.Wallet(m, ethers.provider));
@@ -195,7 +197,7 @@ describe("Test for Shop", () => {
         const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
             factory.connect(deployer),
-            [await certifierContract.getAddress(), await currencyContract.getAddress()],
+            [await certifierContract.getAddress(), await currencyContract.getAddress(), AddressZero, AddressZero],
             {
                 initializer: "initialize",
                 kind: "uups",

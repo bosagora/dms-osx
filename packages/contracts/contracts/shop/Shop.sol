@@ -9,12 +9,13 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-import "../certifier/Certifier.sol";
-import "../currency/CurrencyRate.sol";
+import "../interfaces/ICertifier.sol";
+import "../interfaces/ICurrencyRate.sol";
+import "../interfaces/IShop.sol";
 import "./ShopStorage.sol";
 
 /// @notice 상점컬랙션
-contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IShop {
     /// @notice 상점이 추가될 때 발생되는 이벤트
     event AddedShop(
         bytes32 shopId,
@@ -71,12 +72,20 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     );
 
     /// @notice 생성자
-    function initialize(address _certifier, address _currencyRate) external initializer {
+    function initialize(
+        address _certifier,
+        address _currencyRate,
+        address _providerAddress,
+        address _consumerAddress
+    ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(_msgSender());
 
-        certifier = Certifier(_certifier);
-        currencyRate = CurrencyRate(_currencyRate);
+        providerAddress = _providerAddress;
+        consumerAddress = _consumerAddress;
+
+        certifier = ICertifier(_certifier);
+        currencyRate = ICurrencyRate(_currencyRate);
 
         ledgerAddress = address(0x00);
         deployer = _msgSender();
@@ -87,7 +96,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     }
 
     /// @notice 원장 컨트랙트의 주소를 호출한다.
-    function setLedgerAddress(address _ledgerAddress) public {
+    function setLedger(address _ledgerAddress) public {
         require(_msgSender() == deployer, "1050");
         ledgerAddress = _ledgerAddress;
         deployer = address(0x00);
@@ -99,9 +108,19 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         _;
     }
 
+    modifier onlyProvider() {
+        require(_msgSender() == providerAddress, "1005");
+        _;
+    }
+
+    modifier onlyConsumer() {
+        require(_msgSender() == consumerAddress, "1006");
+        _;
+    }
+
     /// @notice 이용할 수 있는 아이디 인지 알려준다.
     /// @param _shopId 상점 아이디
-    function isAvailableId(bytes32 _shopId) public view virtual returns (bool) {
+    function isAvailableId(bytes32 _shopId) public view override returns (bool) {
         if (shops[_shopId].status == ShopStatus.INVALID) return true;
         else return false;
     }
@@ -255,7 +274,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 _shopId,
         uint256 _value,
         string calldata _purchaseId
-    ) external virtual onlyLedger {
+    ) external virtual onlyProvider {
         if (shops[_shopId].status != ShopStatus.INVALID) {
             shops[_shopId].providedAmount += _value;
             emit IncreasedProvidedAmount(
@@ -380,19 +399,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
-        _openWithdrawal(_shopId, _amount, _account);
-    }
-
-    /// @notice 정산금의 인출을 요청한다.
-    /// @param _shopId 상점아이디
-    /// @param _amount 인출금
-    /// @dev 상점주에 의해 직접 호출됩니다.
-    function openWithdrawalDirect(bytes32 _shopId, uint256 _amount) external {
-        require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
-        _openWithdrawal(_shopId, _amount, _msgSender());
-    }
-
-    function _openWithdrawal(bytes32 _shopId, uint256 _amount, address _account) internal {
         ShopData memory shop = shops[_shopId];
 
         require(shop.account == _account, "1050");
@@ -416,17 +422,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
-        _closeWithdrawal(_shopId, _account);
-    }
-
-    /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
-    /// @param _shopId 상점아이디
-    function closeWithdrawalDirect(bytes32 _shopId) external {
-        require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
-        _closeWithdrawal(_shopId, _msgSender());
-    }
-
-    function _closeWithdrawal(bytes32 _shopId, address _account) internal {
         ShopData memory shop = shops[_shopId];
 
         require(shop.account == _account, "1050");

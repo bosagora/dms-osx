@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -11,16 +9,15 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-import "del-osx-artifacts-v2/contracts/PhoneLinkCollection.sol";
-
-import "../certifier/Certifier.sol";
-import "../currency/CurrencyRate.sol";
-import "../validator/Validator.sol";
-import "../shop/Shop.sol";
+import "../interfaces/ICertifier.sol";
+import "../interfaces/ICurrencyRate.sol";
+import "../interfaces/IValidator.sol";
+import "../interfaces/IShop.sol";
+import "../interfaces/ILedger.sol";
 import "./LedgerStorage.sol";
 
 /// @notice 포인트와 토큰의 원장
-contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ILedger {
     struct PurchaseData {
         string purchaseId;
         uint256 timestamp;
@@ -41,18 +38,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address account;
         bytes signature;
     }
-
-    /// @notice 검증자가 추가될 때 발생되는 이벤트
-    event SavedPurchase(
-        string purchaseId,
-        uint256 timestamp,
-        uint256 amount,
-        string currency,
-        bytes32 shopId,
-        uint32 method,
-        address account,
-        bytes32 phone
-    );
 
     /// @notice 사용가능한 포인트로 변환될 때 발생되는 이벤트
     event ChangedToPayablePoint(
@@ -136,7 +121,9 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address _validatorAddress,
         address _linkAddress,
         address _currencyRateAddress,
-        address _shopAddress
+        address _shopAddress,
+        address _providerAddress,
+        address _consumerAddress
     ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(_msgSender());
@@ -144,13 +131,15 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         foundationAccount = _foundationAccount;
         settlementAccount = _settlementAccount;
         feeAccount = _feeAccount;
+        providerAddress = _providerAddress;
+        consumerAddress = _consumerAddress;
 
-        certifierContract = Certifier(_certifierAddress);
+        certifierContract = ICertifier(_certifierAddress);
         tokenContract = IERC20(_tokenAddress);
-        validatorContract = Validator(_validatorAddress);
-        linkContract = PhoneLinkCollection(_linkAddress);
-        currencyRateContract = CurrencyRate(_currencyRateAddress);
-        shopContract = Shop(_shopAddress);
+        validatorContract = IValidator(_validatorAddress);
+        linkContract = IPhoneLinkCollection(_linkAddress);
+        currencyRateContract = ICurrencyRate(_currencyRateAddress);
+        shopContract = IShop(_shopAddress);
         fee = MAX_FEE;
 
         loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
@@ -169,92 +158,14 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         _;
     }
 
-    /// @notice 구매내역을 저장합니다.
-    /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
-    function savePurchase(PurchaseData calldata data) external onlyValidator(_msgSender()) {
-        if (data.method == 0) {
-            Shop.ShopData memory shop = shopContract.shopOf(data.shopId);
-            if (shop.status == ShopStorage.ShopStatus.ACTIVE) {
-                if (data.account != address(0x0)) {
-                    uint256 loyaltyValue = (data.amount * shop.providePercent) / 100;
-                    uint256 loyaltyPoint = currencyRateContract.convertCurrencyToPoint(loyaltyValue, data.currency);
-                    if (loyaltyTypes[data.account] == LoyaltyType.POINT) {
-                        providePoint(
-                            data.account,
-                            loyaltyPoint,
-                            loyaltyValue,
-                            data.currency,
-                            data.purchaseId,
-                            data.shopId
-                        );
-                    } else {
-                        provideToken(
-                            data.account,
-                            loyaltyPoint,
-                            loyaltyValue,
-                            data.currency,
-                            data.purchaseId,
-                            data.shopId
-                        );
-                    }
-                    shopContract.addProvidedAmount(
-                        data.shopId,
-                        currencyRateContract.convertCurrency(loyaltyValue, data.currency, shop.currency),
-                        data.purchaseId
-                    );
-                } else if (data.phone != NULL) {
-                    uint256 loyaltyValue = (data.amount * shop.providePercent) / 100;
-                    uint256 loyaltyPoint = currencyRateContract.convertCurrencyToPoint(loyaltyValue, data.currency);
-                    address account = linkContract.toAddress(data.phone);
-                    if (account == address(0x00)) {
-                        provideUnPayablePoint(
-                            data.phone,
-                            loyaltyPoint,
-                            loyaltyValue,
-                            data.currency,
-                            data.purchaseId,
-                            data.shopId
-                        );
-                    } else {
-                        if (loyaltyTypes[account] == LoyaltyType.POINT) {
-                            providePoint(
-                                account,
-                                loyaltyPoint,
-                                loyaltyValue,
-                                data.currency,
-                                data.purchaseId,
-                                data.shopId
-                            );
-                        } else {
-                            provideToken(
-                                account,
-                                loyaltyPoint,
-                                loyaltyValue,
-                                data.currency,
-                                data.purchaseId,
-                                data.shopId
-                            );
-                        }
-                    }
-                    shopContract.addProvidedAmount(
-                        data.shopId,
-                        currencyRateContract.convertCurrency(loyaltyValue, data.currency, shop.currency),
-                        data.purchaseId
-                    );
-                }
-            }
-        }
+    modifier onlyProvider() {
+        require(_msgSender() == providerAddress, "1005");
+        _;
+    }
 
-        emit SavedPurchase(
-            data.purchaseId,
-            data.timestamp,
-            data.amount,
-            data.currency,
-            data.shopId,
-            data.method,
-            data.account,
-            data.phone
-        );
+    modifier onlyConsumer() {
+        require(_msgSender() == consumerAddress, "1006");
+        _;
     }
 
     /// @notice 이용할 수 있는 지불 아이디 인지 알려준다.
@@ -426,8 +337,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     function _settleShop(bytes32 _paymentId) internal {
-        Shop.ShopData memory shop = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
-        if (shop.status == ShopStorage.ShopStatus.ACTIVE) {
+        IShop.ShopData memory shop = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
+        if (shop.status == IShop.ShopStatus.ACTIVE) {
             loyaltyPayments[_paymentId].usedValueShop = currencyRateContract.convertCurrency(
                 loyaltyPayments[_paymentId].paidValue,
                 loyaltyPayments[_paymentId].currency,
@@ -477,7 +388,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         );
         require(block.timestamp <= loyaltyPayments[_paymentId].timestamp + 86400 * 7, "1534");
 
-        Shop.ShopData memory shopInfo = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
+        IShop.ShopData memory shopInfo = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
         bytes32 dataHash = keccak256(
             abi.encode(_paymentId, loyaltyPayments[_paymentId].purchaseId, shopInfo.account, nonce[shopInfo.account])
         );
@@ -575,7 +486,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     /// @notice 토큰을 예치합니다.
     /// @param _amount 금액
-    function deposit(uint256 _amount) external {
+    function deposit(uint256 _amount) external virtual {
         require(loyaltyTypes[_msgSender()] == LoyaltyType.TOKEN, "1520");
         require(_amount <= tokenContract.allowance(_msgSender(), address(this)), "1512");
         tokenContract.transferFrom(_msgSender(), address(this), _amount);
@@ -592,7 +503,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     /// @notice 토큰을 인출합니다.
     /// @param _amount 금액
-    function withdraw(uint256 _amount) external {
+    function withdraw(uint256 _amount) external virtual {
         require(_amount <= tokenBalances[_msgSender()], "1511");
         tokenContract.transfer(_msgSender(), _amount);
 
@@ -608,7 +519,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     /// @notice 사용가능한 포인트로 전환합니다.
     /// @dev 중계서버를 통해서 호출됩니다.
-    function changeToPayablePoint(bytes32 _phone, address _account, bytes calldata _signature) external {
+    function changeToPayablePoint(bytes32 _phone, address _account, bytes calldata _signature) external virtual {
         bytes32 dataHash = keccak256(abi.encode(_phone, _account, nonce[_account]));
         require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
@@ -635,7 +546,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     /// @param _account 지갑주소
     /// @param _signature 서명
     /// @dev 중계서버를 통해서 호출됩니다.
-    function changeToLoyaltyToken(address _account, bytes calldata _signature) external {
+    function changeToLoyaltyToken(address _account, bytes calldata _signature) external virtual {
         bytes32 dataHash = keccak256(abi.encode(_account, nonce[_account]));
         require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
@@ -665,33 +576,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
-    /// @param _account 사용자의 지갑주소
-    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
-    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
-    /// @param _purchaseId 구매 아이디
-    /// @param _shopId 구매한 가맹점 아이디
-    function providePoint(
-        address _account,
-        uint256 _loyaltyPoint,
-        uint256 _loyaltyValue,
-        string calldata _currency,
-        string calldata _purchaseId,
-        bytes32 _shopId
-    ) internal {
-        pointBalances[_account] += _loyaltyPoint;
-        emit ProvidedPoint(
-            _account,
-            _loyaltyPoint,
-            _loyaltyValue,
-            _currency,
-            pointBalances[_account],
-            _purchaseId,
-            _shopId
-        );
-    }
-
-    /// @notice 포인트를 지급합니다.
-    /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _phone 전화번호 해시
     /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
     /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
@@ -704,7 +588,18 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         string calldata _currency,
         string calldata _purchaseId,
         bytes32 _shopId
-    ) internal {
+    ) external virtual onlyProvider {
+        _provideUnPayablePoint(_phone, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+    }
+
+    function _provideUnPayablePoint(
+        bytes32 _phone,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal virtual {
         unPayablePointBalances[_phone] += _loyaltyPoint;
         emit ProvidedUnPayablePoint(
             _phone,
@@ -712,6 +607,44 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
             _loyaltyValue,
             _currency,
             unPayablePointBalances[_phone],
+            _purchaseId,
+            _shopId
+        );
+    }
+
+    /// @notice 포인트를 지급합니다.
+    /// @dev 구매 데이터를 확인한 후 호출됩니다.
+    /// @param _account 사용자의 지갑주소
+    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
+    /// @param _purchaseId 구매 아이디
+    /// @param _shopId 구매한 가맹점 아이디
+    function providePoint(
+        address _account,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) external virtual onlyProvider {
+        _providePoint(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+    }
+
+    function _providePoint(
+        address _account,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal virtual {
+        pointBalances[_account] += _loyaltyPoint;
+        emit ProvidedPoint(
+            _account,
+            _loyaltyPoint,
+            _loyaltyValue,
+            _currency,
+            pointBalances[_account],
             _purchaseId,
             _shopId
         );
@@ -731,7 +664,18 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         string calldata _currency,
         string calldata _purchaseId,
         bytes32 _shopId
-    ) internal {
+    ) external virtual onlyProvider {
+        _provideToken(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+    }
+
+    function _provideToken(
+        address _account,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal virtual {
         uint256 amountToken = currencyRateContract.convertPointToToken(_loyaltyPoint);
 
         require(tokenBalances[foundationAccount] >= amountToken, "1510");
@@ -743,37 +687,37 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     /// @notice 포인트의 잔고를 리턴한다
     /// @param _hash 전화번호의 해시
-    function unPayablePointBalanceOf(bytes32 _hash) external view returns (uint256) {
+    function unPayablePointBalanceOf(bytes32 _hash) external view virtual returns (uint256) {
         return unPayablePointBalances[_hash];
     }
 
     /// @notice 포인트의 잔고를 리턴한다
     /// @param _account 지갑주소
-    function pointBalanceOf(address _account) external view returns (uint256) {
+    function pointBalanceOf(address _account) external view virtual returns (uint256) {
         return pointBalances[_account];
     }
 
     /// @notice 토큰의 잔고를 리턴한다
     /// @param _account 지갑주소
-    function tokenBalanceOf(address _account) external view returns (uint256) {
+    function tokenBalanceOf(address _account) external view virtual returns (uint256) {
         return tokenBalances[_account];
     }
 
     /// @notice nonce를  리턴한다
     /// @param _account 지갑주소
-    function nonceOf(address _account) external view returns (uint256) {
+    function nonceOf(address _account) external view virtual returns (uint256) {
         return nonce[_account];
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
     /// @param _account 지갑주소
-    function loyaltyTypeOf(address _account) external view returns (LoyaltyType) {
+    function loyaltyTypeOf(address _account) external view virtual returns (LoyaltyType) {
         return loyaltyTypes[_account];
     }
 
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.
     /// @param _fee % 단위 입니다.
-    function setFee(uint32 _fee) external {
+    function setFee(uint32 _fee) external virtual {
         require(_fee <= MAX_FEE, "1521");
         require(_msgSender() == feeAccount, "1050");
         fee = _fee;

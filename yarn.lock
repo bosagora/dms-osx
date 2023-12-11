@@ -2914,10 +2914,10 @@ define-properties@^1.1.3, define-properties@^1.2.0, define-properties@^1.2.1:
     has-property-descriptors "^1.0.0"
     object-keys "^1.1.1"
 
-del-osx-artifacts-v2@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/del-osx-artifacts-v2/-/del-osx-artifacts-v2-2.0.0.tgz#43e20a0afc5bfbfefe4fd4663aa968013af5809c"
-  integrity sha512-6CDPlT+7eJQ78iYvEU2I7bwOFbR2L62tyKJkWkHL/lKaJ8SLaGU7N8Swqm3ontqmFbD6i5tq1L6P62Sotr/KrA==
+del-osx-artifacts-v2@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/del-osx-artifacts-v2/-/del-osx-artifacts-v2-2.0.2.tgz#5135de4a4ca16db83b1823c521d47a1e85fe926d"
+  integrity sha512-FdUTddryXf2HmqdWZY9EeYExZEk/xhw0hTKyrcSDlQ556ZcDoE+DwZR3h2spEYWeO0QMS2vNMefX0O2wpv9y/g==
 
 delay@^5.0.0:
   version "5.0.0"
