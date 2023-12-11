@@ -4,11 +4,11 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ShopCollection, ValidatorCollection } from "../../typechain-types";
+import { Shop, ValidatorCollection } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-    console.log(`\nDeploying ShopCollection.`);
+    console.log(`\nDeploying Shop.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
@@ -16,11 +16,11 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
 
-    await deploy("ShopCollection", {
+    await deploy("Shop", {
         from: deployer,
         args: [validatorContractAddress],
         log: true,
     });
 };
 export default func;
-func.tags = ["ShopCollection"];
+func.tags = ["Shop"];

@@ -1,28 +1,24 @@
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-chai-matchers";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-network-helpers";
+import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
+import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
-import * as dotenv from "dotenv";
-import { utils, Wallet } from "ethers";
-import "hardhat-deploy";
 import "hardhat-gas-reporter";
-// tslint:disable-next-line:no-submodule-imports
-import { HardhatUserConfig, task } from "hardhat/config";
-// tslint:disable-next-line:no-submodule-imports
-import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
 import "solidity-coverage";
-import "solidity-docgen";
+
+import * as dotenv from "dotenv";
+import { Wallet } from "ethers";
 
 dotenv.config({ path: "env/.env" });
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-    const accounts = await hre.ethers.getSigners();
+// tslint:disable-next-line:no-submodule-imports
+import { HardhatUserConfig } from "hardhat/config";
+// tslint:disable-next-line:no-submodule-imports
+import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
 
-    for (const account of accounts) {
-        console.log(account.address);
-    }
-});
+import { HardhatAccount } from "./src/HardhatAccount";
 
 function getAccounts() {
     const accounts: string[] = [];
@@ -283,39 +279,39 @@ function getAccounts() {
         accounts.push(process.env.LINK_VALIDATOR3);
     }
 
-    return accounts;
-}
-
-function getTestAccounts() {
-    const accounts: HardhatNetworkAccountUserConfig[] = [];
-    const defaultBalance = utils.parseEther("2000000").toString();
-
-    const n = 50;
-    for (let i = 0; i < n; ++i) {
-        accounts.push({
-            privateKey: Wallet.createRandom().privateKey,
-            balance: defaultBalance,
-        });
+    while (accounts.length < 50) {
+        accounts.push(Wallet.createRandom().privateKey);
     }
-    const acc = getAccounts();
-    for (let idx = 0; idx < acc.length; idx++) accounts[idx].privateKey = acc[idx];
-    accounts[0].balance = utils.parseEther("100000000").toString();
+
+    if (HardhatAccount.keys.length === 0) {
+        for (const account of accounts) {
+            HardhatAccount.keys.push(account);
+        }
+    }
 
     return accounts;
 }
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+function getTestAccounts(): HardhatNetworkAccountUserConfig[] {
+    const defaultBalance = "2000000000000000000000000";
+    const acc = getAccounts();
+    return acc.map((m) => {
+        return {
+            privateKey: m,
+            balance: defaultBalance,
+        };
+    });
+}
 
-const config = {
+const config: HardhatUserConfig = {
     solidity: {
         compilers: [
             {
-                version: "0.8.0",
+                version: "0.8.20",
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 128,
+                        runs: 64,
                     },
                 },
             },
@@ -328,99 +324,21 @@ const config = {
             gas: 8000000,
             gasPrice: 8000000000,
             blockGasLimit: 8000000,
-            deploy: ["./deploy"],
         },
         bosagora_mainnet: {
             url: process.env.MAIN_NET_URL || "",
             chainId: 2151,
             accounts: getAccounts(),
-            deploy: ["./deploy/bosagora_mainnet"],
         },
         bosagora_testnet: {
             url: process.env.TEST_NET_URL || "",
             chainId: 2019,
             accounts: getAccounts(),
-            deploy: ["./deploy"],
         },
         bosagora_devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
             accounts: getAccounts(),
-            deploy: ["./deploy/bosagora_devnet"],
-        },
-    },
-    namedAccounts: {
-        deployer: {
-            default: 0,
-        },
-        owner: {
-            default: 1,
-        },
-        validator1: {
-            default: 2,
-        },
-        validator2: {
-            default: 3,
-        },
-        validator3: {
-            default: 4,
-        },
-        validator4: {
-            default: 5,
-        },
-        validator5: {
-            default: 6,
-        },
-        foundation: {
-            default: 7,
-        },
-        settlements: {
-            default: 8,
-        },
-        fee: {
-            default: 9,
-        },
-        certifier: {
-            default: 10,
-        },
-        certifier01: {
-            default: 11,
-        },
-        certifier02: {
-            default: 12,
-        },
-        certifier03: {
-            default: 13,
-        },
-        certifier04: {
-            default: 14,
-        },
-        certifier05: {
-            default: 15,
-        },
-        certifier06: {
-            default: 16,
-        },
-        certifier07: {
-            default: 17,
-        },
-        certifier08: {
-            default: 18,
-        },
-        certifier09: {
-            default: 19,
-        },
-        certifier10: {
-            default: 20,
-        },
-        linkValidator1: {
-            default: 21,
-        },
-        linkValidator2: {
-            default: 22,
-        },
-        linkValidator3: {
-            default: 23,
         },
     },
     gasReporter: {

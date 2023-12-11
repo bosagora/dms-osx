@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { Ledger, ShopCollection } from "../../typechain-types";
+import { Ledger, Shop } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
@@ -37,7 +37,7 @@ export class WatchScheduler extends Scheduler {
 
     private _ledgerContract: Ledger | undefined;
 
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     private _signers: RelaySigners | undefined;
 
@@ -106,10 +106,10 @@ export class WatchScheduler extends Scheduler {
         return this._ledgerContract;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("ShopCollection");
-            this._shopContract = factory.attach(this.config.contracts.shopAddress) as ShopCollection;
+            const factory = await hre.ethers.getContractFactory("Shop");
+            this._shopContract = factory.attach(this.config.contracts.shopAddress) as Shop;
         }
         return this._shopContract;
     }
@@ -457,7 +457,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async waitAndAddEvent(
-        contract: ShopCollection,
+        contract: Shop,
         tx: ContractTransaction
     ): Promise<ContractShopUpdateEvent | undefined> {
         const contractReceipt = await tx.wait();
@@ -478,7 +478,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async waitAndUpdateEvent(
-        contract: ShopCollection,
+        contract: Shop,
         tx: ContractTransaction
     ): Promise<ContractShopUpdateEvent | undefined> {
         const contractReceipt = await tx.wait();
@@ -499,7 +499,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async waitAndChangeStatusEvent(
-        contract: ShopCollection,
+        contract: Shop,
         tx: ContractTransaction
     ): Promise<ContractShopStatusEvent | undefined> {
         const contractReceipt = await tx.wait();

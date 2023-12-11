@@ -5,7 +5,7 @@ import {
     CurrencyRate,
     Ledger,
     PhoneLinkCollection,
-    ShopCollection,
+    Shop,
     Token,
     ValidatorCollection,
 } from "../../../typechain-types";
@@ -22,7 +22,7 @@ export interface Deployment {
     validatorCollection: ValidatorCollection;
     currencyRate: CurrencyRate;
     certifierCollection: CertifierCollection;
-    shopCollection: ShopCollection;
+    shopCollection: Shop;
     ledger: Ledger;
 }
 
@@ -385,8 +385,8 @@ export class ContractDeployer {
                 certifier10,
             ]);
 
-            console.log("Deploy ShopCollection");
-            const shopCollectionContract: ShopCollection = await ContractDeployer.deployShopCollection(
+            console.log("Deploy Shop");
+            const shopCollectionContract: Shop = await ContractDeployer.deployShopCollection(
                 deployer,
                 certifierCollection.address
             );
@@ -574,11 +574,9 @@ export class ContractDeployer {
         return certifierCollection;
     }
 
-    private static async deployShopCollection(deployer: Wallet, certifierAddress: string): Promise<ShopCollection> {
-        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        const shopCollection = (await shopCollectionFactory
-            .connect(deployer)
-            .deploy(certifierAddress)) as ShopCollection;
+    private static async deployShopCollection(deployer: Wallet, certifierAddress: string): Promise<Shop> {
+        const shopCollectionFactory = await hre.ethers.getContractFactory("Shop");
+        const shopCollection = (await shopCollectionFactory.connect(deployer).deploy(certifierAddress)) as Shop;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
         return shopCollection;
@@ -631,7 +629,7 @@ export class ContractDeployer {
         await tx3.wait();
     }
 
-    private static async addShopData(deployer: Wallet, certifier: Wallet, shopCollection: ShopCollection) {
+    private static async addShopData(deployer: Wallet, certifier: Wallet, shopCollection: Shop) {
         for (const shop of shopData) {
             const nonce = await shopCollection.nonceOf(shop.address);
             const signature = await ContractUtils.signShop(new Wallet(shop.privateKey), shop.shopId, nonce);

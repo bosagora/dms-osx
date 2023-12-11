@@ -6,7 +6,7 @@ import { DeployFunction } from "hardhat-deploy/types";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Amount } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import { Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
+import { Ledger, PhoneLinkCollection, Shop, Token } from "../../typechain-types";
 import { getContractAddress, getPhoneLinkCollectionContractAddress } from "../helpers";
 
 import { Wallet } from "ethers";
@@ -35,7 +35,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
     const currencyRateContractAddress = await getContractAddress("CurrencyRate", hre);
-    const shopContractAddress = await getContractAddress("ShopCollection", hre);
+    const shopContractAddress = await getContractAddress("Shop", hre);
     const certifierCollectionAddress = await getContractAddress("CertifierCollection", hre);
 
     const deployResult = await deploy("Ledger", {
@@ -58,7 +58,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
         const ledgerContractAddress = await getContractAddress("Ledger", hre);
         const ledgerContract = (await ethers.getContractAt("Ledger", ledgerContractAddress)) as Ledger;
 
-        const shopCollection = (await ethers.getContractAt("ShopCollection", shopContractAddress)) as ShopCollection;
+        const shopCollection = (await ethers.getContractAt("Shop", shopContractAddress)) as Shop;
         const tx1 = await shopCollection
             .connect(await ethers.getSigner(deployer))
             .setLedgerAddress(ledgerContractAddress);

@@ -1,4 +1,4 @@
-import { ShopCollection } from "../../typechain-types";
+import { Shop } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
@@ -45,7 +45,7 @@ export class ShopRouter {
      * 사용자의 원장 컨트랙트
      * @private
      */
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     private _storage: RelayStorage;
 
@@ -94,9 +94,9 @@ export class ShopRouter {
         signer.using = false;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const shopFactory = await hre.ethers.getContractFactory("ShopCollection");
+            const shopFactory = await hre.ethers.getContractFactory("Shop");
             this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
         }
         return this._shopContract;
@@ -833,7 +833,7 @@ export class ShopRouter {
     }
 
     private async waitAndAddEvent(
-        contract: ShopCollection,
+        contract: Shop,
         tx: ContractTransaction
     ): Promise<ContractShopUpdateEvent | undefined> {
         const contractReceipt = await tx.wait();

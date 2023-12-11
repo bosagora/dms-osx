@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es2018",
+        "target": "es2022",
         "module": "commonjs",
         "strict": true,
         "esModuleInterop": true,
@@ -9,5 +9,5 @@
         "moduleResolution": "node",
         "resolveJsonModule": true
     },
-    "include": ["./hardhat.config.ts", "./test", "./src", ",./typechain-types", "./deploy"]
+    "include": ["./hardhat.config.ts", "./test", "./npm", "./src", ",./typechain-types", "./deploy"]
 }

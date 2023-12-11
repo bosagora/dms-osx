@@ -8,7 +8,7 @@ import {
     UpdatedShop as UpdatedShopEvent,
     ClosedWithdrawal as ClosedWithdrawalEvent,
     OpenedWithdrawal as OpenedWithdrawalEvent,
-} from "../generated/ShopCollection/ShopCollection";
+} from "../generated/Shop/Shop";
 import { Shop, ShopTradeHistory, ShopWithdraw, UserBalance } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { AmountUnit } from "./utils";

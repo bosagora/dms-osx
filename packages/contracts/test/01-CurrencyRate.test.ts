@@ -1,107 +1,110 @@
 import { Amount } from "../src/utils/Amount";
-import { CurrencyRate, Token, ValidatorCollection } from "../typechain-types";
-
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
+import { CurrencyRate, Token, Validator } from "../typechain-types";
+import "@nomicfoundation/hardhat-ethers";
+import "@openzeppelin/hardhat-upgrades";
+import { ethers, upgrades } from "hardhat";
 
 import assert from "assert";
-import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
+import { expect } from "chai";
 
-import * as hre from "hardhat";
-
-import { BigNumber } from "ethers";
-
-chai.use(solidity);
+import { HardhatAccount } from "../src/HardhatAccount";
 
 describe("Test for CurrencyRate", () => {
-    const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
+    const accounts = HardhatAccount.keys.map((m) => new ethers.Wallet(m, ethers.provider));
+    const [deployer, validator1, validator2, validator3, user1] = accounts;
 
     const validators = [validator1, validator2, validator3];
-    let validatorContract: ValidatorCollection;
+    let validatorContract: Validator;
     let tokenContract: Token;
     let currencyRateContract: CurrencyRate;
 
     const amount = Amount.make(20_000, 18);
 
     before(async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
+        const tokenFactory = await ethers.getContractFactory("Token");
+        tokenContract = (await tokenFactory
+            .connect(deployer)
+            .deploy(deployer.address, "Sample", "SAM")) as unknown as Token;
+        await tokenContract.waitForDeployment();
         for (const elem of validators) {
             await tokenContract.connect(deployer).transfer(elem.address, amount.value);
         }
 
-        const validatorFactory = await hre.ethers.getContractFactory("ValidatorCollection");
-        validatorContract = (await validatorFactory.connect(deployer).deploy(
-            tokenContract.address,
-            validators.map((m) => m.address)
-        )) as ValidatorCollection;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
+        const validatorFactory = await ethers.getContractFactory("Validator");
+        validatorContract = (await upgrades.deployProxy(
+            validatorFactory.connect(deployer),
+            [await tokenContract.getAddress(), validators.map((m) => m.address)],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as Validator;
+        await validatorContract.waitForDeployment();
 
         for (const elem of validators) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
+            await tokenContract.connect(elem).approve(await validatorContract.getAddress(), amount.value);
             await expect(validatorContract.connect(elem).deposit(amount.value))
                 .to.emit(validatorContract, "DepositedForValidator")
                 .withArgs(elem.address, amount.value, amount.value);
             const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
+            assert.deepStrictEqual(item.status, 1n);
             assert.deepStrictEqual(item.balance, amount.value);
         }
 
-        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
-        currencyRateContract = (await currencyRateFactory
-            .connect(deployer)
-            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
-        await currencyRateContract.deployed();
-        await currencyRateContract.deployTransaction.wait();
+        const currencyRateFactory = await ethers.getContractFactory("CurrencyRate");
+        currencyRateContract = (await upgrades.deployProxy(
+            currencyRateFactory.connect(deployer),
+            [await validatorContract.getAddress(), await tokenContract.symbol()],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as CurrencyRate;
+        await currencyRateContract.waitForDeployment();
     });
 
     it("Set Not validator", async () => {
-        const currency = "the9";
-        const rate = 123000000000;
-        await expect(currencyRateContract.connect(user1).set(currency, rate)).to.revertedWith("1000");
+        const symbol = "the9";
+        const rate = 123000000000n;
+        await expect(currencyRateContract.connect(user1).set(symbol, rate)).to.revertedWith("1000");
     });
     it("Set Success", async () => {
-        const currency = "the9";
-        const rate = 123000000000;
-        await expect(currencyRateContract.connect(validators[0]).set(currency, rate))
+        const symbol = "the9";
+        const rate = 123000000000n;
+        await expect(currencyRateContract.connect(validators[0]).set(symbol, rate))
             .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ currency, rate });
+            .withArgs(symbol, rate);
     });
 
     it("Get Fail - usd", async () => {
-        const currency = "usd";
-        await expect(currencyRateContract.connect(validators[0]).get(currency)).to.be.revertedWith("1211");
+        const symbol = "usd";
+        await expect(currencyRateContract.connect(validators[0]).get(symbol)).to.be.revertedWith("1211");
     });
 
     it("Get Success - the9", async () => {
-        const currency = "the9";
+        const symbol = "the9";
         const rate = 123000000000;
-        expect(await currencyRateContract.connect(validators[0]).get(currency)).to.equal(rate);
+        expect(await currencyRateContract.connect(validators[0]).get(symbol)).to.equal(rate);
     });
 
     it("Function", async () => {
-        const multiple = await currencyRateContract.MULTIPLE();
+        const multiple = await currencyRateContract.multiple();
         const symbol = await tokenContract.symbol();
 
-        let rate = BigNumber.from(100).mul(multiple);
+        let rate = 100n * multiple;
         await expect(currencyRateContract.connect(validators[0]).set(symbol, rate))
             .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ rate });
-        rate = BigNumber.from(1000).mul(multiple);
+            .withArgs(symbol, rate);
+        rate = 1000n * multiple;
         await expect(currencyRateContract.connect(validators[0]).set("usd", rate))
             .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ rate });
+            .withArgs("usd", rate);
 
-        rate = BigNumber.from(10).mul(multiple);
+        rate = 10n * multiple;
         await expect(currencyRateContract.connect(validators[0]).set("jpy", rate))
             .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ rate });
+            .withArgs("jpy", rate);
 
         assert.deepStrictEqual(
             (await currencyRateContract.convertPointToToken(Amount.make(100).value)).toString(),

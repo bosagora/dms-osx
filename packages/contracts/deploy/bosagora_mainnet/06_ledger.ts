@@ -4,7 +4,7 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { Ledger, ShopCollection, Token } from "../../typechain-types";
+import { Ledger, Shop, Token } from "../../typechain-types";
 import { getContractAddress, getPhoneLinkCollectionContractAddress } from "../helpers";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
@@ -18,7 +18,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const tokenContractAddress = await getContractAddress("Token", hre);
     const validatorContractAddress = await getContractAddress("ValidatorCollection", hre);
     const currencyRateContractAddress = await getContractAddress("CurrencyRate", hre);
-    const shopContractAddress = await getContractAddress("ShopCollection", hre);
+    const shopContractAddress = await getContractAddress("Shop", hre);
 
     await deploy("Ledger", {
         from: deployer,
