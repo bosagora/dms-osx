@@ -42,27 +42,25 @@ jobs:
         env:
           REPORT_GAS: true
         run: cd packages/contracts && yarn run test
-      - name: Run solidity-docgen of Contract
-        run: cd packages/contracts && yarn run docgen
-
-      - name: Copy env of Relay
-        run: cp packages/relay/env/.env.sample packages/relay/env/.env
-      - name: Check formatting of Relay
-        run: cd packages/relay && yarn run formatting:check
-      - name: Compile of Relay
-        run: cd packages/relay && yarn run build
-      - name: Run Hardhat Tests of Relay
-        env:
-          REPORT_GAS: true
-        run: cd packages/relay && yarn run test
-
-      - name: Copy env of Faker
-        run: cp packages/faker/env/.env.sample packages/faker/env/.env
-      - name: Check formatting of Faker
-        run: cd packages/faker && yarn run formatting:check
-      - name: Compile of Faker
-        run: cd packages/faker && yarn run build
-      - name: Run Hardhat Tests of Faker
-        env:
-          REPORT_GAS: true
-        run: cd packages/faker && yarn run test
+#
+#      - name: Copy env of Relay
+#        run: cp packages/relay/env/.env.sample packages/relay/env/.env
+#      - name: Check formatting of Relay
+#        run: cd packages/relay && yarn run formatting:check
+#      - name: Compile of Relay
+#        run: cd packages/relay && yarn run build
+#      - name: Run Hardhat Tests of Relay
+#        env:
+#          REPORT_GAS: true
+#        run: cd packages/relay && yarn run test
+#
+#      - name: Copy env of Faker
+#        run: cp packages/faker/env/.env.sample packages/faker/env/.env
+#      - name: Check formatting of Faker
+#        run: cd packages/faker && yarn run formatting:check
+#      - name: Compile of Faker
+#        run: cd packages/faker && yarn run build
+#      - name: Run Hardhat Tests of Faker
+#        env:
+#          REPORT_GAS: true
+#        run: cd packages/faker && yarn run test

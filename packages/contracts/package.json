@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-artifacts-v2",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"
@@ -57,6 +57,7 @@
         "assert": "^2.0.0",
         "chai": "^4.3.7",
         "chai-http": "^4.3.7",
+        "del-osx-artifacts-v2": "^2.0.1",
         "dotenv": "^10.0.0",
         "ethers": "^6.9.0",
         "hardhat": "^2.19.2",
