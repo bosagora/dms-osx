@@ -6,7 +6,7 @@ import {
     CurrencyRate,
     Ledger,
     PhoneLinkCollection,
-    ShopCollection,
+    Shop,
     Token,
     ValidatorCollection,
 } from "../typechain-types";
@@ -36,7 +36,7 @@ import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 
 chai.use(solidity);
 
-describe("Test for ShopCollection", function () {
+describe("Test for Shop", function () {
     this.timeout(1000 * 60 * 5);
     const provider = hre.waffle.provider;
     const [
@@ -75,7 +75,7 @@ describe("Test for ShopCollection", function () {
     let ledgerContract: Ledger;
     let linkCollectionContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
-    let shopCollection: ShopCollection;
+    let shopCollection: Shop;
     let certifierCollection: CertifierCollection;
 
     const multiple = BigNumber.from(1000000000);
@@ -148,10 +148,10 @@ describe("Test for ShopCollection", function () {
     };
 
     const deployShopCollection = async () => {
-        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+        const shopCollectionFactory = await hre.ethers.getContractFactory("Shop");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
+            .deploy(certifierCollection.address, currencyRateContract.address)) as Shop;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };

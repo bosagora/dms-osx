@@ -1,8 +1,9 @@
-import "@nomiclabs/hardhat-ethers";
+import { defaultAbiCoder } from "@ethersproject/abi";
+import { arrayify } from "@ethersproject/bytes";
+import { keccak256 } from "@ethersproject/keccak256";
+import { randomBytes } from "@ethersproject/random";
+
 import { BigNumberish, Signer } from "ethers";
-// tslint:disable-next-line:no-submodule-imports
-import { arrayify } from "ethers/lib/utils";
-import * as hre from "hardhat";
 
 export class ContractUtils {
     /**
@@ -23,25 +24,22 @@ export class ContractUtils {
     }
 
     public static getPhoneHash(phone: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "string"],
-            ["BOSagora Phone Number", phone]
-        );
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["string", "string"], ["BOSagora Phone Number", phone]);
+        return keccak256(encodedResult);
     }
 
     public static getEmailHash(phone: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
+        return keccak256(encodedResult);
     }
 
     public static async sign(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "address", "uint256"],
             [hash, await signer.getAddress(), nonce]
         );
-        const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
-        return signer.signMessage(message);
+        const message = arrayify(keccak256(encodedResult));
+        return await signer.signMessage(message);
     }
 
     public static getPaymentMessage(
@@ -52,11 +50,11 @@ export class ContractUtils {
         shopId: string,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["string", "uint256", "string", "bytes32", "address", "uint256"],
             [purchaseId, amount, currency, shopId, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signPayment(
@@ -75,14 +73,11 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static getShopId(account: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["address", "bytes32"],
-            [account, hre.ethers.utils.randomBytes(32)]
-        );
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["address", "bytes32"], [account, randomBytes(32)]);
+        return keccak256(encodedResult);
     }
 }

@@ -1,62 +1,63 @@
 import { Amount } from "../src/utils/Amount";
-import { Token, ValidatorCollection } from "../typechain-types";
-
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
+import { Token, Validator } from "../typechain-types";
+import "@nomicfoundation/hardhat-ethers";
+import "@openzeppelin/hardhat-upgrades";
+import { ethers, upgrades } from "hardhat";
 
 import assert from "assert";
-import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
+import { expect } from "chai";
 
-import * as hre from "hardhat";
+import { HardhatAccount } from "../src/HardhatAccount";
 
-chai.use(solidity);
-
-describe("Test for ValidatorCollection", () => {
-    const provider = hre.waffle.provider;
-    const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
+describe("Test for Validator", () => {
+    const accounts = HardhatAccount.keys.map((m) => new ethers.Wallet(m, ethers.provider));
+    const [deployer, validator1, validator2, validator3, user1] = accounts;
 
     const validators = [validator1, validator2, validator3];
-    let contract: ValidatorCollection;
+    let contract: Validator;
     let tokenContract: Token;
 
     const amount = Amount.make(20000, 18);
     const halfAmount = Amount.make(10000, 18);
 
     before(async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
+        const tokenFactory = await ethers.getContractFactory("Token");
+        tokenContract = (await tokenFactory
+            .connect(deployer)
+            .deploy(deployer.address, "Sample", "SAM")) as unknown as Token;
+        await tokenContract.waitForDeployment();
         for (const elem of validators) {
             await tokenContract.connect(deployer).transfer(elem.address, amount.value);
         }
 
-        const factory = await hre.ethers.getContractFactory("ValidatorCollection");
-        contract = (await factory.connect(deployer).deploy(
-            tokenContract.address,
-            validators.map((m) => m.address)
-        )) as ValidatorCollection;
-        await contract.deployed();
-        await contract.deployTransaction.wait();
+        const factory = await ethers.getContractFactory("Validator");
+        contract = (await upgrades.deployProxy(
+            factory.connect(deployer),
+            [await tokenContract.getAddress(), validators.map((m) => m.address)],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as Validator;
+        await contract.waitForDeployment();
     });
 
     it("Check validator", async () => {
         let item = await contract.validatorOf(validator1.address);
         assert.deepStrictEqual(item.validator, validator1.address);
-        assert.deepStrictEqual(item.status, 2);
+        assert.deepStrictEqual(item.status, 2n);
 
         item = await contract.validatorOf(validator2.address);
         assert.deepStrictEqual(item.validator, validator2.address);
-        assert.deepStrictEqual(item.status, 2);
+        assert.deepStrictEqual(item.status, 2n);
 
         item = await contract.validatorOf(validator3.address);
         assert.deepStrictEqual(item.validator, validator3.address);
-        assert.deepStrictEqual(item.status, 2);
+        assert.deepStrictEqual(item.status, 2n);
     });
 
     it("Deposit not validator", async () => {
-        await tokenContract.connect(deployer).approve(contract.address, amount.value);
+        await tokenContract.connect(deployer).approve(await contract.getAddress(), amount.value);
         await expect(contract.connect(deployer).deposit(amount.value)).to.be.revertedWith("1000");
     });
 
@@ -66,26 +67,26 @@ describe("Test for ValidatorCollection", () => {
 
     it("Deposit 25,000", async () => {
         for (const elem of validators) {
-            await tokenContract.connect(elem).approve(contract.address, halfAmount.value);
+            await tokenContract.connect(elem).approve(await contract.getAddress(), halfAmount.value);
             await expect(contract.connect(elem).deposit(halfAmount.value))
                 .to.emit(contract, "DepositedForValidator")
                 .withArgs(elem.address, halfAmount.value, halfAmount.value);
             const item = await contract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 2);
+            assert.deepStrictEqual(item.status, 2n);
             assert.deepStrictEqual(item.balance, halfAmount.value);
         }
     });
 
     it("Deposit 50,000", async () => {
         for (const elem of validators) {
-            await tokenContract.connect(elem).approve(contract.address, halfAmount.value);
+            await tokenContract.connect(elem).approve(await contract.getAddress(), halfAmount.value);
             await expect(contract.connect(elem).deposit(halfAmount.value))
                 .to.emit(contract, "DepositedForValidator")
                 .withArgs(elem.address, halfAmount.value, amount.value);
             const item = await contract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
+            assert.deepStrictEqual(item.status, 1n);
             assert.deepStrictEqual(item.balance, amount.value);
         }
 
@@ -94,57 +95,55 @@ describe("Test for ValidatorCollection", () => {
 
     it("Request participation - already validator", async () => {
         await tokenContract.connect(deployer).transfer(validator1.address, amount.value);
-        await tokenContract.connect(validator1).approve(contract.address, amount.value);
+        await tokenContract.connect(validator1).approve(await contract.getAddress(), amount.value);
         await expect(contract.connect(validator1).requestRegistration()).to.be.revertedWith("1003");
     });
 
     it("Request participation - not allowed deposit", async () => {
-        await tokenContract.connect(user1).approve(contract.address, amount.value);
-        await expect(contract.connect(user1).requestRegistration()).to.be.revertedWith(
-            "ERC20: transfer amount exceeds balance"
-        );
+        await tokenContract.connect(user1).approve(await contract.getAddress(), amount.value);
+        await expect(contract.connect(user1).requestRegistration()).to.be.reverted;
     });
 
     it("Request registration", async () => {
         await tokenContract.connect(deployer).transfer(user1.address, amount.value);
-        await tokenContract.connect(user1).approve(contract.address, amount.value);
+        await tokenContract.connect(user1).approve(await contract.getAddress(), amount.value);
         await expect(contract.connect(user1).requestRegistration())
             .to.emit(contract, "RequestedToJoinValidator")
             .withArgs(user1.address);
         const item = await contract.validatorOf(user1.address);
         assert.deepStrictEqual(item.validator, user1.address);
-        assert.deepStrictEqual(item.status, 1);
+        assert.deepStrictEqual(item.status, 1n);
         assert.deepStrictEqual(item.balance, amount.value);
 
         assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "3");
     });
 
     it("Request exit", async () => {
-        const balanceBefore = await tokenContract.balanceOf(contract.address);
+        const balanceBefore = await tokenContract.balanceOf(await contract.getAddress());
         await expect(contract.connect(validator1).requestExit(validator3.address))
             .to.emit(contract, "RequestedToExitValidator")
             .withArgs(validator1.address, validator3.address);
         const item = await contract.validatorOf(validator3.address);
         assert.deepStrictEqual(item.validator, validator3.address);
-        assert.deepStrictEqual(item.status, 3);
-        assert.deepStrictEqual(item.balance.toString(), "0");
-        const balanceAfter = await tokenContract.balanceOf(contract.address);
-        assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
+        assert.deepStrictEqual(item.status, 3n);
+        assert.deepStrictEqual(item.balance, 0n);
+        const balanceAfter = await tokenContract.balanceOf(await contract.getAddress());
+        assert.deepStrictEqual(balanceBefore - balanceAfter, amount.value);
 
         assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "2");
     });
 
     it("Voluntary Exit 1", async () => {
-        const balanceBefore = await tokenContract.balanceOf(contract.address);
+        const balanceBefore = await tokenContract.balanceOf(await contract.getAddress());
         await expect(contract.connect(validator1).exit())
             .to.emit(contract, "ExitedFromValidator")
             .withArgs(validator1.address);
         const item = await contract.validatorOf(validator1.address);
         assert.deepStrictEqual(item.validator, validator1.address);
-        assert.deepStrictEqual(item.status, 3);
-        assert.deepStrictEqual(item.balance.toString(), "0");
-        const balanceAfter = await tokenContract.balanceOf(contract.address);
-        assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
+        assert.deepStrictEqual(item.status, 3n);
+        assert.deepStrictEqual(item.balance, 0n);
+        const balanceAfter = await tokenContract.balanceOf(await contract.getAddress());
+        assert.deepStrictEqual(balanceBefore - balanceAfter, amount.value);
 
         assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "1");
     });

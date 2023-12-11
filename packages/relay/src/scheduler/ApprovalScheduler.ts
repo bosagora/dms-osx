@@ -11,7 +11,7 @@ import {
 } from "../types/index";
 import { Scheduler } from "./Scheduler";
 
-import { Ledger, ShopCollection, Token } from "../../typechain-types";
+import { Ledger, Shop, Token } from "../../typechain-types";
 
 import * as fs from "fs";
 import * as hre from "hardhat";
@@ -39,7 +39,7 @@ export class ApprovalScheduler extends Scheduler {
 
     private _ledgerContract: Ledger | undefined;
 
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     private _wallets: IWalletData[];
 
@@ -111,10 +111,10 @@ export class ApprovalScheduler extends Scheduler {
         return this._ledgerContract;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("ShopCollection");
-            this._shopContract = factory.attach(this.config.contracts.shopAddress) as ShopCollection;
+            const factory = await hre.ethers.getContractFactory("Shop");
+            this._shopContract = factory.attach(this.config.contracts.shopAddress) as Shop;
         }
         return this._shopContract;
     }

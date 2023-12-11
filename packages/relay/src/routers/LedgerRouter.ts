@@ -1,4 +1,4 @@
-import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
+import { CurrencyRate, Ledger, PhoneLinkCollection, Shop, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
@@ -43,7 +43,7 @@ export class LedgerRouter {
      * 사용자의 원장 컨트랙트
      * @private
      */
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     /**
      * 이메일 지갑주소 링크 컨트랙트
@@ -118,9 +118,9 @@ export class LedgerRouter {
         return this._ledgerContract;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const shopFactory = await hre.ethers.getContractFactory("ShopCollection");
+            const shopFactory = await hre.ethers.getContractFactory("Shop");
             this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
         }
         return this._shopContract;

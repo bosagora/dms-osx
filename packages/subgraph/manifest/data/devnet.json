@@ -7,8 +7,8 @@
             "address": "0x12c316e0358d914A211A3d477db912A503cFCc21",
             "startBlock": 1
         },
-        "ShopCollection": {
-            "name": "ShopCollection",
+        "Shop": {
+            "name": "Shop",
             "address": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
             "startBlock": 1
         }

@@ -1,24 +1,20 @@
 import { ContractShopStatus } from "../src/types";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { CertifierCollection, CurrencyRate, ShopCollection, Token, ValidatorCollection } from "../typechain-types";
+import { Certifier, CurrencyRate, Shop, Token, Validator } from "../typechain-types";
 
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
-
-import chai, { expect } from "chai";
-import { solidity } from "ethereum-waffle";
-
-import * as hre from "hardhat";
-
-import { BigNumber, Wallet } from "ethers";
+import "@nomicfoundation/hardhat-ethers";
+import "@openzeppelin/hardhat-upgrades";
+import { ethers, upgrades } from "hardhat";
 
 import assert from "assert";
+import { expect } from "chai";
 
-chai.use(solidity);
+import { HardhatAccount } from "../src/HardhatAccount";
 
-describe("Test for ShopCollection", () => {
-    const provider = hre.waffle.provider;
+describe("Test for Shop", () => {
+    const accounts = HardhatAccount.keys.map((m) => new ethers.Wallet(m, ethers.provider));
+
     const [
         deployer,
         ,
@@ -35,84 +31,91 @@ describe("Test for ShopCollection", () => {
         shop4,
         shop5,
         relay,
-    ] = provider.getWallets();
+    ] = accounts;
 
     const validatorWallets = [validator1, validator2, validator3];
-    const shopWallets: Wallet[] = [shop1, shop2, shop3, shop4, shop5];
+    const shopWallets = [shop1, shop2, shop3, shop4, shop5];
 
-    let validatorContract: ValidatorCollection;
+    let validatorContract: Validator;
     let tokenContract: Token;
-    let currencyRateContract: CurrencyRate;
-    let shopCollection: ShopCollection;
-    let certifierCollection: CertifierCollection;
+    let currencyContract: CurrencyRate;
+    let shopContract: Shop;
+    let certifierContract: Certifier;
 
-    const multiple = BigNumber.from(1000000000);
-    const price = BigNumber.from(150).mul(multiple);
+    const multiple = 1000000000n;
+    const price = 150n * multiple;
 
     const amount = Amount.make(20_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
 
     const deployToken = async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
+        const factory = await ethers.getContractFactory("Token");
+        tokenContract = (await factory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as unknown as Token;
+        await tokenContract.waitForDeployment();
         for (const elem of validatorWallets) {
             await tokenContract.connect(deployer).transfer(elem.address, amount.value);
         }
     };
 
-    const deployValidatorCollection = async () => {
-        const validatorFactory = await hre.ethers.getContractFactory("ValidatorCollection");
-        validatorContract = (await validatorFactory.connect(deployer).deploy(
-            tokenContract.address,
-            validatorWallets.map((m) => m.address)
-        )) as ValidatorCollection;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
+    const deployValidator = async () => {
+        const factory = await ethers.getContractFactory("Validator");
+        validatorContract = (await upgrades.deployProxy(
+            factory.connect(deployer),
+            [await tokenContract.getAddress(), validatorWallets.map((m) => m.address)],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as Validator;
+        await validatorContract.waitForDeployment();
     };
 
     const depositValidators = async () => {
         for (const elem of validatorWallets) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
+            await tokenContract.connect(elem).approve(await validatorContract.getAddress(), amount.value);
             await expect(validatorContract.connect(elem).deposit(amount.value))
                 .to.emit(validatorContract, "DepositedForValidator")
                 .withArgs(elem.address, amount.value, amount.value);
             const item = await validatorContract.validatorOf(elem.address);
             assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
+            assert.deepStrictEqual(item.status, 1n);
             assert.deepStrictEqual(item.balance, amount.value);
         }
     };
 
     const deployCurrencyRate = async () => {
-        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
-        currencyRateContract = (await currencyRateFactory
-            .connect(deployer)
-            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
-        await currencyRateContract.deployed();
-        await currencyRateContract.deployTransaction.wait();
-        await currencyRateContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
-        await currencyRateContract.connect(validatorWallets[0]).set("usd", BigNumber.from(1000).mul(multiple));
-        await currencyRateContract.connect(validatorWallets[0]).set("jpy", BigNumber.from(1000).mul(multiple));
-        await currencyRateContract.connect(validatorWallets[0]).set("eur", BigNumber.from(900).mul(multiple));
+        const factory = await ethers.getContractFactory("CurrencyRate");
+        currencyContract = (await upgrades.deployProxy(
+            factory.connect(deployer),
+            [await validatorContract.getAddress(), await tokenContract.symbol()],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as CurrencyRate;
+        await currencyContract.waitForDeployment();
+
+        await currencyContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
+        await currencyContract.connect(validatorWallets[0]).set("usd", 1000n * multiple);
+        await currencyContract.connect(validatorWallets[0]).set("jpy", 1000n * multiple);
+        await currencyContract.connect(validatorWallets[0]).set("eur", 900n * multiple);
     };
 
-    const deployCertifierCollection = async () => {
-        const factory = await hre.ethers.getContractFactory("CertifierCollection");
-        certifierCollection = (await factory.connect(deployer).deploy(certifier.address)) as CertifierCollection;
-        await certifierCollection.deployed();
-        await certifierCollection.deployTransaction.wait();
-
-        await certifierCollection.connect(certifier).grantCertifier(relay.address);
+    const deployCertifier = async () => {
+        const factory = await ethers.getContractFactory("Certifier");
+        certifierContract = (await upgrades.deployProxy(factory.connect(deployer), [certifier.address], {
+            initializer: "initialize",
+            kind: "uups",
+        })) as unknown as Certifier;
+        await certifierContract.waitForDeployment();
     };
 
     const deployAllContract = async () => {
         await deployToken();
-        await deployValidatorCollection();
+        await deployValidator();
         await depositValidators();
         await deployCurrencyRate();
-        await deployCertifierCollection();
+        await deployCertifier();
     };
 
     interface IShopData {
@@ -121,7 +124,8 @@ describe("Test for ShopCollection", () => {
         currency: string;
         provideWaitTime: number;
         providePercent: number;
-        wallet: Wallet;
+        // @ts-ignore
+        wallet: ethers.Wallet;
     }
 
     const shopData: IShopData[] = [
@@ -188,12 +192,16 @@ describe("Test for ShopCollection", () => {
     });
 
     before(async () => {
-        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory
-            .connect(deployer)
-            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
-        await shopCollection.deployed();
-        await shopCollection.deployTransaction.wait();
+        const factory = await ethers.getContractFactory("Shop");
+        shopContract = (await upgrades.deployProxy(
+            factory.connect(deployer),
+            [await certifierContract.getAddress(), await currencyContract.getAddress()],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as Shop;
+        await shopContract.waitForDeployment();
     });
 
     before("Set Shop ID", async () => {
@@ -204,26 +212,29 @@ describe("Test for ShopCollection", () => {
 
     it("Success", async () => {
         for (const elem of shopData) {
-            const nonce = await shopCollection.nonceOf(elem.wallet.address);
-            const signature = ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
+            const nonce = await shopContract.nonceOf(elem.wallet.address);
+            const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
             await expect(
-                shopCollection
+                shopContract
                     .connect(relay)
                     .add(elem.shopId, elem.name, elem.currency.toLowerCase(), elem.wallet.address, signature)
             )
-                .to.emit(shopCollection, "AddedShop")
-                .withNamedArgs({
-                    shopId: elem.shopId,
-                    name: elem.name,
-                    currency: elem.currency.toLowerCase(),
-                    account: elem.wallet.address,
-                });
+                .to.emit(shopContract, "AddedShop")
+                .withArgs(
+                    elem.shopId,
+                    elem.name,
+                    elem.currency.toLowerCase(),
+                    7n * 86400n,
+                    5n,
+                    elem.wallet.address,
+                    ContractShopStatus.INACTIVE
+                );
         }
-        expect(await shopCollection.shopsLength()).to.equal(shopData.length);
+        expect(await shopContract.shopsLength()).to.equal(shopData.length);
     });
 
     it("Check", async () => {
-        const ids = await shopCollection.shopsOf(shopWallets[0].address);
+        const ids = await shopContract.shopsOf(shopWallets[0].address);
         expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
     });
 
@@ -232,13 +243,13 @@ describe("Test for ShopCollection", () => {
         elem.name = "New Shop";
         elem.provideWaitTime = 86400 * 7;
         elem.providePercent = 10;
-        const signature = ContractUtils.signShop(
+        const signature = await ContractUtils.signShop(
             elem.wallet,
             elem.shopId,
-            await shopCollection.nonceOf(elem.wallet.address)
+            await shopContract.nonceOf(elem.wallet.address)
         );
         await expect(
-            shopCollection
+            shopContract
                 .connect(certifier)
                 .update(
                     elem.shopId,
@@ -250,47 +261,45 @@ describe("Test for ShopCollection", () => {
                     signature
                 )
         )
-            .to.emit(shopCollection, "UpdatedShop")
-            .withNamedArgs({
-                shopId: elem.shopId,
-                name: elem.name,
-                currency: "usd",
-                provideWaitTime: elem.provideWaitTime,
-                providePercent: elem.providePercent,
-                account: elem.wallet.address,
-            });
+            .to.emit(shopContract, "UpdatedShop")
+            .withArgs(
+                elem.shopId,
+                elem.name,
+                "usd",
+                BigInt(elem.provideWaitTime),
+                BigInt(elem.providePercent),
+                elem.wallet.address,
+                ContractShopStatus.INACTIVE
+            );
     });
 
     it("Check status", async () => {
         for (const elem of shopData) {
-            const shop = await shopCollection.shopOf(elem.shopId);
+            const shop = await shopContract.shopOf(elem.shopId);
             expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
         }
     });
 
     it("Change status", async () => {
         for (const elem of shopData) {
-            const signature = ContractUtils.signShop(
+            const signature = await ContractUtils.signShop(
                 elem.wallet,
                 elem.shopId,
-                await shopCollection.nonceOf(elem.wallet.address)
+                await shopContract.nonceOf(elem.wallet.address)
             );
             await expect(
-                shopCollection
+                shopContract
                     .connect(certifier)
                     .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature)
             )
-                .to.emit(shopCollection, "ChangedShopStatus")
-                .withNamedArgs({
-                    shopId: elem.shopId,
-                    status: ContractShopStatus.ACTIVE,
-                });
+                .to.emit(shopContract, "ChangedShopStatus")
+                .withArgs(elem.shopId, ContractShopStatus.ACTIVE);
         }
     });
 
     it("Check status", async () => {
         for (const elem of shopData) {
-            const shop = await shopCollection.shopOf(elem.shopId);
+            const shop = await shopContract.shopOf(elem.shopId);
             expect(shop.status).to.deep.equal(ContractShopStatus.ACTIVE);
         }
     });

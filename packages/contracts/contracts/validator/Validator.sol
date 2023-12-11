@@ -1,38 +1,15 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./ValidatorStorage.sol";
 
 /// @notice 검증자들을 저장하는 컨트랙트
-contract ValidatorCollection {
-    uint256 public constant MINIMUM_DEPOSIT_AMOUNT = 20000000000000000000000;
-
-    address public tokenAddress;
-
-    IERC20 private token;
-
-    /// @notice 검증자의 상태코드
-    enum Status {
-        INVALID, //  초기값
-        ACTIVE, //  검증자의 기능이 활성화됨
-        STOP, //  예치금 부족으로 정지된 상태
-        EXIT //  탈퇴한 상태
-    }
-
-    struct ValidatorData {
-        address validator; // 검증자의 지갑주소
-        uint256 start; // 검증자로서 역할을 수행할 수 있는 시작 시간
-        uint256 balance; // 검증자의 예치금
-        Status status; // 검증자의 상태
-    }
-
-    address[] private items;
-
-    address[] private activeItems;
-
-    mapping(address => ValidatorData) private validators;
-
+contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event AddedValidator(address validator, uint256 start, uint256 balance, Status status);
     /// @notice 자금이 입급될 때 발생되는 이벤트
@@ -45,9 +22,12 @@ contract ValidatorCollection {
     event ExitedFromValidator(address validator);
 
     /// @notice 생성자
-    /// @param _validators 초기에 설정될 검증자, 예치금이 예치된 후 그 즉시 활성화 된다.
-    constructor(address _tokenAddress, address[] memory _validators) {
-        tokenAddress = _tokenAddress;
+    /// @param _tokenAddress 토큰컽트랙트의 주소
+    /// @param _validators 검증자들
+    function initialize(address _tokenAddress, address[] memory _validators) external initializer {
+        __UUPSUpgradeable_init();
+        __Ownable_init_unchained(_msgSender());
+
         token = IERC20(_tokenAddress);
 
         for (uint256 i = 0; i < _validators.length; ++i) {
@@ -64,48 +44,52 @@ contract ValidatorCollection {
         }
     }
 
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(_msgSender() == owner(), "Unauthorized access");
+    }
+
     /// @notice 예치금을 추가로 입급합니다.
     /// @param _amount 추가로 입금할 예치 금액
-    function deposit(uint256 _amount) public {
-        ValidatorData memory item = validators[msg.sender];
-        require(item.validator == msg.sender, "1000");
+    function deposit(uint256 _amount) external virtual {
+        ValidatorData memory item = validators[_msgSender()];
+        require(item.validator == _msgSender(), "1000");
         require(item.status != Status.INVALID, "1001");
         require(item.status != Status.EXIT, "1003");
 
-        require(_amount <= token.allowance(msg.sender, address(this)), "1020");
-        token.transferFrom(msg.sender, address(this), _amount);
+        require(_amount <= token.allowance(_msgSender(), address(this)), "1020");
+        token.transferFrom(_msgSender(), address(this), _amount);
 
-        validators[msg.sender].balance += _amount;
+        validators[_msgSender()].balance += _amount;
 
-        if (validators[msg.sender].balance >= MINIMUM_DEPOSIT_AMOUNT) validators[msg.sender].status = Status.ACTIVE;
+        if (validators[_msgSender()].balance >= MINIMUM_DEPOSIT_AMOUNT) validators[_msgSender()].status = Status.ACTIVE;
 
-        emit DepositedForValidator(msg.sender, _amount, validators[msg.sender].balance);
+        emit DepositedForValidator(_msgSender(), _amount, validators[_msgSender()].balance);
     }
 
     /// @notice 신규 검증자 등록을 신청합니다.
-    function requestRegistration() public {
-        require(validators[msg.sender].status == Status.INVALID, "1003");
+    function requestRegistration() external virtual {
+        require(validators[_msgSender()].status == Status.INVALID, "1003");
 
-        require(MINIMUM_DEPOSIT_AMOUNT <= token.allowance(msg.sender, address(this)), "1020");
-        token.transferFrom(msg.sender, address(this), MINIMUM_DEPOSIT_AMOUNT);
+        require(MINIMUM_DEPOSIT_AMOUNT <= token.allowance(_msgSender(), address(this)), "1020");
+        token.transferFrom(_msgSender(), address(this), MINIMUM_DEPOSIT_AMOUNT);
 
         ValidatorData memory item = ValidatorData({
-            validator: msg.sender,
+            validator: _msgSender(),
             start: block.timestamp + 86500 * 7,
             balance: MINIMUM_DEPOSIT_AMOUNT,
             status: Status.ACTIVE
         });
 
-        items.push(msg.sender);
-        validators[msg.sender] = item;
+        items.push(_msgSender());
+        validators[_msgSender()] = item;
 
-        emit RequestedToJoinValidator(msg.sender);
+        emit RequestedToJoinValidator(_msgSender());
     }
 
     /// @notice 검증자의 강제탈퇴를 신청합니다.
-    function requestExit(address validator) public {
-        ValidatorData memory item = validators[msg.sender];
-        require(item.validator == msg.sender, "1000");
+    function requestExit(address validator) external virtual {
+        ValidatorData memory item = validators[_msgSender()];
+        require(item.validator == _msgSender(), "1000");
         require(item.status == Status.ACTIVE && item.start <= block.timestamp, "1001");
 
         require(validators[validator].status != Status.INVALID, "1001");
@@ -116,21 +100,21 @@ contract ValidatorCollection {
             validators[validator].balance = 0;
         }
 
-        emit RequestedToExitValidator(msg.sender, validator);
+        emit RequestedToExitValidator(_msgSender(), validator);
     }
 
     /// @notice 등록된 검증자를 리턴한다.
     /// @param _idx 배열의 순번
-    function itemOf(uint256 _idx) public view returns (address) {
+    function itemOf(uint256 _idx) public virtual view returns (address) {
         return items[_idx];
     }
 
     /// @notice 등록된 검증자의 수를 리턴합니다.
-    function itemsLength() public view returns (uint256) {
+    function itemsLength() public virtual view returns (uint256) {
         return items.length;
     }
 
-    function isActiveValidator(address _account) public view returns (bool) {
+    function isActiveValidator(address _account) public virtual view returns (bool) {
         ValidatorData memory item = validators[_account];
 
         if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
@@ -141,7 +125,7 @@ contract ValidatorCollection {
     }
 
     /// @notice 유효한 검증자의 수를 리턴합니다.
-    function activeItemsLength() public view returns (uint256) {
+    function activeItemsLength() public virtual view returns (uint256) {
         uint256 value = 0;
         for (uint256 i = 0; i < items.length; ++i) {
             ValidatorData memory item = validators[items[i]];
@@ -154,25 +138,25 @@ contract ValidatorCollection {
 
     /// @notice 검증자의 데이타를 리턴합니다.
     /// @param _account 지갑주소
-    function validatorOf(address _account) public view returns (ValidatorData memory) {
+    function validatorOf(address _account) public virtual view returns (ValidatorData memory) {
         return validators[_account];
     }
 
     /// @notice 자발적으로 탈퇴하기 위해 사용되는 함수입니다.
-    function exit() public {
-        ValidatorData memory item = validators[msg.sender];
-        require(item.validator == msg.sender, "1000");
+    function exit() external virtual {
+        ValidatorData memory item = validators[_msgSender()];
+        require(item.validator == _msgSender(), "1000");
         require(item.status == Status.ACTIVE && item.start <= block.timestamp, "1001");
 
         require(activeItemsLength() > 1, "1010");
 
-        validators[msg.sender].status = Status.EXIT;
+        validators[_msgSender()].status = Status.EXIT;
 
-        if (validators[msg.sender].balance > 0) {
-            token.transfer(msg.sender, validators[msg.sender].balance);
-            validators[msg.sender].balance = 0;
+        if (validators[_msgSender()].balance > 0) {
+            token.transfer(_msgSender(), validators[_msgSender()].balance);
+            validators[_msgSender()].balance = 0;
         }
 
-        emit ExitedFromValidator(msg.sender);
+        emit ExitedFromValidator(_msgSender());
     }
 }

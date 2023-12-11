@@ -53,12 +53,12 @@ dataSources:
       file: ./src/ledger.ts
 
   - kind: ethereum
-    name: {{dataSources.ShopCollection.name}}
+    name: {{dataSources.Shop.name}}
     network: {{network}}
     source:
-      address: '{{dataSources.ShopCollection.address}}'
-      abi: ShopCollection
-      startBlock: {{dataSources.ShopCollection.startBlock}}
+      address: '{{dataSources.Shop.address}}'
+      abi: Shop
+      startBlock: {{dataSources.Shop.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -74,8 +74,8 @@ dataSources:
         - OpenedWithdrawal
         - UpdatedShop
       abis:
-        - name: ShopCollection
-          file: $DMS_OSX_MODULE/artifacts/contracts/ShopCollection.sol/ShopCollection.json
+        - name: Shop
+          file: $DMS_OSX_MODULE/artifacts/contracts/Shop.sol/Shop.json
       eventHandlers:
         - event: AddedShop(bytes32,string,string,uint256,uint256,address,uint8)
           handler: handleAddedShop

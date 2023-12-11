@@ -4,7 +4,7 @@
     "ValidatorCollection": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
     "CurrencyRate": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
     "CertifierCollection": "0xd7c16E257Ba560bA0C5A32169C2956837B39d89e",
-    "ShopCollection": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
+    "Shop": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
     "Ledger": "0x12c316e0358d914A211A3d477db912A503cFCc21"
   },
   "bosagora_testnet": {
@@ -12,7 +12,7 @@
     "ValidatorCollection": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
     "CurrencyRate": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
     "CertifierCollection": "0xd7c16E257Ba560bA0C5A32169C2956837B39d89e",
-    "ShopCollection": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
+    "Shop": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
     "Ledger": "0x12c316e0358d914A211A3d477db912A503cFCc21"
   },
   "bosagora_devnet": {
@@ -20,7 +20,7 @@
     "ValidatorCollection": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
     "CurrencyRate": "0xF396e42687C4ba2d1E2A65792B7165Ee8010Fdfe",
     "CertifierCollection": "0xd7c16E257Ba560bA0C5A32169C2956837B39d89e",
-    "ShopCollection": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
+    "Shop": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
     "Ledger": "0x12c316e0358d914A211A3d477db912A503cFCc21"
   }
 }

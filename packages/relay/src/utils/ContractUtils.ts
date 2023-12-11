@@ -1,13 +1,15 @@
-import { BigNumberish, BytesLike, ethers, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
-import { arrayify } from "ethers/lib/utils";
-import * as hre from "hardhat";
-
+import { defaultAbiCoder } from "@ethersproject/abi";
+import { arrayify, BytesLike } from "@ethersproject/bytes";
+import { keccak256 } from "@ethersproject/keccak256";
+import { randomBytes } from "@ethersproject/random";
 import { Log } from "@ethersproject/providers";
 import { id } from "@ethersproject/hash";
 import { ContractReceipt } from "@ethersproject/contracts";
 import { Interface } from "@ethersproject/abi";
-import { randomBytes } from "@ethersproject/random";
+import { verifyMessage } from "@ethersproject/wallet";
+
+import { BigNumberish, Signer } from "ethers";
 
 export class ContractUtils {
     public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {
@@ -34,16 +36,13 @@ export class ContractUtils {
     }
 
     public static getPhoneHash(phone: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "string"],
-            ["BOSagora Phone Number", phone]
-        );
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["string", "string"], ["BOSagora Phone Number", phone]);
+        return keccak256(encodedResult);
     }
 
     public static getEmailHash(phone: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
+        return keccak256(encodedResult);
     }
 
     /**
@@ -100,31 +99,28 @@ export class ContractUtils {
     }
 
     public static getRequestId(emailHash: string, address: string, nonce: BigNumberish): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "address", "uint256", "bytes32"],
             [emailHash, address, nonce, randomBytes(32)]
         );
-        return hre.ethers.utils.keccak256(encodedResult);
+        return keccak256(encodedResult);
     }
 
     public static getRequestHash(hash: string, address: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "address", "uint256"],
-            [hash, address, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["bytes32", "address", "uint256"], [hash, address, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signRequestHash(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getRequestHash(hash, await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyRequestHash(address: string, hash: string, nonce: BigNumberish, signature: string): boolean {
         const message = ContractUtils.getRequestHash(hash, address, nonce);
         let res: string;
         try {
-            res = hre.ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -139,11 +135,11 @@ export class ContractUtils {
         shopId: string,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["string", "uint256", "string", "bytes32", "address", "uint256"],
             [purchaseId, amount, currency, shopId, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signPayment(
@@ -162,7 +158,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyPayment(
@@ -177,7 +173,7 @@ export class ContractUtils {
         const message = ContractUtils.getPaymentMessage(account, purchaseId, amount, currency, shopId, nonce);
         let res: string;
         try {
-            res = ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -185,20 +181,20 @@ export class ContractUtils {
     }
 
     public static getLoyaltyTypeMessage(account: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["address", "uint256"], [account, nonce]);
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["address", "uint256"], [account, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyType(signer: Signer, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyLoyaltyType(account: string, nonce: BigNumberish, signature: string): boolean {
         const message = ContractUtils.getLoyaltyTypeMessage(account, nonce);
         let res: string;
         try {
-            res = ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -206,16 +202,13 @@ export class ContractUtils {
     }
 
     public static getChangePayablePointMessage(phone: BytesLike, address: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "address", "uint256"],
-            [phone, address, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["bytes32", "address", "uint256"], [phone, address, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signChangePayablePoint(signer: Signer, phone: BytesLike, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getChangePayablePointMessage(phone, await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyChangePayablePoint(
@@ -227,7 +220,7 @@ export class ContractUtils {
         const message = ContractUtils.getChangePayablePointMessage(phone, account, nonce);
         let res: string;
         try {
-            res = ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -235,31 +228,25 @@ export class ContractUtils {
     }
 
     public static getShopId(account: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["address", "bytes32"],
-            [account, randomBytes(32)]
-        );
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["address", "bytes32"], [account, randomBytes(32)]);
+        return keccak256(encodedResult);
     }
 
     public static getShopMessage(shopId: BytesLike, account: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "address", "uint256"],
-            [shopId, account, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["bytes32", "address", "uint256"], [shopId, account, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signShop(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getShopMessage(shopId, await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyShop(shopId: BytesLike, nonce: BigNumberish, account: string, signature: BytesLike): boolean {
         const message = ContractUtils.getShopMessage(shopId, account, nonce);
         let res: string;
         try {
-            res = ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -275,11 +262,11 @@ export class ContractUtils {
         shopId: string,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "string", "uint256", "string", "bytes32", "address", "uint256"],
             [paymentId, purchaseId, amount, currency, shopId, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyNewPayment(
@@ -300,7 +287,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyLoyaltyNewPayment(
@@ -324,7 +311,7 @@ export class ContractUtils {
         );
         let res: string;
         try {
-            res = ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -337,11 +324,11 @@ export class ContractUtils {
         purchaseId: string,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "string", "address", "uint256"],
             [paymentId, purchaseId, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyCancelPayment(
@@ -356,7 +343,7 @@ export class ContractUtils {
             purchaseId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
     public static verifyLoyaltyCancelPayment(
         paymentId: string,
@@ -368,7 +355,7 @@ export class ContractUtils {
         const message = ContractUtils.getLoyaltyCancelPaymentMessage(account, paymentId, purchaseId, nonce);
         let res: string;
         try {
-            res = ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -376,19 +363,19 @@ export class ContractUtils {
     }
 
     public static getPaymentId(account: string, nonce: BigNumberish): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["address", "uint256", "bytes32"],
             [account, nonce, randomBytes(32)]
         );
-        return hre.ethers.utils.keccak256(encodedResult);
+        return keccak256(encodedResult);
     }
 
     public static getTaskId(shopId: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "uint256", "bytes32", "bytes32"],
             [shopId, ContractUtils.getTimeStamp(), randomBytes(32), randomBytes(32)]
         );
-        return hre.ethers.utils.keccak256(encodedResult);
+        return keccak256(encodedResult);
     }
 
     public static getLoyaltyClosePaymentMessage(
@@ -398,11 +385,11 @@ export class ContractUtils {
         confirm: boolean,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "string", "bool", "address", "uint256"],
             [paymentId, purchaseId, confirm, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyClosePayment(
@@ -419,24 +406,24 @@ export class ContractUtils {
             confirm,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static getMobileTokenMessage(address: string, token: string): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "address"], [token, address]);
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["string", "address"], [token, address]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signMobileToken(signer: Signer, token: string): Promise<string> {
         const message = ContractUtils.getMobileTokenMessage(await signer.getAddress(), token);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyMobileToken(account: string, token: string, signature: BytesLike): boolean {
         const message = ContractUtils.getMobileTokenMessage(account, token);
         let res: string;
         try {
-            res = ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }

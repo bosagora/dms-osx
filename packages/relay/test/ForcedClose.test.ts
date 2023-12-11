@@ -7,7 +7,7 @@ import {
     CurrencyRate,
     Ledger,
     PhoneLinkCollection,
-    ShopCollection,
+    Shop,
     Token,
     ValidatorCollection,
 } from "../typechain-types";
@@ -64,7 +64,7 @@ describe("Test of Server", function () {
     let ledgerContract: Ledger;
     let linkCollectionContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
-    let shopCollection: ShopCollection;
+    let shopCollection: Shop;
     let certifierCollection: CertifierCollection;
 
     const multiple = BigNumber.from(1000000000);
@@ -141,10 +141,10 @@ describe("Test of Server", function () {
     };
 
     const deployShopCollection = async () => {
-        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
+        const shopCollectionFactory = await hre.ethers.getContractFactory("Shop");
         shopCollection = (await shopCollectionFactory
             .connect(deployer)
-            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
+            .deploy(certifierCollection.address, currencyRateContract.address)) as Shop;
         await shopCollection.deployed();
         await shopCollection.deployTransaction.wait();
     };

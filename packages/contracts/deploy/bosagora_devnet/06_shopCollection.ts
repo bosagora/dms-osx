@@ -5,7 +5,7 @@ import "hardhat-deploy";
 import { DeployFunction } from "hardhat-deploy/types";
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { ShopCollection } from "../../typechain-types";
+import { Shop } from "../../typechain-types";
 import { getContractAddress } from "../helpers";
 
 import { Wallet } from "ethers";
@@ -13,7 +13,7 @@ import { ContractShopStatus } from "../../src/types";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 
 const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
-    console.log(`\nDeploying ShopCollection.`);
+    console.log(`\nDeploying Shop.`);
 
     const { deployments, getNamedAccounts, ethers } = hre;
     const { deploy } = deployments;
@@ -22,7 +22,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     const certifierCollectionAddress = await getContractAddress("CertifierCollection", hre);
     const currencyRateContractAddress = await getContractAddress("CurrencyRate", hre);
 
-    const deployResult = await deploy("ShopCollection", {
+    const deployResult = await deploy("Shop", {
         from: deployer,
         args: [certifierCollectionAddress, currencyRateContractAddress],
         log: true,
@@ -39,8 +39,8 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
             privateKey: string;
         }
         const shopData: IShopData[] = JSON.parse(fs.readFileSync("./deploy/data/shops.json"));
-        const contractAddress = await getContractAddress("ShopCollection", hre);
-        const contract = (await ethers.getContractAt("ShopCollection", contractAddress)) as ShopCollection;
+        const contractAddress = await getContractAddress("Shop", hre);
+        const contract = (await ethers.getContractAt("Shop", contractAddress)) as Shop;
 
         for (const shop of shopData) {
             const nonce = await contract.nonceOf(shop.address);
@@ -85,4 +85,4 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
 };
 
 export default func;
-func.tags = ["ShopCollection"];
+func.tags = ["Shop"];
