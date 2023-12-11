@@ -46,7 +46,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
 
     /// @notice 통화에 대한 가격을 제공한다.
     /// @param _symbol 통화명
-    function get(string calldata _symbol) external virtual view returns (uint256) {
+    function get(string calldata _symbol) external view virtual returns (uint256) {
         return _get(_symbol);
     }
 
@@ -64,17 +64,17 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     }
 
     /// @notice 포인트를 토큰으로 환산한다.
-    function convertPointToToken(uint256 amount) external virtual view returns (uint256) {
+    function convertPointToToken(uint256 amount) external view virtual returns (uint256) {
         return (amount * MULTIPLE) / _get(tokenSymbol);
     }
 
     /// @notice 토큰을 포인트로 환산한다.
-    function convertTokenToPoint(uint256 amount) external virtual view returns (uint256) {
+    function convertTokenToPoint(uint256 amount) external view virtual returns (uint256) {
         return (amount * _get(tokenSymbol)) / MULTIPLE;
     }
 
     /// @notice 화폐를 포인트로 환산한다.
-    function convertCurrencyToPoint(uint256 _amount, string calldata _symbol) external virtual view returns (uint256) {
+    function convertCurrencyToPoint(uint256 _amount, string calldata _symbol) external view virtual returns (uint256) {
         bytes32 byteCurrency = keccak256(abi.encodePacked(_symbol));
         if ((byteCurrency == BASE_CURRENCY) || (byteCurrency == NULL_CURRENCY)) {
             return _amount;
@@ -84,7 +84,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     }
 
     /// @notice 화폐를 토큰으로 환산한다.
-    function convertCurrencyToToken(uint256 _amount, string calldata _symbol) external virtual view returns (uint256) {
+    function convertCurrencyToToken(uint256 _amount, string calldata _symbol) external view virtual returns (uint256) {
         return _convertCurrency(_amount, _symbol, tokenSymbol);
     }
 
@@ -93,7 +93,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         uint256 _amount,
         string calldata _symbol1,
         string calldata _symbol2
-    ) external virtual view returns (uint256) {
+    ) external view virtual returns (uint256) {
         return _convertCurrency(_amount, _symbol1, _symbol2);
     }
 
