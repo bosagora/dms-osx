@@ -62,7 +62,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 changedValue,
         uint256 balancePoint
     );
-/// @notice 포인트가 지급될 때 발생되는 이벤트
+
+    /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedPoint(
         address account,
         uint256 providedPoint,
@@ -72,6 +73,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         string purchaseId,
         bytes32 shopId
     );
+
     /// @notice 토큰이 지급될 때 발생되는 이벤트
     event ProvidedToken(
         address account,
@@ -135,7 +137,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address _linkAddress,
         address _currencyRateAddress,
         address _shopAddress
-    )  external initializer  {
+    ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(_msgSender());
 
@@ -284,7 +286,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
                 nonce[data.account]
             )
         );
-        require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), data.signature) == data.account, "1501");
+        require(
+            ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), data.signature) == data.account,
+            "1501"
+        );
 
         nonce[data.account]++;
 
@@ -476,7 +481,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         bytes32 dataHash = keccak256(
             abi.encode(_paymentId, loyaltyPayments[_paymentId].purchaseId, shopInfo.account, nonce[shopInfo.account])
         );
-        require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == shopInfo.account, "1501");
+        require(
+            ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == shopInfo.account,
+            "1501"
+        );
 
         nonce[shopInfo.account]++;
 
@@ -574,7 +582,12 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
         tokenBalances[_msgSender()] += _amount;
 
-        emit Deposited(_msgSender(), _amount, currencyRateContract.convertTokenToPoint(_amount), tokenBalances[_msgSender()]);
+        emit Deposited(
+            _msgSender(),
+            _amount,
+            currencyRateContract.convertTokenToPoint(_amount),
+            tokenBalances[_msgSender()]
+        );
     }
 
     /// @notice 토큰을 인출합니다.
@@ -585,7 +598,12 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
         tokenBalances[_msgSender()] -= _amount;
 
-        emit Withdrawn(_msgSender(), _amount, currencyRateContract.convertTokenToPoint(_amount), tokenBalances[_msgSender()]);
+        emit Withdrawn(
+            _msgSender(),
+            _amount,
+            currencyRateContract.convertTokenToPoint(_amount),
+            tokenBalances[_msgSender()]
+        );
     }
 
     /// @notice 사용가능한 포인트로 전환합니다.

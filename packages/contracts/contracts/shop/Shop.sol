@@ -82,7 +82,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         deployer = _msgSender();
     }
 
-
     function _authorizeUpgrade(address newImplementation) internal virtual override {
         require(_msgSender() == owner(), "Unauthorized access");
     }
@@ -102,7 +101,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     /// @notice 이용할 수 있는 아이디 인지 알려준다.
     /// @param _shopId 상점 아이디
-    function isAvailableId(bytes32 _shopId) public virtual view returns (bool) {
+    function isAvailableId(bytes32 _shopId) public view virtual returns (bool) {
         if (shops[_shopId].status == ShopStatus.INVALID) return true;
         else return false;
     }
@@ -222,7 +221,12 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     /// @param _shopId 상점 아이디
     /// @param _status 상점의 상태
     /// @dev 중계서버를 통해서 호출됩니다.
-    function changeStatus(bytes32 _shopId, ShopStatus _status, address _account, bytes calldata _signature) external virtual {
+    function changeStatus(
+        bytes32 _shopId,
+        ShopStatus _status,
+        address _account,
+        bytes calldata _signature
+    ) external virtual {
         bytes32 id = _shopId;
         require(_status != ShopStatus.INVALID, "1201");
         require(shops[id].status != ShopStatus.INVALID, "1201");
@@ -242,12 +246,16 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     /// @notice 지갑주소로 등록한 상점의 아이디들을 리턴한다.
     /// @param _account 지갑주소
-    function shopsOf(address _account) external virtual view returns (bytes32[] memory) {
+    function shopsOf(address _account) external view virtual returns (bytes32[] memory) {
         return shopIdByAddress[_account];
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
-    function addProvidedAmount(bytes32 _shopId, uint256 _value, string calldata _purchaseId) external virtual onlyLedger {
+    function addProvidedAmount(
+        bytes32 _shopId,
+        uint256 _value,
+        string calldata _purchaseId
+    ) external virtual onlyLedger {
         if (shops[_shopId].status != ShopStatus.INVALID) {
             shops[_shopId].providedAmount += _value;
             emit IncreasedProvidedAmount(
@@ -303,7 +311,11 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     }
 
     /// @notice 정산된 총 마일지리를 누적한다
-    function addSettledAmount(bytes32 _shopId, uint256 _value, string calldata _purchaseId) external virtual onlyLedger {
+    function addSettledAmount(
+        bytes32 _shopId,
+        uint256 _value,
+        string calldata _purchaseId
+    ) external virtual onlyLedger {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             shops[_shopId].settledAmount += _value;
             emit IncreasedSettledAmount(
@@ -317,7 +329,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     }
 
     /// @notice 정산되어야 할 마일지리의 량을 리턴합니다.
-    function getSettlementAmount(bytes32 _shopId) external virtual view returns (uint256) {
+    function getSettlementAmount(bytes32 _shopId) external view virtual returns (uint256) {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             ShopData memory data = shops[_shopId];
             if (data.providedAmount + data.settledAmount < data.usedAmount) {
@@ -332,24 +344,24 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     /// @notice 상점 데이터를 리턴한다
     /// @param _shopId 상점의 아이디
-    function shopOf(bytes32 _shopId) external virtual view returns (ShopData memory) {
+    function shopOf(bytes32 _shopId) external view virtual returns (ShopData memory) {
         return shops[_shopId];
     }
 
     /// @notice 상점의 아이디를 리턴한다
     /// @param _idx 배열의 순번
-    function shopIdOf(uint256 _idx) external virtual view returns (bytes32) {
+    function shopIdOf(uint256 _idx) external view virtual returns (bytes32) {
         return items[_idx];
     }
 
     /// @notice 상점의 갯수를 리턴한다
-    function shopsLength() external virtual view returns (uint256) {
+    function shopsLength() external view virtual returns (uint256) {
         return items.length;
     }
 
     /// @notice 인출가능한 정산금액을 리턴한다.
     /// @param _shopId 상점의 아이디
-    function withdrawableOf(bytes32 _shopId) external virtual view returns (uint256) {
+    function withdrawableOf(bytes32 _shopId) external view virtual returns (uint256) {
         ShopData memory shop = shops[_shopId];
         return shop.settledAmount - shop.withdrawnAmount;
     }
@@ -358,7 +370,12 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     /// @param _shopId 상점아이디
     /// @param _amount 인출금
     /// @dev 중계서버를 통해서 상점주의 서명을 가지고 호출됩니다.
-    function openWithdrawal(bytes32 _shopId, uint256 _amount, address _account, bytes calldata _signature) external virtual {
+    function openWithdrawal(
+        bytes32 _shopId,
+        uint256 _amount,
+        address _account,
+        bytes calldata _signature
+    ) external virtual {
         require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
@@ -433,7 +450,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     /// @notice nonce를  리턴한다
     /// @param _account 지갑주소
-    function nonceOf(address _account) external virtual view returns (uint256) {
+    function nonceOf(address _account) external view virtual returns (uint256) {
         return nonce[_account];
     }
 }

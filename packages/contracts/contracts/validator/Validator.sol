@@ -105,16 +105,16 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
 
     /// @notice 등록된 검증자를 리턴한다.
     /// @param _idx 배열의 순번
-    function itemOf(uint256 _idx) public virtual view returns (address) {
+    function itemOf(uint256 _idx) public view virtual returns (address) {
         return items[_idx];
     }
 
     /// @notice 등록된 검증자의 수를 리턴합니다.
-    function itemsLength() public virtual view returns (uint256) {
+    function itemsLength() public view virtual returns (uint256) {
         return items.length;
     }
 
-    function isActiveValidator(address _account) public virtual view returns (bool) {
+    function isActiveValidator(address _account) public view virtual returns (bool) {
         ValidatorData memory item = validators[_account];
 
         if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
@@ -125,7 +125,7 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
     }
 
     /// @notice 유효한 검증자의 수를 리턴합니다.
-    function activeItemsLength() public virtual view returns (uint256) {
+    function activeItemsLength() public view virtual returns (uint256) {
         uint256 value = 0;
         for (uint256 i = 0; i < items.length; ++i) {
             ValidatorData memory item = validators[items[i]];
@@ -138,7 +138,7 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
 
     /// @notice 검증자의 데이타를 리턴합니다.
     /// @param _account 지갑주소
-    function validatorOf(address _account) public virtual view returns (ValidatorData memory) {
+    function validatorOf(address _account) public view virtual returns (ValidatorData memory) {
         return validators[_account];
     }
 
