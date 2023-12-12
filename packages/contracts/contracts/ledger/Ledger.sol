@@ -18,36 +18,6 @@ import "./LedgerStorage.sol";
 
 /// @notice 포인트와 토큰의 원장
 contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ILedger {
-    struct PurchaseData {
-        string purchaseId;
-        uint256 timestamp;
-        uint256 amount;
-        string currency;
-        bytes32 shopId;
-        uint32 method;
-        address account;
-        bytes32 phone;
-    }
-
-    struct LoyaltyPaymentInputData {
-        bytes32 paymentId;
-        string purchaseId;
-        uint256 amount;
-        string currency;
-        bytes32 shopId;
-        address account;
-        bytes signature;
-    }
-
-    /// @notice 사용가능한 포인트로 변환될 때 발생되는 이벤트
-    event ChangedToPayablePoint(
-        bytes32 phone,
-        address account,
-        uint256 changedPoint,
-        uint256 changedValue,
-        uint256 balancePoint
-    );
-
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedPoint(
         address account,
@@ -93,37 +63,28 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         string purchaseId
     );
 
-    /// @notice 토큰/포인트로 지불을 완료했을 때 발생하는 이벤트
-    event LoyaltyPaymentEvent(LoyaltyPaymentData payment, uint256 balance);
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(address account, uint256 depositedToken, uint256 depositedValue, uint256 balanceToken);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
     event Withdrawn(address account, uint256 withdrawnToken, uint256 withdrawnValue, uint256 balanceToken);
-    /// @notice 구매 후 적립되는 로열티를 토큰으로 변경했을 때 발생하는 이벤트
-    event ChangedToLoyaltyToken(address account, uint256 amountToken, uint256 amountPoint, uint256 balanceToken);
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
     /// @param _settlementAccount 정산금 계정
     /// @param _feeAccount 수수료 계정
-    /// @param _certifierAddress 거래 취소를 인증하는 계정
     /// @param _tokenAddress 토큰 컨트랙트의 주소
-    /// @param _validatorAddress 검증자 컬랙션 컨트랙트의 주소
     /// @param _linkAddress 전화번호-지갑주소 링크 컨트랙트의 주소
     /// @param _currencyRateAddress 환률을 제공하는 컨트랙트의 주소
-    /// @param _shopAddress 가맹점 컬랙션 컨트랙트의 주소
     function initialize(
         address _foundationAccount,
         address _settlementAccount,
         address _feeAccount,
-        address _certifierAddress,
         address _tokenAddress,
-        address _validatorAddress,
         address _linkAddress,
         address _currencyRateAddress,
-        address _shopAddress,
         address _providerAddress,
-        address _consumerAddress
+        address _consumerAddress,
+        address _exchangerAddress
     ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(_msgSender());
@@ -133,13 +94,11 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         feeAccount = _feeAccount;
         providerAddress = _providerAddress;
         consumerAddress = _consumerAddress;
+        exchangerAddress = _exchangerAddress;
 
-        certifierContract = ICertifier(_certifierAddress);
         tokenContract = IERC20(_tokenAddress);
-        validatorContract = IValidator(_validatorAddress);
         linkContract = IPhoneLinkCollection(_linkAddress);
         currencyRateContract = ICurrencyRate(_currencyRateAddress);
-        shopContract = IShop(_shopAddress);
         fee = MAX_FEE;
 
         loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
@@ -153,11 +112,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         require(_msgSender() == owner(), "Unauthorized access");
     }
 
-    modifier onlyValidator(address _account) {
-        require(validatorContract.isActiveValidator(_account), "1000");
-        _;
-    }
-
     modifier onlyProvider() {
         require(_msgSender() == providerAddress, "1005");
         _;
@@ -168,320 +122,19 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         _;
     }
 
-    /// @notice 이용할 수 있는 지불 아이디 인지 알려준다.
-    /// @param _paymentId 지불 아이디
-    function isAvailablePaymentId(bytes32 _paymentId) external view returns (bool) {
-        if (loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.INVALID) return true;
-        else return false;
+    modifier onlyExchanger() {
+        require(_msgSender() == exchangerAddress, "1007");
+        _;
     }
 
-    /// @notice 로얄티(포인트/토큰)을 구매데아타를 제공하는 함수
-    /// @param _paymentId 지불 아이디
-    function loyaltyPaymentOf(bytes32 _paymentId) external view returns (LoyaltyPaymentData memory) {
-        return loyaltyPayments[_paymentId];
+    modifier onlyAccessNonce() {
+        require(_msgSender() == consumerAddress || _msgSender() == exchangerAddress, "1007");
+        _;
     }
 
-    /// @notice 로얄티(포인트/토큰)을 사용하여 구매요청을 시작하는 함수
-    /// @dev 중계서버를 통해서 호출됩니다.
-    function openNewLoyaltyPayment(LoyaltyPaymentInputData calldata data) external {
-        require(loyaltyPayments[data.paymentId].status == LoyaltyPaymentStatus.INVALID, "1530");
-
-        bytes32 dataHash = keccak256(
-            abi.encode(
-                data.paymentId,
-                data.purchaseId,
-                data.amount,
-                data.currency,
-                data.shopId,
-                data.account,
-                nonce[data.account]
-            )
-        );
-        require(
-            ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), data.signature) == data.account,
-            "1501"
-        );
-
-        nonce[data.account]++;
-
-        if (loyaltyTypes[data.account] == LoyaltyType.POINT) {
-            _openNewLoyaltyPaymentPoint(data);
-        } else {
-            _openNewLoyaltyPaymentToken(data);
-        }
-    }
-
-    /// @notice 포인트를 사용한 구매요청을 시작하는 함수
-    function _openNewLoyaltyPaymentPoint(LoyaltyPaymentInputData memory data) internal {
-        uint256 paidPoint = currencyRateContract.convertCurrencyToPoint(data.amount, data.currency);
-        uint256 paidToken = currencyRateContract.convertPointToToken(paidPoint);
-        uint256 feeValue = (data.amount * fee) / 100;
-        uint256 feePoint = currencyRateContract.convertCurrencyToPoint(feeValue, data.currency);
-        uint256 feeToken = currencyRateContract.convertPointToToken(feePoint);
-
-        require(pointBalances[data.account] >= (paidPoint + feePoint), "1511");
-
-        pointBalances[data.account] -= (paidPoint + feePoint);
-        pointBalances[temporaryAddress] += (paidPoint + feePoint);
-
-        loyaltyPayments[data.paymentId] = LoyaltyPaymentData({
-            paymentId: data.paymentId,
-            purchaseId: data.purchaseId,
-            currency: data.currency,
-            shopId: data.shopId,
-            account: data.account,
-            timestamp: block.timestamp,
-            loyaltyType: LoyaltyType.POINT,
-            paidPoint: paidPoint,
-            paidToken: paidToken,
-            paidValue: data.amount,
-            feePoint: feePoint,
-            feeToken: feeToken,
-            feeValue: feeValue,
-            usedValueShop: 0,
-            status: LoyaltyPaymentStatus.OPENED_PAYMENT
-        });
-
-        emit LoyaltyPaymentEvent(loyaltyPayments[data.paymentId], pointBalances[data.account]);
-    }
-
-    /// @notice 토큰을 사용한 구매요청을 시작하는 함수
-    function _openNewLoyaltyPaymentToken(LoyaltyPaymentInputData memory data) internal {
-        uint256 paidPoint = currencyRateContract.convertCurrencyToPoint(data.amount, data.currency);
-        uint256 paidToken = currencyRateContract.convertPointToToken(paidPoint);
-        uint256 feeValue = (data.amount * fee) / 100;
-        uint256 feePoint = currencyRateContract.convertCurrencyToPoint(feeValue, data.currency);
-        uint256 feeToken = currencyRateContract.convertPointToToken(feePoint);
-        uint256 totalToken = paidToken + feeToken;
-
-        require(tokenBalances[data.account] >= totalToken, "1511");
-
-        tokenBalances[data.account] -= totalToken;
-        tokenBalances[temporaryAddress] += totalToken;
-
-        loyaltyPayments[data.paymentId] = LoyaltyPaymentData({
-            paymentId: data.paymentId,
-            purchaseId: data.purchaseId,
-            currency: data.currency,
-            shopId: data.shopId,
-            account: data.account,
-            timestamp: block.timestamp,
-            loyaltyType: LoyaltyType.TOKEN,
-            paidPoint: paidPoint,
-            paidToken: paidToken,
-            paidValue: data.amount,
-            feePoint: feePoint,
-            feeToken: feeToken,
-            feeValue: feeValue,
-            usedValueShop: 0,
-            status: LoyaltyPaymentStatus.OPENED_PAYMENT
-        });
-
-        emit LoyaltyPaymentEvent(loyaltyPayments[data.paymentId], tokenBalances[data.account]);
-    }
-
-    /// @notice 로얄티(포인트/토큰)을 사용하여 구매요청을 종료 함수
-    /// @dev 중계서버를 통해서 호출됩니다.
-    function closeNewLoyaltyPayment(bytes32 _paymentId, bool _confirm) external {
-        require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_PAYMENT, "1531");
-
-        require(certifierContract.isCertifier(_msgSender()), "1505");
-
-        if (loyaltyTypes[loyaltyPayments[_paymentId].account] == LoyaltyType.POINT) {
-            _closeNewLoyaltyPaymentPoint(_paymentId, _confirm);
-        } else {
-            _closeNewLoyaltyPaymentToken(_paymentId, _confirm);
-        }
-    }
-
-    /// @notice 포인트를 사용한 구매요청을 종료하는 함수
-    function _closeNewLoyaltyPaymentPoint(bytes32 _paymentId, bool _confirm) internal {
-        uint256 totalPoint = loyaltyPayments[_paymentId].paidPoint + loyaltyPayments[_paymentId].feePoint;
-        if (_confirm) {
-            pointBalances[temporaryAddress] -= totalPoint;
-
-            // 재단의 토큰으로 교환해 수수료계좌에 지급한다.
-            if (tokenBalances[foundationAccount] >= loyaltyPayments[_paymentId].feeToken) {
-                tokenBalances[foundationAccount] -= loyaltyPayments[_paymentId].feeToken;
-                tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
-            }
-            _settleShop(_paymentId);
-            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_PAYMENT;
-        } else {
-            // 임시저장 포인트를 소각한다.
-            pointBalances[temporaryAddress] -= totalPoint;
-            // 사용자에게 포인트를 반환한다
-            pointBalances[loyaltyPayments[_paymentId].account] += totalPoint;
-            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.FAILED_PAYMENT;
-        }
-        emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], pointBalances[loyaltyPayments[_paymentId].account]);
-    }
-
-    /// @notice 토큰을 사용한 구매요청을 종료하는 함수
-    function _closeNewLoyaltyPaymentToken(bytes32 _paymentId, bool _confirm) internal {
-        if (_confirm) {
-            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].paidToken;
-            tokenBalances[foundationAccount] += loyaltyPayments[_paymentId].paidToken;
-            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
-            tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
-            _settleShop(_paymentId);
-            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_PAYMENT;
-        } else {
-            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].paidToken;
-            tokenBalances[loyaltyPayments[_paymentId].account] += loyaltyPayments[_paymentId].paidToken;
-            tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
-            tokenBalances[loyaltyPayments[_paymentId].account] += loyaltyPayments[_paymentId].feeToken;
-            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.FAILED_PAYMENT;
-        }
-        emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], tokenBalances[loyaltyPayments[_paymentId].account]);
-    }
-
-    function _settleShop(bytes32 _paymentId) internal {
-        IShop.ShopData memory shop = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
-        if (shop.status == IShop.ShopStatus.ACTIVE) {
-            loyaltyPayments[_paymentId].usedValueShop = currencyRateContract.convertCurrency(
-                loyaltyPayments[_paymentId].paidValue,
-                loyaltyPayments[_paymentId].currency,
-                shop.currency
-            );
-            shopContract.addUsedAmount(
-                loyaltyPayments[_paymentId].shopId,
-                loyaltyPayments[_paymentId].usedValueShop,
-                loyaltyPayments[_paymentId].purchaseId,
-                _paymentId
-            );
-
-            uint256 settlementValue = shopContract.getSettlementAmount(loyaltyPayments[_paymentId].shopId);
-            if (settlementValue > 0) {
-                uint256 settlementPoint = currencyRateContract.convertCurrencyToPoint(settlementValue, shop.currency);
-                uint256 settlementToken = currencyRateContract.convertCurrencyToToken(settlementValue, shop.currency);
-                if (tokenBalances[foundationAccount] >= settlementToken) {
-                    tokenBalances[settlementAccount] += settlementToken;
-                    tokenBalances[foundationAccount] -= settlementToken;
-                    shopContract.addSettledAmount(
-                        loyaltyPayments[_paymentId].shopId,
-                        settlementValue,
-                        loyaltyPayments[_paymentId].purchaseId
-                    );
-                    emit ProvidedTokenForSettlement(
-                        settlementAccount,
-                        loyaltyPayments[_paymentId].shopId,
-                        settlementPoint,
-                        settlementToken,
-                        settlementValue,
-                        shop.currency,
-                        tokenBalances[settlementAccount],
-                        loyaltyPayments[_paymentId].purchaseId
-                    );
-                }
-            }
-        }
-    }
-
-    /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 시작하는 함수
-    /// @dev 상점주가 중계서버를 통해서 호출됩니다.
-    function openCancelLoyaltyPayment(bytes32 _paymentId, bytes calldata _signature) external {
-        require(
-            (loyaltyPayments[_paymentId].status != LoyaltyPaymentStatus.CLOSED_PAYMENT) ||
-                (loyaltyPayments[_paymentId].status != LoyaltyPaymentStatus.FAILED_CANCEL),
-            "1532"
-        );
-        require(block.timestamp <= loyaltyPayments[_paymentId].timestamp + 86400 * 7, "1534");
-
-        IShop.ShopData memory shopInfo = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
-        bytes32 dataHash = keccak256(
-            abi.encode(_paymentId, loyaltyPayments[_paymentId].purchaseId, shopInfo.account, nonce[shopInfo.account])
-        );
-        require(
-            ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == shopInfo.account,
-            "1501"
-        );
-
-        nonce[shopInfo.account]++;
-
-        if (loyaltyPayments[_paymentId].loyaltyType == LoyaltyType.POINT) {
-            if (tokenBalances[feeAccount] >= loyaltyPayments[_paymentId].feeToken) {
-                tokenBalances[feeAccount] -= loyaltyPayments[_paymentId].feeToken;
-                tokenBalances[temporaryAddress] += loyaltyPayments[_paymentId].feeToken;
-                pointBalances[temporaryAddress] += (loyaltyPayments[_paymentId].paidPoint +
-                    loyaltyPayments[_paymentId].feePoint);
-                loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.OPENED_CANCEL;
-                emit LoyaltyPaymentEvent(
-                    loyaltyPayments[_paymentId],
-                    pointBalances[loyaltyPayments[_paymentId].account]
-                );
-            } else {
-                revert("1513");
-            }
-        } else {
-            if (
-                (tokenBalances[foundationAccount] >= loyaltyPayments[_paymentId].paidToken) &&
-                (tokenBalances[feeAccount] >= loyaltyPayments[_paymentId].feeToken)
-            ) {
-                tokenBalances[foundationAccount] -= loyaltyPayments[_paymentId].paidToken;
-                tokenBalances[feeAccount] -= loyaltyPayments[_paymentId].feeToken;
-                tokenBalances[temporaryAddress] += (loyaltyPayments[_paymentId].paidToken +
-                    loyaltyPayments[_paymentId].feeToken);
-                loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.OPENED_CANCEL;
-                emit LoyaltyPaymentEvent(
-                    loyaltyPayments[_paymentId],
-                    tokenBalances[loyaltyPayments[_paymentId].account]
-                );
-            } else {
-                revert("1513");
-            }
-        }
-    }
-
-    /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 종료하는 함수
-    /// @dev 사용자가 중계서버를 통해서 호출됩니다.
-    function closeCancelLoyaltyPayment(bytes32 _paymentId, bool _confirm) external {
-        require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_CANCEL, "1533");
-
-        require(certifierContract.isCertifier(_msgSender()), "1505");
-
-        uint256 balance;
-        if (_confirm) {
-            if (loyaltyPayments[_paymentId].loyaltyType == LoyaltyType.POINT) {
-                tokenBalances[foundationAccount] += loyaltyPayments[_paymentId].feeToken;
-                tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
-                pointBalances[loyaltyPayments[_paymentId].account] += (loyaltyPayments[_paymentId].paidPoint +
-                    loyaltyPayments[_paymentId].feePoint);
-
-                balance = pointBalances[loyaltyPayments[_paymentId].account];
-            } else {
-                tokenBalances[temporaryAddress] -= (loyaltyPayments[_paymentId].paidToken +
-                    loyaltyPayments[_paymentId].feeToken);
-                tokenBalances[loyaltyPayments[_paymentId].account] += (loyaltyPayments[_paymentId].paidToken +
-                    loyaltyPayments[_paymentId].feeToken);
-
-                balance = tokenBalances[loyaltyPayments[_paymentId].account];
-            }
-            shopContract.subUsedAmount(
-                loyaltyPayments[_paymentId].shopId,
-                loyaltyPayments[_paymentId].usedValueShop,
-                loyaltyPayments[_paymentId].purchaseId,
-                _paymentId
-            );
-            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_CANCEL;
-            emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], balance);
-        } else {
-            if (loyaltyPayments[_paymentId].loyaltyType == LoyaltyType.POINT) {
-                tokenBalances[temporaryAddress] -= loyaltyPayments[_paymentId].feeToken;
-                tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
-                pointBalances[temporaryAddress] -= (loyaltyPayments[_paymentId].paidPoint +
-                    loyaltyPayments[_paymentId].feePoint);
-                balance = pointBalances[loyaltyPayments[_paymentId].account];
-            } else {
-                tokenBalances[temporaryAddress] -= (loyaltyPayments[_paymentId].paidToken +
-                    loyaltyPayments[_paymentId].feeToken);
-                tokenBalances[foundationAccount] += loyaltyPayments[_paymentId].paidToken;
-                tokenBalances[feeAccount] += loyaltyPayments[_paymentId].feeToken;
-                balance = tokenBalances[loyaltyPayments[_paymentId].account];
-            }
-            loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.FAILED_CANCEL;
-            emit LoyaltyPaymentEvent(loyaltyPayments[_paymentId], balance);
-        }
+    modifier onlyAccessLedger() {
+        require(_msgSender() == consumerAddress || _msgSender() == exchangerAddress, "1007");
+        _;
     }
 
     /// @notice 토큰을 예치합니다.
@@ -517,63 +170,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         );
     }
 
-    /// @notice 사용가능한 포인트로 전환합니다.
-    /// @dev 중계서버를 통해서 호출됩니다.
-    function changeToPayablePoint(bytes32 _phone, address _account, bytes calldata _signature) external virtual {
-        bytes32 dataHash = keccak256(abi.encode(_phone, _account, nonce[_account]));
-        require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-
-        address userAddress = linkContract.toAddress(_phone);
-        require(userAddress != address(0x00), "1502");
-        require(userAddress == _account, "1503");
-        require(unPayablePointBalances[_phone] > 0, "1511");
-
-        uint256 amount = unPayablePointBalances[_phone];
-        uint256 value = amount;
-        unPayablePointBalances[_phone] = 0;
-        pointBalances[_account] += amount;
-
-        nonce[_account]++;
-
-        emit ChangedToPayablePoint(_phone, _account, amount, value, pointBalances[_account]);
-
-        if (loyaltyTypes[_account] == LoyaltyType.TOKEN) {
-            _exchangePointToToken(_account);
-        }
-    }
-
-    /// @notice 사용자가 적립할 로열티를 토큰으로 변경한다.
-    /// @param _account 지갑주소
-    /// @param _signature 서명
-    /// @dev 중계서버를 통해서 호출됩니다.
-    function changeToLoyaltyToken(address _account, bytes calldata _signature) external virtual {
-        bytes32 dataHash = keccak256(abi.encode(_account, nonce[_account]));
-        require(ECDSA.recover(MessageHashUtils.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-
-        if (loyaltyTypes[_account] != LoyaltyType.TOKEN) {
-            loyaltyTypes[_account] = LoyaltyType.TOKEN;
-            _exchangePointToToken(_account);
-            nonce[_account]++;
-        }
-    }
-
-    function _exchangePointToToken(address _account) internal {
-        uint256 amountPoint;
-        uint256 amountToken;
-        if (pointBalances[_account] > 0) {
-            amountPoint = pointBalances[_account];
-            amountToken = currencyRateContract.convertPointToToken(amountPoint);
-            require(tokenBalances[foundationAccount] >= amountToken, "1510");
-            tokenBalances[_account] += amountToken;
-            tokenBalances[foundationAccount] -= amountToken;
-            pointBalances[_account] = 0;
-        } else {
-            amountPoint = 0;
-            amountToken = 0;
-        }
-        emit ChangedToLoyaltyToken(_account, amountToken, amountPoint, tokenBalances[_account]);
-    }
-
     /// @notice 포인트를 지급합니다.
     /// @dev 구매 데이터를 확인한 후 호출됩니다.
     /// @param _phone 전화번호 해시
@@ -599,7 +195,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         string calldata _currency,
         string calldata _purchaseId,
         bytes32 _shopId
-    ) internal virtual {
+    ) internal {
         unPayablePointBalances[_phone] += _loyaltyPoint;
         emit ProvidedUnPayablePoint(
             _phone,
@@ -637,7 +233,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         string calldata _currency,
         string calldata _purchaseId,
         bytes32 _shopId
-    ) internal virtual {
+    ) internal {
         pointBalances[_account] += _loyaltyPoint;
         emit ProvidedPoint(
             _account,
@@ -675,7 +271,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         string calldata _currency,
         string calldata _purchaseId,
         bytes32 _shopId
-    ) internal virtual {
+    ) internal {
         uint256 amountToken = currencyRateContract.convertPointToToken(_loyaltyPoint);
 
         require(tokenBalances[foundationAccount] >= amountToken, "1510");
@@ -683,6 +279,56 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         tokenBalances[foundationAccount] -= amountToken;
         uint256 balance = tokenBalances[_account];
         emit ProvidedToken(_account, amountToken, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
+    }
+
+    function provideSettlement(
+        address _account,
+        bytes32 _shopId,
+        uint256 _providedPoint,
+        uint256 _providedToken,
+        uint256 _providedValue,
+        string calldata _currency,
+        string calldata _purchaseId
+    ) external virtual onlyConsumer {
+        uint256 balance = tokenBalances[_account];
+        emit ProvidedTokenForSettlement(
+            _account,
+            _shopId,
+            _providedPoint,
+            _providedToken,
+            _providedValue,
+            _currency,
+            balance,
+            _purchaseId
+        );
+    }
+
+    /// @notice 포인트의 잔고에 더한다. Consumer 컨트랙트만 호출할 수 있다.
+    function addPointBalance(address _account, uint256 _amount) external virtual onlyAccessLedger {
+        pointBalances[_account] += _amount;
+    }
+
+    /// @notice 포인트의 잔고에서 뺀다. Consumer 컨트랙트만 호출할 수 있다.
+    function subPointBalance(address _account, uint256 _amount) external virtual onlyAccessLedger {
+        if (pointBalances[_account] >= _amount) pointBalances[_account] -= _amount;
+    }
+
+    /// @notice 토큰의 잔고에 더한다. Consumer 컨트랙트만 호출할 수 있다.
+    function addTokenBalance(address _account, uint256 _amount) external virtual onlyAccessLedger {
+        tokenBalances[_account] += _amount;
+    }
+
+    /// @notice 토큰의 잔고에서 뺀다. Consumer 컨트랙트만 호출할 수 있다.
+    function subTokenBalance(address _account, uint256 _amount) external virtual onlyAccessLedger {
+        if (tokenBalances[_account] >= _amount) tokenBalances[_account] -= _amount;
+    }
+
+    /// @notice 토큰을 전달한다. Consumer 컨트랙트만 호출할 수 있다.
+    function transferToken(address _from, address _to, uint256 _amount) external virtual onlyAccessLedger {
+        if (tokenBalances[_from] >= _amount) {
+            tokenBalances[_from] -= _amount;
+            tokenBalances[_to] += _amount;
+        }
     }
 
     /// @notice 포인트의 잔고를 리턴한다
@@ -703,10 +349,16 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         return tokenBalances[_account];
     }
 
-    /// @notice nonce를  리턴한다
+    /// @notice nonce를 리턴한다
     /// @param _account 지갑주소
     function nonceOf(address _account) external view virtual returns (uint256) {
         return nonce[_account];
+    }
+
+    /// @notice nonce를 증가한다
+    /// @param _account 지갑주소
+    function increaseNonce(address _account) external virtual onlyAccessNonce {
+        nonce[_account]++;
     }
 
     /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
@@ -721,5 +373,34 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         require(_fee <= MAX_FEE, "1521");
         require(_msgSender() == feeAccount, "1050");
         fee = _fee;
+    }
+
+    /// @notice 포인트와 토큰의 사용수수료률을 리턴합니다.
+    function getFee() external view virtual returns (uint32) {
+        return fee;
+    }
+
+    /// @notice 사용가능한 포인트로 전환합니다.
+    function changeToPayablePoint(bytes32 _phone, address _account) external onlyExchanger {
+        uint256 amount = unPayablePointBalances[_phone];
+        unPayablePointBalances[_phone] = 0;
+        pointBalances[_account] += amount;
+    }
+
+    /// @notice 사용자가 적립할 로열티를 토큰으로 변경한다.
+    function changeToLoyaltyToken(address _account) external onlyExchanger {
+        loyaltyTypes[_account] = LoyaltyType.TOKEN;
+    }
+
+    function getFoundationAccount() external view returns (address) {
+        return foundationAccount;
+    }
+
+    function getSettlementAccount() external view returns (address) {
+        return settlementAccount;
+    }
+
+    function getFeeAccount() external view returns (address) {
+        return feeAccount;
     }
 }

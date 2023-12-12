@@ -14,11 +14,9 @@ import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/IValidator.sol";
 import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
+import "./LoyaltyProviderStorage.sol";
 
-contract LoyaltyProvider is Initializable, OwnableUpgradeable, UUPSUpgradeable {
-    /// @notice Hash value of a blank string
-    bytes32 public constant NULL = 0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c;
-
+contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     struct PurchaseData {
         string purchaseId;
         uint256 timestamp;
@@ -42,12 +40,6 @@ contract LoyaltyProvider is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         bytes32 phone
     );
 
-    IValidator internal validatorContract;
-    IPhoneLinkCollection internal linkContract;
-    ICurrencyRate internal currencyRateContract;
-    IShop internal shopContract;
-    ILedger internal ledgerContract;
-
     function initialize(
         address _validatorAddress,
         address _linkAddress,
@@ -59,18 +51,26 @@ contract LoyaltyProvider is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         validatorContract = IValidator(_validatorAddress);
         linkContract = IPhoneLinkCollection(_linkAddress);
         currencyRateContract = ICurrencyRate(_currencyRateAddress);
+        isSetLedger = false;
+        isSetShop = false;
     }
 
     /// @notice 원장 컨트랙트를 등록한다.
     function setLedger(address _contractAddress) public {
         require(_msgSender() == owner(), "1050");
-        ledgerContract = ILedger(_contractAddress);
+        if (!isSetLedger) {
+            ledgerContract = ILedger(_contractAddress);
+            isSetLedger = true;
+        }
     }
 
     /// @notice 상점 컨트랙트를 등록한다.
     function setShop(address _contractAddress) public {
         require(_msgSender() == owner(), "1050");
-        shopContract = IShop(_contractAddress);
+        if (!isSetShop) {
+            shopContract = IShop(_contractAddress);
+            isSetShop = true;
+        }
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override {

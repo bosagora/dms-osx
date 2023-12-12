@@ -86,26 +86,10 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
         certifier = ICertifier(_certifier);
         currencyRate = ICurrencyRate(_currencyRate);
-
-        ledgerAddress = address(0x00);
-        deployer = _msgSender();
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override {
         require(_msgSender() == owner(), "Unauthorized access");
-    }
-
-    /// @notice 원장 컨트랙트의 주소를 호출한다.
-    function setLedger(address _ledgerAddress) public {
-        require(_msgSender() == deployer, "1050");
-        ledgerAddress = _ledgerAddress;
-        deployer = address(0x00);
-    }
-
-    /// @notice 원장 컨트랙트에서만 호출될 수 있도록 해준다.
-    modifier onlyLedger() {
-        require(_msgSender() == ledgerAddress, "1050");
-        _;
     }
 
     modifier onlyProvider() {
@@ -293,7 +277,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         uint256 _value,
         string calldata _purchaseId,
         bytes32 _paymentId
-    ) external virtual onlyLedger {
+    ) external virtual onlyConsumer {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             shops[_shopId].usedAmount += _value;
             emit IncreasedUsedAmount(
@@ -313,7 +297,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         uint256 _value,
         string calldata _purchaseId,
         bytes32 _paymentId
-    ) external virtual onlyLedger {
+    ) external virtual onlyConsumer {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             if (shops[_shopId].usedAmount >= _value) {
                 shops[_shopId].usedAmount -= _value;
@@ -334,7 +318,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 _shopId,
         uint256 _value,
         string calldata _purchaseId
-    ) external virtual onlyLedger {
+    ) external virtual onlyConsumer {
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             shops[_shopId].settledAmount += _value;
             emit IncreasedSettledAmount(

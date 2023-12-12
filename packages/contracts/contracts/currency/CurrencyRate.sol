@@ -60,21 +60,26 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     }
 
     /// @notice 통화심벌을 제공하는지 검사한다.
+    /// @param _symbol 통화명
     function support(string memory _symbol) external view returns (bool) {
         return rates[_symbol] != 0;
     }
 
     /// @notice 포인트를 토큰으로 환산한다.
-    function convertPointToToken(uint256 amount) external view virtual returns (uint256) {
-        return (amount * MULTIPLE) / _get(tokenSymbol);
+    /// @param _amount 포인트량
+    function convertPointToToken(uint256 _amount) external view virtual returns (uint256) {
+        return (_amount * MULTIPLE) / _get(tokenSymbol);
     }
 
     /// @notice 토큰을 포인트로 환산한다.
-    function convertTokenToPoint(uint256 amount) external view virtual returns (uint256) {
-        return (amount * _get(tokenSymbol)) / MULTIPLE;
+    /// @param _amount 토큰량
+    function convertTokenToPoint(uint256 _amount) external view virtual returns (uint256) {
+        return (_amount * _get(tokenSymbol)) / MULTIPLE;
     }
 
     /// @notice 화폐를 포인트로 환산한다.
+    /// @param _amount 화폐량
+    /// @param _symbol 통화명
     function convertCurrencyToPoint(uint256 _amount, string calldata _symbol) external view virtual returns (uint256) {
         bytes32 byteCurrency = keccak256(abi.encodePacked(_symbol));
         if ((byteCurrency == BASE_CURRENCY) || (byteCurrency == NULL_CURRENCY)) {
@@ -85,11 +90,16 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     }
 
     /// @notice 화폐를 토큰으로 환산한다.
+    /// @param _amount 화폐량
+    /// @param _symbol 토큰심벌
     function convertCurrencyToToken(uint256 _amount, string calldata _symbol) external view virtual returns (uint256) {
         return _convertCurrency(_amount, _symbol, tokenSymbol);
     }
 
     /// @notice 화폐들을 환산한다.
+    /// @param _amount 화폐량
+    /// @param _symbol1 변경전의 화폐심벌
+    /// @param _symbol2 변경후의 화폐심벌
     function convertCurrency(
         uint256 _amount,
         string calldata _symbol1,
@@ -111,6 +121,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         return (_amount * rate1) / rate2;
     }
 
+    /// @notice 환률은 실수이기 때문에 이를 정수로 관리하기 위해 배수를 곱한 값을 사용한다
     function multiple() external view returns (uint256) {
         return MULTIPLE;
     }

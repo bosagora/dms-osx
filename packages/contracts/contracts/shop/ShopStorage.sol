@@ -13,10 +13,8 @@ contract ShopStorage {
 
     bytes32[] internal items;
 
-    address public ledgerAddress;
     address public providerAddress;
     address public consumerAddress;
-    address public deployer;
     mapping(address => uint256) internal nonce;
 
     ICertifier internal certifier;

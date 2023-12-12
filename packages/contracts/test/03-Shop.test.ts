@@ -1,7 +1,7 @@
 import { ContractShopStatus } from "../src/types";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { Certifier, CurrencyRate, LoyaltyProvider, Shop, Token, Validator } from "../typechain-types";
+import { Certifier, CurrencyRate, Shop, Token, Validator } from "../typechain-types";
 
 import "@nomicfoundation/hardhat-ethers";
 import "@openzeppelin/hardhat-upgrades";

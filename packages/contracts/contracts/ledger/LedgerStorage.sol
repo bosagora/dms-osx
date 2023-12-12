@@ -12,16 +12,6 @@ import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
 
 contract LedgerStorage {
-    enum LoyaltyPaymentStatus {
-        INVALID,
-        OPENED_PAYMENT,
-        CLOSED_PAYMENT,
-        FAILED_PAYMENT,
-        OPENED_CANCEL,
-        CLOSED_CANCEL,
-        FAILED_CANCEL
-    }
-
     /// @notice Hash value of a blank string
     uint32 public constant MAX_FEE = 5;
 
@@ -31,37 +21,17 @@ contract LedgerStorage {
     mapping(address => uint256) internal nonce;
     mapping(address => ILedger.LoyaltyType) internal loyaltyTypes;
 
-    struct LoyaltyPaymentData {
-        bytes32 paymentId;
-        string purchaseId;
-        string currency;
-        bytes32 shopId;
-        address account;
-        uint256 timestamp;
-        ILedger.LoyaltyType loyaltyType;
-        uint256 paidPoint;
-        uint256 paidToken;
-        uint256 paidValue;
-        uint256 feePoint;
-        uint256 feeToken;
-        uint256 feeValue;
-        uint256 usedValueShop;
-        LoyaltyPaymentStatus status;
-    }
-    mapping(bytes32 => LoyaltyPaymentData) internal loyaltyPayments;
-
     address public foundationAccount;
     address public settlementAccount;
     address public feeAccount;
     address public providerAddress;
     address public consumerAddress;
-    uint32 public fee;
-    address public temporaryAddress;
+    address public exchangerAddress;
+
+    uint32 internal fee;
+    address internal temporaryAddress;
 
     IPhoneLinkCollection internal linkContract;
     IERC20 internal tokenContract;
-    IValidator internal validatorContract;
     ICurrencyRate internal currencyRateContract;
-    IShop internal shopContract;
-    ICertifier internal certifierContract;
 }
