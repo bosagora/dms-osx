@@ -117,7 +117,7 @@ export class ContractUtils {
 
     public static async signRequestHash(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getRequestHash(hash, await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyRequestHash(address: string, hash: string, nonce: BigNumberish, signature: string): boolean {
@@ -162,7 +162,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyPayment(
@@ -191,7 +191,7 @@ export class ContractUtils {
 
     public static async signLoyaltyType(signer: Signer, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyLoyaltyType(account: string, nonce: BigNumberish, signature: string): boolean {
@@ -215,7 +215,7 @@ export class ContractUtils {
 
     public static async signChangePayablePoint(signer: Signer, phone: BytesLike, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getChangePayablePointMessage(phone, await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyChangePayablePoint(
@@ -252,7 +252,7 @@ export class ContractUtils {
 
     public static async signShop(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getShopMessage(shopId, await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyShop(shopId: BytesLike, nonce: BigNumberish, account: string, signature: BytesLike): boolean {
@@ -300,7 +300,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyLoyaltyNewPayment(
@@ -356,7 +356,7 @@ export class ContractUtils {
             purchaseId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
     public static verifyLoyaltyCancelPayment(
         paymentId: string,
@@ -419,7 +419,7 @@ export class ContractUtils {
             confirm,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static getMobileTokenMessage(address: string, token: string): Uint8Array {
@@ -429,7 +429,7 @@ export class ContractUtils {
 
     public static async signMobileToken(signer: Signer, token: string): Promise<string> {
         const message = ContractUtils.getMobileTokenMessage(await signer.getAddress(), token);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static verifyMobileToken(account: string, token: string, signature: BytesLike): boolean {

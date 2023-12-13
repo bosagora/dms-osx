@@ -8,7 +8,7 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Scheduler } from "./Scheduler";
 
-import { Ledger, Token } from "../../typechain-types";
+import { Ledger, LoyaltyProvider, Token } from "../../typechain-types";
 
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
@@ -39,6 +39,8 @@ export class DefaultScheduler extends Scheduler {
      * @private
      */
     private _ledgerContract: Ledger | undefined;
+
+    private _providerContract: LoyaltyProvider | undefined;
 
     private _purchaseIdx: number = 0;
 
@@ -107,6 +109,14 @@ export class DefaultScheduler extends Scheduler {
         return this._ledgerContract;
     }
 
+    private async getProviderContract(): Promise<LoyaltyProvider> {
+        if (this._providerContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("LoyaltyProvider");
+            this._providerContract = factory.attach(this._config.contracts.providerAddress) as LoyaltyProvider;
+        }
+        return this._providerContract;
+    }
+
     /***
      * 서명자
      * @private
@@ -138,7 +148,7 @@ export class DefaultScheduler extends Scheduler {
                     account: Math.random() < 0.1 ? AddressZero : this._users[userIdx].address,
                     phone: phoneHash,
                 };
-                const tx = await (await this.getLedgerContract()).connect(await this.getSigner()).savePurchase(data);
+                const tx = await (await this.getProviderContract()).connect(await this.getSigner()).savePurchase(data);
 
                 console.log(
                     `Send purchase data (account: ${data.account}, phone: ${data.phone}, purchaseId: ${

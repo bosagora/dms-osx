@@ -7,12 +7,12 @@ import { TestClient, TestServer } from "./helper/Utility";
 import URI from "urijs";
 import { URL } from "url";
 import { Config } from "../src/common/Config";
+import { ContractUtils } from "../src/utils/ContractUtils";
 
 import path from "path";
 
 import assert from "assert";
 import * as hre from "hardhat";
-import { ContractUtils } from "../src/utils/ContractUtils";
 
 describe("Test for ETC", function () {
     this.timeout(1000 * 60 * 5);

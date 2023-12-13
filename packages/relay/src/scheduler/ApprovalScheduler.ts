@@ -11,7 +11,7 @@ import {
 } from "../types/index";
 import { Scheduler } from "./Scheduler";
 
-import { Ledger, ShopCollection, Token } from "../../typechain-types";
+import { Ledger, LoyaltyConsumer, Shop, Token } from "../../typechain-types";
 
 import * as fs from "fs";
 import * as hre from "hardhat";
@@ -39,7 +39,7 @@ export class ApprovalScheduler extends Scheduler {
 
     private _ledgerContract: Ledger | undefined;
 
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     private _wallets: IWalletData[];
 
@@ -111,10 +111,19 @@ export class ApprovalScheduler extends Scheduler {
         return this._ledgerContract;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private _consumerContract: LoyaltyConsumer | undefined;
+    private async getConsumerContract(): Promise<LoyaltyConsumer> {
+        if (this._consumerContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
+            this._consumerContract = factory.attach(this.config.contracts.consumerAddress);
+        }
+        return this._consumerContract;
+    }
+
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("ShopCollection");
-            this._shopContract = factory.attach(this.config.contracts.shopAddress) as ShopCollection;
+            const factory = await hre.ethers.getContractFactory("Shop");
+            this._shopContract = factory.attach(this.config.contracts.shopAddress) as Shop;
         }
         return this._shopContract;
     }
@@ -139,14 +148,15 @@ export class ApprovalScheduler extends Scheduler {
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.approvalSecond) continue;
 
-            const contract = await this.getLedgerContract();
-            const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
+            const ledgerContract = await this.getLedgerContract();
+            const consumerContract = await this.getConsumerContract();
+            const loyaltyPaymentData = await consumerContract.loyaltyPaymentOf(payment.paymentId);
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) continue;
 
             const wallet = this.findWallet(payment.account);
             if (wallet !== undefined) {
                 logger.info(`ApprovalScheduler.onNewPayment ${payment.paymentId}`);
-                const nonce = await contract.nonceOf(wallet.address);
+                const nonce = await ledgerContract.nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
                     new Wallet(wallet.privateKey),
                     payment.paymentId,
@@ -199,15 +209,16 @@ export class ApprovalScheduler extends Scheduler {
         for (const payment of payments) {
             if (ContractUtils.getTimeStamp() - payment.openCancelTimestamp < this.config.relay.approvalSecond) continue;
 
-            const contract = await this.getLedgerContract();
-            const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
+            const ledgerContract = await this.getLedgerContract();
+            const consumerContract = await this.getConsumerContract();
+            const loyaltyPaymentData = await consumerContract.loyaltyPaymentOf(payment.paymentId);
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) continue;
 
             const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
             const wallet = this.findWallet(shopInfo.account);
             if (wallet !== undefined) {
                 logger.info(`ApprovalScheduler.onCancelPayment ${payment.paymentId}`);
-                const nonce = await contract.nonceOf(wallet.address);
+                const nonce = await ledgerContract.nonceOf(wallet.address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
                     new Wallet(wallet.privateKey),
                     payment.paymentId,

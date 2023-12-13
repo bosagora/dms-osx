@@ -2,7 +2,7 @@ import { Wallet } from "ethers";
 
 async function main() {
     const users = [];
-    for (let idx = 0; idx < 10; idx++) {
+    for (let idx = 0; idx < 20; idx++) {
         const phone = "08201010005" + idx.toString().padStart(3, "0");
         const wallet = Wallet.createRandom();
         const loyaltyType = idx < 5 ? 0 : 1;

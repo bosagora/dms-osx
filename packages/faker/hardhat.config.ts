@@ -1,28 +1,18 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-web3";
+import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
+import "hardhat-gas-reporter";
+import "solidity-coverage";
+import "solidity-docgen";
+
 import * as dotenv from "dotenv";
 import { utils, Wallet } from "ethers";
 
-import "hardhat-gas-reporter";
-// tslint:disable-next-line:no-submodule-imports
-import { HardhatUserConfig, task } from "hardhat/config";
-// tslint:disable-next-line:no-submodule-imports
-import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
-import "solidity-coverage";
-
 dotenv.config({ path: "env/.env" });
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-    const accounts = await hre.ethers.getSigners();
-
-    for (const account of accounts) {
-        console.log(account.address);
-    }
-});
+// tslint:disable-next-line:no-submodule-imports
+import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
 
 function getAccounts() {
     const accounts: string[] = [];
@@ -128,7 +118,7 @@ const config = {
     solidity: {
         compilers: [
             {
-                version: "0.8.0",
+                version: "0.8.2",
                 settings: {
                     optimizer: {
                         enabled: true,

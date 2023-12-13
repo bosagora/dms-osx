@@ -1,32 +1,32 @@
-import { Amount } from "../src/utils/Amount";
-import { CurrencyRate, Token, ValidatorCollection } from "../typechain-types";
-
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
+
+import { ethers, upgrades, waffle } from "hardhat";
+
+import { Amount } from "../src/utils/Amount";
+import { CurrencyRate, Token, Validator } from "../typechain-types";
 
 import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
-
-import * as hre from "hardhat";
 
 import { BigNumber } from "ethers";
 
 chai.use(solidity);
 
 describe("Test for CurrencyRate", () => {
-    const provider = hre.waffle.provider;
+    const provider = waffle.provider;
     const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
 
     const validators = [validator1, validator2, validator3];
-    let validatorContract: ValidatorCollection;
+    let validatorContract: Validator;
     let tokenContract: Token;
     let currencyRateContract: CurrencyRate;
 
     const amount = Amount.make(20_000, 18);
 
     before(async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
+        const tokenFactory = await ethers.getContractFactory("Token");
         tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
         await tokenContract.deployed();
         await tokenContract.deployTransaction.wait();
@@ -34,11 +34,15 @@ describe("Test for CurrencyRate", () => {
             await tokenContract.connect(deployer).transfer(elem.address, amount.value);
         }
 
-        const validatorFactory = await hre.ethers.getContractFactory("ValidatorCollection");
-        validatorContract = (await validatorFactory.connect(deployer).deploy(
-            tokenContract.address,
-            validators.map((m) => m.address)
-        )) as ValidatorCollection;
+        const validatorFactory = await ethers.getContractFactory("Validator");
+        validatorContract = (await upgrades.deployProxy(
+            validatorFactory.connect(deployer),
+            [tokenContract.address, validators.map((m) => m.address)],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as Validator;
         await validatorContract.deployed();
         await validatorContract.deployTransaction.wait();
 
@@ -53,10 +57,15 @@ describe("Test for CurrencyRate", () => {
             assert.deepStrictEqual(item.balance, amount.value);
         }
 
-        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
-        currencyRateContract = (await currencyRateFactory
-            .connect(deployer)
-            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
+        const currencyRateFactory = await ethers.getContractFactory("CurrencyRate");
+        currencyRateContract = (await upgrades.deployProxy(
+            currencyRateFactory.connect(deployer),
+            [validatorContract.address, await tokenContract.symbol()],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as CurrencyRate;
         await currencyRateContract.deployed();
         await currencyRateContract.deployTransaction.wait();
     });

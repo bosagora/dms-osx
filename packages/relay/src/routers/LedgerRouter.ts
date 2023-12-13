@@ -1,4 +1,4 @@
-import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
+import { CurrencyRate, Ledger, LoyaltyExchanger, PhoneLinkCollection, Shop, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
@@ -43,7 +43,7 @@ export class LedgerRouter {
      * 사용자의 원장 컨트랙트
      * @private
      */
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     /**
      * 이메일 지갑주소 링크 컨트랙트
@@ -118,12 +118,21 @@ export class LedgerRouter {
         return this._ledgerContract;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const shopFactory = await hre.ethers.getContractFactory("ShopCollection");
+            const shopFactory = await hre.ethers.getContractFactory("Shop");
             this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
         }
         return this._shopContract;
+    }
+
+    private _exchangerContract: LoyaltyExchanger | undefined;
+    private async getExchangerContract(): Promise<LoyaltyExchanger> {
+        if (this._exchangerContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("LoyaltyExchanger");
+            this._exchangerContract = factory.attach(this._config.contracts.exchangerAddress);
+        }
+        return this._exchangerContract;
     }
 
     /**
@@ -221,7 +230,7 @@ export class LedgerRouter {
             if (!ContractUtils.verifyLoyaltyType(account, userNonce, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
-            const tx = await (await this.getLedgerContract())
+            const tx = await (await this.getExchangerContract())
                 .connect(signerItem.signer)
                 .changeToLoyaltyToken(account, signature);
 
@@ -260,7 +269,7 @@ export class LedgerRouter {
             if (!ContractUtils.verifyChangePayablePoint(phone, account, userNonce, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
-            const tx = await (await this.getLedgerContract())
+            const tx = await (await this.getExchangerContract())
                 .connect(signerItem.signer)
                 .changeToPayablePoint(phone, account, signature);
 
