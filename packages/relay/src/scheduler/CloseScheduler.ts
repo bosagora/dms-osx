@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { Ledger } from "../../typechain-types";
+import { Ledger, LoyaltyConsumer } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { RelayStorage } from "../storage/RelayStorage";
@@ -147,6 +147,15 @@ export class CloseScheduler extends Scheduler {
         return this._ledgerContract;
     }
 
+    private _consumerContract: LoyaltyConsumer | undefined;
+    private async getConsumerContract(): Promise<LoyaltyConsumer> {
+        if (this._consumerContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
+            this._consumerContract = factory.attach(this.config.contracts.consumerAddress);
+        }
+        return this._consumerContract;
+    }
+
     private async onCheckConsistencyOfNewPayment() {
         const payments = await this.storage.getContractPaymentsStatusOf(
             [ContractLoyaltyPaymentStatus.OPENED_PAYMENT],
@@ -155,7 +164,7 @@ export class CloseScheduler extends Scheduler {
         for (const payment of payments) {
             logger.info(`CloseScheduler.onCheckConsistencyOfNewPayment ${payment.paymentId}`);
 
-            const contract = await this.getLedgerContract();
+            const contract = await this.getConsumerContract();
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
@@ -192,7 +201,7 @@ export class CloseScheduler extends Scheduler {
         for (const payment of payments) {
             logger.info(`CloseScheduler.onCheckConsistencyOfCancelPayment ${payment.paymentId}`);
 
-            const contract = await this.getLedgerContract();
+            const contract = await this.getConsumerContract();
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {

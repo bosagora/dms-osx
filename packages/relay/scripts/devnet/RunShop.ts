@@ -12,7 +12,6 @@ import { HTTPClient, Utils } from "../../src/utils/Utils";
 
 import * as assert from "assert";
 import fs from "fs";
-import { ContractUtils } from "../../src/utils/ContractUtils";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");

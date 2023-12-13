@@ -41,7 +41,7 @@ export class ContractUtils {
             [hash, await signer.getAddress(), nonce]
         );
         const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static getPaymentMessage(
@@ -75,7 +75,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static getShopId(account: string): string {

@@ -16,49 +16,103 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - ChangedToLoyaltyToken
-        - ChangedToPayablePoint
         - Deposited
-        - LoyaltyPaymentEvent
         - ProvidedPoint
         - ProvidedToken
-        - ProvidedTokenForSettlement
         - ProvidedUnPayablePoint
-        - SavedPurchase
         - Withdrawn
       abis:
         - name: Ledger
-          file: $DMS_OSX_MODULE/artifacts/contracts/Ledger.sol/Ledger.json
+          file: $DMS_OSX_MODULE/artifacts/contracts/ledger/Ledger.sol/Ledger.json
       eventHandlers:
-        - event: ChangedToLoyaltyToken(address,uint256,uint256,uint256)
-          handler: handleChangedToLoyaltyToken
-        - event: ChangedToPayablePoint(bytes32,address,uint256,uint256,uint256)
-          handler: handleChangedToPayablePoint
         - event: Deposited(address,uint256,uint256,uint256)
           handler: handleDeposited
-        - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
-          handler: handleLoyaltyPaymentEvent
         - event: ProvidedPoint(address,uint256,uint256,string,uint256,string,bytes32)
           handler: handleProvidedPoint
         - event: ProvidedToken(address,uint256,uint256,string,uint256,string,bytes32)
           handler: handleProvidedToken
-        - event: ProvidedTokenForSettlement(address,bytes32,uint256,uint256,uint256,string,uint256,string)
-          handler: handleProvidedTokenForSettlement
         - event: ProvidedUnPayablePoint(bytes32,uint256,uint256,string,uint256,string,bytes32)
           handler: handleProvidedUnPayablePoint
-        - event: SavedPurchase(string,uint256,uint256,string,bytes32,uint32,address,bytes32)
-          handler: handleSavedPurchase
         - event: Withdrawn(address,uint256,uint256,uint256)
           handler: handleWithdrawn
       file: ./src/ledger.ts
 
   - kind: ethereum
-    name: {{dataSources.ShopCollection.name}}
+    name: {{dataSources.LoyaltyProvider.name}}
     network: {{network}}
     source:
-      address: '{{dataSources.ShopCollection.address}}'
-      abi: ShopCollection
-      startBlock: {{dataSources.ShopCollection.startBlock}}
+      address: '{{dataSources.LoyaltyProvider.address}}'
+      abi: LoyaltyProvider
+      startBlock: {{dataSources.LoyaltyProvider.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - SavedPurchase
+      abis:
+        - name: LoyaltyProvider
+          file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyProvider.sol/LoyaltyProvider.json
+      eventHandlers:
+        - event: SavedPurchase(string,uint256,uint256,string,bytes32,uint32,address,bytes32)
+          handler: handleSavedPurchase
+      file: ./src/ledger.ts
+
+  - kind: ethereum
+    name: {{dataSources.LoyaltyConsumer.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.LoyaltyConsumer.address}}'
+      abi: LoyaltyConsumer
+      startBlock: {{dataSources.LoyaltyConsumer.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - LoyaltyPaymentEvent
+        - ProvidedTokenForSettlement
+      abis:
+        - name: LoyaltyConsumer
+          file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyConsumer.sol/LoyaltyConsumer.json
+      eventHandlers:
+        - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
+          handler: handleLoyaltyPaymentEvent
+        - event: ProvidedTokenForSettlement(address,bytes32,uint256,uint256,uint256,string,uint256,string)
+          handler: handleProvidedTokenForSettlement
+      file: ./src/ledger.ts
+
+  - kind: ethereum
+    name: {{dataSources.LoyaltyExchanger.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.LoyaltyExchanger.address}}'
+      abi: LoyaltyExchanger
+      startBlock: {{dataSources.LoyaltyExchanger.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ChangedToLoyaltyToken
+        - ChangedToPayablePoint
+      abis:
+        - name: LoyaltyExchanger
+          file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyExchanger.sol/LoyaltyExchanger.json
+      eventHandlers:
+        - event: ChangedToLoyaltyToken(address,uint256,uint256,uint256)
+          handler: handleChangedToLoyaltyToken
+        - event: ChangedToPayablePoint(bytes32,address,uint256,uint256,uint256)
+          handler: handleChangedToPayablePoint
+      file: ./src/ledger.ts
+
+  - kind: ethereum
+    name: {{dataSources.Shop.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.Shop.address}}'
+      abi: Shop
+      startBlock: {{dataSources.Shop.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -74,8 +128,8 @@ dataSources:
         - OpenedWithdrawal
         - UpdatedShop
       abis:
-        - name: ShopCollection
-          file: $DMS_OSX_MODULE/artifacts/contracts/ShopCollection.sol/ShopCollection.json
+        - name: Shop
+          file: $DMS_OSX_MODULE/artifacts/contracts/shop/Shop.sol/Shop.json
       eventHandlers:
         - event: AddedShop(bytes32,string,string,uint256,uint256,address,uint8)
           handler: handleAddedShop
@@ -95,4 +149,4 @@ dataSources:
           handler: handleOpenedWithdrawal
         - event: UpdatedShop(bytes32,string,string,uint256,uint256,address,uint8)
           handler: handleUpdatedShop
-      file: ./src/shop-collection.ts
+      file: ./src/shop.ts

@@ -1,4 +1,12 @@
-import { CurrencyRate, Ledger, PhoneLinkCollection, ShopCollection, Token } from "../../typechain-types";
+import {
+    CurrencyRate,
+    Ledger,
+    LoyaltyConsumer,
+    LoyaltyExchanger,
+    PhoneLinkCollection,
+    Shop,
+    Token,
+} from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
@@ -59,7 +67,7 @@ export class PaymentRouter {
      * 사용자의 원장 컨트랙트
      * @private
      */
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     /**
      * 이메일 지갑주소 링크 컨트랙트
@@ -254,9 +262,9 @@ export class PaymentRouter {
         return this._ledgerContract;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const shopFactory = await hre.ethers.getContractFactory("ShopCollection");
+            const shopFactory = await hre.ethers.getContractFactory("Shop");
             this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
         }
         return this._shopContract;
@@ -288,6 +296,15 @@ export class PaymentRouter {
         return this._currencyRateContract;
     }
 
+    private _consumerContract: LoyaltyConsumer | undefined;
+    private async getConsumerContract(): Promise<LoyaltyConsumer> {
+        if (this._consumerContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
+            this._consumerContract = factory.attach(this._config.contracts.consumerAddress);
+        }
+        return this._consumerContract;
+    }
+
     /**
      * Make the response data
      * @param code      The result code
@@ -308,7 +325,7 @@ export class PaymentRouter {
         // 내부에 랜덤으로 32 Bytes 를 생성하여 ID를 생성하므로 무한반복될 가능성이 극히 낮음
         while (true) {
             const id = ContractUtils.getPaymentId(account, nonce);
-            if (await (await this.getLedgerContract()).isAvailablePaymentId(id)) return id;
+            if (await (await this.getConsumerContract()).isAvailablePaymentId(id)) return id;
         }
     }
 
@@ -431,7 +448,7 @@ export class PaymentRouter {
             const currency: string = String(req.query.currency).trim();
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
 
-            const feeRate = await (await this.getLedgerContract()).fee();
+            const feeRate = await (await this.getLedgerContract()).getFee();
             const rate = await (await this.getCurrencyRateContract()).get(currency.toLowerCase());
             const multiple = await (await this.getCurrencyRateContract()).MULTIPLE();
 
@@ -519,7 +536,7 @@ export class PaymentRouter {
             const shopId: string = String(req.body.shopId).trim();
             const account: string = String(req.body.account).trim();
 
-            const feeRate = await (await this.getLedgerContract()).fee();
+            const feeRate = await (await this.getLedgerContract()).getFee();
             const rate = await (await this.getCurrencyRateContract()).get(currency.toLowerCase());
             const multiple = await (await this.getCurrencyRateContract()).MULTIPLE();
 
@@ -706,7 +723,7 @@ export class PaymentRouter {
                     return res.status(200).json(data);
                 }
 
-                const contract = await this.getLedgerContract();
+                const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (approval) {
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
@@ -827,7 +844,7 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                const contract = await this.getLedgerContract();
+                const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
                     if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_NEW) {
@@ -1195,7 +1212,7 @@ export class PaymentRouter {
                     return res.status(200).json(msg);
                 }
 
-                const contract = await this.getLedgerContract();
+                const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (approval) {
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
@@ -1311,7 +1328,7 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
-                const contract = await this.getLedgerContract();
+                const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                     if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_CANCEL) {
@@ -1528,7 +1545,7 @@ export class PaymentRouter {
     }
 
     private async waitPaymentLoyalty(
-        contract: Ledger,
+        contract: LoyaltyConsumer,
         tx: ContractTransaction
     ): Promise<ContractLoyaltyPaymentEvent | undefined> {
         const res: any = {};

@@ -1,37 +1,35 @@
 import { Amount } from "../src/common/Amount";
+import { Config } from "../src/common/Config";
 import { RelayStorage } from "../src/storage/RelayStorage";
-import { ContractShopStatus } from "../src/types";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
-    CertifierCollection,
+    Certifier,
     CurrencyRate,
     Ledger,
+    LoyaltyConsumer,
+    LoyaltyExchanger,
+    LoyaltyProvider,
     PhoneLinkCollection,
-    ShopCollection,
+    Shop,
     Token,
-    ValidatorCollection,
+    Validator,
 } from "../typechain-types";
-import { TestClient, TestServer } from "./helper/Utility";
-
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
-import * as hre from "hardhat";
-
 import { BigNumber, Wallet } from "ethers";
 
 import assert from "assert";
+import path from "path";
 import URI from "urijs";
 import { URL } from "url";
-import { Config } from "../src/common/Config";
-
-import path from "path";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+
+import { Deployments } from "./helper/Deployments";
+import { TestClient, TestServer } from "./helper/Utility";
 
 chai.use(solidity);
 
@@ -60,200 +58,27 @@ interface IUserData {
     privateKey: string;
 }
 
-describe("Test for ShopCollection", () => {
-    const provider = hre.waffle.provider;
-    const [
-        deployer,
-        foundation,
-        settlements,
-        fee,
-        certifier,
-        validator1,
-        validator2,
-        validator3,
-        relay,
-        user1,
-        user2,
-        user3,
-        user4,
-        user5,
-        shop1,
-        shop2,
-        shop3,
-        shop4,
-        shop5,
-        shop6,
-    ] = provider.getWallets();
+describe("Test for Shop", () => {
+    const deployments = new Deployments();
 
-    const validatorWallets = [validator1, validator2, validator3];
-    const linkValidators = [validator1];
-    const userWallets = [user1, user2, user3, user4, user5];
-    const shopWallets = [shop1, shop2, shop3, shop4, shop5, shop6];
-    let validatorContract: ValidatorCollection;
+    const userWallets = deployments.accounts.users;
+    const shopWallets = deployments.accounts.shops;
+
+    let validatorContract: Validator;
     let tokenContract: Token;
-    let ledgerContract: Ledger;
-    let linkCollectionContract: PhoneLinkCollection;
+    let linkContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
-    let shopCollection: ShopCollection;
-    let certifierCollection: CertifierCollection;
+    let shopContract: Shop;
+    let certifierContract: Certifier;
+    let consumerContract: LoyaltyConsumer;
+    let providerContract: LoyaltyProvider;
+    let exchangerContract: LoyaltyExchanger;
+    let ledgerContract: Ledger;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
 
     const amount = Amount.make(20_000, 18);
-    const assetAmount = Amount.make(10_000_000, 18);
-
-    const deployToken = async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
-        for (const elem of validatorWallets) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-    };
-
-    const deployValidatorCollection = async () => {
-        const validatorFactory = await hre.ethers.getContractFactory("ValidatorCollection");
-        validatorContract = (await validatorFactory.connect(deployer).deploy(
-            tokenContract.address,
-            validatorWallets.map((m) => m.address)
-        )) as ValidatorCollection;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
-    };
-
-    const depositValidators = async () => {
-        for (const elem of validatorWallets) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
-            await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "DepositedForValidator")
-                .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validatorOf(elem.address);
-            assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
-            assert.deepStrictEqual(item.balance, amount.value);
-        }
-    };
-
-    const deployLinkCollection = async () => {
-        const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
-        linkCollectionContract = (await linkCollectionFactory
-            .connect(deployer)
-            .deploy(linkValidators.map((m) => m.address))) as PhoneLinkCollection;
-        await linkCollectionContract.deployed();
-        await linkCollectionContract.deployTransaction.wait();
-    };
-
-    const deployCurrencyRate = async () => {
-        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
-        currencyRateContract = (await currencyRateFactory
-            .connect(deployer)
-            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
-        await currencyRateContract.deployed();
-        await currencyRateContract.deployTransaction.wait();
-        await currencyRateContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
-    };
-
-    const deployCertifierCollection = async () => {
-        const factory = await hre.ethers.getContractFactory("CertifierCollection");
-        certifierCollection = (await factory.connect(deployer).deploy(certifier.address)) as CertifierCollection;
-        await certifierCollection.deployed();
-        await certifierCollection.deployTransaction.wait();
-        await certifierCollection.connect(certifier).grantCertifier(relay.address);
-    };
-
-    const deployShopCollection = async () => {
-        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory
-            .connect(deployer)
-            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
-        await shopCollection.deployed();
-        await shopCollection.deployTransaction.wait();
-    };
-
-    const addShopData = async (shops: IShopData[]) => {
-        for (const shop of shops) {
-            const nonce = await shopCollection.nonceOf(shop.wallet.address);
-            const signature = await ContractUtils.signShop(shop.wallet, shop.shopId, nonce);
-            await shopCollection
-                .connect(deployer)
-                .add(shop.shopId, shop.name, shop.currency, shop.wallet.address, signature);
-        }
-
-        for (const shop of shops) {
-            const signature1 = ContractUtils.signShop(
-                shop.wallet,
-                shop.shopId,
-                await shopCollection.nonceOf(shop.wallet.address)
-            );
-            await shopCollection
-                .connect(certifier)
-                .update(
-                    shop.shopId,
-                    shop.name,
-                    shop.currency,
-                    shop.provideWaitTime,
-                    shop.providePercent,
-                    shop.wallet.address,
-                    signature1
-                );
-        }
-
-        for (const shop of shops) {
-            const signature1 = ContractUtils.signShop(
-                shop.wallet,
-                shop.shopId,
-                await shopCollection.nonceOf(shop.wallet.address)
-            );
-            await shopCollection
-                .connect(certifier)
-                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.wallet.address, signature1);
-        }
-    };
-
-    const prepareToken = async () => {
-        for (const elem of userWallets) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-        await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-        await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-        await ledgerContract.connect(foundation).deposit(assetAmount.value);
-    };
-
-    const deployLedger = async () => {
-        const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
-        ledgerContract = (await ledgerFactory
-            .connect(deployer)
-            .deploy(
-                foundation.address,
-                settlements.address,
-                fee.address,
-                certifierCollection.address,
-                tokenContract.address,
-                validatorContract.address,
-                linkCollectionContract.address,
-                currencyRateContract.address,
-                shopCollection.address
-            )) as Ledger;
-        await ledgerContract.deployed();
-        await ledgerContract.deployTransaction.wait();
-
-        await shopCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
-    };
-
-    const deployAllContract = async (shops: IShopData[]) => {
-        await deployToken();
-        await deployValidatorCollection();
-        await depositValidators();
-        await deployLinkCollection();
-        await deployCurrencyRate();
-        await deployCertifierCollection();
-        await deployShopCollection();
-        await deployLedger();
-        await addShopData(shops);
-        await prepareToken();
-    };
 
     const client = new TestClient();
     let server: TestServer;
@@ -405,18 +230,35 @@ describe("Test for ShopCollection", () => {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
+            config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [relay.privateKey];
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
+            config.relay.callbackEndpoint = `http://127.0.0.1:${config.server.port}/callback`;
         });
 
         before("Create TestServer", async () => {
@@ -446,7 +288,7 @@ describe("Test for ShopCollection", () => {
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
                     await expect(
-                        ledgerContract.connect(validatorWallets[0]).savePurchase({
+                        providerContract.connect(deployments.accounts.validators[0]).savePurchase({
                             purchaseId: purchase.purchaseId,
                             timestamp: purchase.timestamp,
                             amount: purchaseAmount,
@@ -457,7 +299,7 @@ describe("Test for ShopCollection", () => {
                             phone: phoneHash,
                         })
                     )
-                        .to.emit(ledgerContract, "SavedPurchase")
+                        .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
                             purchase.timestamp,
@@ -507,7 +349,7 @@ describe("Test for ShopCollection", () => {
 
                 const amt = purchaseAmount.mul(shop.providePercent).div(100);
                 await expect(
-                    ledgerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -516,9 +358,9 @@ describe("Test for ShopCollection", () => {
                         account: userWallets[purchase.userIndex].address,
                         signature,
                     })
-                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const paymentData = await ledgerContract.loyaltyPaymentOf(paymentId);
+                const paymentData = await consumerContract.loyaltyPaymentOf(paymentId);
                 expect(paymentData.paymentId).to.deep.equal(paymentId);
                 expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
@@ -528,16 +370,18 @@ describe("Test for ShopCollection", () => {
                 expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true))
-                    .to.emit(ledgerContract, "ProvidedTokenForSettlement")
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                )
+                    .to.emit(consumerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
-                        account: settlements.address,
+                        account: deployments.accounts.settlements.address,
                         shopId: shop.shopId,
                         providedPoint: Amount.make(200, 18).value,
                     })
-                    .to.emit(ledgerContract, "LoyaltyPaymentEvent");
+                    .to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const shopInfo = await shopCollection.shopOf(shop.shopId);
+                const shopInfo = await shopContract.shopOf(shop.shopId);
                 expect(shopInfo.providedAmount).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo.usedAmount).to.equal(Amount.make(300, 18).value);
                 expect(shopInfo.settledAmount).to.equal(Amount.make(200, 18).value);
@@ -607,7 +451,9 @@ describe("Test for ShopCollection", () => {
                 const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address, nonce);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = purchaseAmount.mul(multiple).div(price);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
                 const shop = shopData[purchase.shopIndex];
                 const signature = await ContractUtils.signLoyaltyNewPayment(
                     userWallets[purchase.userIndex],
@@ -620,7 +466,7 @@ describe("Test for ShopCollection", () => {
                 );
 
                 await expect(
-                    ledgerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         purchaseId: purchase.purchaseId,
                         paymentId,
                         amount: purchaseAmount,
@@ -629,9 +475,9 @@ describe("Test for ShopCollection", () => {
                         account: userWallets[purchase.userIndex].address,
                         signature,
                     })
-                ).to.emit(ledgerContract, "LoyaltyPaymentEvent");
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const paymentData = await ledgerContract.loyaltyPaymentOf(paymentId);
+                const paymentData = await consumerContract.loyaltyPaymentOf(paymentId);
                 expect(paymentData.paymentId).to.deep.equal(paymentId);
                 expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
@@ -641,20 +487,19 @@ describe("Test for ShopCollection", () => {
                 expect(paymentData.paidToken).to.deep.equal(tokenAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
-                await expect(ledgerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
-                    ledgerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const shopInfo2 = await shopCollection.shopOf(shop.shopId);
+                const shopInfo2 = await shopContract.shopOf(shop.shopId);
                 expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value);
                 expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
 
                 const settledToken = shopInfo2.settledAmount.mul(multiple).div(price);
-                expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
-                    oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
-                );
+                expect(
+                    (await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).toString()
+                ).to.deep.equal(oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString());
             });
         });
 
@@ -664,7 +509,7 @@ describe("Test for ShopCollection", () => {
             const amount2 = Amount.make(400, 18).value;
 
             it("Check Settlement", async () => {
-                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(amount2);
             });
 
@@ -692,7 +537,7 @@ describe("Test for ShopCollection", () => {
             });
 
             it("Open Withdrawal", async () => {
-                const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
+                const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
                 const signature = await ContractUtils.signShop(
                     shopData[shopIndex].wallet,
                     shopData[shopIndex].shopId,
@@ -712,7 +557,7 @@ describe("Test for ShopCollection", () => {
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
-                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(amount2);
             });
 
@@ -732,7 +577,7 @@ describe("Test for ShopCollection", () => {
             });
 
             it("Close Withdrawal", async () => {
-                const nonce = await shopCollection.nonceOf(shopData[shopIndex].wallet.address);
+                const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
                 const signature = await ContractUtils.signShop(
                     shopData[shopIndex].wallet,
                     shopData[shopIndex].shopId,
@@ -751,7 +596,7 @@ describe("Test for ShopCollection", () => {
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
-                const withdrawalAmount = await shopCollection.withdrawableOf(shop.shopId);
+                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(0);
             });
 

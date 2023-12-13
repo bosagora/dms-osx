@@ -73,3 +73,6 @@ contracts:
   phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
   shopAddress : "${SHOP_CONTRACT_ADDRESS}"
   currencyRateAddress: "${CURRENCY_RATE_CONTRACT_ADDRESS}"
+  providerAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
+  consumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
+  exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"

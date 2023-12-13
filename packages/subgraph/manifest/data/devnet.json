@@ -4,12 +4,27 @@
     "dataSources": {
         "Ledger": {
             "name": "Ledger",
-            "address": "0x12c316e0358d914A211A3d477db912A503cFCc21",
+            "address": "0x0B92368a93549FD57e42bb29849438F72DAEf1F6",
             "startBlock": 1
         },
-        "ShopCollection": {
-            "name": "ShopCollection",
-            "address": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
+        "LoyaltyProvider": {
+            "name": "LoyaltyProvider",
+            "address": "0xf9F610108d001Bd1A672f63E9B9b78d723ac6Ced",
+            "startBlock": 1
+        },
+        "LoyaltyConsumer": {
+            "name": "LoyaltyConsumer",
+            "address": "0xD9d2A3fA6A93EC688831969C286B91524735aa35",
+            "startBlock": 1
+        },
+        "LoyaltyExchanger": {
+            "name": "LoyaltyExchanger",
+            "address": "0xdBD4c398031868829C5f08DCf168B157d3e03c62",
+            "startBlock": 1
+        },
+        "Shop": {
+            "name": "Shop",
+            "address": "0xDb62De0aD297cfDa76EE80Cc909177aAF5C7f322",
             "startBlock": 1
         }
     }

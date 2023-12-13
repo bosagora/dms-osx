@@ -27,4 +27,5 @@ setting:
 contracts:
     tokenAddress: ${TOKEN_CONTRACT_ADDRESS}
     ledgerAddress: ${LEDGER_CONTRACT_ADDRESS}
+    providerAddress: ${LOYALTY_PROVIDER_CONTRACT_ADDRESS}
     phoneLinkerAddress: ${PHONE_LINKER_CONTRACT_ADDRESS}

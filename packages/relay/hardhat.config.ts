@@ -1,27 +1,17 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
-import "@nomiclabs/hardhat-web3";
+import "@openzeppelin/hardhat-upgrades";
 import "@typechain/hardhat";
-import * as dotenv from "dotenv";
-import { utils, Wallet } from "ethers";
 import "hardhat-gas-reporter";
-// tslint:disable-next-line:no-submodule-imports
-import { task } from "hardhat/config";
-// tslint:disable-next-line:no-submodule-imports
-import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
 import "solidity-coverage";
+import "solidity-docgen";
+
+import * as dotenv from "dotenv";
+import { Wallet } from "ethers";
 
 dotenv.config({ path: "env/.env" });
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-    const accounts = await hre.ethers.getSigners();
-
-    for (const account of accounts) {
-        console.log(account.address);
-    }
-});
+import { HardhatAccount } from "./src/HardhatAccount";
 
 function getAccounts() {
     const accounts: string[] = [];
@@ -282,25 +272,28 @@ function getAccounts() {
         accounts.push(process.env.LINK_VALIDATOR3);
     }
 
+    while (accounts.length < 50) {
+        accounts.push(Wallet.createRandom().privateKey);
+    }
+
+    if (HardhatAccount.keys.length === 0) {
+        for (const account of accounts) {
+            HardhatAccount.keys.push(account);
+        }
+    }
+
     return accounts;
 }
 
 function getTestAccounts() {
-    const accounts: HardhatNetworkAccountUserConfig[] = [];
-    const defaultBalance = utils.parseEther("2000000").toString();
-
-    const n = 50;
-    for (let i = 0; i < n; ++i) {
-        accounts.push({
-            privateKey: Wallet.createRandom().privateKey,
-            balance: defaultBalance,
-        });
-    }
+    const defaultBalance = "2000000000000000000000000";
     const acc = getAccounts();
-    for (let idx = 0; idx < acc.length; idx++) accounts[idx].privateKey = acc[idx];
-    accounts[0].balance = utils.parseEther("100000000").toString();
-
-    return accounts;
+    return acc.map((m) => {
+        return {
+            privateKey: m,
+            balance: defaultBalance,
+        };
+    });
 }
 
 // You need to export an object to set up your config
@@ -310,11 +303,11 @@ const config = {
     solidity: {
         compilers: [
             {
-                version: "0.8.0",
+                version: "0.8.2",
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 128,
+                        runs: 2000,
                     },
                 },
             },
@@ -328,17 +321,17 @@ const config = {
             gasPrice: 8000000000,
             blockGasLimit: 8000000,
         },
-        mainnet: {
+        bosagora_mainnet: {
             url: process.env.MAIN_NET_URL || "",
             chainId: 2151,
             accounts: getAccounts(),
         },
-        testnet: {
+        bosagora_testnet: {
             url: process.env.TEST_NET_URL || "",
             chainId: 2019,
             accounts: getAccounts(),
         },
-        devnet: {
+        bosagora_devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
             accounts: getAccounts(),

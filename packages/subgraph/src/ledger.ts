@@ -1,15 +1,19 @@
 import {
-    ChangedToLoyaltyToken as ChangedToLoyaltyTokenEvent,
-    ChangedToPayablePoint as ChangedToPayablePointEvent,
     Deposited as DepositedEvent,
-    LoyaltyPaymentEvent as LoyaltyPaymentEventEvent,
     ProvidedPoint as ProvidedPointEvent,
     ProvidedToken as ProvidedTokenEvent,
-    ProvidedTokenForSettlement as ProvidedTokenForSettlementEvent,
     ProvidedUnPayablePoint as ProvidedUnPayablePointEvent,
-    SavedPurchase as SavedPurchaseEvent,
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
+import { SavedPurchase as SavedPurchaseEvent } from "../generated/LoyaltyProvider/LoyaltyProvider";
+import {
+    LoyaltyPaymentEvent as LoyaltyPaymentEventEvent,
+    ProvidedTokenForSettlement as ProvidedTokenForSettlementEvent,
+} from "../generated/LoyaltyConsumer/LoyaltyConsumer";
+import {
+    ChangedToLoyaltyToken as ChangedToLoyaltyTokenEvent,
+    ChangedToPayablePoint as ChangedToPayablePointEvent,
+} from "../generated/LoyaltyExchanger/LoyaltyExchanger";
 import {
     SavedPurchase,
     UserBalance,
@@ -18,7 +22,7 @@ import {
     LoyaltyPaymentEvent,
 } from "../generated/schema";
 import { BigInt, Bytes } from "@graphprotocol/graph-ts";
-import { AmountUnit, NullAccount, NullBytes32 } from "./utils";
+import { AmountUnit, NullBytes32 } from "./utils";
 
 enum PageType {
     NONE = 0,

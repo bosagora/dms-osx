@@ -9,12 +9,13 @@
  */
 
 import { ArgumentParser } from "argparse";
+import { Utils } from "../utils/Utils";
+
 import extend from "extend";
 import fs from "fs";
 import ip from "ip";
 import path from "path";
 import { readYamlEnvSync } from "yaml-env-defaults";
-import { Utils } from "../utils/Utils";
 
 /**
  * Main config
@@ -287,7 +288,6 @@ export class RelayConfig implements IRelayConfig {
      */
     public managerKeys: string[];
     public accessKey: string;
-    public certifierKey: string;
     public callbackAccessKey: string;
     public callbackEndpoint: string;
     public paymentTimeoutSecond: number;
@@ -303,7 +303,6 @@ export class RelayConfig implements IRelayConfig {
 
         this.managerKeys = defaults.managerKeys;
         this.accessKey = defaults.accessKey;
-        this.certifierKey = defaults.certifierKey;
         this.callbackAccessKey = defaults.callbackAccessKey;
         this.callbackEndpoint = defaults.callbackEndpoint;
         this.paymentTimeoutSecond = defaults.paymentTimeoutSecond;
@@ -325,7 +324,6 @@ export class RelayConfig implements IRelayConfig {
                 process.env.CERTIFIER01 || "",
             ],
             accessKey: process.env.ACCESS_SECRET || "",
-            certifierKey: process.env.CERTIFIER_KEY || "",
             callbackAccessKey: process.env.CALLBACK_ACCESS_KEY || "",
             callbackEndpoint: process.env.CALLBACK_ENDPOINT || "",
             paymentTimeoutSecond: 45,
@@ -342,7 +340,6 @@ export class RelayConfig implements IRelayConfig {
     public readFromObject(config: IRelayConfig) {
         if (config.managerKeys !== undefined) this.managerKeys = config.managerKeys;
         if (config.accessKey !== undefined) this.accessKey = config.accessKey;
-        if (config.certifierKey !== undefined) this.certifierKey = config.certifierKey;
         if (config.callbackAccessKey !== undefined) this.callbackAccessKey = config.callbackAccessKey;
         if (config.callbackEndpoint !== undefined) this.callbackEndpoint = config.callbackEndpoint;
         if (config.paymentTimeoutSecond !== undefined) this.paymentTimeoutSecond = config.paymentTimeoutSecond;
@@ -358,6 +355,9 @@ export class RelayConfig implements IRelayConfig {
 export class ContractsConfig implements IContractsConfig {
     public tokenAddress: string;
     public ledgerAddress: string;
+    public providerAddress: string;
+    public consumerAddress: string;
+    public exchangerAddress: string;
     public phoneLinkerAddress: string;
     public shopAddress: string;
     public currencyRateAddress: string;
@@ -370,6 +370,9 @@ export class ContractsConfig implements IContractsConfig {
 
         this.tokenAddress = defaults.tokenAddress;
         this.ledgerAddress = defaults.ledgerAddress;
+        this.providerAddress = defaults.providerAddress;
+        this.consumerAddress = defaults.consumerAddress;
+        this.exchangerAddress = defaults.exchangerAddress;
         this.phoneLinkerAddress = defaults.phoneLinkerAddress;
         this.shopAddress = defaults.shopAddress;
         this.currencyRateAddress = defaults.currencyRateAddress;
@@ -382,6 +385,9 @@ export class ContractsConfig implements IContractsConfig {
         return {
             tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
             ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
+            providerAddress: process.env.LOYALTY_PROVIDER_CONTRACT_ADDRESS || "",
+            consumerAddress: process.env.LOYALTY_CONSUMER_CONTRACT_ADDRESS || "",
+            exchangerAddress: process.env.LOYALTY_EXCHANGER_CONTRACT_ADDRESS || "",
             phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
             shopAddress: process.env.SHOP_CONTRACT_ADDRESS || "",
             currencyRateAddress: process.env.CURRENCY_RATE_CONTRACT_ADDRESS || "",
@@ -395,6 +401,9 @@ export class ContractsConfig implements IContractsConfig {
     public readFromObject(config: IContractsConfig) {
         if (config.tokenAddress !== undefined) this.tokenAddress = config.tokenAddress;
         if (config.ledgerAddress !== undefined) this.ledgerAddress = config.ledgerAddress;
+        if (config.providerAddress !== undefined) this.providerAddress = config.providerAddress;
+        if (config.consumerAddress !== undefined) this.consumerAddress = config.consumerAddress;
+        if (config.exchangerAddress !== undefined) this.exchangerAddress = config.exchangerAddress;
         if (config.phoneLinkerAddress !== undefined) this.phoneLinkerAddress = config.phoneLinkerAddress;
         if (config.shopAddress !== undefined) this.shopAddress = config.shopAddress;
         if (config.currencyRateAddress !== undefined) this.currencyRateAddress = config.currencyRateAddress;
@@ -588,7 +597,6 @@ export interface ILoggingConfig {
 export interface IRelayConfig {
     managerKeys: string[];
     accessKey: string;
-    certifierKey: string;
     callbackAccessKey: string;
     callbackEndpoint: string;
     paymentTimeoutSecond: number;
@@ -600,6 +608,9 @@ export interface IRelayConfig {
 export interface IContractsConfig {
     tokenAddress: string;
     ledgerAddress: string;
+    providerAddress: string;
+    consumerAddress: string;
+    exchangerAddress: string;
     phoneLinkerAddress: string;
     shopAddress: string;
     currencyRateAddress: string;

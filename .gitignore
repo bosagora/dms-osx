@@ -33,7 +33,5 @@ yarn-error.log*
 .env.athens
 .env.localhost
 
-# deployments
-deployed_contracts.json
-
 .idea
+/packages/contracts/.openzeppelin/unknown-24680.json

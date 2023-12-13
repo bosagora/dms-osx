@@ -196,7 +196,7 @@ export class ContractUtils {
 
     public static async signLoyaltyType(signer: Signer, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce);
-        return signer.signMessage(message);
+        return await signer.signMessage(message);
     }
 
     public static getShopId(account: string): string {

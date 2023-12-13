@@ -3,19 +3,21 @@ import { Config } from "../src/common/Config";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
-    CertifierCollection,
+    Certifier,
     CurrencyRate,
     Ledger,
+    LoyaltyConsumer,
+    LoyaltyExchanger,
+    LoyaltyProvider,
     PhoneLinkCollection,
-    ShopCollection,
+    Shop,
     Token,
-    ValidatorCollection,
+    Validator,
 } from "../typechain-types";
 import { TestClient, TestServer } from "./helper/Utility";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
-import * as hre from "hardhat";
 
 import * as path from "path";
 import { URL } from "url";
@@ -28,7 +30,8 @@ import { AddressZero } from "@ethersproject/constants";
 import { INotificationEventHandler } from "../src/delegator/NotificationSender";
 import { Scheduler } from "../src/scheduler/Scheduler";
 import { WatchScheduler } from "../src/scheduler/WatchScheduler";
-import { ContractLoyaltyType, ContractShopStatus, LoyaltyPaymentTaskStatus } from "../src/types";
+import { ContractLoyaltyType, LoyaltyPaymentTaskStatus } from "../src/types";
+import { Deployments } from "./helper/Deployments";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 
 // tslint:disable-next-line:no-var-requires
@@ -38,208 +41,28 @@ chai.use(solidity);
 
 describe("Test of Server", function () {
     this.timeout(1000 * 60 * 5);
-    const provider = hre.waffle.provider;
-    const [
-        deployer,
-        foundation,
-        settlements,
-        fee,
-        certifier,
-        validator1,
-        validator2,
-        validator3,
-        user1,
-        user2,
-        user3,
-        relay1,
-        relay2,
-        relay3,
-        relay4,
-        relay5,
-        shop1,
-        shop2,
-        shop3,
-        shop4,
-        shop5,
-    ] = provider.getWallets();
 
-    const validators = [validator1, validator2, validator3];
-    const linkValidators = [validator1];
-    const users = [user1, user2, user3];
-    const shopWallets = [shop1, shop2, shop3, shop4, shop5];
+    const deployments = new Deployments();
 
-    let validatorContract: ValidatorCollection;
+    const users = deployments.accounts.users;
+    const shops = deployments.accounts.shops;
+    const validators = deployments.accounts.validators;
+
+    let validatorContract: Validator;
     let tokenContract: Token;
-    let ledgerContract: Ledger;
-    let linkCollectionContract: PhoneLinkCollection;
+    let linkContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
-    let shopCollection: ShopCollection;
-    let certifierCollection: CertifierCollection;
+    let shopContract: Shop;
+    let certifierContract: Certifier;
+    let consumerContract: LoyaltyConsumer;
+    let providerContract: LoyaltyProvider;
+    let exchangerContract: LoyaltyExchanger;
+    let ledgerContract: Ledger;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
 
-    const amount = Amount.make(20_000, 18);
-    const assetAmount = Amount.make(10_000_000, 18);
-
     const expression = "*/1 * * * * *";
-    const deployToken = async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
-        for (const elem of validators) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-    };
-
-    const deployValidatorCollection = async () => {
-        const validatorFactory = await hre.ethers.getContractFactory("ValidatorCollection");
-        validatorContract = (await validatorFactory.connect(deployer).deploy(
-            tokenContract.address,
-            validators.map((m) => m.address)
-        )) as ValidatorCollection;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
-    };
-
-    const depositValidators = async () => {
-        for (const elem of validators) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
-            await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "DepositedForValidator")
-                .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validatorOf(elem.address);
-            assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
-            assert.deepStrictEqual(item.balance, amount.value);
-        }
-    };
-
-    const deployPhoneLinkCollection = async () => {
-        const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
-        linkCollectionContract = (await linkCollectionFactory
-            .connect(deployer)
-            .deploy(linkValidators.map((m) => m.address))) as PhoneLinkCollection;
-        await linkCollectionContract.deployed();
-        await linkCollectionContract.deployTransaction.wait();
-    };
-
-    const deployCurrencyRate = async () => {
-        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
-        currencyRateContract = (await currencyRateFactory
-            .connect(deployer)
-            .deploy(validatorContract.address, await tokenContract.symbol())) as CurrencyRate;
-        await currencyRateContract.deployed();
-        await currencyRateContract.deployTransaction.wait();
-        await currencyRateContract.connect(validators[0]).set(await tokenContract.symbol(), price);
-        await currencyRateContract.connect(validators[0]).set("krw", multiple);
-        await currencyRateContract.connect(validators[0]).set("usd", BigNumber.from(1000).mul(multiple));
-        await currencyRateContract.connect(validators[0]).set("point", multiple);
-    };
-
-    const deployCertifierCollection = async () => {
-        const factory = await hre.ethers.getContractFactory("CertifierCollection");
-        certifierCollection = (await factory.connect(deployer).deploy(certifier.address)) as CertifierCollection;
-        await certifierCollection.deployed();
-        await certifierCollection.deployTransaction.wait();
-        await certifierCollection.connect(certifier).grantCertifier(relay1.address);
-        await certifierCollection.connect(certifier).grantCertifier(relay2.address);
-        await certifierCollection.connect(certifier).grantCertifier(relay3.address);
-        await certifierCollection.connect(certifier).grantCertifier(relay4.address);
-        await certifierCollection.connect(certifier).grantCertifier(relay5.address);
-    };
-
-    const deployShopCollection = async () => {
-        const shopCollectionFactory = await hre.ethers.getContractFactory("ShopCollection");
-        shopCollection = (await shopCollectionFactory
-            .connect(deployer)
-            .deploy(certifierCollection.address, currencyRateContract.address)) as ShopCollection;
-        await shopCollection.deployed();
-        await shopCollection.deployTransaction.wait();
-    };
-
-    const addShopData = async (shops: IShopData[]) => {
-        for (const shop of shops) {
-            const nonce = await shopCollection.nonceOf(shop.wallet.address);
-            const signature = await ContractUtils.signShop(shop.wallet, shop.shopId, nonce);
-            await shopCollection
-                .connect(deployer)
-                .add(shop.shopId, shop.name, shop.currency, shop.wallet.address, signature);
-        }
-
-        for (const shop of shops) {
-            const signature1 = ContractUtils.signShop(
-                shop.wallet,
-                shop.shopId,
-                await shopCollection.nonceOf(shop.wallet.address)
-            );
-            await shopCollection
-                .connect(certifier)
-                .update(
-                    shop.shopId,
-                    shop.name,
-                    shop.currency,
-                    shop.provideWaitTime,
-                    shop.providePercent,
-                    shop.wallet.address,
-                    signature1
-                );
-        }
-
-        for (const shop of shops) {
-            const signature1 = ContractUtils.signShop(
-                shop.wallet,
-                shop.shopId,
-                await shopCollection.nonceOf(shop.wallet.address)
-            );
-            await shopCollection
-                .connect(certifier)
-                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.wallet.address, signature1);
-        }
-    };
-
-    const prepareToken = async () => {
-        for (const elem of users) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-        await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-        await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-        await ledgerContract.connect(foundation).deposit(assetAmount.value);
-    };
-
-    const deployLedger = async () => {
-        const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
-        ledgerContract = (await ledgerFactory
-            .connect(deployer)
-            .deploy(
-                foundation.address,
-                foundation.address,
-                fee.address,
-                certifierCollection.address,
-                tokenContract.address,
-                validatorContract.address,
-                linkCollectionContract.address,
-                currencyRateContract.address,
-                shopCollection.address
-            )) as Ledger;
-        await ledgerContract.deployed();
-        await ledgerContract.deployTransaction.wait();
-        await shopCollection.connect(deployer).setLedgerAddress(ledgerContract.address);
-    };
-
-    const deployAllContract = async (shops: IShopData[]) => {
-        await deployToken();
-        await deployValidatorCollection();
-        await depositValidators();
-        await deployPhoneLinkCollection();
-        await deployCurrencyRate();
-        await deployCertifierCollection();
-        await deployShopCollection();
-        await deployLedger();
-        await addShopData(shops);
-        await prepareToken();
-    };
 
     const client = new TestClient();
     let storage: RelayStorage;
@@ -265,7 +88,7 @@ describe("Test of Server", function () {
             currency: "krw",
             provideWaitTime: 0,
             providePercent: 10,
-            wallet: shopWallets[0],
+            wallet: shops[0],
         },
         {
             shopId: "F000200",
@@ -273,7 +96,7 @@ describe("Test of Server", function () {
             currency: "krw",
             provideWaitTime: 0,
             providePercent: 10,
-            wallet: shopWallets[1],
+            wallet: shops[1],
         },
         {
             shopId: "F000300",
@@ -281,7 +104,7 @@ describe("Test of Server", function () {
             currency: "krw",
             provideWaitTime: 0,
             providePercent: 10,
-            wallet: shopWallets[2],
+            wallet: shops[2],
         },
         {
             shopId: "F000400",
@@ -289,7 +112,7 @@ describe("Test of Server", function () {
             currency: "krw",
             provideWaitTime: 0,
             providePercent: 10,
-            wallet: shopWallets[3],
+            wallet: shops[3],
         },
         {
             shopId: "F000500",
@@ -297,7 +120,7 @@ describe("Test of Server", function () {
             currency: "krw",
             provideWaitTime: 0,
             providePercent: 10,
-            wallet: shopWallets[4],
+            wallet: shops[4],
         },
     ];
 
@@ -347,26 +170,34 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [
-                relay1.privateKey,
-                relay2.privateKey,
-                relay3.privateKey,
-                relay4.privateKey,
-                relay5.privateKey,
-            ];
-            config.relay.certifierKey = certifier.privateKey;
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
@@ -430,7 +261,7 @@ describe("Test of Server", function () {
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
                 await expect(
-                    ledgerContract.connect(validators[0]).savePurchase({
+                    providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -441,7 +272,7 @@ describe("Test of Server", function () {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
@@ -786,26 +617,34 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [
-                relay1.privateKey,
-                relay2.privateKey,
-                relay3.privateKey,
-                relay4.privateKey,
-                relay5.privateKey,
-            ];
-            config.relay.certifierKey = certifier.privateKey;
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
@@ -871,7 +710,7 @@ describe("Test of Server", function () {
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
                 await expect(
-                    ledgerContract.connect(validators[0]).savePurchase({
+                    providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -882,7 +721,7 @@ describe("Test of Server", function () {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
@@ -1067,7 +906,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 oldBalance = await ledgerContract.pointBalanceOf(responseItem.data.data.account);
-                oldShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
+                oldShopInfo = await shopContract.shopOf(responseItem.data.data.shopId);
 
                 const nonce = await ledgerContract.nonceOf(shopData[purchaseOfLoyalty.shopIndex].wallet.address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
@@ -1131,7 +970,7 @@ describe("Test of Server", function () {
                 const newBalance = await ledgerContract.pointBalanceOf(users[purchaseOfLoyalty.userIndex].address);
                 assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalPoint)));
 
-                const newShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
+                const newShopInfo = await shopContract.shopOf(responseItem.data.data.shopId);
                 assert.deepStrictEqual(
                     newShopInfo.usedAmount,
                     oldShopInfo.usedAmount.sub(BigNumber.from(responseItem.data.data.paidPoint))
@@ -1162,26 +1001,34 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [
-                relay1.privateKey,
-                relay2.privateKey,
-                relay3.privateKey,
-                relay4.privateKey,
-                relay5.privateKey,
-            ];
-            config.relay.certifierKey = certifier.privateKey;
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
@@ -1247,7 +1094,7 @@ describe("Test of Server", function () {
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
                 await expect(
-                    ledgerContract.connect(validators[0]).savePurchase({
+                    providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -1258,7 +1105,7 @@ describe("Test of Server", function () {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
@@ -1503,26 +1350,34 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [
-                relay1.privateKey,
-                relay2.privateKey,
-                relay3.privateKey,
-                relay4.privateKey,
-                relay5.privateKey,
-            ];
-            config.relay.certifierKey = certifier.privateKey;
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
@@ -1602,7 +1457,7 @@ describe("Test of Server", function () {
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
                 await expect(
-                    ledgerContract.connect(validators[0]).savePurchase({
+                    providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -1613,7 +1468,7 @@ describe("Test of Server", function () {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
@@ -1751,26 +1606,34 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [
-                relay1.privateKey,
-                relay2.privateKey,
-                relay3.privateKey,
-                relay4.privateKey,
-                relay5.privateKey,
-            ];
-            config.relay.certifierKey = certifier.privateKey;
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
@@ -1851,7 +1714,7 @@ describe("Test of Server", function () {
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
                 await expect(
-                    ledgerContract.connect(validators[0]).savePurchase({
+                    providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -1862,7 +1725,7 @@ describe("Test of Server", function () {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
@@ -2022,7 +1885,7 @@ describe("Test of Server", function () {
                     URI(serverURL).directory("/v1/payment/item").addQuery("paymentId", paymentId).toString()
                 );
                 oldBalance = await ledgerContract.tokenBalanceOf(responseItem.data.data.account);
-                oldShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
+                oldShopInfo = await shopContract.shopOf(responseItem.data.data.shopId);
 
                 const nonce = await ledgerContract.nonceOf(shopData[purchaseOfLoyalty.shopIndex].wallet.address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
@@ -2086,7 +1949,7 @@ describe("Test of Server", function () {
                 const newBalance = await ledgerContract.tokenBalanceOf(users[purchaseOfLoyalty.userIndex].address);
                 assert.deepStrictEqual(newBalance, oldBalance.add(BigNumber.from(responseItem.data.data.totalToken)));
 
-                const newShopInfo = await shopCollection.shopOf(responseItem.data.data.shopId);
+                const newShopInfo = await shopContract.shopOf(responseItem.data.data.shopId);
 
                 assert.deepStrictEqual(
                     newShopInfo.usedAmount.toString(),
@@ -2118,26 +1981,34 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [
-                relay1.privateKey,
-                relay2.privateKey,
-                relay3.privateKey,
-                relay4.privateKey,
-                relay5.privateKey,
-            ];
-            config.relay.certifierKey = certifier.privateKey;
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
@@ -2218,7 +2089,7 @@ describe("Test of Server", function () {
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
                 await expect(
-                    ledgerContract.connect(validators[0]).savePurchase({
+                    providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
                         amount: purchaseAmount,
@@ -2229,7 +2100,7 @@ describe("Test of Server", function () {
                         phone: phoneHash,
                     })
                 )
-                    .to.emit(ledgerContract, "SavedPurchase")
+                    .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
                         timestamp: purchase.timestamp,
@@ -2550,26 +2421,34 @@ describe("Test of Server", function () {
         });
 
         before("Deploy", async () => {
-            await deployAllContract(shopData);
+            deployments.setShopData(shopData);
+            await deployments.doDeploy();
+
+            validatorContract = deployments.getContract("Validator") as Validator;
+            tokenContract = deployments.getContract("Token") as Token;
+            ledgerContract = deployments.getContract("Ledger") as Ledger;
+            linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+            consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+            providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+            exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+            currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+            shopContract = deployments.getContract("Shop") as Shop;
+            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
             config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkCollectionContract.address;
+            config.contracts.phoneLinkerAddress = linkContract.address;
+            config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.shopAddress = shopCollection.address;
+            config.contracts.consumerAddress = consumerContract.address;
+            config.contracts.providerAddress = providerContract.address;
+            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
-            config.relay.managerKeys = [
-                relay1.privateKey,
-                relay2.privateKey,
-                relay3.privateKey,
-                relay4.privateKey,
-                relay5.privateKey,
-            ];
-            config.relay.certifierKey = certifier.privateKey;
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
         });
 
@@ -2651,7 +2530,7 @@ describe("Test of Server", function () {
                     ? userData[purchase.userIndex].address.trim()
                     : AddressZero;
             await expect(
-                ledgerContract.connect(validators[0]).savePurchase({
+                providerContract.connect(validators[0]).savePurchase({
                     purchaseId: purchase.purchaseId,
                     timestamp: purchase.timestamp,
                     amount: purchaseAmount,
@@ -2662,7 +2541,7 @@ describe("Test of Server", function () {
                     phone: phoneHash,
                 })
             )
-                .to.emit(ledgerContract, "SavedPurchase")
+                .to.emit(providerContract, "SavedPurchase")
                 .withNamedArgs({
                     purchaseId: purchase.purchaseId,
                     timestamp: purchase.timestamp,

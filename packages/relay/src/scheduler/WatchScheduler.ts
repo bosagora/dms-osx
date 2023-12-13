@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { Ledger, ShopCollection } from "../../typechain-types";
+import { Ledger, LoyaltyConsumer, Shop } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
@@ -37,7 +37,7 @@ export class WatchScheduler extends Scheduler {
 
     private _ledgerContract: Ledger | undefined;
 
-    private _shopContract: ShopCollection | undefined;
+    private _shopContract: Shop | undefined;
 
     private _signers: RelaySigners | undefined;
 
@@ -106,10 +106,19 @@ export class WatchScheduler extends Scheduler {
         return this._ledgerContract;
     }
 
-    private async getShopContract(): Promise<ShopCollection> {
+    private _consumerContract: LoyaltyConsumer | undefined;
+    private async getConsumerContract(): Promise<LoyaltyConsumer> {
+        if (this._consumerContract === undefined) {
+            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
+            this._consumerContract = factory.attach(this.config.contracts.consumerAddress);
+        }
+        return this._consumerContract;
+    }
+
+    private async getShopContract(): Promise<Shop> {
         if (this._shopContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("ShopCollection");
-            this._shopContract = factory.attach(this.config.contracts.shopAddress) as ShopCollection;
+            const factory = await hre.ethers.getContractFactory("Shop");
+            this._shopContract = factory.attach(this.config.contracts.shopAddress) as Shop;
         }
         return this._shopContract;
     }
@@ -131,7 +140,7 @@ export class WatchScheduler extends Scheduler {
 
     private async onApproveNewPayment(payment: LoyaltyPaymentTaskData) {
         logger.info(`WatchScheduler.onApproveNewPayment ${payment.paymentId}`);
-        const contract = await this.getLedgerContract();
+        const contract = await this.getConsumerContract();
         const signerItem = await this.getRelaySigner();
         try {
             if (signerItem.signer.provider) {
@@ -176,7 +185,7 @@ export class WatchScheduler extends Scheduler {
 
     private async onApproveCancelPayment(payment: LoyaltyPaymentTaskData) {
         logger.info(`WatchScheduler.onApproveCancelPayment ${payment.paymentId}`);
-        const contract = await this.getLedgerContract();
+        const contract = await this.getConsumerContract();
         const signerItem = await this.getRelaySigner();
         try {
             if (signerItem.signer.provider) {
@@ -261,7 +270,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async waitPaymentLoyalty(
-        contract: Ledger,
+        contract: LoyaltyConsumer,
         tx: ContractTransaction
     ): Promise<ContractLoyaltyPaymentEvent | undefined> {
         const res: any = {};
@@ -457,7 +466,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async waitAndAddEvent(
-        contract: ShopCollection,
+        contract: Shop,
         tx: ContractTransaction
     ): Promise<ContractShopUpdateEvent | undefined> {
         const contractReceipt = await tx.wait();
@@ -478,7 +487,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async waitAndUpdateEvent(
-        contract: ShopCollection,
+        contract: Shop,
         tx: ContractTransaction
     ): Promise<ContractShopUpdateEvent | undefined> {
         const contractReceipt = await tx.wait();
@@ -499,7 +508,7 @@ export class WatchScheduler extends Scheduler {
     }
 
     private async waitAndChangeStatusEvent(
-        contract: ShopCollection,
+        contract: Shop,
         tx: ContractTransaction
     ): Promise<ContractShopStatusEvent | undefined> {
         const contractReceipt = await tx.wait();

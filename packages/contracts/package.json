@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-artifacts",
-    "version": "1.1.14",
+    "version": "2.0.0",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"
@@ -11,18 +11,18 @@
         "build": "hardhat compile",
         "build:npm": "rollup --config rollup.config.ts",
         "deploy:hardhat": "hardhat deploy",
-        "deploy:mainnet": "hardhat deploy --network bosagora_mainnet",
-        "deploy:testnet": "hardhat deploy --network bosagora_testnet",
-        "deploy:devnet": "hardhat deploy --network bosagora_devnet",
+        "deploy:mainnet": "hardhat run deploy/bosagora_devnet/deploy.ts --network bosagora_mainnet",
+        "deploy:testnet": "hardhat run deploy/bosagora_devnet/deploy.ts --network bosagora_testnet",
+        "deploy:devnet": "hardhat run deploy/bosagora_devnet/deploy.ts --network bosagora_devnet",
         "lint": "tslint --config tslint.json \\\"{src,test}/**/*.ts\\\"",
         "lint-fix": "tslint --fix --config tslint.json \\\"{src,test}/**/*.ts\\\"",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,md}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,md}' --write",
         "docgen": "hardhat docgen",
-        "test:Validator": "hardhat test test/00-ValidatorCollection.test.ts",
+        "test:Validator": "hardhat test test/00-Validator.test.ts",
         "test:CurrencyRate": "hardhat test test/01-CurrencyRate.test.ts",
-        "test:ShopCollection": "hardhat test test/02-ShopCollection.test.ts",
-        "test:CertifierCollection": "hardhat test test/03-CertifierCollection.test.ts",
+        "test:Certifier": "hardhat test test/02-Certifier.test.ts",
+        "test:Shop": "hardhat test test/03-Shop.test.ts",
         "test:Ledger": "hardhat test test/04-Ledger.test.ts"
     },
     "repository": {
@@ -30,16 +30,18 @@
         "url": "git+https://github.com/bosagora/dms-osx.git"
     },
     "author": "BOSagora Foundation",
-    "license": "MIT",
+    "license": "AGPL-3.0-or-later",
     "bugs": {
-        "url": ""
+        "url": "https://github.com/bosagora/dms-osx/issues"
     },
-    "homepage": "",
+    "homepage": "https://github.com/bosagora/dms-osx#readme",
     "devDependencies": {
         "@ethersproject/constants": "^5.7.0",
-        "@nomiclabs/hardhat-ethers": "^2.2.1",
+        "@nomiclabs/hardhat-ethers": "^2.2.3",
         "@nomiclabs/hardhat-waffle": "^2.0.2",
-        "@openzeppelin/contracts": "^4.8.2",
+        "@openzeppelin/contracts": "^4.9.5",
+        "@openzeppelin/contracts-upgradeable": "^4.9.5",
+        "@openzeppelin/hardhat-upgrades": "^1.28.0",
         "@rollup/plugin-json": "^4.1.0",
         "@rollup/plugin-typescript": "^8.3.1",
         "@typechain/ethers-v5": "^10.1.0",
@@ -50,13 +52,12 @@
         "assert": "^2.0.0",
         "chai": "^4.3.7",
         "chai-http": "^4.3.7",
+        "del-osx-artifacts": "^2.0.0",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
         "ethers": "npm:boa-ethers2@^5.7.9",
         "hardhat": "^2.12.7",
-        "hardhat-deploy": "^0.9.26",
         "hardhat-gas-reporter": "^1.0.7",
-        "del-osx-artifacts": "^1.1.1",
         "mocha": "10.1.0",
         "prettier": "^2.5.1",
         "prettier-plugin-solidity": "^1.1.1",

@@ -271,6 +271,7 @@ export class SettingConfig implements ISettingConfig {
 export class ContractsConfig implements IContractsConfig {
     public tokenAddress: string;
     public ledgerAddress: string;
+    public providerAddress: string;
     public phoneLinkerAddress: string;
 
     /**
@@ -281,6 +282,7 @@ export class ContractsConfig implements IContractsConfig {
 
         this.tokenAddress = defaults.tokenAddress;
         this.ledgerAddress = defaults.ledgerAddress;
+        this.providerAddress = defaults.providerAddress;
         this.phoneLinkerAddress = defaults.phoneLinkerAddress;
     }
 
@@ -291,6 +293,7 @@ export class ContractsConfig implements IContractsConfig {
         return {
             tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
             ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
+            providerAddress: process.env.LOYALTY_PROVIDER_CONTRACT_ADDRESS || "",
             phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
         };
     }
@@ -379,6 +382,7 @@ export interface IContractsConfig {
     tokenAddress: string;
     ledgerAddress: string;
     phoneLinkerAddress: string;
+    providerAddress: string;
 }
 
 /**

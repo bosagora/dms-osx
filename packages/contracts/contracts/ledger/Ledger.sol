@@ -1,0 +1,371 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+pragma solidity ^0.8.2;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
+import "../interfaces/ICertifier.sol";
+import "../interfaces/ICurrencyRate.sol";
+import "../interfaces/IValidator.sol";
+import "../interfaces/IShop.sol";
+import "../interfaces/ILedger.sol";
+import "./LedgerStorage.sol";
+
+/// @notice 포인트와 토큰의 원장
+contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ILedger {
+    /// @notice 포인트가 지급될 때 발생되는 이벤트
+    event ProvidedPoint(
+        address account,
+        uint256 providedPoint,
+        uint256 providedValue,
+        string currency,
+        uint256 balancePoint,
+        string purchaseId,
+        bytes32 shopId
+    );
+
+    /// @notice 토큰이 지급될 때 발생되는 이벤트
+    event ProvidedToken(
+        address account,
+        uint256 providedToken,
+        uint256 providedValue,
+        string currency,
+        uint256 balanceToken,
+        string purchaseId,
+        bytes32 shopId
+    );
+
+    /// @notice 포인트가 지급될 때 발생되는 이벤트
+    event ProvidedUnPayablePoint(
+        bytes32 phone,
+        uint256 providedPoint,
+        uint256 providedValue,
+        string currency,
+        uint256 balancePoint,
+        string purchaseId,
+        bytes32 shopId
+    );
+
+    /// @notice 토큰을 예치했을 때 발생하는 이벤트
+    event Deposited(address account, uint256 depositedToken, uint256 depositedValue, uint256 balanceToken);
+    /// @notice 토큰을 인출했을 때 발생하는 이벤트
+    event Withdrawn(address account, uint256 withdrawnToken, uint256 withdrawnValue, uint256 balanceToken);
+
+    /// @notice 생성자
+    /// @param _foundationAccount 재단의 계정
+    /// @param _settlementAccount 정산금 계정
+    /// @param _feeAccount 수수료 계정
+    /// @param _tokenAddress 토큰 컨트랙트의 주소
+    /// @param _linkAddress 전화번호-지갑주소 링크 컨트랙트의 주소
+    /// @param _currencyRateAddress 환률을 제공하는 컨트랙트의 주소
+    function initialize(
+        address _foundationAccount,
+        address _settlementAccount,
+        address _feeAccount,
+        address _tokenAddress,
+        address _linkAddress,
+        address _currencyRateAddress,
+        address _providerAddress,
+        address _consumerAddress,
+        address _exchangerAddress
+    ) external initializer {
+        __UUPSUpgradeable_init();
+        __Ownable_init_unchained();
+
+        foundationAccount = _foundationAccount;
+        settlementAccount = _settlementAccount;
+        feeAccount = _feeAccount;
+        providerAddress = _providerAddress;
+        consumerAddress = _consumerAddress;
+        exchangerAddress = _exchangerAddress;
+
+        tokenContract = IERC20(_tokenAddress);
+        linkContract = IPhoneLinkCollection(_linkAddress);
+        currencyRateContract = ICurrencyRate(_currencyRateAddress);
+        fee = MAX_FEE;
+
+        loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
+        loyaltyTypes[settlementAccount] = LoyaltyType.TOKEN;
+        loyaltyTypes[feeAccount] = LoyaltyType.TOKEN;
+
+        temporaryAddress = address(0x0);
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal virtual override {
+        require(_msgSender() == owner(), "Unauthorized access");
+    }
+
+    modifier onlyProvider() {
+        require(_msgSender() == providerAddress, "1005");
+        _;
+    }
+
+    modifier onlyConsumer() {
+        require(_msgSender() == consumerAddress, "1006");
+        _;
+    }
+
+    modifier onlyExchanger() {
+        require(_msgSender() == exchangerAddress, "1007");
+        _;
+    }
+
+    modifier onlyAccessNonce() {
+        require(_msgSender() == consumerAddress || _msgSender() == exchangerAddress, "1007");
+        _;
+    }
+
+    modifier onlyAccessLedger() {
+        require(_msgSender() == consumerAddress || _msgSender() == exchangerAddress, "1007");
+        _;
+    }
+
+    /// @notice 토큰을 예치합니다.
+    /// @param _amount 금액
+    function deposit(uint256 _amount) external virtual {
+        require(loyaltyTypes[_msgSender()] == LoyaltyType.TOKEN, "1520");
+        require(_amount <= tokenContract.allowance(_msgSender(), address(this)), "1512");
+        tokenContract.transferFrom(_msgSender(), address(this), _amount);
+
+        tokenBalances[_msgSender()] += _amount;
+
+        emit Deposited(
+            _msgSender(),
+            _amount,
+            currencyRateContract.convertTokenToPoint(_amount),
+            tokenBalances[_msgSender()]
+        );
+    }
+
+    /// @notice 토큰을 인출합니다.
+    /// @param _amount 금액
+    function withdraw(uint256 _amount) external virtual {
+        require(_amount <= tokenBalances[_msgSender()], "1511");
+        tokenContract.transfer(_msgSender(), _amount);
+
+        tokenBalances[_msgSender()] -= _amount;
+
+        emit Withdrawn(
+            _msgSender(),
+            _amount,
+            currencyRateContract.convertTokenToPoint(_amount),
+            tokenBalances[_msgSender()]
+        );
+    }
+
+    /// @notice 포인트를 지급합니다.
+    /// @dev 구매 데이터를 확인한 후 호출됩니다.
+    /// @param _phone 전화번호 해시
+    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
+    /// @param _purchaseId 구매 아이디
+    /// @param _shopId 구매한 가맹점 아이디
+    function provideUnPayablePoint(
+        bytes32 _phone,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) external override onlyProvider {
+        _provideUnPayablePoint(_phone, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+    }
+
+    function _provideUnPayablePoint(
+        bytes32 _phone,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal {
+        unPayablePointBalances[_phone] += _loyaltyPoint;
+        emit ProvidedUnPayablePoint(
+            _phone,
+            _loyaltyPoint,
+            _loyaltyValue,
+            _currency,
+            unPayablePointBalances[_phone],
+            _purchaseId,
+            _shopId
+        );
+    }
+
+    /// @notice 포인트를 지급합니다.
+    /// @dev 구매 데이터를 확인한 후 호출됩니다.
+    /// @param _account 사용자의 지갑주소
+    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
+    /// @param _purchaseId 구매 아이디
+    /// @param _shopId 구매한 가맹점 아이디
+    function providePoint(
+        address _account,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) external override onlyProvider {
+        _providePoint(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+    }
+
+    function _providePoint(
+        address _account,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal {
+        pointBalances[_account] += _loyaltyPoint;
+        emit ProvidedPoint(
+            _account,
+            _loyaltyPoint,
+            _loyaltyValue,
+            _currency,
+            pointBalances[_account],
+            _purchaseId,
+            _shopId
+        );
+    }
+
+    /// @notice 토큰을 지급합니다.
+    /// @dev 구매 데이터를 확인한 후 호출됩니다.
+    /// @param _account 사용자의 지갑주소
+    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
+    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
+    /// @param _purchaseId 구매 아이디
+    /// @param _shopId 구매한 가맹점 아이디
+    function provideToken(
+        address _account,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) external override onlyProvider {
+        _provideToken(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+    }
+
+    function _provideToken(
+        address _account,
+        uint256 _loyaltyPoint,
+        uint256 _loyaltyValue,
+        string calldata _currency,
+        string calldata _purchaseId,
+        bytes32 _shopId
+    ) internal {
+        uint256 amountToken = currencyRateContract.convertPointToToken(_loyaltyPoint);
+
+        require(tokenBalances[foundationAccount] >= amountToken, "1510");
+        tokenBalances[_account] += amountToken;
+        tokenBalances[foundationAccount] -= amountToken;
+        uint256 balance = tokenBalances[_account];
+        emit ProvidedToken(_account, amountToken, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
+    }
+
+    /// @notice 포인트의 잔고에 더한다. Consumer 컨트랙트만 호출할 수 있다.
+    function addPointBalance(address _account, uint256 _amount) external override onlyAccessLedger {
+        pointBalances[_account] += _amount;
+    }
+
+    /// @notice 포인트의 잔고에서 뺀다. Consumer 컨트랙트만 호출할 수 있다.
+    function subPointBalance(address _account, uint256 _amount) external override onlyAccessLedger {
+        if (pointBalances[_account] >= _amount) pointBalances[_account] -= _amount;
+    }
+
+    /// @notice 토큰의 잔고에 더한다. Consumer 컨트랙트만 호출할 수 있다.
+    function addTokenBalance(address _account, uint256 _amount) external override onlyAccessLedger {
+        tokenBalances[_account] += _amount;
+    }
+
+    /// @notice 토큰의 잔고에서 뺀다. Consumer 컨트랙트만 호출할 수 있다.
+    function subTokenBalance(address _account, uint256 _amount) external override onlyAccessLedger {
+        if (tokenBalances[_account] >= _amount) tokenBalances[_account] -= _amount;
+    }
+
+    /// @notice 토큰을 전달한다. Consumer 컨트랙트만 호출할 수 있다.
+    function transferToken(address _from, address _to, uint256 _amount) external override onlyAccessLedger {
+        if (tokenBalances[_from] >= _amount) {
+            tokenBalances[_from] -= _amount;
+            tokenBalances[_to] += _amount;
+        }
+    }
+
+    /// @notice 포인트의 잔고를 리턴한다
+    /// @param _hash 전화번호의 해시
+    function unPayablePointBalanceOf(bytes32 _hash) external view override returns (uint256) {
+        return unPayablePointBalances[_hash];
+    }
+
+    /// @notice 포인트의 잔고를 리턴한다
+    /// @param _account 지갑주소
+    function pointBalanceOf(address _account) external view override returns (uint256) {
+        return pointBalances[_account];
+    }
+
+    /// @notice 토큰의 잔고를 리턴한다
+    /// @param _account 지갑주소
+    function tokenBalanceOf(address _account) external view override returns (uint256) {
+        return tokenBalances[_account];
+    }
+
+    /// @notice nonce를 리턴한다
+    /// @param _account 지갑주소
+    function nonceOf(address _account) external view override returns (uint256) {
+        return nonce[_account];
+    }
+
+    /// @notice nonce를 증가한다
+    /// @param _account 지갑주소
+    function increaseNonce(address _account) external override onlyAccessNonce {
+        nonce[_account]++;
+    }
+
+    /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
+    /// @param _account 지갑주소
+    function loyaltyTypeOf(address _account) external view override returns (LoyaltyType) {
+        return loyaltyTypes[_account];
+    }
+
+    /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.
+    /// @param _fee % 단위 입니다.
+    function setFee(uint32 _fee) external override {
+        require(_fee <= MAX_FEE, "1521");
+        require(_msgSender() == feeAccount, "1050");
+        fee = _fee;
+    }
+
+    /// @notice 포인트와 토큰의 사용수수료률을 리턴합니다.
+    function getFee() external view override returns (uint32) {
+        return fee;
+    }
+
+    /// @notice 사용가능한 포인트로 전환합니다.
+    function changeToPayablePoint(bytes32 _phone, address _account) external override onlyExchanger {
+        uint256 amount = unPayablePointBalances[_phone];
+        unPayablePointBalances[_phone] = 0;
+        pointBalances[_account] += amount;
+    }
+
+    /// @notice 사용자가 적립할 로열티를 토큰으로 변경한다.
+    function changeToLoyaltyToken(address _account) external override onlyExchanger {
+        loyaltyTypes[_account] = LoyaltyType.TOKEN;
+    }
+
+    function getFoundationAccount() external view override returns (address) {
+        return foundationAccount;
+    }
+
+    function getSettlementAccount() external view override returns (address) {
+        return settlementAccount;
+    }
+
+    function getFeeAccount() external view override returns (address) {
+        return feeAccount;
+    }
+}

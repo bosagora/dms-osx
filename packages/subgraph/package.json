@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "description": "The DMS OSx Subgraph",
     "homepage": "https://github.com/bosagora/dms-osx",
-    "license": "MIT",
+    "author": "BOSagora Foundation",
+    "license": "AGPL-3.0-or-later",
     "scripts": {
         "build:contracts": "cd ../contracts && yarn build",
         "manifest": "scripts/build-manifest.sh",
