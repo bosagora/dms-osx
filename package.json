@@ -4,6 +4,7 @@
   "description": "A smart contract framework that decentralized point systems",
   "repository": "https://github.com/bosagora/dms-osx",
   "author": "BOSagora Foundation",
+  "license": "AGPL-3.0-or-later",
   "private": true,
   "workspaces": {
     "packages": [
