@@ -1346,19 +1346,6 @@ export class Shop extends Entity {
     this.set("currency", Value.fromString(value));
   }
 
-  get provideWaitTime(): BigInt {
-    let value = this.get("provideWaitTime");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set provideWaitTime(value: BigInt) {
-    this.set("provideWaitTime", Value.fromBigInt(value));
-  }
-
   get providePercent(): BigInt {
     let value = this.get("providePercent");
     if (!value || value.kind == ValueKind.NULL) {

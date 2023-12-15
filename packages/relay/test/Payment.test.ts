@@ -76,7 +76,6 @@ describe("Test of Server", function () {
         shopId: string;
         name: string;
         currency: string;
-        provideWaitTime: number;
         providePercent: number;
         wallet: Wallet;
     }
@@ -86,7 +85,6 @@ describe("Test of Server", function () {
             shopId: "F000100",
             name: "Shop1",
             currency: "krw",
-            provideWaitTime: 0,
             providePercent: 10,
             wallet: shops[0],
         },
@@ -94,7 +92,6 @@ describe("Test of Server", function () {
             shopId: "F000200",
             name: "Shop2",
             currency: "krw",
-            provideWaitTime: 0,
             providePercent: 10,
             wallet: shops[1],
         },
@@ -102,7 +99,6 @@ describe("Test of Server", function () {
             shopId: "F000300",
             name: "Shop3",
             currency: "krw",
-            provideWaitTime: 0,
             providePercent: 10,
             wallet: shops[2],
         },
@@ -110,7 +106,6 @@ describe("Test of Server", function () {
             shopId: "F000400",
             name: "Shop4",
             currency: "krw",
-            provideWaitTime: 0,
             providePercent: 10,
             wallet: shops[3],
         },
@@ -118,7 +113,6 @@ describe("Test of Server", function () {
             shopId: "F000500",
             name: "Shop5",
             currency: "krw",
-            provideWaitTime: 0,
             providePercent: 10,
             wallet: shops[4],
         },

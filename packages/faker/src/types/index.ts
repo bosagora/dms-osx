@@ -14,7 +14,6 @@ export interface IPurchaseData {
 export interface IShopData {
     shopId: string;
     name: string;
-    provideWaitTime: number;
     providePercent: number;
     address: string;
     privateKey: string;

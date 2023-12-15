@@ -35,20 +35,16 @@ export class AddedShop__Params {
     return this._event.parameters[2].value.toString();
   }
 
-  get provideWaitTime(): BigInt {
+  get providePercent(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get providePercent(): BigInt {
-    return this._event.parameters[4].value.toBigInt();
-  }
-
   get account(): Address {
-    return this._event.parameters[5].value.toAddress();
+    return this._event.parameters[4].value.toAddress();
   }
 
   get status(): i32 {
-    return this._event.parameters[6].value.toI32();
+    return this._event.parameters[5].value.toI32();
   }
 }
 
@@ -395,20 +391,16 @@ export class UpdatedShop__Params {
     return this._event.parameters[2].value.toString();
   }
 
-  get provideWaitTime(): BigInt {
+  get providePercent(): BigInt {
     return this._event.parameters[3].value.toBigInt();
   }
 
-  get providePercent(): BigInt {
-    return this._event.parameters[4].value.toBigInt();
-  }
-
   get account(): Address {
-    return this._event.parameters[5].value.toAddress();
+    return this._event.parameters[4].value.toAddress();
   }
 
   get status(): i32 {
-    return this._event.parameters[6].value.toI32();
+    return this._event.parameters[5].value.toI32();
   }
 }
 
@@ -443,50 +435,46 @@ export class Shop__shopOfResultValue0Struct extends ethereum.Tuple {
     return this[2].toString();
   }
 
-  get provideWaitTime(): BigInt {
+  get providePercent(): BigInt {
     return this[3].toBigInt();
   }
 
-  get providePercent(): BigInt {
-    return this[4].toBigInt();
-  }
-
   get account(): Address {
-    return this[5].toAddress();
+    return this[4].toAddress();
   }
 
   get providedAmount(): BigInt {
-    return this[6].toBigInt();
+    return this[5].toBigInt();
   }
 
   get usedAmount(): BigInt {
-    return this[7].toBigInt();
+    return this[6].toBigInt();
   }
 
   get settledAmount(): BigInt {
-    return this[8].toBigInt();
+    return this[7].toBigInt();
   }
 
   get withdrawnAmount(): BigInt {
-    return this[9].toBigInt();
+    return this[8].toBigInt();
   }
 
   get status(): i32 {
-    return this[10].toI32();
+    return this[9].toI32();
   }
 
   get withdrawData(): Shop__shopOfResultValue0WithdrawDataStruct {
     return changetype<Shop__shopOfResultValue0WithdrawDataStruct>(
-      this[11].toTuple()
+      this[10].toTuple()
     );
   }
 
   get itemIndex(): BigInt {
-    return this[12].toBigInt();
+    return this[11].toBigInt();
   }
 
   get accountIndex(): BigInt {
-    return this[13].toBigInt();
+    return this[12].toBigInt();
   }
 }
 
@@ -674,7 +662,7 @@ export class Shop extends ethereum.SmartContract {
   shopOf(_shopId: Bytes): Shop__shopOfResultValue0Struct {
     let result = super.call(
       "shopOf",
-      "shopOf(bytes32):((bytes32,string,string,uint256,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint256,uint8),uint256,uint256))",
+      "shopOf(bytes32):((bytes32,string,string,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint256,uint8),uint256,uint256))",
       [ethereum.Value.fromFixedBytes(_shopId)]
     );
 
@@ -686,7 +674,7 @@ export class Shop extends ethereum.SmartContract {
   ): ethereum.CallResult<Shop__shopOfResultValue0Struct> {
     let result = super.tryCall(
       "shopOf",
-      "shopOf(bytes32):((bytes32,string,string,uint256,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint256,uint8),uint256,uint256))",
+      "shopOf(bytes32):((bytes32,string,string,uint256,address,uint256,uint256,uint256,uint256,uint8,(uint256,uint256,uint8),uint256,uint256))",
       [ethereum.Value.fromFixedBytes(_shopId)]
     );
     if (result.reverted) {
@@ -1211,20 +1199,16 @@ export class UpdateCall__Inputs {
     return this._call.inputValues[2].value.toString();
   }
 
-  get _provideWaitTime(): BigInt {
+  get _providePercent(): BigInt {
     return this._call.inputValues[3].value.toBigInt();
   }
 
-  get _providePercent(): BigInt {
-    return this._call.inputValues[4].value.toBigInt();
-  }
-
   get _account(): Address {
-    return this._call.inputValues[5].value.toAddress();
+    return this._call.inputValues[4].value.toAddress();
   }
 
   get _signature(): Bytes {
-    return this._call.inputValues[6].value.toBytes();
+    return this._call.inputValues[5].value.toBytes();
   }
 }
 

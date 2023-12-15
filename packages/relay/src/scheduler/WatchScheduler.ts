@@ -374,7 +374,6 @@ export class WatchScheduler extends Scheduler {
                     task.name = event.name;
                     task.currency = event.currency;
                     task.providePercent = event.providePercent;
-                    task.provideWaitTime = event.provideWaitTime;
                     task.status = event.status;
                     await this.storage.updateTask(task);
 
@@ -410,7 +409,6 @@ export class WatchScheduler extends Scheduler {
                     task.name = event.name;
                     task.currency = event.currency;
                     task.providePercent = event.providePercent;
-                    task.provideWaitTime = event.provideWaitTime;
                     task.status = event.status;
                     await this.storage.updateTask(task);
 
@@ -478,7 +476,6 @@ export class WatchScheduler extends Scheduler {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
                 currency: parsedLog.args.currency,
-                provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
                 providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
                 status: parsedLog.args.status,
@@ -499,7 +496,6 @@ export class WatchScheduler extends Scheduler {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
                 currency: parsedLog.args.currency,
-                provideWaitTime: (parsedLog.args.provideWaitTime as BigNumber).toNumber(),
                 providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
                 status: parsedLog.args.status,
@@ -528,7 +524,6 @@ export class WatchScheduler extends Scheduler {
             shopId: item.shopId,
             name: item.name,
             currency: item.currency,
-            provideWaitTime: item.provideWaitTime,
             providePercent: item.providePercent,
             status: item.status,
             account: item.account,

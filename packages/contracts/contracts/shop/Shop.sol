@@ -20,7 +20,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 shopId,
         string name,
         string currency,
-        uint256 provideWaitTime,
         uint256 providePercent,
         address account,
         ShopStatus status
@@ -30,7 +29,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 shopId,
         string name,
         string currency,
-        uint256 provideWaitTime,
         uint256 providePercent,
         address account,
         ShopStatus status
@@ -128,7 +126,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
             shopId: _shopId,
             name: _name,
             currency: _currency,
-            provideWaitTime: 7 * 86400,
             providePercent: 5,
             account: _account,
             providedAmount: 0,
@@ -147,28 +144,18 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         nonce[_account]++;
 
         ShopData memory shop = shops[_shopId];
-        emit AddedShop(
-            shop.shopId,
-            shop.name,
-            shop.currency,
-            shop.provideWaitTime,
-            shop.providePercent,
-            shop.account,
-            shop.status
-        );
+        emit AddedShop(shop.shopId, shop.name, shop.currency, shop.providePercent, shop.account, shop.status);
     }
 
     /// @notice 상점정보를 수정합니다
     /// @param _shopId 상점 아이디
     /// @param _name 상점이름
-    /// @param _provideWaitTime 제품구매 후 포인트가 지급될 시간
     /// @param _providePercent 구매금액에 대한 포인트 지급량
     /// @dev 중계서버를 통해서 호출됩니다.
     function update(
         bytes32 _shopId,
         string calldata _name,
         string calldata _currency,
-        uint256 _provideWaitTime,
         uint256 _providePercent,
         address _account,
         bytes calldata _signature
@@ -184,7 +171,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         shops[id].name = _name;
-        shops[id].provideWaitTime = _provideWaitTime;
         shops[id].providePercent = _providePercent;
         if (keccak256(abi.encodePacked(shops[id].currency)) != keccak256(abi.encodePacked(_currency))) {
             shops[id].providedAmount = currencyRate.convertCurrency(
@@ -212,7 +198,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
             shops[id].shopId,
             shops[id].name,
             shops[id].currency,
-            shops[id].provideWaitTime,
             shops[id].providePercent,
             shops[id].account,
             shops[id].status
