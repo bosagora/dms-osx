@@ -1,6 +1,18 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
+import { ApprovalScheduler } from "../src/scheduler/ApprovalScheduler";
+import { Scheduler } from "../src/scheduler/Scheduler";
+import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import { RelayStorage } from "../src/storage/RelayStorage";
+import {
+    ContractLoyaltyType,
+    ContractShopStatus,
+    IShopData,
+    IUserData,
+    LoyaltyPaymentTaskStatus,
+    ShopTaskStatus,
+    TaskResultType,
+} from "../src/types";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     Certifier,
@@ -14,18 +26,6 @@ import {
     Token,
     Validator,
 } from "../typechain-types";
-import { ApprovalScheduler } from "../src/scheduler/ApprovalScheduler";
-import { Scheduler } from "../src/scheduler/Scheduler";
-import { WatchScheduler } from "../src/scheduler/WatchScheduler";
-import {
-    ContractLoyaltyType,
-    ContractShopStatus,
-    IShopData,
-    IUserData,
-    LoyaltyPaymentTaskStatus,
-    ShopTaskStatus,
-    TaskResultType,
-} from "../src/types";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
@@ -118,7 +118,6 @@ describe("Test of Server", function () {
                         shopId: m.shopId,
                         name: m.name,
                         currency: m.currency,
-                        provideWaitTime: m.provideWaitTime,
                         providePercent: m.providePercent,
                         wallet: new Wallet(m.privateKey, ethers.provider),
                     };
@@ -353,7 +352,6 @@ describe("Test of Server", function () {
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
                     currency: shopData[0].currency,
-                    provideWaitTime: 86400,
                     providePercent: 10,
                 };
                 const response = await client.post(url, params);

@@ -11,12 +11,14 @@ import { ethers, upgrades, waffle } from "hardhat";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
+// tslint:disable-next-line:no-duplicate-imports
 import * as hre from "hardhat";
+
+import { AddressZero } from "@ethersproject/constants";
 
 import { BigNumber, Wallet } from "ethers";
 
 import assert from "assert";
-import { AddressZero } from "@ethersproject/constants";
 
 chai.use(solidity);
 
@@ -135,7 +137,6 @@ describe("Test for Shop", () => {
         shopId: string;
         name: string;
         currency: string;
-        provideWaitTime: number;
         providePercent: number;
         wallet: Wallet;
     }
@@ -145,7 +146,6 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 1-1",
             currency: "krw",
-            provideWaitTime: 0,
             providePercent: 5,
             wallet: shopWallets[0],
         },
@@ -153,7 +153,6 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 1-2",
             currency: "krw",
-            provideWaitTime: 0,
             providePercent: 5,
             wallet: shopWallets[0],
         },
@@ -161,7 +160,6 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 2-1",
             currency: "usd",
-            provideWaitTime: 0,
             providePercent: 5,
             wallet: shopWallets[1],
         },
@@ -169,7 +167,6 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 2-2",
             currency: "jpy",
-            provideWaitTime: 0,
             providePercent: 5,
             wallet: shopWallets[1],
         },
@@ -177,7 +174,6 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 3",
             currency: "jpy",
-            provideWaitTime: 0,
             providePercent: 5,
             wallet: shopWallets[2],
         },
@@ -185,7 +181,6 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 4",
             currency: "jpy",
-            provideWaitTime: 0,
             providePercent: 5,
             wallet: shopWallets[3],
         },
@@ -193,7 +188,6 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 5",
             currency: "jpy",
-            provideWaitTime: 0,
             providePercent: 5,
             wallet: shopWallets[4],
         },
@@ -251,7 +245,6 @@ describe("Test for Shop", () => {
     it("Update", async () => {
         const elem = shopData[0];
         elem.name = "New Shop";
-        elem.provideWaitTime = 86400 * 7;
         elem.providePercent = 10;
         const signature = await ContractUtils.signShop(
             elem.wallet,
@@ -261,22 +254,13 @@ describe("Test for Shop", () => {
         await expect(
             shopContract
                 .connect(certifier)
-                .update(
-                    elem.shopId,
-                    elem.name,
-                    "usd",
-                    elem.provideWaitTime,
-                    elem.providePercent,
-                    elem.wallet.address,
-                    signature
-                )
+                .update(elem.shopId, elem.name, "usd", elem.providePercent, elem.wallet.address, signature)
         )
             .to.emit(shopContract, "UpdatedShop")
             .withNamedArgs({
                 shopId: elem.shopId,
                 name: elem.name,
                 currency: "usd",
-                provideWaitTime: elem.provideWaitTime,
                 providePercent: elem.providePercent,
                 account: elem.wallet.address,
             });

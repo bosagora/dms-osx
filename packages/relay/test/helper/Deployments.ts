@@ -26,7 +26,6 @@ interface IShopData {
     shopId: string;
     name: string;
     currency: string;
-    provideWaitTime: number;
     providePercent: number;
     wallet: Wallet;
 }
@@ -510,15 +509,7 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
             );
             const tx4 = await contract
                 .connect(accounts.certifier)
-                .update(
-                    shop.shopId,
-                    shop.name,
-                    shop.currency,
-                    shop.provideWaitTime,
-                    shop.providePercent,
-                    shop.wallet.address,
-                    signature1
-                );
+                .update(shop.shopId, shop.name, shop.currency, shop.providePercent, shop.wallet.address, signature1);
             console.log(`Update shop data (tx: ${tx4.hash})...`);
             await tx4.wait();
 

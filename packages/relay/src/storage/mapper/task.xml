@@ -11,7 +11,6 @@
                 "account"               ,
                 "name"                  ,
                 "currency"              ,
-                "provideWaitTime"       ,
                 "providePercent"        ,
                 "status"                ,
                 "taskStatus"            ,
@@ -25,7 +24,6 @@
                 #{account}              ,
                 #{name}                 ,
                 #{currency}             ,
-                ${provideWaitTime}      ,
                 ${providePercent}       ,
                 ${status}               ,
                 ${taskStatus}           ,
@@ -43,7 +41,6 @@
         SET
             "name"              = #{name},
             "currency"          = #{currency},
-            "provideWaitTime"   = ${provideWaitTime},
             "providePercent"    = ${providePercent},
             "status"            = ${status},
             "taskStatus"        = ${taskStatus},

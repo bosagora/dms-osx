@@ -50,7 +50,6 @@ export interface ContractShopUpdateEvent {
     shopId: string;
     name: string;
     currency: string;
-    provideWaitTime: number;
     providePercent: number;
     account: string;
     status: ContractShopStatus;
@@ -174,7 +173,6 @@ export interface ShopTaskData {
     shopId: string;
     name: string;
     currency: string;
-    provideWaitTime: number;
     providePercent: number;
     status: ContractShopStatus;
     account: string;
@@ -188,7 +186,6 @@ export interface IShopData {
     shopId: string;
     name: string;
     currency: string;
-    provideWaitTime: number;
     providePercent: number;
     address: string;
     privateKey: string;

@@ -293,7 +293,6 @@
 | shopId          | string | Yes  | 상점 아이디                |
 | name            | string | Yes  | 상점 이름                 |
 | currency        | string | Yes  | 상점의 결제 통화             |
-| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
 | providePercent  | int    | Yes  | 적립비율\*100             |
 | status          | int    | Yes  | 상점의 상태(1:활성, 2:비활성)   |
 | account         | string | Yes  | 상점주의 월렛주소             |
@@ -699,7 +698,6 @@
 | shopId          | string | Yes  | 상점 아이디                            |
 | name            | string | Yes  | 상점 이름                              |
 | currency        | string | Yes  | 상점의 결제 통화             |
-| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간 |
 | providePercent  | int    | Yes  | 적립비율\*100                          |
 
 #### - 결과
@@ -710,7 +708,6 @@
 | shopId          | string | Yes  | 상점 아이디                                                                                              |
 | name            | string | Yes  | 상점 이름                                                                                               |
 | currency        | string | Yes  | 상점의 결제 통화                                                                                           |
-| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                                                               |
 | providePercent  | int    | Yes  | 적립비율\*100                                                                                           |
 | taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 승인실패<br/>14 : 접수완료<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
 | timestamp       | int    | Yes  | 접수 시간                                                                                               |
@@ -769,7 +766,6 @@
 | data      | shopId          | string | Yes  | 상점 아이디                                                             |
 | data      | name            | string | Yes  | 상점 이름                                                              |
 | data      | currency        | string | Yes  | 상점의 결제통화                                                          |
-| data      | provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                              |
 | data      | providePercent  | int    | Yes  | 적립비율\*100                                                          |
 | data      | status          | int    | Yes  | 활성상태(1:활성, 2:비활성)                                                  |     |
 | data      | account         | string | Yes  | 상점주의 지갑주소                                                          |
@@ -791,7 +787,6 @@
         "shopId": "0xb2980bfac07826f2f93bea8434b569a2a458cbbd39b812a062ddcd7d1fa8fff9",
         "name": "Shop 5",
         "currency": "krw",
-        "provideWaitTime": 5,
         "providePercent": 5,
         "status": 2,
         "account": "0x5b9aD6ad05c0fC423B34C1EaF2FF67C47F02E0D1"
@@ -812,7 +807,6 @@
         "shopId": "0xb29991db39fc61c96b5048b9d8863dbe40d556e1ae29c758c48468ffe3ecabad",
         "name": "새로운 이름",
         "currency": "krw",
-        "provideWaitTime": 86400,
         "providePercent": 10,
         "status": 2,
         "account": "0x1956F0c574ee588efd4759948a40611613C87Bc6"
@@ -833,7 +827,6 @@
         "shopId": "0xb29991db39fc61c96b5048b9d8863dbe40d556e1ae29c758c48468ffe3ecabad",
         "name": "새로운 이름",
         "currency": "krw",
-        "provideWaitTime": 86400,
         "providePercent": 10,
         "status": 1,
         "account": "0x1956F0c574ee588efd4759948a40611613C87Bc6"
@@ -976,7 +969,6 @@
 | shopId          | string | Yes  | 상점 아이디                                                                                              |
 | name            | string | Yes  | 상점 이름                                                                                               |
 | currency        | string | Yes  | 상점의 결제 통화                                                                                           |
-| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                                                               |
 | providePercent  | int    | Yes  | 적립비율\*100                                                                                           |
 | status          | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성                                                                         |
 | account         | string | Yes  | 상점주의 지갑주소                                                                                           |
@@ -1009,7 +1001,6 @@
 | shopId          | string | Yes  | 상점 아이디                                                                                              |
 | name            | string | Yes  | 상점 이름                                                                                               |
 | currency        | string | Yes  | 상점의 결제 통화                                                                                           |
-| provideWaitTime | int    | Yes  | 구매후 로열티를 적립하기 까지 지연시간                                                                               |
 | providePercent  | int    | Yes  | 적립비율\*100                                                                                           |
 | taskStatus      | int    | Yes  | 처리상태<br/>11 : 시작<br/>12 : 접수실패<br/>13 : 승인실패<br/>14 : 접수완료<br/>15 : 사용자거부<br/>16 : 완료<br/>70 : 타임아웃 |
 | timestamp       | int    | Yes  | 접수 시간                                                                                               |

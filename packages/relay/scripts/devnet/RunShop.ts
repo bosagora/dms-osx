@@ -52,7 +52,6 @@ async function main() {
                     accessKey: ACCESS_KEY,
                     shopId: shopData[shopIndex].shopId,
                     name: "새로운 이름",
-                    provideWaitTime: 86400,
                     providePercent: 10,
                 };
                 const response = await client.post(url, params);

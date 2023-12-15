@@ -66,7 +66,6 @@ describe("Test for Shop", function () {
             shopId: string;
             name: string;
             currency: string;
-            provideWaitTime: number;
             providePercent: number;
             wallet: Wallet;
         }
@@ -76,7 +75,6 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 1-1",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 5,
                 wallet: deployments.accounts.shops[0],
             },
@@ -84,7 +82,6 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 1-2",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 5,
                 wallet: deployments.accounts.shops[0],
             },
@@ -92,7 +89,6 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 2-1",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 5,
                 wallet: deployments.accounts.shops[1],
             },
@@ -100,7 +96,6 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 2-2",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 5,
                 wallet: deployments.accounts.shops[1],
             },
@@ -108,7 +103,6 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 3",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 5,
                 wallet: deployments.accounts.shops[2],
             },
@@ -116,7 +110,6 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 4",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 5,
                 wallet: deployments.accounts.shops[3],
             },
@@ -124,7 +117,6 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 5",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 5,
                 wallet: deployments.accounts.shops[4],
             },
@@ -244,7 +236,6 @@ describe("Test for Shop", function () {
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
                     currency: shopData[0].currency,
-                    provideWaitTime: 86400,
                     providePercent: 10,
                 };
                 const response = await client.post(url, params);
@@ -321,7 +312,6 @@ describe("Test for Shop", function () {
             it("Check update", async () => {
                 const shop = await shopContract.shopOf(shopData[0].shopId);
                 expect(shop.name).to.deep.equal("새로운 이름");
-                expect(shop.provideWaitTime.toNumber()).to.deep.equal(86400);
                 expect(shop.providePercent.toNumber()).to.deep.equal(10);
             });
         });

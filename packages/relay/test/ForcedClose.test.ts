@@ -32,10 +32,11 @@ import { TestClient, TestServer } from "./helper/Utility";
 
 import * as assert from "assert";
 import * as fs from "fs";
+import { ethers } from "hardhat";
 import * as path from "path";
 import { URL } from "url";
-import { ethers } from "hardhat";
 
+// tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
 
 chai.use(solidity);
@@ -113,7 +114,6 @@ describe("Test of Server", function () {
                         shopId: m.shopId,
                         name: m.name,
                         currency: m.currency,
-                        provideWaitTime: m.provideWaitTime,
                         providePercent: m.providePercent,
                         wallet: new Wallet(m.privateKey, ethers.provider),
                     };
@@ -303,7 +303,6 @@ describe("Test of Server", function () {
                         shopId: m.shopId,
                         name: m.name,
                         currency: m.currency,
-                        provideWaitTime: m.provideWaitTime,
                         providePercent: m.providePercent,
                         wallet: new Wallet(m.privateKey, ethers.provider),
                     };

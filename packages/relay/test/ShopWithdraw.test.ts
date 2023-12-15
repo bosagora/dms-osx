@@ -47,7 +47,6 @@ interface IShopData {
     shopId: string;
     name: string;
     currency: string;
-    provideWaitTime: number;
     providePercent: number;
     wallet: Wallet;
 }
@@ -177,7 +176,6 @@ describe("Test for Shop", () => {
                 shopId: "F000100",
                 name: "Shop1",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[0],
             },
@@ -185,7 +183,6 @@ describe("Test for Shop", () => {
                 shopId: "F000200",
                 name: "Shop2",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[1],
             },
@@ -193,7 +190,6 @@ describe("Test for Shop", () => {
                 shopId: "F000300",
                 name: "Shop3",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[2],
             },
@@ -201,7 +197,6 @@ describe("Test for Shop", () => {
                 shopId: "F000400",
                 name: "Shop4",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[3],
             },
@@ -209,7 +204,6 @@ describe("Test for Shop", () => {
                 shopId: "F000500",
                 name: "Shop5",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[4],
             },
@@ -217,7 +211,6 @@ describe("Test for Shop", () => {
                 shopId: "F000600",
                 name: "Shop6",
                 currency: "krw",
-                provideWaitTime: 0,
                 providePercent: 1,
                 wallet: shopWallets[5],
             },
@@ -525,8 +518,7 @@ describe("Test for Shop", () => {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
                     currency: "krw",
-                    provideWaitTime: 0,
-                    providePercent: 0,
+                    providePercent: 1,
                     status: 1,
                     account: shopData[shopIndex].wallet.address,
                     providedAmount: "100000000000000000000",
@@ -612,8 +604,7 @@ describe("Test for Shop", () => {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
                     currency: "krw",
-                    provideWaitTime: 0,
-                    providePercent: 0,
+                    providePercent: 1,
                     status: 1,
                     account: shopData[shopIndex].wallet.address,
                     providedAmount: "100000000000000000000",

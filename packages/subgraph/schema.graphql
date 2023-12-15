@@ -106,7 +106,6 @@ type Shop @entity {
 
   name: String! # string
   currency: String!
-  provideWaitTime: BigInt! # uint256
   providePercent: BigInt! # uint256
   status: Int!
   account: Bytes! # address
