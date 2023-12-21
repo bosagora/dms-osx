@@ -19,11 +19,10 @@ import "./LoyaltyProviderStorage.sol";
 contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     struct PurchaseData {
         string purchaseId;
-        uint256 timestamp;
         uint256 amount;
+        uint256 loyalty;
         string currency;
         bytes32 shopId;
-        uint32 method;
         address account;
         bytes32 phone;
     }
@@ -31,11 +30,10 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
     /// @notice 검증자가 추가될 때 발생되는 이벤트
     event SavedPurchase(
         string purchaseId,
-        uint256 timestamp,
         uint256 amount,
+        uint256 loyalty,
         string currency,
         bytes32 shopId,
-        uint32 method,
         address account,
         bytes32 phone
     );
@@ -85,12 +83,15 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
     /// @notice 구매내역을 저장합니다.
     /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
     function savePurchase(PurchaseData calldata data) external onlyValidator(_msgSender()) {
-        if (data.method == 0) {
+        if (data.loyalty > 0) {
+            require(data.loyalty <= data.amount / 10, "1522");
+
+            uint256 loyaltyValue = data.loyalty;
+            uint256 loyaltyPoint = currencyRateContract.convertCurrencyToPoint(loyaltyValue, data.currency);
+
             IShop.ShopData memory shop = shopContract.shopOf(data.shopId);
             if (shop.status == IShop.ShopStatus.ACTIVE) {
                 if (data.account != address(0x0)) {
-                    uint256 loyaltyValue = (data.amount * shop.providePercent) / 100;
-                    uint256 loyaltyPoint = currencyRateContract.convertCurrencyToPoint(loyaltyValue, data.currency);
                     if (ledgerContract.loyaltyTypeOf(data.account) == ILedger.LoyaltyType.POINT) {
                         ledgerContract.providePoint(
                             data.account,
@@ -116,8 +117,6 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                         data.purchaseId
                     );
                 } else if (data.phone != NULL) {
-                    uint256 loyaltyValue = (data.amount * shop.providePercent) / 100;
-                    uint256 loyaltyPoint = currencyRateContract.convertCurrencyToPoint(loyaltyValue, data.currency);
                     address account = linkContract.toAddress(data.phone);
                     if (account == address(0x00)) {
                         ledgerContract.provideUnPayablePoint(
@@ -160,11 +159,10 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
 
         emit SavedPurchase(
             data.purchaseId,
-            data.timestamp,
             data.amount,
+            data.loyalty,
             data.currency,
             data.shopId,
-            data.method,
             data.account,
             data.phone
         );
