@@ -137,7 +137,6 @@ describe("Test for Shop", () => {
         shopId: string;
         name: string;
         currency: string;
-        providePercent: number;
         wallet: Wallet;
     }
 
@@ -146,49 +145,42 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 1-1",
             currency: "krw",
-            providePercent: 5,
             wallet: shopWallets[0],
         },
         {
             shopId: "",
             name: "Shop 1-2",
             currency: "krw",
-            providePercent: 5,
             wallet: shopWallets[0],
         },
         {
             shopId: "",
             name: "Shop 2-1",
             currency: "usd",
-            providePercent: 5,
             wallet: shopWallets[1],
         },
         {
             shopId: "",
             name: "Shop 2-2",
             currency: "jpy",
-            providePercent: 5,
             wallet: shopWallets[1],
         },
         {
             shopId: "",
             name: "Shop 3",
             currency: "jpy",
-            providePercent: 5,
             wallet: shopWallets[2],
         },
         {
             shopId: "",
             name: "Shop 4",
             currency: "jpy",
-            providePercent: 5,
             wallet: shopWallets[3],
         },
         {
             shopId: "",
             name: "Shop 5",
             currency: "jpy",
-            providePercent: 5,
             wallet: shopWallets[4],
         },
     ];
@@ -245,23 +237,19 @@ describe("Test for Shop", () => {
     it("Update", async () => {
         const elem = shopData[0];
         elem.name = "New Shop";
-        elem.providePercent = 10;
         const signature = await ContractUtils.signShop(
             elem.wallet,
             elem.shopId,
             await shopContract.nonceOf(elem.wallet.address)
         );
         await expect(
-            shopContract
-                .connect(certifier)
-                .update(elem.shopId, elem.name, "usd", elem.providePercent, elem.wallet.address, signature)
+            shopContract.connect(certifier).update(elem.shopId, elem.name, "usd", elem.wallet.address, signature)
         )
             .to.emit(shopContract, "UpdatedShop")
             .withNamedArgs({
                 shopId: elem.shopId,
                 name: elem.name,
                 currency: "usd",
-                providePercent: elem.providePercent,
                 account: elem.wallet.address,
             });
     });
@@ -269,7 +257,7 @@ describe("Test for Shop", () => {
     it("Check status", async () => {
         for (const elem of shopData) {
             const shop = await shopContract.shopOf(elem.shopId);
-            expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
+            expect(shop.status).to.deep.equal(ContractShopStatus.ACTIVE);
         }
     });
 
@@ -283,12 +271,12 @@ describe("Test for Shop", () => {
             await expect(
                 shopContract
                     .connect(certifier)
-                    .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature)
+                    .changeStatus(elem.shopId, ContractShopStatus.INACTIVE, elem.wallet.address, signature)
             )
                 .to.emit(shopContract, "ChangedShopStatus")
                 .withNamedArgs({
                     shopId: elem.shopId,
-                    status: ContractShopStatus.ACTIVE,
+                    status: ContractShopStatus.INACTIVE,
                 });
         }
     });
@@ -296,7 +284,7 @@ describe("Test for Shop", () => {
     it("Check status", async () => {
         for (const elem of shopData) {
             const shop = await shopContract.shopOf(elem.shopId);
-            expect(shop.status).to.deep.equal(ContractShopStatus.ACTIVE);
+            expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
         }
     });
 });

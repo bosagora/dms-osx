@@ -16,23 +16,9 @@ import "./ShopStorage.sol";
 /// @notice 상점컬랙션
 contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IShop {
     /// @notice 상점이 추가될 때 발생되는 이벤트
-    event AddedShop(
-        bytes32 shopId,
-        string name,
-        string currency,
-        uint256 providePercent,
-        address account,
-        ShopStatus status
-    );
+    event AddedShop(bytes32 shopId, string name, string currency, address account, ShopStatus status);
     /// @notice 상점의 정보가 변경될 때 발생되는 이벤트
-    event UpdatedShop(
-        bytes32 shopId,
-        string name,
-        string currency,
-        uint256 providePercent,
-        address account,
-        ShopStatus status
-    );
+    event UpdatedShop(bytes32 shopId, string name, string currency, address account, ShopStatus status);
     /// @notice 상점의 정보가 변경될 때 발생되는 이벤트
     event ChangedShopStatus(bytes32 shopId, ShopStatus status);
     /// @notice 상점에서 제공한 마일리지가 증가할 때 발생되는 이벤트
@@ -126,13 +112,12 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
             shopId: _shopId,
             name: _name,
             currency: _currency,
-            providePercent: 5,
             account: _account,
             providedAmount: 0,
             usedAmount: 0,
             settledAmount: 0,
             withdrawnAmount: 0,
-            status: ShopStatus.INACTIVE,
+            status: ShopStatus.ACTIVE,
             withdrawData: WithdrawData({ id: 0, amount: 0, status: WithdrawStatus.CLOSE }),
             itemIndex: items.length,
             accountIndex: shopIdByAddress[_account].length
@@ -144,19 +129,17 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         nonce[_account]++;
 
         ShopData memory shop = shops[_shopId];
-        emit AddedShop(shop.shopId, shop.name, shop.currency, shop.providePercent, shop.account, shop.status);
+        emit AddedShop(shop.shopId, shop.name, shop.currency, shop.account, shop.status);
     }
 
     /// @notice 상점정보를 수정합니다
     /// @param _shopId 상점 아이디
     /// @param _name 상점이름
-    /// @param _providePercent 구매금액에 대한 포인트 지급량
     /// @dev 중계서버를 통해서 호출됩니다.
     function update(
         bytes32 _shopId,
         string calldata _name,
         string calldata _currency,
-        uint256 _providePercent,
         address _account,
         bytes calldata _signature
     ) external virtual {
@@ -171,7 +154,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         shops[id].name = _name;
-        shops[id].providePercent = _providePercent;
         if (keccak256(abi.encodePacked(shops[id].currency)) != keccak256(abi.encodePacked(_currency))) {
             shops[id].providedAmount = currencyRate.convertCurrency(
                 shops[id].providedAmount,
@@ -194,14 +176,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
         nonce[_account]++;
 
-        emit UpdatedShop(
-            shops[id].shopId,
-            shops[id].name,
-            shops[id].currency,
-            shops[id].providePercent,
-            shops[id].account,
-            shops[id].status
-        );
+        emit UpdatedShop(shops[id].shopId, shops[id].name, shops[id].currency, shops[id].account, shops[id].status);
     }
 
     /// @notice 상점상태를 수정합니다
