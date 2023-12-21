@@ -27,6 +27,7 @@ export class ResponseMessage {
         ["1513", "Insufficient fee or foundation balance"],
         ["1520", "Loyalty type is not TOKEN"],
         ["1521", "Invalid value entered"],
+        ["1522", "Too much royalty paid"],
         ["1530", "The payment ID already exists"],
         ["1531", "The status of the payment corresponding to the payment ID is not in progress"],
         ["1532", "The status of the payment corresponding to the payment ID is not a cancellable condition"],
