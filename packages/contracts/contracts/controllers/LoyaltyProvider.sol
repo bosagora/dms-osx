@@ -78,7 +78,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
     }
 
     modifier onlyValidator(address _account) {
-        require(validatorContract.isActiveValidator(_account), "1000");
+        require(validatorContract.isCurrentActiveValidator(_account), "1000");
         _;
     }
 

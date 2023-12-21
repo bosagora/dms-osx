@@ -93,7 +93,7 @@ describe("Test for Validator", () => {
             assert.deepStrictEqual(item.balance, amount.value);
         }
 
-        assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "3");
+        assert.deepStrictEqual((await contract.lengthOfActiveValidator()).toString(), "3");
     });
 
     it("Request participation - already validator", async () => {
@@ -120,7 +120,7 @@ describe("Test for Validator", () => {
         assert.deepStrictEqual(item.status, 1);
         assert.deepStrictEqual(item.balance, amount.value);
 
-        assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "3");
+        assert.deepStrictEqual((await contract.lengthOfActiveValidator()).toString(), "3");
     });
 
     it("Request exit", async () => {
@@ -135,7 +135,7 @@ describe("Test for Validator", () => {
         const balanceAfter = await tokenContract.balanceOf(contract.address);
         assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
 
-        assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "2");
+        assert.deepStrictEqual((await contract.lengthOfActiveValidator()).toString(), "2");
     });
 
     it("Voluntary Exit 1", async () => {
@@ -150,7 +150,7 @@ describe("Test for Validator", () => {
         const balanceAfter = await tokenContract.balanceOf(contract.address);
         assert.deepStrictEqual(balanceBefore.sub(balanceAfter).toString(), amount.toString());
 
-        assert.deepStrictEqual((await contract.activeItemsLength()).toString(), "1");
+        assert.deepStrictEqual((await contract.lengthOfActiveValidator()).toString(), "1");
     });
 
     it("Voluntary Exit 2", async () => {
