@@ -21,7 +21,6 @@ interface IShop {
         bytes32 shopId; // 상점 아이디
         string name; // 상점 이름
         string currency; // 상점의 결제 통화
-        uint256 providePercent; // 구매금액에 대한 포인트 지급량
         address account; // 상점주의 지갑주소
         uint256 providedAmount; // 제공된 결제통화의 총량
         uint256 usedAmount; // 사용된 결제통화의 총량
