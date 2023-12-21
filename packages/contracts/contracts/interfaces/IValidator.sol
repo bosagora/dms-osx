@@ -24,7 +24,11 @@ interface IValidator {
 
     function isActiveValidator(address _account) external view returns (bool);
 
-    function activeItemsLength() external view returns (uint256);
+    function lengthOfActiveValidator() external view returns (uint256);
 
     function validatorOf(address _account) external view returns (ValidatorData memory);
+
+    function isCurrentActiveValidator(address _account) external view returns (bool);
+
+    function lengthOfCurrentActiveValidator() external view returns (uint256);
 }

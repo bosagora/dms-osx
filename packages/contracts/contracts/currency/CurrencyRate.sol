@@ -32,7 +32,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     }
 
     modifier onlyValidator(address _account) {
-        require(validator.isActiveValidator(_account), "1000");
+        require(validator.isCurrentActiveValidator(_account), "1000");
         _;
     }
 

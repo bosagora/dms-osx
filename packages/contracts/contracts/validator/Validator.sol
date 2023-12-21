@@ -126,12 +126,12 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
     }
 
     /// @notice 유효한 검증자의 수를 리턴합니다.
-    function activeItemsLength() external view override returns (uint256) {
-        return _activeItemsLength();
+    function lengthOfActiveValidator() external view override returns (uint256) {
+        return _lengthOfActiveValidator();
     }
 
     /// @notice 유효한 검증자의 수를 리턴합니다.
-    function _activeItemsLength() internal view virtual returns (uint256) {
+    function _lengthOfActiveValidator() internal view virtual returns (uint256) {
         uint256 value = 0;
         for (uint256 i = 0; i < items.length; ++i) {
             ValidatorData memory item = validators[items[i]];
@@ -140,6 +140,20 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
             }
         }
         return value;
+    }
+
+    function isCurrentActiveValidator(address _account) external view override returns (bool) {
+        ValidatorData memory item = validators[_account];
+
+        if (item.status == Status.ACTIVE && item.start <= block.timestamp) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function lengthOfCurrentActiveValidator() external view override returns (uint256) {
+        return _lengthOfActiveValidator();
     }
 
     /// @notice 검증자의 데이타를 리턴합니다.
@@ -154,7 +168,7 @@ contract Validator is ValidatorStorage, Initializable, OwnableUpgradeable, UUPSU
         require(item.validator == _msgSender(), "1000");
         require(item.status == Status.ACTIVE && item.start <= block.timestamp, "1001");
 
-        require(_activeItemsLength() > 1, "1010");
+        require(_lengthOfActiveValidator() > 1, "1010");
 
         validators[_msgSender()].status = Status.EXIT;
 
