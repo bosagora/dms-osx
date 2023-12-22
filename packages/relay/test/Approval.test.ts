@@ -77,9 +77,8 @@ describe("Test of Server", function () {
 
     interface IPurchaseData {
         purchaseId: string;
-        timestamp: number;
         amount: number;
-        method: number;
+        providePercent: number;
         currency: string;
         userIndex: number;
         shopIndex: number;
@@ -118,7 +117,6 @@ describe("Test of Server", function () {
                         shopId: m.shopId,
                         name: m.name,
                         currency: m.currency,
-                        providePercent: m.providePercent,
                         wallet: new Wallet(m.privateKey, ethers.provider),
                     };
                 })
@@ -218,9 +216,8 @@ describe("Test of Server", function () {
         context("Test of payment", async () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000002",
-                timestamp: 1672844500,
                 amount: 1000,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 0,
                 userIndex: 0,
@@ -352,7 +349,6 @@ describe("Test of Server", function () {
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
                     currency: shopData[0].currency,
-                    providePercent: 10,
                 };
                 const response = await client.post(url, params);
                 assert.deepStrictEqual(response.data.code, 0);

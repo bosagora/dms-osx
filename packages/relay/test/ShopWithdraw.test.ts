@@ -35,9 +35,8 @@ chai.use(solidity);
 
 interface IPurchaseData {
     purchaseId: string;
-    timestamp: number;
     amount: number;
-    method: number;
+    providePercent: number;
     currency: string;
     userIndex: number;
     shopIndex: number;
@@ -47,7 +46,6 @@ interface IShopData {
     shopId: string;
     name: string;
     currency: string;
-    providePercent: number;
     wallet: Wallet;
 }
 
@@ -117,54 +115,48 @@ describe("Test for Shop", () => {
         const purchaseData: IPurchaseData[] = [
             {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
                 amount: 10000,
-                method: 0,
+                providePercent: 1,
                 currency: "krw",
                 shopIndex: 0,
                 userIndex: 0,
             },
             {
                 purchaseId: "P000002",
-                timestamp: 1675522800,
                 amount: 10000,
-                method: 0,
+                providePercent: 1,
                 currency: "krw",
                 shopIndex: 0,
                 userIndex: 0,
             },
             {
                 purchaseId: "P000003",
-                timestamp: 1677942000,
                 amount: 10000,
-                method: 0,
+                providePercent: 1,
                 currency: "krw",
                 shopIndex: 0,
                 userIndex: 0,
             },
             {
                 purchaseId: "P000004",
-                timestamp: 1680620400,
                 amount: 10000,
-                method: 0,
+                providePercent: 1,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
             },
             {
                 purchaseId: "P000005",
-                timestamp: 1683212400,
                 amount: 10000,
-                method: 0,
+                providePercent: 1,
                 currency: "krw",
                 shopIndex: 2,
                 userIndex: 0,
             },
             {
                 purchaseId: "P000005",
-                timestamp: 1683212400,
                 amount: 10000,
-                method: 0,
+                providePercent: 1,
                 currency: "krw",
                 shopIndex: 3,
                 userIndex: 0,
@@ -176,42 +168,36 @@ describe("Test for Shop", () => {
                 shopId: "F000100",
                 name: "Shop1",
                 currency: "krw",
-                providePercent: 1,
                 wallet: shopWallets[0],
             },
             {
                 shopId: "F000200",
                 name: "Shop2",
                 currency: "krw",
-                providePercent: 1,
                 wallet: shopWallets[1],
             },
             {
                 shopId: "F000300",
                 name: "Shop3",
                 currency: "krw",
-                providePercent: 1,
                 wallet: shopWallets[2],
             },
             {
                 shopId: "F000400",
                 name: "Shop4",
                 currency: "krw",
-                providePercent: 1,
                 wallet: shopWallets[3],
             },
             {
                 shopId: "F000500",
                 name: "Shop5",
                 currency: "krw",
-                providePercent: 1,
                 wallet: shopWallets[4],
             },
             {
                 shopId: "F000600",
                 name: "Shop6",
                 currency: "krw",
-                providePercent: 1,
                 wallet: shopWallets[5],
             },
         ];
@@ -274,8 +260,8 @@ describe("Test for Shop", () => {
                 for (const purchase of purchaseData) {
                     const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const shop = shopData[purchase.shopIndex];
-                    const amt = purchaseAmount.mul(shop.providePercent).div(100);
+                    const loyaltyAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+                    const amt = purchaseAmount.mul(purchase.providePercent).div(100);
                     const userAccount =
                         userData[purchase.userIndex].address.trim() !== ""
                             ? userData[purchase.userIndex].address.trim()
@@ -283,11 +269,10 @@ describe("Test for Shop", () => {
                     await expect(
                         providerContract.connect(deployments.accounts.validators[0]).savePurchase({
                             purchaseId: purchase.purchaseId,
-                            timestamp: purchase.timestamp,
                             amount: purchaseAmount,
+                            loyalty: loyaltyAmount,
                             currency: purchase.currency.toLowerCase(),
                             shopId: shopData[purchase.shopIndex].shopId,
-                            method: purchase.method,
                             account: userAccount,
                             phone: phoneHash,
                         })
@@ -295,11 +280,10 @@ describe("Test for Shop", () => {
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
                             purchase.purchaseId,
-                            purchase.timestamp,
                             purchaseAmount,
+                            loyaltyAmount,
                             purchase.currency.toLowerCase(),
                             shopData[purchase.shopIndex].shopId,
-                            purchase.method,
                             userAccount,
                             phoneHash
                         )
@@ -318,9 +302,8 @@ describe("Test for Shop", () => {
             it("Pay point - Success", async () => {
                 const purchase = {
                     purchaseId: "P000100",
-                    timestamp: 1672849000,
                     amount: 300,
-                    method: 0,
+                    providePercent: 10,
                     currency: "krw",
                     shopIndex: 1,
                     userIndex: 0,
@@ -340,7 +323,6 @@ describe("Test for Shop", () => {
                     nonce
                 );
 
-                const amt = purchaseAmount.mul(shop.providePercent).div(100);
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -432,9 +414,8 @@ describe("Test for Shop", () => {
             it("Pay token - Success", async () => {
                 const purchase: IPurchaseData = {
                     purchaseId: "P000200",
-                    timestamp: 1672849000,
                     amount: 500,
-                    method: 0,
+                    providePercent: 10,
                     currency: "krw",
                     shopIndex: 2,
                     userIndex: 0,
@@ -518,7 +499,6 @@ describe("Test for Shop", () => {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
                     currency: "krw",
-                    providePercent: 1,
                     status: 1,
                     account: shopData[shopIndex].wallet.address,
                     providedAmount: "100000000000000000000",
@@ -604,7 +584,6 @@ describe("Test for Shop", () => {
                     shopId: shopData[shopIndex].shopId,
                     name: "Shop3",
                     currency: "krw",
-                    providePercent: 1,
                     status: 1,
                     account: shopData[shopIndex].wallet.address,
                     providedAmount: "100000000000000000000",

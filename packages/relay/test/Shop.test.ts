@@ -66,7 +66,6 @@ describe("Test for Shop", function () {
             shopId: string;
             name: string;
             currency: string;
-            providePercent: number;
             wallet: Wallet;
         }
 
@@ -75,49 +74,42 @@ describe("Test for Shop", function () {
                 shopId: "",
                 name: "Shop 1-1",
                 currency: "krw",
-                providePercent: 5,
                 wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "",
                 name: "Shop 1-2",
                 currency: "krw",
-                providePercent: 5,
                 wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "",
                 name: "Shop 2-1",
                 currency: "krw",
-                providePercent: 5,
                 wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "",
                 name: "Shop 2-2",
                 currency: "krw",
-                providePercent: 5,
                 wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "",
                 name: "Shop 3",
                 currency: "krw",
-                providePercent: 5,
                 wallet: deployments.accounts.shops[2],
             },
             {
                 shopId: "",
                 name: "Shop 4",
                 currency: "krw",
-                providePercent: 5,
                 wallet: deployments.accounts.shops[3],
             },
             {
                 shopId: "",
                 name: "Shop 5",
                 currency: "krw",
-                providePercent: 5,
                 wallet: deployments.accounts.shops[4],
             },
         ];
@@ -223,7 +215,7 @@ describe("Test for Shop", function () {
         it("Check", async () => {
             for (const elem of shopData) {
                 const shop = await shopContract.shopOf(elem.shopId);
-                expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
+                expect(shop.status).to.deep.equal(ContractShopStatus.ACTIVE);
             }
         });
 
@@ -236,7 +228,6 @@ describe("Test for Shop", function () {
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
                     currency: shopData[0].currency,
-                    providePercent: 10,
                 };
                 const response = await client.post(url, params);
 
@@ -257,7 +248,7 @@ describe("Test for Shop", function () {
 
                 assert.deepStrictEqual(response.data.data.type, TaskResultType.UPDATE);
                 assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
-                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.INACTIVE);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.ACTIVE);
                 assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.OPENED);
             });
 
@@ -305,14 +296,13 @@ describe("Test for Shop", function () {
 
                 assert.deepStrictEqual(response.data.data.type, TaskResultType.UPDATE);
                 assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
-                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.INACTIVE);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.ACTIVE);
                 assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
             });
 
             it("Check update", async () => {
                 const shop = await shopContract.shopOf(shopData[0].shopId);
                 expect(shop.name).to.deep.equal("새로운 이름");
-                expect(shop.providePercent.toNumber()).to.deep.equal(10);
             });
         });
 
@@ -323,7 +313,7 @@ describe("Test for Shop", function () {
                 const params = {
                     accessKey: config.relay.accessKey,
                     shopId: shopData[0].shopId,
-                    status: ContractShopStatus.ACTIVE,
+                    status: ContractShopStatus.INACTIVE,
                 };
                 const response = await client.post(url, params);
 
@@ -344,7 +334,7 @@ describe("Test for Shop", function () {
 
                 assert.deepStrictEqual(response.data.data.type, TaskResultType.STATUS);
                 assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
-                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.ACTIVE);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.INACTIVE);
                 assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.OPENED);
             });
 
@@ -392,13 +382,13 @@ describe("Test for Shop", function () {
 
                 assert.deepStrictEqual(response.data.data.type, TaskResultType.STATUS);
                 assert.deepStrictEqual(response.data.data.shopId, shopData[0].shopId);
-                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.ACTIVE);
+                assert.deepStrictEqual(response.data.data.status, ContractShopStatus.INACTIVE);
                 assert.deepStrictEqual(response.data.data.taskStatus, ShopTaskStatus.COMPLETED);
             });
 
             it("Check status", async () => {
                 const shop = await shopContract.shopOf(shopData[0].shopId);
-                expect(shop.status).to.deep.equal(ContractShopStatus.ACTIVE);
+                expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
             });
         });
     });

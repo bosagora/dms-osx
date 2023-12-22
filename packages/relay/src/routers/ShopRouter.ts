@@ -145,7 +145,6 @@ export class ShopRouter {
                     .matches(/^(0x)[0-9a-f]{64}$/i),
                 body("name").exists(),
                 body("currency").exists(),
-                body("providePercent").exists().custom(Validation.isAmount),
             ],
             this.shop_update_create.bind(this)
         );
@@ -246,7 +245,6 @@ export class ShopRouter {
                 shopId,
                 name,
                 currency,
-                providePercent: 0,
                 status: ContractShopStatus.INVALID,
                 account,
                 taskStatus: ShopTaskStatus.OPENED,
@@ -323,7 +321,6 @@ export class ShopRouter {
                     shopId: item.shopId,
                     name: item.name,
                     currency: item.currency,
-                    providePercent: item.providePercent,
                     status: item.status,
                     taskStatus: item.taskStatus,
                     account: item.account,
@@ -359,7 +356,6 @@ export class ShopRouter {
             const shopId: string = String(req.body.shopId).trim();
             const name: string = String(req.body.name).trim();
             const currency: string = String(req.body.currency).trim().toLowerCase();
-            const providePercent: number = Number(String(req.body.providePercent).trim());
 
             const shopInfo = await (await this.getShopContract()).shopOf(shopId);
             if (shopInfo.status !== ContractShopStatus.INVALID) {
@@ -371,7 +367,6 @@ export class ShopRouter {
                     shopId,
                     name,
                     currency,
-                    providePercent,
                     status: shopInfo.status,
                     account: shopInfo.account,
                     taskStatus: ShopTaskStatus.OPENED,
@@ -389,7 +384,7 @@ export class ShopRouter {
                     const contents: string[] = [];
                     const data = { type: "shop_update", taskId: item.taskId };
                     contents.push(`상점이름 : ${item.name}`);
-                    contents.push(`적립비율(%) : ${item.providePercent}`);
+                    contents.push(`정산 환률 심벌 : ${item.currency}`);
                     await this._sender.send(to, title, contents.join(", "), data);
                 } else {
                     if (!process.env.TESTING) logger.error("Can not found a mobile to send notifications to");
@@ -401,7 +396,6 @@ export class ShopRouter {
                         shopId: item.shopId,
                         name: item.name,
                         currency: item.currency,
-                        providePercent: item.providePercent,
                         taskStatus: item.taskStatus,
                         timestamp: item.timestamp,
                     })
@@ -469,14 +463,7 @@ export class ShopRouter {
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .update(
-                                item.shopId,
-                                item.name,
-                                item.currency,
-                                item.providePercent,
-                                item.account,
-                                signature
-                            );
+                            .update(item.shopId, item.name, item.currency, item.account, signature);
 
                         item.taskStatus = ShopTaskStatus.SENT_TX;
                         item.txId = tx.hash;
@@ -489,7 +476,6 @@ export class ShopRouter {
                                 shopId: item.shopId,
                                 name: item.name,
                                 currency: item.currency,
-                                providePercent: item.providePercent,
                                 taskStatus: item.taskStatus,
                                 timestamp: item.timestamp,
                                 txHash: item.txId,
@@ -520,7 +506,6 @@ export class ShopRouter {
                             shopId: item.shopId,
                             name: item.name,
                             currency: item.currency,
-                            providePercent: item.providePercent,
                             taskStatus: item.taskStatus,
                             timestamp: item.timestamp,
                         })
@@ -568,7 +553,6 @@ export class ShopRouter {
                     shopId,
                     name: shopInfo.name,
                     currency: shopInfo.currency,
-                    providePercent: shopInfo.providePercent.toNumber(),
                     status,
                     account: shopInfo.account,
                     taskStatus: ShopTaskStatus.OPENED,
@@ -814,7 +798,6 @@ export class ShopRouter {
             shopId: item.shopId,
             name: item.name,
             currency: item.currency,
-            providePercent: item.providePercent,
             status: item.status,
             account: item.account,
         };
@@ -833,7 +816,6 @@ export class ShopRouter {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
                 currency: parsedLog.args.currency,
-                providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
                 status: parsedLog.args.status,
             };

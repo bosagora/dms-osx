@@ -380,7 +380,6 @@ export class PaymentRouter {
                 shopId: info.shopId,
                 name: info.name,
                 currency: info.currency,
-                providePercent: info.providePercent.toNumber(),
                 status: info.status,
                 account: info.account,
                 providedAmount: info.providedAmount.toString(),

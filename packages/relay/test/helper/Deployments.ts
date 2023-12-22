@@ -26,7 +26,6 @@ interface IShopData {
     shopId: string;
     name: string;
     currency: string;
-    providePercent: number;
     wallet: Wallet;
 }
 
@@ -501,28 +500,6 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
                 .add(shop.shopId, shop.name, shop.currency, shop.wallet.address, signature);
             console.log(`Add shop data (tx: ${tx3.hash})...`);
             await tx3.wait();
-
-            const signature1 = await ContractUtils.signShop(
-                shop.wallet,
-                shop.shopId,
-                await contract.nonceOf(shop.wallet.address)
-            );
-            const tx4 = await contract
-                .connect(accounts.certifier)
-                .update(shop.shopId, shop.name, shop.currency, shop.providePercent, shop.wallet.address, signature1);
-            console.log(`Update shop data (tx: ${tx4.hash})...`);
-            await tx4.wait();
-
-            const signature3 = await ContractUtils.signShop(
-                shop.wallet,
-                shop.shopId,
-                await contract.nonceOf(shop.wallet.address)
-            );
-            const tx5 = await contract
-                .connect(accounts.certifier)
-                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.wallet.address, signature3);
-            console.log(`Change shop status (tx: ${tx5.hash})...`);
-            await tx5.wait();
         }
     }
 }

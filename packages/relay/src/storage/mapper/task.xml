@@ -11,7 +11,6 @@
                 "account"               ,
                 "name"                  ,
                 "currency"              ,
-                "providePercent"        ,
                 "status"                ,
                 "taskStatus"            ,
                 "timestamp"
@@ -24,7 +23,6 @@
                 #{account}              ,
                 #{name}                 ,
                 #{currency}             ,
-                ${providePercent}       ,
                 ${status}               ,
                 ${taskStatus}           ,
                 ${timestamp}
@@ -41,7 +39,6 @@
         SET
             "name"              = #{name},
             "currency"          = #{currency},
-            "providePercent"    = ${providePercent},
             "status"            = ${status},
             "taskStatus"        = ${taskStatus},
             "timestamp"         = ${timestamp}

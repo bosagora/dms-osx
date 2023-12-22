@@ -43,7 +43,6 @@
             "account"               VARCHAR(42) NOT NULL,
             "name"                  VARCHAR(128) NOT NULL,
             "currency"              VARCHAR(12) NOT NULL,
-            "providePercent"        INTEGER NOT NULL,
             "status"                INTEGER NOT NULL,
             "taskStatus"            INTEGER NOT NULL,
             "timestamp"             INTEGER DEFAULT 0,
