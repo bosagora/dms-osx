@@ -2,11 +2,10 @@
 type SavedPurchase @entity(immutable: true) {
   id: Bytes!
   purchaseId: String! # string
-  timestamp: BigInt! # uint256
   amount: BigInt! # uint256
+  loyalty: BigInt! # uint256
   currency: String! # string
   shopId: Bytes! # bytes32
-  method: BigInt! # uint32
   account: Bytes! # address
   phone: Bytes! # bytes32
   blockNumber: BigInt!
@@ -106,7 +105,6 @@ type Shop @entity {
 
   name: String! # string
   currency: String!
-  providePercent: BigInt! # uint256
   status: Int!
   account: Bytes! # address
   action: Int!

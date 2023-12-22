@@ -45,7 +45,6 @@ export function handleAddedShop(event: AddedShopEvent): void {
 
     entity.name = event.params.name;
     entity.currency = event.params.currency;
-    entity.providePercent = event.params.providePercent;
     entity.status = event.params.status;
     entity.account = event.params.account;
     entity.action = ShopDataAction.CREATED;
@@ -67,7 +66,6 @@ export function handleUpdatedShop(event: UpdatedShopEvent): void {
     if (shopEntity !== null) {
         shopEntity.name = event.params.name;
         shopEntity.currency = event.params.currency;
-        shopEntity.providePercent = event.params.providePercent;
         shopEntity.status = event.params.status;
         shopEntity.action = ShopDataAction.UPDATED;
 

@@ -58,11 +58,10 @@ enum UserAction {
 export function handleSavedPurchase(event: SavedPurchaseEvent): void {
     let entity = new SavedPurchase(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.purchaseId = event.params.purchaseId;
-    entity.timestamp = event.params.timestamp;
     entity.amount = event.params.amount.div(AmountUnit);
+    entity.loyalty = event.params.loyalty.div(AmountUnit);
     entity.currency = event.params.currency;
     entity.shopId = event.params.shopId;
-    entity.method = event.params.method;
     entity.account = event.params.account;
     entity.phone = event.params.phone;
 

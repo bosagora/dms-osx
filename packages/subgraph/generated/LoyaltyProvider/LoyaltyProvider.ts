@@ -107,11 +107,11 @@ export class SavedPurchase__Params {
     return this._event.parameters[0].value.toString();
   }
 
-  get timestamp(): BigInt {
+  get amount(): BigInt {
     return this._event.parameters[1].value.toBigInt();
   }
 
-  get amount(): BigInt {
+  get loyalty(): BigInt {
     return this._event.parameters[2].value.toBigInt();
   }
 
@@ -123,16 +123,12 @@ export class SavedPurchase__Params {
     return this._event.parameters[4].value.toBytes();
   }
 
-  get method(): BigInt {
-    return this._event.parameters[5].value.toBigInt();
-  }
-
   get account(): Address {
-    return this._event.parameters[6].value.toAddress();
+    return this._event.parameters[5].value.toAddress();
   }
 
   get phone(): Bytes {
-    return this._event.parameters[7].value.toBytes();
+    return this._event.parameters[6].value.toBytes();
   }
 }
 
@@ -310,11 +306,11 @@ export class SavePurchaseCallDataStruct extends ethereum.Tuple {
     return this[0].toString();
   }
 
-  get timestamp(): BigInt {
+  get amount(): BigInt {
     return this[1].toBigInt();
   }
 
-  get amount(): BigInt {
+  get loyalty(): BigInt {
     return this[2].toBigInt();
   }
 
@@ -326,16 +322,12 @@ export class SavePurchaseCallDataStruct extends ethereum.Tuple {
     return this[4].toBytes();
   }
 
-  get method(): BigInt {
-    return this[5].toBigInt();
-  }
-
   get account(): Address {
-    return this[6].toAddress();
+    return this[5].toAddress();
   }
 
   get phone(): Bytes {
-    return this[7].toBytes();
+    return this[6].toBytes();
   }
 }
 

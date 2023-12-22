@@ -67,19 +67,6 @@ export class SavedPurchase extends Entity {
     this.set("purchaseId", Value.fromString(value));
   }
 
-  get timestamp(): BigInt {
-    let value = this.get("timestamp");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set timestamp(value: BigInt) {
-    this.set("timestamp", Value.fromBigInt(value));
-  }
-
   get amount(): BigInt {
     let value = this.get("amount");
     if (!value || value.kind == ValueKind.NULL) {
@@ -91,6 +78,19 @@ export class SavedPurchase extends Entity {
 
   set amount(value: BigInt) {
     this.set("amount", Value.fromBigInt(value));
+  }
+
+  get loyalty(): BigInt {
+    let value = this.get("loyalty");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set loyalty(value: BigInt) {
+    this.set("loyalty", Value.fromBigInt(value));
   }
 
   get currency(): string {
@@ -117,19 +117,6 @@ export class SavedPurchase extends Entity {
 
   set shopId(value: Bytes) {
     this.set("shopId", Value.fromBytes(value));
-  }
-
-  get method(): BigInt {
-    let value = this.get("method");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set method(value: BigInt) {
-    this.set("method", Value.fromBigInt(value));
   }
 
   get account(): Bytes {
@@ -1344,19 +1331,6 @@ export class Shop extends Entity {
 
   set currency(value: string) {
     this.set("currency", Value.fromString(value));
-  }
-
-  get providePercent(): BigInt {
-    let value = this.get("providePercent");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toBigInt();
-    }
-  }
-
-  set providePercent(value: BigInt) {
-    this.set("providePercent", Value.fromBigInt(value));
   }
 
   get status(): i32 {

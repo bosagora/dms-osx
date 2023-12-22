@@ -54,7 +54,7 @@ dataSources:
         - name: LoyaltyProvider
           file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyProvider.sol/LoyaltyProvider.json
       eventHandlers:
-        - event: SavedPurchase(string,uint256,uint256,string,bytes32,uint32,address,bytes32)
+        - event: SavedPurchase(string,uint256,uint256,string,bytes32,address,bytes32)
           handler: handleSavedPurchase
       file: ./src/ledger.ts
 
@@ -131,7 +131,7 @@ dataSources:
         - name: Shop
           file: $DMS_OSX_MODULE/artifacts/contracts/shop/Shop.sol/Shop.json
       eventHandlers:
-        - event: AddedShop(bytes32,string,string,uint256,address,uint8)
+        - event: AddedShop(bytes32,string,string,address,uint8)
           handler: handleAddedShop
         - event: ChangedShopStatus(bytes32,uint8)
           handler: handleChangedShopStatus
@@ -147,6 +147,6 @@ dataSources:
           handler: handleIncreasedUsedAmount
         - event: OpenedWithdrawal(bytes32,uint256,string,address,uint256)
           handler: handleOpenedWithdrawal
-        - event: UpdatedShop(bytes32,string,string,uint256,address,uint8)
+        - event: UpdatedShop(bytes32,string,string,address,uint8)
           handler: handleUpdatedShop
       file: ./src/shop.ts
