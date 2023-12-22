@@ -2,10 +2,9 @@ import { BigNumber } from "ethers";
 
 export interface IPurchaseData {
     purchaseId: string;
-    timestamp: number;
     amount: BigNumber;
+    loyalty: BigNumber;
     currency: string;
-    method: number;
     account: string;
     phone: string;
     shopId: string;
