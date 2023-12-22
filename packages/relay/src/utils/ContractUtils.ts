@@ -3,10 +3,15 @@ import { BigNumberish, BytesLike, ethers, Signer } from "ethers";
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
 
-import { Log } from "@ethersproject/providers";
-import { id } from "@ethersproject/hash";
-import { ContractReceipt } from "@ethersproject/contracts";
+// tslint:disable-next-line:no-implicit-dependencies
 import { Interface } from "@ethersproject/abi";
+// tslint:disable-next-line:no-implicit-dependencies
+import { ContractReceipt } from "@ethersproject/contracts";
+// tslint:disable-next-line:no-implicit-dependencies
+import { id } from "@ethersproject/hash";
+// tslint:disable-next-line:no-implicit-dependencies
+import { Log } from "@ethersproject/providers";
+// tslint:disable-next-line:no-implicit-dependencies
 import { randomBytes } from "@ethersproject/random";
 
 export class ContractUtils {
@@ -117,7 +122,7 @@ export class ContractUtils {
 
     public static async signRequestHash(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getRequestHash(hash, await signer.getAddress(), nonce);
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static verifyRequestHash(address: string, hash: string, nonce: BigNumberish, signature: string): boolean {
@@ -162,7 +167,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static verifyPayment(
@@ -191,7 +196,7 @@ export class ContractUtils {
 
     public static async signLoyaltyType(signer: Signer, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce);
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static verifyLoyaltyType(account: string, nonce: BigNumberish, signature: string): boolean {
@@ -215,7 +220,7 @@ export class ContractUtils {
 
     public static async signChangePayablePoint(signer: Signer, phone: BytesLike, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getChangePayablePointMessage(phone, await signer.getAddress(), nonce);
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static verifyChangePayablePoint(
@@ -252,7 +257,7 @@ export class ContractUtils {
 
     public static async signShop(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
         const message = ContractUtils.getShopMessage(shopId, await signer.getAddress(), nonce);
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static verifyShop(shopId: BytesLike, nonce: BigNumberish, account: string, signature: BytesLike): boolean {
@@ -300,7 +305,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static verifyLoyaltyNewPayment(
@@ -356,7 +361,7 @@ export class ContractUtils {
             purchaseId,
             nonce
         );
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
     public static verifyLoyaltyCancelPayment(
         paymentId: string,
@@ -419,7 +424,7 @@ export class ContractUtils {
             confirm,
             nonce
         );
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static getMobileTokenMessage(address: string, token: string): Uint8Array {
@@ -429,7 +434,7 @@ export class ContractUtils {
 
     public static async signMobileToken(signer: Signer, token: string): Promise<string> {
         const message = ContractUtils.getMobileTokenMessage(await signer.getAddress(), token);
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static verifyMobileToken(account: string, token: string, signature: BytesLike): boolean {

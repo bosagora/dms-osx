@@ -76,7 +76,6 @@ describe("Test of Server", function () {
         shopId: string;
         name: string;
         currency: string;
-        providePercent: number;
         wallet: Wallet;
     }
 
@@ -85,35 +84,30 @@ describe("Test of Server", function () {
             shopId: "F000100",
             name: "Shop1",
             currency: "krw",
-            providePercent: 10,
             wallet: shops[0],
         },
         {
             shopId: "F000200",
             name: "Shop2",
             currency: "krw",
-            providePercent: 10,
             wallet: shops[1],
         },
         {
             shopId: "F000300",
             name: "Shop3",
             currency: "krw",
-            providePercent: 10,
             wallet: shops[2],
         },
         {
             shopId: "F000400",
             name: "Shop4",
             currency: "krw",
-            providePercent: 10,
             wallet: shops[3],
         },
         {
             shopId: "F000500",
             name: "Shop5",
             currency: "krw",
-            providePercent: 10,
             wallet: shops[4],
         },
     ];
@@ -148,9 +142,8 @@ describe("Test of Server", function () {
 
     interface IPurchaseData {
         purchaseId: string;
-        timestamp: number;
         amount: number;
-        method: number;
+        providePercent: number;
         currency: string;
         userIndex: number;
         shopIndex: number;
@@ -225,9 +218,8 @@ describe("Test of Server", function () {
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
                 amount: 10000,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -235,13 +227,12 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: "P000002",
-                timestamp: 1672844500,
                 amount: 10,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -257,11 +248,10 @@ describe("Test of Server", function () {
                 await expect(
                     providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -269,11 +259,10 @@ describe("Test of Server", function () {
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -673,9 +662,8 @@ describe("Test of Server", function () {
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
                 amount: 10000,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -683,13 +671,12 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: "P000002",
-                timestamp: 1672844500,
                 amount: 10,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -706,11 +693,10 @@ describe("Test of Server", function () {
                 await expect(
                     providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -718,11 +704,10 @@ describe("Test of Server", function () {
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -1057,9 +1042,8 @@ describe("Test of Server", function () {
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
                 amount: 10000,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -1067,13 +1051,12 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: "P000002",
-                timestamp: 1672844500,
                 amount: 10,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -1090,11 +1073,10 @@ describe("Test of Server", function () {
                 await expect(
                     providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -1102,11 +1084,10 @@ describe("Test of Server", function () {
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -1406,9 +1387,8 @@ describe("Test of Server", function () {
         context("Test of Loyalty Token", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
                 amount: 10000,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -1416,14 +1396,13 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
             const tokenAmount = pointAmount.mul(multiple).div(price);
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: "P000002",
-                timestamp: 1672844500,
                 amount: 10,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -1453,11 +1432,10 @@ describe("Test of Server", function () {
                 await expect(
                     providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -1465,11 +1443,10 @@ describe("Test of Server", function () {
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -1662,9 +1639,8 @@ describe("Test of Server", function () {
         context("Test of Loyalty Token", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
                 amount: 10000,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -1672,14 +1648,13 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
             const tokenAmount = pointAmount.mul(multiple).div(price);
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: "P000002",
-                timestamp: 1672844500,
                 amount: 10,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -1710,11 +1685,10 @@ describe("Test of Server", function () {
                 await expect(
                     providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -1722,11 +1696,10 @@ describe("Test of Server", function () {
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -2037,9 +2010,8 @@ describe("Test of Server", function () {
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
                 purchaseId: "P000001",
-                timestamp: 1672844400,
                 amount: 10000,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -2047,14 +2019,13 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
             const tokenAmount = pointAmount.mul(multiple).div(price);
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: "P000002",
-                timestamp: 1672844500,
                 amount: 10,
-                method: 0,
+                providePercent: 10,
                 currency: "krw",
                 shopIndex: 1,
                 userIndex: 0,
@@ -2085,11 +2056,10 @@ describe("Test of Server", function () {
                 await expect(
                     providerContract.connect(validators[0]).savePurchase({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -2097,11 +2067,10 @@ describe("Test of Server", function () {
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
-                        timestamp: purchase.timestamp,
                         amount: purchaseAmount,
+                        loyalty: pointAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        method: purchase.method,
                         account: userAccount,
                         phone: phoneHash,
                     })
@@ -2314,9 +2283,8 @@ describe("Test of Server", function () {
     context("Mobile Notification", () => {
         const purchase: IPurchaseData = {
             purchaseId: "P000001",
-            timestamp: 1672844400,
             amount: 10000,
-            method: 0,
+            providePercent: 10,
             currency: "krw",
             shopIndex: 1,
             userIndex: 0,
@@ -2324,13 +2292,12 @@ describe("Test of Server", function () {
 
         const purchaseAmount = Amount.make(purchase.amount, 18).value;
         const shop = shopData[purchase.shopIndex];
-        const pointAmount = purchaseAmount.mul(shop.providePercent).div(100);
+        const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
         const purchaseOfLoyalty: IPurchaseData = {
             purchaseId: "P000002",
-            timestamp: 1672844500,
             amount: 10,
-            method: 0,
+            providePercent: 10,
             currency: "krw",
             shopIndex: 1,
             userIndex: 0,
@@ -2526,11 +2493,10 @@ describe("Test of Server", function () {
             await expect(
                 providerContract.connect(validators[0]).savePurchase({
                     purchaseId: purchase.purchaseId,
-                    timestamp: purchase.timestamp,
                     amount: purchaseAmount,
+                    loyalty: pointAmount,
                     currency: purchase.currency.toLowerCase(),
                     shopId: shop.shopId,
-                    method: purchase.method,
                     account: userAccount,
                     phone: phoneHash,
                 })
@@ -2538,11 +2504,10 @@ describe("Test of Server", function () {
                 .to.emit(providerContract, "SavedPurchase")
                 .withNamedArgs({
                     purchaseId: purchase.purchaseId,
-                    timestamp: purchase.timestamp,
                     amount: purchaseAmount,
+                    loyalty: pointAmount,
                     currency: purchase.currency.toLowerCase(),
                     shopId: shop.shopId,
-                    method: purchase.method,
                     account: userAccount,
                     phone: phoneHash,
                 })

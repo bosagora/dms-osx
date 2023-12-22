@@ -373,7 +373,6 @@ export class WatchScheduler extends Scheduler {
                     task.taskStatus = ShopTaskStatus.COMPLETED;
                     task.name = event.name;
                     task.currency = event.currency;
-                    task.providePercent = event.providePercent;
                     task.status = event.status;
                     await this.storage.updateTask(task);
 
@@ -408,7 +407,6 @@ export class WatchScheduler extends Scheduler {
                     task.taskStatus = ShopTaskStatus.COMPLETED;
                     task.name = event.name;
                     task.currency = event.currency;
-                    task.providePercent = event.providePercent;
                     task.status = event.status;
                     await this.storage.updateTask(task);
 
@@ -476,7 +474,6 @@ export class WatchScheduler extends Scheduler {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
                 currency: parsedLog.args.currency,
-                providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
                 status: parsedLog.args.status,
             };
@@ -496,7 +493,6 @@ export class WatchScheduler extends Scheduler {
                 shopId: parsedLog.args.shopId,
                 name: parsedLog.args.name,
                 currency: parsedLog.args.currency,
-                providePercent: (parsedLog.args.providePercent as BigNumber).toNumber(),
                 account: parsedLog.args.account,
                 status: parsedLog.args.status,
             };
@@ -524,7 +520,6 @@ export class WatchScheduler extends Scheduler {
             shopId: item.shopId,
             name: item.name,
             currency: item.currency,
-            providePercent: item.providePercent,
             status: item.status,
             account: item.account,
         };
