@@ -4,7 +4,6 @@ import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
 
 import { HardhatAccount } from "../../src/HardhatAccount";
-import { ContractShopStatus } from "../../src/types";
 import { Amount } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
@@ -501,7 +500,6 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
             shopId: string;
             name: string;
             currency: string;
-            providePercent: bigint;
             address: string;
             privateKey: string;
         }
@@ -519,28 +517,6 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
                 .add(shop.shopId, shop.name, shop.currency, shop.address, signature);
             console.log(`Add shop data (tx: ${tx.hash})...`);
             await tx.wait();
-
-            const signature1 = await ContractUtils.signShop(
-                new Wallet(shop.privateKey, ethers.provider),
-                shop.shopId,
-                await contract.nonceOf(shop.address)
-            );
-            const tx3 = await contract
-                .connect(accounts.certifier)
-                .update(shop.shopId, shop.name, shop.currency, shop.providePercent, shop.address, signature1);
-            console.log(`Update shop data (tx: ${tx3.hash})...`);
-            await tx3.wait();
-
-            const signature3 = await ContractUtils.signShop(
-                new Wallet(shop.privateKey, ethers.provider),
-                shop.shopId,
-                await contract.nonceOf(shop.address)
-            );
-            const tx4 = await contract
-                .connect(accounts.certifier)
-                .changeStatus(shop.shopId, ContractShopStatus.ACTIVE, shop.address, signature3);
-            console.log(`Change shop status (tx: ${tx4.hash})...`);
-            await tx4.wait();
         }
     }
 }
