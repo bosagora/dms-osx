@@ -447,4 +447,24 @@ export class ContractUtils {
         }
         return res.toLowerCase() === account.toLowerCase();
     }
+
+    public static getPurchaseMessage(
+        purchaseId: string,
+        amount: BigNumberish,
+        loyalty: BigNumberish,
+        currency: string,
+        shopId: BytesLike,
+        account: string,
+        phone: BytesLike
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
+            [purchaseId, amount, loyalty, currency, shopId, account, phone]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signPurchaseMessage(signer: Signer, message: Uint8Array): Promise<string> {
+        return signer.signMessage(message);
+    }
 }

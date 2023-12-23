@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { BigNumberish, Signer } from "ethers";
+import { BigNumberish, BytesLike, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
@@ -41,7 +41,7 @@ export class ContractUtils {
             [hash, await signer.getAddress(), nonce]
         );
         const message = arrayify(hre.ethers.utils.keccak256(encodedResult));
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static getPaymentMessage(
@@ -75,7 +75,7 @@ export class ContractUtils {
             shopId,
             nonce
         );
-        return await signer.signMessage(message);
+        return signer.signMessage(message);
     }
 
     public static getShopId(account: string): string {
@@ -84,5 +84,25 @@ export class ContractUtils {
             [account, hre.ethers.utils.randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
+    }
+
+    public static getPurchaseMessage(
+        purchaseId: string,
+        amount: BigNumberish,
+        loyalty: BigNumberish,
+        currency: string,
+        shopId: BytesLike,
+        account: string,
+        phone: BytesLike
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
+            [purchaseId, amount, loyalty, currency, shopId, account, phone]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signPurchaseMessage(signer: Signer, message: Uint8Array): Promise<string> {
+        return signer.signMessage(message);
     }
 }

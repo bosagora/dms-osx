@@ -2,30 +2,35 @@
 ##                               Logging options                              ##
 ################################################################################
 logging:
-    # Values: error, warn, info, http, verbose, debug, silly
-    level: verbose
+  # Values: error, warn, info, http, verbose, debug, silly
+  level: verbose
 
 ################################################################################
 ##                             Scheduler options                              ##
 ################################################################################
 scheduler:
-    enable: true
-    items:
-        - name: purchase
-          enable: true
-          expression: "*/1 * * * * *"
+  enable: true
+  items:
+    - name: purchase
+      enable: true
+      expression: "*/1 * * * * *"
 
 ################################################################################
 ##                               Setting options                              ##
 ################################################################################
 setting:
-    validator_key: ${VALIDATOR1}
+  validatorKeys:
+    - ${VALIDATOR1}
+    - ${VALIDATOR2}
+    - ${VALIDATOR3}
+    - ${VALIDATOR4}
+    - ${VALIDATOR5}
 
 ################################################################################
 ##                               Contracts options                              ##
 ################################################################################
 contracts:
-    tokenAddress: ${TOKEN_CONTRACT_ADDRESS}
-    ledgerAddress: ${LEDGER_CONTRACT_ADDRESS}
-    providerAddress: ${LOYALTY_PROVIDER_CONTRACT_ADDRESS}
-    phoneLinkerAddress: ${PHONE_LINKER_CONTRACT_ADDRESS}
+  tokenAddress: ${TOKEN_CONTRACT_ADDRESS}
+  ledgerAddress: ${LEDGER_CONTRACT_ADDRESS}
+  providerAddress: ${LOYALTY_PROVIDER_CONTRACT_ADDRESS}
+  phoneLinkerAddress: ${PHONE_LINKER_CONTRACT_ADDRESS}

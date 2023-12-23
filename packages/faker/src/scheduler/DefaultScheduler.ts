@@ -5,7 +5,6 @@ import { logger } from "../common/Logger";
 import { GasPriceManager } from "../contract/GasPriceManager";
 import { IPurchaseData, IShopData, IUserData } from "../types/index";
 import { ContractUtils } from "../utils/ContractUtils";
-import { Utils } from "../utils/Utils";
 import { Scheduler } from "./Scheduler";
 
 import { Ledger, LoyaltyProvider, Token } from "../../typechain-types";
@@ -47,11 +46,15 @@ export class DefaultScheduler extends Scheduler {
     private _users: IUserData[] = [];
     private _shops: IShopData[] = [];
 
+    private validatorWallets: Wallet[];
+
     constructor(expression: string) {
         super(expression);
         this._users.push(...(JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[]));
         this._users.push(...(JSON.parse(fs.readFileSync("./src/data/users_mobile.json", "utf8")) as IUserData[]));
         this._shops.push(...(JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[]));
+
+        this.validatorWallets = this._config.setting.validatorKeys.map((m) => new Wallet(m));
     }
 
     /**
@@ -122,7 +125,7 @@ export class DefaultScheduler extends Scheduler {
      * @private
      */
     private getSigner(): Signer {
-        const wallet = new Wallet(this._config.setting.validator_key);
+        const wallet = new Wallet(this._config.setting.validatorKeys[0]);
         return new NonceManager(new GasPriceManager(hre.ethers.provider.getSigner(wallet.address)));
     }
 
@@ -147,7 +150,21 @@ export class DefaultScheduler extends Scheduler {
                     account: Math.random() < 0.1 ? AddressZero : this._users[userIdx].address,
                     phone: phoneHash,
                 };
-                const tx = await (await this.getProviderContract()).connect(await this.getSigner()).savePurchase(data);
+                const message = ContractUtils.getPurchaseMessage(
+                    data.purchaseId,
+                    data.amount,
+                    data.loyalty,
+                    data.currency,
+                    data.shopId,
+                    data.account,
+                    data.phone
+                );
+
+                const signatures = this.validatorWallets.map((m) => ContractUtils.signPurchaseMessage(m, message));
+
+                const tx = await (await this.getProviderContract())
+                    .connect(await this.getSigner())
+                    .savePurchase({ ...data, signatures });
 
                 console.log(
                     `Send purchase data (account: ${data.account}, phone: ${data.phone}, purchaseId: ${

@@ -246,24 +246,30 @@ export class LoggingConfig implements ILoggingConfig {
  * Setting config
  */
 export class SettingConfig implements ISettingConfig {
-    public validator_key: string;
+    public validatorKeys: string[];
 
     /**
      * Constructor
      */
     constructor() {
         const defaults = SettingConfig.defaultValue();
-        this.validator_key = defaults.validator_key;
+        this.validatorKeys = defaults.validatorKeys;
     }
     public readFromObject(config: ISettingConfig) {
-        if (config.validator_key !== undefined) this.validator_key = config.validator_key;
+        if (config.validatorKeys !== undefined) this.validatorKeys = config.validatorKeys;
     }
     /**
      * Returns default value
      */
     public static defaultValue(): ISettingConfig {
         return {
-            validator_key: process.env.VALIDATOR1 || "",
+            validatorKeys: [
+                process.env.VALIDATOR1 || "",
+                process.env.VALIDATOR2 || "",
+                process.env.VALIDATOR3 || "",
+                process.env.VALIDATOR4 || "",
+                process.env.VALIDATOR5 || "",
+            ],
         };
     }
 }
@@ -375,7 +381,7 @@ export interface ISchedulerConfig {
 }
 
 export interface ISettingConfig {
-    validator_key: string;
+    validatorKeys: string[];
 }
 
 export interface IContractsConfig {

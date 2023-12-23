@@ -12,6 +12,7 @@ import { BigNumber, BigNumberish, BytesLike, Signer, utils } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
+import { PromiseOrValue } from "../../typechain-types/common";
 
 export class ContractUtils {
     /**
@@ -226,5 +227,25 @@ export class ContractUtils {
             [account, utils.randomBytes(32)]
         );
         return hre.ethers.utils.keccak256(encodedResult);
+    }
+
+    public static getPurchaseMessage(
+        purchaseId: string,
+        amount: BigNumberish,
+        loyalty: BigNumberish,
+        currency: string,
+        shopId: BytesLike,
+        account: string,
+        phone: BytesLike
+    ): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
+            [purchaseId, amount, loyalty, currency, shopId, account, phone]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async signPurchaseMessage(signer: Signer, message: Uint8Array): Promise<string> {
+        return signer.signMessage(message);
     }
 }

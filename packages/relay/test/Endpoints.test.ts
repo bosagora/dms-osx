@@ -281,16 +281,32 @@ describe("Test of Server", function () {
                 const loyaltyAmount = purchaseAmount.mul(purchase.providePercent).div(100);
                 const shop = shopData[purchase.shopIndex];
                 const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+                const purchaseParam = {
+                    purchaseId: purchase.purchaseId,
+                    amount: purchaseAmount,
+                    loyalty: loyaltyAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    account: userAccount,
+                    phone: phoneHash,
+                };
+                const purchaseMessage = ContractUtils.getPurchaseMessage(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone
+                );
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                );
+
                 await expect(
-                    providerContract.connect(deployments.accounts.validators[0]).savePurchase({
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: loyaltyAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shop.shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                    })
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase({ ...purchaseParam, signatures })
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
