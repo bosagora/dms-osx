@@ -8,6 +8,8 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
 import "del-osx-artifacts/contracts/interfaces/IPhoneLinkCollection.sol";
 
 import "../interfaces/ICurrencyRate.sol";
@@ -17,6 +19,7 @@ import "../interfaces/ILedger.sol";
 import "./LoyaltyProviderStorage.sol";
 
 contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+    uint256 public constant QUORUM = (uint256(2000) / uint256(3));
     struct PurchaseData {
         string purchaseId;
         uint256 amount;
@@ -25,6 +28,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
         bytes32 shopId;
         address account;
         bytes32 phone;
+        bytes[] signatures;
     }
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
@@ -82,9 +86,44 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
 
     /// @notice 구매내역을 저장합니다.
     /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
-    function savePurchase(PurchaseData calldata data) external onlyValidator(_msgSender()) {
-        if (data.loyalty > 0) {
+    function savePurchase(PurchaseData calldata _data) external onlyValidator(_msgSender()) {
+        if (_data.loyalty > 0) {
+            PurchaseData memory data = _data;
             require(data.loyalty <= data.amount / 10, "1522");
+            uint256 numberOfVoters = validatorContract.lengthOfCurrentActiveValidator();
+            require(numberOfVoters > 0, "1523");
+            require(data.signatures.length <= numberOfVoters, "1524");
+
+            bytes32 dataHash = keccak256(
+                abi.encode(
+                    data.purchaseId,
+                    data.amount,
+                    data.loyalty,
+                    data.currency,
+                    data.shopId,
+                    data.account,
+                    data.phone
+                )
+            );
+
+            address[] memory participants = new address[](data.signatures.length);
+            uint256 length = 0;
+            for (uint256 idx = 0; idx < data.signatures.length; idx++) {
+                address participant = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), data.signatures[idx]);
+                bool exist = false;
+                for (uint256 j = 0; j < length; j++) {
+                    if (participants[j] == participant) {
+                        exist = true;
+                        break;
+                    }
+                }
+                if (!exist && validatorContract.isCurrentActiveValidator(participant)) {
+                    participants[length] = participant;
+                    length++;
+                }
+            }
+
+            require(((length * 1000) / numberOfVoters) >= QUORUM, "1055");
 
             uint256 loyaltyValue = data.loyalty;
             uint256 loyaltyPoint = currencyRateContract.convertCurrencyToPoint(loyaltyValue, data.currency);
@@ -158,13 +197,13 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
         }
 
         emit SavedPurchase(
-            data.purchaseId,
-            data.amount,
-            data.loyalty,
-            data.currency,
-            data.shopId,
-            data.account,
-            data.phone
+            _data.purchaseId,
+            _data.amount,
+            _data.loyalty,
+            _data.currency,
+            _data.shopId,
+            _data.account,
+            _data.phone
         );
     }
 }

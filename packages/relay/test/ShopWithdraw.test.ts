@@ -266,16 +266,31 @@ describe("Test for Shop", () => {
                         userData[purchase.userIndex].address.trim() !== ""
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
+                    const purchaseParam = {
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        loyalty: loyaltyAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shopData[purchase.shopIndex].shopId,
+                        account: userAccount,
+                        phone: phoneHash,
+                    };
+                    const purchaseMessage = ContractUtils.getPurchaseMessage(
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
+                    );
+                    const signatures = deployments.accounts.validators.map((m) =>
+                        ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                    );
                     await expect(
-                        providerContract.connect(deployments.accounts.validators[0]).savePurchase({
-                            purchaseId: purchase.purchaseId,
-                            amount: purchaseAmount,
-                            loyalty: loyaltyAmount,
-                            currency: purchase.currency.toLowerCase(),
-                            shopId: shopData[purchase.shopIndex].shopId,
-                            account: userAccount,
-                            phone: phoneHash,
-                        })
+                        providerContract
+                            .connect(deployments.accounts.validators[0])
+                            .savePurchase({ ...purchaseParam, signatures })
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(

@@ -245,17 +245,29 @@ describe("Test of Server", function () {
                     userData[purchase.userIndex].address.trim() !== ""
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
-                await expect(
-                    providerContract.connect(validators[0]).savePurchase({
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: pointAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shop.shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                    })
-                )
+                const purchaseParam = {
+                    purchaseId: purchase.purchaseId,
+                    amount: purchaseAmount,
+                    loyalty: pointAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    account: userAccount,
+                    phone: phoneHash,
+                };
+                const purchaseMessage = ContractUtils.getPurchaseMessage(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone
+                );
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                );
+
+                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -690,17 +702,29 @@ describe("Test of Server", function () {
                     userData[purchase.userIndex].address.trim() !== ""
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
-                await expect(
-                    providerContract.connect(validators[0]).savePurchase({
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: pointAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shop.shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                    })
-                )
+                const purchaseParam = {
+                    purchaseId: purchase.purchaseId,
+                    amount: purchaseAmount,
+                    loyalty: pointAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    account: userAccount,
+                    phone: phoneHash,
+                };
+                const purchaseMessage = ContractUtils.getPurchaseMessage(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone
+                );
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                );
+
+                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1070,17 +1094,28 @@ describe("Test of Server", function () {
                     userData[purchase.userIndex].address.trim() !== ""
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
-                await expect(
-                    providerContract.connect(validators[0]).savePurchase({
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: pointAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shop.shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                    })
-                )
+                const purchaseParam = {
+                    purchaseId: purchase.purchaseId,
+                    amount: purchaseAmount,
+                    loyalty: pointAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    account: userAccount,
+                    phone: phoneHash,
+                };
+                const purchaseMessage = ContractUtils.getPurchaseMessage(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone
+                );
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                );
+                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1429,17 +1464,28 @@ describe("Test of Server", function () {
                     userData[purchase.userIndex].address.trim() !== ""
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
-                await expect(
-                    providerContract.connect(validators[0]).savePurchase({
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: pointAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shop.shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                    })
-                )
+                const purchaseParam = {
+                    purchaseId: purchase.purchaseId,
+                    amount: purchaseAmount,
+                    loyalty: pointAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    account: userAccount,
+                    phone: phoneHash,
+                };
+                const purchaseMessage = ContractUtils.getPurchaseMessage(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone
+                );
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                );
+                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1682,17 +1728,28 @@ describe("Test of Server", function () {
                     userData[purchase.userIndex].address.trim() !== ""
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
-                await expect(
-                    providerContract.connect(validators[0]).savePurchase({
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: pointAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shop.shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                    })
-                )
+                const purchaseParam = {
+                    purchaseId: purchase.purchaseId,
+                    amount: purchaseAmount,
+                    loyalty: pointAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    account: userAccount,
+                    phone: phoneHash,
+                };
+                const purchaseMessage = ContractUtils.getPurchaseMessage(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone
+                );
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                );
+                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -2053,17 +2110,28 @@ describe("Test of Server", function () {
                     userData[purchase.userIndex].address.trim() !== ""
                         ? userData[purchase.userIndex].address.trim()
                         : AddressZero;
-                await expect(
-                    providerContract.connect(validators[0]).savePurchase({
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: pointAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shop.shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                    })
-                )
+                const purchaseParam = {
+                    purchaseId: purchase.purchaseId,
+                    amount: purchaseAmount,
+                    loyalty: pointAmount,
+                    currency: purchase.currency.toLowerCase(),
+                    shopId: shop.shopId,
+                    account: userAccount,
+                    phone: phoneHash,
+                };
+                const purchaseMessage = ContractUtils.getPurchaseMessage(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone
+                );
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                );
+                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -2490,17 +2558,28 @@ describe("Test of Server", function () {
                 userData[purchase.userIndex].address.trim() !== ""
                     ? userData[purchase.userIndex].address.trim()
                     : AddressZero;
-            await expect(
-                providerContract.connect(validators[0]).savePurchase({
-                    purchaseId: purchase.purchaseId,
-                    amount: purchaseAmount,
-                    loyalty: pointAmount,
-                    currency: purchase.currency.toLowerCase(),
-                    shopId: shop.shopId,
-                    account: userAccount,
-                    phone: phoneHash,
-                })
-            )
+            const purchaseParam = {
+                purchaseId: purchase.purchaseId,
+                amount: purchaseAmount,
+                loyalty: pointAmount,
+                currency: purchase.currency.toLowerCase(),
+                shopId: shop.shopId,
+                account: userAccount,
+                phone: phoneHash,
+            };
+            const purchaseMessage = ContractUtils.getPurchaseMessage(
+                purchaseParam.purchaseId,
+                purchaseParam.amount,
+                purchaseParam.loyalty,
+                purchaseParam.currency,
+                purchaseParam.shopId,
+                purchaseParam.account,
+                purchaseParam.phone
+            );
+            const signatures = deployments.accounts.validators.map((m) =>
+                ContractUtils.signPurchaseMessage(m, purchaseMessage)
+            );
+            await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
                 .to.emit(providerContract, "SavedPurchase")
                 .withNamedArgs({
                     purchaseId: purchase.purchaseId,
