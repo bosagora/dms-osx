@@ -35,7 +35,7 @@ import { ethers } from "hardhat";
 
 import { Deployments } from "./helper/Deployments";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
-import { TestClient, TestServer } from "./helper/Utility";
+import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
 
 import * as assert from "assert";
 import * as fs from "fs";
@@ -215,7 +215,7 @@ describe("Test of Server", function () {
 
         context("Test of payment", async () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 1000,
                 providePercent: 10,
                 currency: "krw",

@@ -72,3 +72,10 @@ export function delay(interval: number): Promise<void> {
         setTimeout(resolve, interval);
     });
 }
+
+let purchaseId = 0;
+export function getPurchaseId(): string {
+    const res = "P" + purchaseId.toString().padStart(10, "0");
+    purchaseId++;
+    return res;
+}

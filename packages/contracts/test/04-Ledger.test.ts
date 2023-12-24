@@ -300,6 +300,13 @@ describe("Test for Ledger", () => {
         await prepareToken();
     };
 
+    let purchaseId = 0;
+    const getPurchaseId = (): string => {
+        const res = "P" + purchaseId.toString().padStart(10, "0");
+        purchaseId++;
+        return res;
+    };
+
     let requestId: string;
     context("Save Purchase Data & Pay (point, token)", () => {
         const userData: IUserData[] = [
@@ -337,7 +344,7 @@ describe("Test for Ledger", () => {
 
         const purchaseData: IPurchaseData[] = [
             {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 5,
                 currency: "krw",
@@ -345,7 +352,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 5,
                 currency: "krw",
@@ -353,7 +360,7 @@ describe("Test for Ledger", () => {
                 userIndex: 1,
             },
             {
-                purchaseId: "P000003",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 6,
                 currency: "krw",
@@ -361,7 +368,7 @@ describe("Test for Ledger", () => {
                 userIndex: 2,
             },
             {
-                purchaseId: "P000004",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 7,
                 currency: "krw",
@@ -369,7 +376,7 @@ describe("Test for Ledger", () => {
                 userIndex: 3,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 6,
                 currency: "krw",
@@ -438,7 +445,7 @@ describe("Test for Ledger", () => {
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
                     const purchaseParam = {
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: getPurchaseId(),
                         amount: purchaseAmount,
                         loyalty: loyaltyAmount,
                         currency: purchase.currency.toLowerCase(),
@@ -477,7 +484,7 @@ describe("Test for Ledger", () => {
                             : AddressZero;
                     if (userAccount !== AddressZero) {
                         const purchaseParam = {
-                            purchaseId: purchase.purchaseId,
+                            purchaseId: getPurchaseId(),
                             amount: purchaseAmount,
                             loyalty: loyaltyAmount,
                             currency: purchase.currency.toLowerCase(),
@@ -502,24 +509,24 @@ describe("Test for Ledger", () => {
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
-                                purchase.purchaseId,
-                                purchaseAmount,
-                                loyaltyAmount,
-                                purchase.currency.toLowerCase(),
-                                shopData[purchase.shopIndex].shopId,
-                                userAccount,
-                                phoneHash
+                                purchaseParam.purchaseId,
+                                purchaseParam.amount,
+                                purchaseParam.loyalty,
+                                purchaseParam.currency,
+                                purchaseParam.shopId,
+                                purchaseParam.account,
+                                purchaseParam.phone
                             )
                             .emit(ledgerContract, "ProvidedPoint")
                             .withNamedArgs({
                                 account: userAccount,
                                 providedPoint: amt,
                                 providedValue: amt,
-                                purchaseId: purchase.purchaseId,
+                                purchaseId: purchaseParam.purchaseId,
                             });
                     } else {
                         const purchaseParam = {
-                            purchaseId: purchase.purchaseId,
+                            purchaseId: getPurchaseId(),
                             amount: purchaseAmount,
                             loyalty: loyaltyAmount,
                             currency: purchase.currency.toLowerCase(),
@@ -544,20 +551,20 @@ describe("Test for Ledger", () => {
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
-                                purchase.purchaseId,
-                                purchaseAmount,
-                                loyaltyAmount,
-                                purchase.currency.toLowerCase(),
-                                shopData[purchase.shopIndex].shopId,
-                                userAccount,
-                                phoneHash
+                                purchaseParam.purchaseId,
+                                purchaseParam.amount,
+                                purchaseParam.loyalty,
+                                purchaseParam.currency,
+                                purchaseParam.shopId,
+                                purchaseParam.account,
+                                purchaseParam.phone
                             )
                             .emit(ledgerContract, "ProvidedUnPayablePoint")
                             .withNamedArgs({
                                 phone: phoneHash,
                                 providedPoint: amt,
                                 providedValue: amt,
-                                purchaseId: purchase.purchaseId,
+                                purchaseId: purchaseParam.purchaseId,
                             });
                     }
                 }
@@ -589,7 +596,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data (user: 3, point type : 0) - phone and address are not registered", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -609,7 +616,7 @@ describe("Test for Ledger", () => {
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -632,20 +639,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(
                     oldUnPayablePointBalance.add(pointAmount)
@@ -666,7 +673,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data (user: 3, point type : 0) - phone and address are registered (user: 3, point type : 0)", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -690,7 +697,7 @@ describe("Test for Ledger", () => {
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -714,20 +721,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         account: userWallets[3].address,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
                 expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
@@ -779,7 +786,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data - phone and address are registered (user: 3, point type : 1)", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -803,7 +810,7 @@ describe("Test for Ledger", () => {
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -827,20 +834,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
                         account: userWallets[3].address,
                         providedToken: tokenAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
                 expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
@@ -856,7 +863,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data -(user: 1, point type : 0)", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -880,7 +887,7 @@ describe("Test for Ledger", () => {
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -904,20 +911,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         account: userAccount,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
                 expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
@@ -944,7 +951,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data - (user: 1, point type : 1)", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     providePercent: 6,
                     amount: 100000,
                     currency: "krw",
@@ -968,7 +975,7 @@ describe("Test for Ledger", () => {
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -992,20 +999,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
                         account: userAccount,
                         providedToken: tokenAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
                 expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
@@ -1021,7 +1028,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data (user: 4, point type : 0) - phone and address are not registered", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -1041,7 +1048,7 @@ describe("Test for Ledger", () => {
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -1065,20 +1072,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(
                     oldUnPayablePointBalance.add(pointAmount)
@@ -1099,7 +1106,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data (user: 4, point type : 0) - phone and address are registered (user: 4, point type : 0)", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -1123,7 +1130,7 @@ describe("Test for Ledger", () => {
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -1147,20 +1154,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
                         account: userWallets[4].address,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
                 expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
@@ -1212,7 +1219,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data - phone and address are registered (user: 4, point type : 1)", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -1236,7 +1243,7 @@ describe("Test for Ledger", () => {
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -1260,20 +1267,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
                         account: userWallets[4].address,
                         providedToken: tokenAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
                 expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
@@ -1289,7 +1296,7 @@ describe("Test for Ledger", () => {
 
             it("Save Purchase Data (user: 5, point type : 0) - phone and address are not registered", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000005",
+                    purchaseId: getPurchaseId(),
                     amount: 10000,
                     providePercent: 6,
                     currency: "krw",
@@ -1309,7 +1316,7 @@ describe("Test for Ledger", () => {
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
 
                 const purchaseParam = {
-                    purchaseId: purchase.purchaseId,
+                    purchaseId: getPurchaseId(),
                     amount: purchaseAmount,
                     loyalty: loyaltyAmount,
                     currency: purchase.currency.toLowerCase(),
@@ -1333,20 +1340,20 @@ describe("Test for Ledger", () => {
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
-                        purchase.purchaseId,
-                        purchaseAmount,
-                        loyaltyAmount,
-                        purchase.currency.toLowerCase(),
-                        shopData[purchase.shopIndex].shopId,
-                        userAccount,
-                        phoneHash
+                        purchaseParam.purchaseId,
+                        purchaseParam.amount,
+                        purchaseParam.loyalty,
+                        purchaseParam.currency,
+                        purchaseParam.shopId,
+                        purchaseParam.account,
+                        purchaseParam.phone
                     )
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(
                     oldUnPayablePointBalance.add(pointAmount)
@@ -1416,7 +1423,7 @@ describe("Test for Ledger", () => {
         context("Pay point", () => {
             it("Pay point - Invalid signature", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000100",
+                    purchaseId: getPurchaseId(),
                     amount: 100,
                     providePercent: 5,
                     currency: "krw",
@@ -1452,7 +1459,7 @@ describe("Test for Ledger", () => {
 
             it("Pay point - Insufficient balance", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000100",
+                    purchaseId: getPurchaseId(),
                     amount: 100000,
                     providePercent: 5,
                     currency: "krw",
@@ -1488,7 +1495,7 @@ describe("Test for Ledger", () => {
 
             it("Pay point - Success", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000100",
+                    purchaseId: getPurchaseId(),
                     amount: 100,
                     providePercent: 5,
                     currency: "krw",
@@ -1548,7 +1555,7 @@ describe("Test for Ledger", () => {
 
         context("Pay Loyalty Point", async () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000100",
+                purchaseId: getPurchaseId(),
                 amount: 100,
                 providePercent: 5,
                 currency: "krw",
@@ -1651,7 +1658,7 @@ describe("Test for Ledger", () => {
         context("Pay token", () => {
             it("Pay token - Invalid signature", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000000",
+                    purchaseId: getPurchaseId(),
                     amount: 100,
                     providePercent: 5,
                     currency: "krw",
@@ -1687,7 +1694,7 @@ describe("Test for Ledger", () => {
 
             it("Pay token - Insufficient balance", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000000",
+                    purchaseId: getPurchaseId(),
                     amount: 100000,
                     providePercent: 5,
                     currency: "krw",
@@ -1723,7 +1730,7 @@ describe("Test for Ledger", () => {
 
             it("Pay token - Success", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000000",
+                    purchaseId: getPurchaseId(),
                     amount: 100,
                     providePercent: 5,
                     currency: "krw",
@@ -1791,7 +1798,7 @@ describe("Test for Ledger", () => {
 
         context("Pay Loyalty Token", async () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000000",
+                purchaseId: getPurchaseId(),
                 amount: 100,
                 providePercent: 5,
                 currency: "krw",
@@ -1939,7 +1946,7 @@ describe("Test for Ledger", () => {
 
         const purchaseData: IPurchaseData[] = [
             {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 5,
                 currency: "krw",
@@ -1947,7 +1954,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 5,
                 currency: "krw",
@@ -1955,7 +1962,7 @@ describe("Test for Ledger", () => {
                 userIndex: 1,
             },
             {
-                purchaseId: "P000003",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 6,
                 currency: "krw",
@@ -1963,7 +1970,7 @@ describe("Test for Ledger", () => {
                 userIndex: 2,
             },
             {
-                purchaseId: "P000004",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 7,
                 currency: "krw",
@@ -1971,7 +1978,7 @@ describe("Test for Ledger", () => {
                 userIndex: 3,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 6,
                 currency: "krw",
@@ -2108,7 +2115,7 @@ describe("Test for Ledger", () => {
 
         const purchaseData: IPurchaseData[] = [
             {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2116,7 +2123,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2124,7 +2131,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000003",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2132,7 +2139,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000004",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2140,7 +2147,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2148,7 +2155,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2219,7 +2226,7 @@ describe("Test for Ledger", () => {
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
                     const purchaseParam = {
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: getPurchaseId(),
                         amount: purchaseAmount,
                         loyalty: loyaltyAmount,
                         currency: purchase.currency.toLowerCase(),
@@ -2245,20 +2252,20 @@ describe("Test for Ledger", () => {
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            loyaltyAmount,
-                            purchase.currency.toLowerCase(),
-                            shopData[purchase.shopIndex].shopId,
-                            userAccount,
-                            phoneHash
+                            purchaseParam.purchaseId,
+                            purchaseParam.amount,
+                            purchaseParam.loyalty,
+                            purchaseParam.currency,
+                            purchaseParam.shopId,
+                            purchaseParam.account,
+                            purchaseParam.phone
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             account: userAccount,
                             providedPoint: amt,
                             providedValue: amt,
-                            purchaseId: purchase.purchaseId,
+                            purchaseId: purchaseParam.purchaseId,
                         });
                 }
             });
@@ -2320,7 +2327,7 @@ describe("Test for Ledger", () => {
         context("Pay point", () => {
             it("Pay point - Success", async () => {
                 const purchase = {
-                    purchaseId: "P000100",
+                    purchaseId: getPurchaseId(),
                     amount: 300,
                     providePercent: 1,
                     currency: "krw",
@@ -2409,7 +2416,7 @@ describe("Test for Ledger", () => {
         context("Pay token", () => {
             it("Pay token - Success", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000200",
+                    purchaseId: getPurchaseId(),
                     amount: 500,
                     providePercent: 1,
                     currency: "krw",
@@ -2548,7 +2555,7 @@ describe("Test for Ledger", () => {
 
         const purchaseData: IPurchaseData[] = [
             {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "KRW",
@@ -2556,7 +2563,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "USD",
@@ -2564,7 +2571,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000003",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "JPY",
@@ -2572,7 +2579,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000004",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "CNY",
@@ -2580,7 +2587,7 @@ describe("Test for Ledger", () => {
                 userIndex: 1,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "KRW",
@@ -2588,7 +2595,7 @@ describe("Test for Ledger", () => {
                 userIndex: 1,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "KRW",
@@ -2695,20 +2702,20 @@ describe("Test for Ledger", () => {
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            loyaltyAmount,
-                            purchase.currency.toLowerCase(),
-                            shopData[purchase.shopIndex].shopId,
-                            userAccount,
-                            phoneHash
+                            purchaseParam.purchaseId,
+                            purchaseParam.amount,
+                            purchaseParam.loyalty,
+                            purchaseParam.currency,
+                            purchaseParam.shopId,
+                            purchaseParam.account,
+                            purchaseParam.phone
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             account: userAccount,
                             providedPoint: loyaltyPoint,
                             providedValue: loyaltyValue,
-                            purchaseId: purchase.purchaseId,
+                            purchaseId: purchaseParam.purchaseId,
                         });
                 }
             });
@@ -2800,7 +2807,7 @@ describe("Test for Ledger", () => {
 
         const purchaseData: IPurchaseData[] = [
             {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2808,7 +2815,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2816,7 +2823,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000003",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -2900,7 +2907,7 @@ describe("Test for Ledger", () => {
                     const amt = purchaseAmount.mul(purchase.providePercent).div(100);
                     const userAccount = userData[purchase.userIndex].address.trim();
                     const purchaseParam = {
-                        purchaseId: purchase.purchaseId,
+                        purchaseId: getPurchaseId(),
                         amount: purchaseAmount,
                         loyalty: loyaltyAmount,
                         currency: purchase.currency.toLowerCase(),
@@ -2926,20 +2933,20 @@ describe("Test for Ledger", () => {
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
-                            purchase.purchaseId,
-                            purchaseAmount,
-                            loyaltyAmount,
-                            purchase.currency.toLowerCase(),
-                            shopData[purchase.shopIndex].shopId,
-                            userAccount,
-                            phoneHash
+                            purchaseParam.purchaseId,
+                            purchaseParam.amount,
+                            purchaseParam.loyalty,
+                            purchaseParam.currency,
+                            purchaseParam.shopId,
+                            purchaseParam.account,
+                            purchaseParam.phone
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
                             account: userAccount,
                             providedPoint: amt,
                             providedValue: amt,
-                            purchaseId: purchase.purchaseId,
+                            purchaseId: purchaseParam.purchaseId,
                         });
                 }
             });
@@ -2980,7 +2987,7 @@ describe("Test for Ledger", () => {
         context("Pay point", () => {
             it("Pay point - Success", async () => {
                 const purchase = {
-                    purchaseId: "P000100",
+                    purchaseId: getPurchaseId(),
                     amount: 100,
                     providePercent: 1,
                     currency: "krw",
@@ -3066,7 +3073,7 @@ describe("Test for Ledger", () => {
         context("Pay token", () => {
             it("Pay token - Success", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000200",
+                    purchaseId: getPurchaseId(),
                     amount: 500,
                     providePercent: 1,
                     currency: "krw",

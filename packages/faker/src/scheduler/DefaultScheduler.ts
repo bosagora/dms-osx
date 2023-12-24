@@ -142,7 +142,7 @@ export class DefaultScheduler extends Scheduler {
                 const userIdx = Math.floor(Math.random() * this._users.length);
                 const phoneHash = ContractUtils.getPhoneHash(this._users[userIdx].phone);
                 const data: IPurchaseData = {
-                    purchaseId: `P${this._purchaseIdx.toString().padStart(6, "0")}`,
+                    purchaseId: `FAKER${this._purchaseIdx.toString().padStart(6, "0")}`,
                     amount: amount.value,
                     loyalty: amount.value.mul(5).div(100),
                     currency: "krw",

@@ -14,7 +14,7 @@ import {
     Token,
     Validator,
 } from "../typechain-types";
-import { TestClient, TestServer } from "./helper/Utility";
+import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
@@ -217,7 +217,7 @@ describe("Test of Server", function () {
 
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 10,
                 currency: "krw",
@@ -230,7 +230,7 @@ describe("Test of Server", function () {
             const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
             const purchaseOfLoyalty: IPurchaseData = {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10,
                 providePercent: 10,
                 currency: "krw",
@@ -673,7 +673,7 @@ describe("Test of Server", function () {
 
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 10,
                 currency: "krw",
@@ -686,7 +686,7 @@ describe("Test of Server", function () {
             const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
             const purchaseOfLoyalty: IPurchaseData = {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10,
                 providePercent: 10,
                 currency: "krw",
@@ -1065,7 +1065,7 @@ describe("Test of Server", function () {
 
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 10,
                 currency: "krw",
@@ -1078,7 +1078,7 @@ describe("Test of Server", function () {
             const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
             const purchaseOfLoyalty: IPurchaseData = {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10,
                 providePercent: 10,
                 currency: "krw",
@@ -1421,7 +1421,7 @@ describe("Test of Server", function () {
 
         context("Test of Loyalty Token", () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 10,
                 currency: "krw",
@@ -1435,7 +1435,7 @@ describe("Test of Server", function () {
             const tokenAmount = pointAmount.mul(multiple).div(price);
 
             const purchaseOfLoyalty: IPurchaseData = {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10,
                 providePercent: 10,
                 currency: "krw",
@@ -1684,7 +1684,7 @@ describe("Test of Server", function () {
 
         context("Test of Loyalty Token", () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 10,
                 currency: "krw",
@@ -1698,7 +1698,7 @@ describe("Test of Server", function () {
             const tokenAmount = pointAmount.mul(multiple).div(price);
 
             const purchaseOfLoyalty: IPurchaseData = {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10,
                 providePercent: 10,
                 currency: "krw",
@@ -2066,7 +2066,7 @@ describe("Test of Server", function () {
 
         context("Test of Loyalty Point", () => {
             const purchase: IPurchaseData = {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 10,
                 currency: "krw",
@@ -2080,7 +2080,7 @@ describe("Test of Server", function () {
             const tokenAmount = pointAmount.mul(multiple).div(price);
 
             const purchaseOfLoyalty: IPurchaseData = {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10,
                 providePercent: 10,
                 currency: "krw",
@@ -2350,7 +2350,7 @@ describe("Test of Server", function () {
 
     context("Mobile Notification", () => {
         const purchase: IPurchaseData = {
-            purchaseId: "P000001",
+            purchaseId: getPurchaseId(),
             amount: 10000,
             providePercent: 10,
             currency: "krw",
@@ -2363,7 +2363,7 @@ describe("Test of Server", function () {
         const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
 
         const purchaseOfLoyalty: IPurchaseData = {
-            purchaseId: "P000002",
+            purchaseId: getPurchaseId(),
             amount: 10,
             providePercent: 10,
             currency: "krw",
