@@ -87,6 +87,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
     /// @notice 구매내역을 저장합니다.
     /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
     function savePurchase(PurchaseData calldata _data) external onlyValidator(_msgSender()) {
+        require(purchases[_data.purchaseId] == false, "1526");
         if (_data.loyalty > 0) {
             PurchaseData memory data = _data;
             require(data.loyalty <= data.amount / 10, "1522");
@@ -196,6 +197,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
             }
         }
 
+        purchases[_data.purchaseId] = true;
         emit SavedPurchase(
             _data.purchaseId,
             _data.amount,

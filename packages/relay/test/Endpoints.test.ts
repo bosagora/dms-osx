@@ -15,7 +15,7 @@ import {
     Validator,
 } from "../typechain-types";
 import { Deployments } from "./helper/Deployments";
-import { TestClient, TestServer } from "./helper/Utility";
+import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
@@ -266,7 +266,7 @@ describe("Test of Server", function () {
         context("Save Purchase Data", () => {
             const userIndex = 0;
             const purchase: IPurchaseData = {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 10,
                 currency: "krw",

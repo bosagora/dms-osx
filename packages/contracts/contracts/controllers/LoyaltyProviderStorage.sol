@@ -19,6 +19,8 @@ contract LoyaltyProviderStorage {
     IShop internal shopContract;
     ILedger internal ledgerContract;
 
+    mapping(string => bool) internal purchases;
+
     bool internal isSetLedger;
     bool internal isSetShop;
 }

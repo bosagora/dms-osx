@@ -10,6 +10,12 @@ import "./CurrencyStorage.sol";
 
 /// @notice 토큰 가격을 제공하는 스마트컨트랙트
 contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ICurrencyRate {
+    struct PurchaseData {
+        string[] symbols;
+        uint256[] rates;
+        bytes[] signatures;
+    }
+
     /// @notice 환률이 저장될 때 발생되는 이벤트
     event SetRate(string currency, uint256 rate);
 

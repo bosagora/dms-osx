@@ -29,7 +29,7 @@ import { URL } from "url";
 import { AddressZero } from "@ethersproject/constants";
 
 import { Deployments } from "./helper/Deployments";
-import { TestClient, TestServer } from "./helper/Utility";
+import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
 
 chai.use(solidity);
 
@@ -114,7 +114,7 @@ describe("Test for Shop", () => {
 
         const purchaseData: IPurchaseData[] = [
             {
-                purchaseId: "P000001",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -122,7 +122,7 @@ describe("Test for Shop", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000002",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -130,7 +130,7 @@ describe("Test for Shop", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000003",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -138,7 +138,7 @@ describe("Test for Shop", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000004",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -146,7 +146,7 @@ describe("Test for Shop", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -154,7 +154,7 @@ describe("Test for Shop", () => {
                 userIndex: 0,
             },
             {
-                purchaseId: "P000005",
+                purchaseId: getPurchaseId(),
                 amount: 10000,
                 providePercent: 1,
                 currency: "krw",
@@ -316,7 +316,7 @@ describe("Test for Shop", () => {
         context("Pay point", () => {
             it("Pay point - Success", async () => {
                 const purchase = {
-                    purchaseId: "P000100",
+                    purchaseId: getPurchaseId(),
                     amount: 300,
                     providePercent: 10,
                     currency: "krw",
@@ -428,7 +428,7 @@ describe("Test for Shop", () => {
         context("Pay token", () => {
             it("Pay token - Success", async () => {
                 const purchase: IPurchaseData = {
-                    purchaseId: "P000200",
+                    purchaseId: getPurchaseId(),
                     amount: 500,
                     providePercent: 10,
                     currency: "krw",
