@@ -3,11 +3,10 @@ import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
 
-import { BaseContract, BigNumber, Wallet } from "ethers";
+import { BaseContract, Wallet } from "ethers";
 
 import { Amount } from "../../src/common/Amount";
 import { HardhatAccount } from "../../src/HardhatAccount";
-import { ContractShopStatus } from "../../src/types";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
     Certifier,
@@ -314,29 +313,12 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
 
     {
         const multiple = await contract.multiple();
-        let price = BigNumber.from(150).mul(multiple);
-        let tx1 = await contract.connect(accounts.validators[0]).set("the9", price);
-        console.log(`Set token price (tx: ${tx1.hash})...`);
-        await tx1.wait();
-
-        price = BigNumber.from(1000).mul(multiple);
-        tx1 = await contract.connect(accounts.validators[0]).set("usd", price);
-        console.log(`Set token price (tx: ${tx1.hash})...`);
-        await tx1.wait();
-
-        price = BigNumber.from(100).mul(multiple);
-        tx1 = await contract.connect(accounts.validators[0]).set("jpy", price);
-        console.log(`Set token price (tx: ${tx1.hash})...`);
-        await tx1.wait();
-
-        price = BigNumber.from(1).mul(multiple);
-        tx1 = await contract.connect(accounts.validators[0]).set("krw", price);
-        console.log(`Set token price (tx: ${tx1.hash})...`);
-        await tx1.wait();
-
-        price = BigNumber.from(1).mul(multiple);
-        tx1 = await contract.connect(accounts.validators[0]).set("point", price);
-        console.log(`Set token price (tx: ${tx1.hash})...`);
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["the9", "usd", "jpy", "krw", "point"];
+        const rates = [multiple.mul(150), multiple.mul(1000), multiple.mul(100), multiple.mul(1), multiple.mul(1)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+        const tx1 = await contract.connect(accounts.validators[0]).set({ timestamp, symbols, rates, signatures });
         await tx1.wait();
     }
 }

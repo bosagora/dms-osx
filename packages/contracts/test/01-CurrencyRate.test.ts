@@ -10,7 +10,7 @@ import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
-import { BigNumber } from "ethers";
+import { ContractUtils } from "../src/utils/ContractUtils";
 
 chai.use(solidity);
 
@@ -70,47 +70,129 @@ describe("Test for CurrencyRate", () => {
         await currencyRateContract.deployTransaction.wait();
     });
 
-    it("Set Not validator", async () => {
-        const currency = "the9";
-        const rate = 123000000000;
-        await expect(currencyRateContract.connect(user1).set(currency, rate)).to.revertedWith("1000");
-    });
-    it("Set Success", async () => {
-        const currency = "the9";
-        const rate = 123000000000;
-        await expect(currencyRateContract.connect(validators[0]).set(currency, rate))
-            .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ currency, rate });
+    it("Set Array - revert", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures })
+        ).to.be.revertedWith("1170");
     });
 
-    it("Get Fail - usd", async () => {
-        const currency = "usd";
+    it("Set Array - revert", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1), multiple.mul(150)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = [validator1].map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures })
+        ).to.be.revertedWith("1174");
+    });
+
+    it("Set Array - revert", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1), multiple.mul(150)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = [validator1, validator1].map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures })
+        ).to.be.revertedWith("1174");
+    });
+
+    it("Set Array - revert", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1), multiple.mul(150)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = [validator1, user1].map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures })
+        ).to.be.revertedWith("1174");
+    });
+
+    it("Set Array - revert", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1), multiple.mul(150)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = [deployer, user1].map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures })
+        ).to.be.revertedWith("1174");
+    });
+
+    it("Set Array", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1), multiple.mul(150)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = [validator1, validator2].map((m) => ContractUtils.signMessage(m, message));
+        await expect(currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures }))
+            .to.emit(currencyRateContract, "SetRate")
+            .withNamedArgs({ currency: symbols[0], rate: rates[0] })
+            .to.emit(currencyRateContract, "SetRate")
+            .withNamedArgs({ currency: symbols[1], rate: rates[1] })
+            .to.emit(currencyRateContract, "SetRate")
+            .withNamedArgs({ currency: symbols[2], rate: rates[2] })
+            .to.emit(currencyRateContract, "SetRate")
+            .withNamedArgs({ currency: symbols[3], rate: rates[3] });
+    });
+
+    it("Set Array", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1), multiple.mul(150)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = [validator1, validator2, user1, deployer].map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures })
+        ).to.be.revertedWith("1173");
+    });
+
+    it("Set Array - revert", async () => {
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp() - 100;
+        const symbols = ["usd", "jpy", "krw", "the9"];
+        const rates = [multiple.mul(1200), multiple.mul(80), multiple.mul(1), multiple.mul(150)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures })
+        ).to.be.revertedWith("1171");
+    });
+
+    it("Get Fail - abc", async () => {
+        const currency = "abc";
         await expect(currencyRateContract.connect(validators[0]).get(currency)).to.be.revertedWith("1211");
     });
 
-    it("Get Success - the9", async () => {
-        const currency = "the9";
-        const rate = 123000000000;
-        expect(await currencyRateContract.connect(validators[0]).get(currency)).to.equal(rate);
-    });
-
     it("Function", async () => {
-        const multiple = await currencyRateContract.MULTIPLE();
-        const symbol = await tokenContract.symbol();
-
-        let rate = BigNumber.from(100).mul(multiple);
-        await expect(currencyRateContract.connect(validators[0]).set(symbol, rate))
+        const multiple = await currencyRateContract.multiple();
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = [await tokenContract.symbol(), "usd", "jpy", "krw"];
+        const rates = [multiple.mul(100), multiple.mul(1000), multiple.mul(10), multiple.mul(1)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = [validator1, validator2].map((m) => ContractUtils.signMessage(m, message));
+        await expect(currencyRateContract.connect(validators[0]).set({ timestamp, symbols, rates, signatures }))
             .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ rate });
-        rate = BigNumber.from(1000).mul(multiple);
-        await expect(currencyRateContract.connect(validators[0]).set("usd", rate))
+            .withNamedArgs({ currency: symbols[0], rate: rates[0] })
             .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ rate });
-
-        rate = BigNumber.from(10).mul(multiple);
-        await expect(currencyRateContract.connect(validators[0]).set("jpy", rate))
+            .withNamedArgs({ currency: symbols[1], rate: rates[1] })
             .to.emit(currencyRateContract, "SetRate")
-            .withNamedArgs({ rate });
+            .withNamedArgs({ currency: symbols[2], rate: rates[2] })
+            .to.emit(currencyRateContract, "SetRate")
+            .withNamedArgs({ currency: symbols[3], rate: rates[3] });
 
         assert.deepStrictEqual(
             (await currencyRateContract.convertPointToToken(Amount.make(100).value)).toString(),

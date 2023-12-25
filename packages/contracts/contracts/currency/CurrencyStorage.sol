@@ -11,6 +11,8 @@ contract CurrencyStorage {
     uint256 public constant MULTIPLE = 1000000000;
     mapping(string => uint256) internal rates;
 
+    uint256 internal prevTimestamp;
+
     IValidator internal validator;
     string internal tokenSymbol;
 }

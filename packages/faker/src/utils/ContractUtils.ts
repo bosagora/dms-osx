@@ -102,7 +102,7 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signPurchaseMessage(signer: Signer, message: Uint8Array): Promise<string> {
+    public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
         return signer.signMessage(message);
     }
 }

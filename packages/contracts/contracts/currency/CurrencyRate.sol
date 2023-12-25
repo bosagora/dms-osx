@@ -5,11 +5,15 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
 import "../interfaces/ICurrencyRate.sol";
 import "./CurrencyStorage.sol";
 
 /// @notice 토큰 가격을 제공하는 스마트컨트랙트
 contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ICurrencyRate {
+    uint256 public constant QUORUM = (uint256(2000) / uint256(3));
     /// @notice 환률이 저장될 때 발생되는 이벤트
     event SetRate(string currency, uint256 rate);
 
@@ -25,6 +29,8 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
 
         rates["krw"] = MULTIPLE;
         rates["point"] = MULTIPLE;
+
+        prevTimestamp = block.timestamp - 3600;
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override {
@@ -37,12 +43,41 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     }
 
     /// @notice 통화에 대한 가격을 저장한다.
-    /// @param _symbol 통화명
-    /// @param _price 토큰의 가격
-    function set(string calldata _symbol, uint256 _price) external override onlyValidator(_msgSender()) {
-        rates[_symbol] = _price;
+    function set(CurrencyData calldata _data) external override onlyValidator(_msgSender()) {
+        require(_data.symbols.length == _data.rates.length, "1170");
+        require(_data.timestamp >= prevTimestamp && _data.timestamp <= block.timestamp, "1171");
 
-        emit SetRate(_symbol, _price);
+        bytes32 dataHash = keccak256(abi.encode(_data.timestamp, _data.symbols, _data.rates));
+
+        uint256 numberOfVoters = validator.lengthOfCurrentActiveValidator();
+        require(numberOfVoters > 0, "1172");
+        require(_data.signatures.length <= numberOfVoters, "1173");
+
+        address[] memory participants = new address[](_data.signatures.length);
+        uint256 length = 0;
+        for (uint256 idx = 0; idx < _data.signatures.length; idx++) {
+            address participant = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _data.signatures[idx]);
+            bool exist = false;
+            for (uint256 j = 0; j < length; j++) {
+                if (participants[j] == participant) {
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist && validator.isCurrentActiveValidator(participant)) {
+                participants[length] = participant;
+                length++;
+            }
+        }
+
+        require(((length * 1000) / numberOfVoters) >= QUORUM, "1174");
+
+        prevTimestamp = _data.timestamp;
+
+        for (uint256 idx = 0; idx < _data.symbols.length; idx++) {
+            rates[_data.symbols[idx]] = _data.rates[idx];
+            emit SetRate(_data.symbols[idx], _data.rates[idx]);
+        }
     }
 
     /// @notice 통화에 대한 가격을 제공한다.
