@@ -464,7 +464,15 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
-    public static async signPurchaseMessage(signer: Signer, message: Uint8Array): Promise<string> {
+    public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
         return signer.signMessage(message);
+    }
+
+    public static getCurrencyMessage(timestamp: BigNumberish, symbols: string[], rates: BigNumberish[]): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["uint256", "string[]", "uint256[]"],
+            [timestamp, symbols, rates]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 }

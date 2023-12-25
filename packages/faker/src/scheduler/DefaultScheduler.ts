@@ -160,7 +160,7 @@ export class DefaultScheduler extends Scheduler {
                     data.phone
                 );
 
-                const signatures = this.validatorWallets.map((m) => ContractUtils.signPurchaseMessage(m, message));
+                const signatures = this.validatorWallets.map((m) => ContractUtils.signMessage(m, message));
 
                 const tx = await (await this.getProviderContract())
                     .connect(await this.getSigner())

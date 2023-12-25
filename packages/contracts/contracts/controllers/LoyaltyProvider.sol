@@ -87,13 +87,13 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
     /// @notice 구매내역을 저장합니다.
     /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
     function savePurchase(PurchaseData calldata _data) external onlyValidator(_msgSender()) {
-        require(purchases[_data.purchaseId] == false, "1526");
+        require(purchases[_data.purchaseId] == false, "1160");
         if (_data.loyalty > 0) {
             PurchaseData memory data = _data;
-            require(data.loyalty <= data.amount / 10, "1522");
+            require(data.loyalty <= data.amount / 10, "1161");
             uint256 numberOfVoters = validatorContract.lengthOfCurrentActiveValidator();
-            require(numberOfVoters > 0, "1523");
-            require(data.signatures.length <= numberOfVoters, "1524");
+            require(numberOfVoters > 0, "1162");
+            require(data.signatures.length <= numberOfVoters, "1163");
 
             bytes32 dataHash = keccak256(
                 abi.encode(
@@ -124,7 +124,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                 }
             }
 
-            require(((length * 1000) / numberOfVoters) >= QUORUM, "1055");
+            require(((length * 1000) / numberOfVoters) >= QUORUM, "1164");
 
             uint256 loyaltyValue = data.loyalty;
             uint256 loyaltyPoint = currencyRateContract.convertCurrencyToPoint(loyaltyValue, data.currency);

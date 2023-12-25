@@ -107,10 +107,12 @@ describe("Test for Shop", () => {
         await currencyContract.deployed();
         await currencyContract.deployTransaction.wait();
 
-        await currencyContract.connect(validatorWallets[0]).set(await tokenContract.symbol(), price);
-        await currencyContract.connect(validatorWallets[0]).set("usd", BigNumber.from(1000).mul(multiple));
-        await currencyContract.connect(validatorWallets[0]).set("jpy", BigNumber.from(1000).mul(multiple));
-        await currencyContract.connect(validatorWallets[0]).set("eur", BigNumber.from(900).mul(multiple));
+        const timestamp = ContractUtils.getTimeStamp();
+        const symbols = [await tokenContract.symbol(), "usd", "jpy", "eur"];
+        const rates = [price, multiple.mul(1000), multiple.mul(1000), multiple.mul(900)];
+        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
+        await currencyContract.connect(validatorWallets[0]).set({ timestamp, symbols, rates, signatures });
     };
 
     const deployCertifier = async () => {

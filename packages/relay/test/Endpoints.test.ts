@@ -300,7 +300,7 @@ describe("Test of Server", function () {
                     purchaseParam.phone
                 );
                 const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signPurchaseMessage(m, purchaseMessage)
+                    ContractUtils.signMessage(m, purchaseMessage)
                 );
 
                 await expect(
