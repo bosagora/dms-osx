@@ -56,10 +56,11 @@
         CREATE TABLE IF NOT EXISTS mobiles
         (
             "account"               VARCHAR(42)  NOT NULL,
+            "type"                  INTEGER DEFAULT 0,
             "token"                 VARCHAR(50) NOT NULL,
             "language"              VARCHAR(3)   NOT NULL,
             "os"                    VARCHAR(12)  NOT NULL,
-            PRIMARY KEY ("account")
+            PRIMARY KEY ("account", "type")
             );
     </sql>
 

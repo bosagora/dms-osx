@@ -196,8 +196,13 @@ export interface IUserData {
     loyaltyType: number;
 }
 
+export enum MobileType {
+    USER_APP,
+    SHOP_APP,
+}
 export interface MobileData {
     account: string;
+    type: MobileType;
     token: string;
     language: string;
     os: string;

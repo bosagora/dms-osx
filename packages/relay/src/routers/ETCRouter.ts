@@ -87,6 +87,7 @@ export class ETCRouter {
 
         try {
             const account: string = String(req.body.account).trim();
+            const type = req.body.type === undefined ? 0 : Number(req.body.type);
             const token: string = String(req.body.token).trim();
             const language: string = String(req.body.language).trim();
             const os: string = String(req.body.os).trim();
@@ -98,6 +99,7 @@ export class ETCRouter {
 
             const item = {
                 account,
+                type,
                 token,
                 language,
                 os,

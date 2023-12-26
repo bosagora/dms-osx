@@ -2512,6 +2512,7 @@ describe("Test of Server", function () {
         it("Register user's mobile token", async () => {
             const param = {
                 account: users[purchaseOfLoyalty.userIndex].address,
+                type: 0,
                 token: "12345678901234567890123456789012345678901234567890",
                 language: "kr",
                 os: "iOS",
@@ -2534,6 +2535,7 @@ describe("Test of Server", function () {
             const wallet = shopData[purchaseOfLoyalty.shopIndex].wallet;
             const param = {
                 account: wallet.address,
+                type: 1,
                 token: "12345678901234567890123456789012345678901234567890",
                 language: "kr",
                 os: "iOS",

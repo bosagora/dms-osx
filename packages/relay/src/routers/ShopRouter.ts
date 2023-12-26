@@ -18,6 +18,7 @@ import {
     ContractShopStatusEvent,
     ContractShopUpdateEvent,
     LoyaltyPaymentTaskStatus,
+    MobileType,
     ShopTaskData,
     ShopTaskStatus,
     TaskResultCode,
@@ -376,7 +377,7 @@ export class ShopRouter {
                 };
                 await this._storage.postTask(item);
 
-                const mobileData = await this._storage.getMobile(item.account);
+                const mobileData = await this._storage.getMobile(item.account, MobileType.SHOP_APP);
                 if (mobileData !== undefined) {
                     /// 사용자에게 메세지 발송
                     const to = mobileData.token;
@@ -563,7 +564,7 @@ export class ShopRouter {
                 await this._storage.postTask(item);
 
                 /// 사용자에게 푸쉬 메세지 발송
-                const mobileData = await this._storage.getMobile(item.account);
+                const mobileData = await this._storage.getMobile(item.account, MobileType.SHOP_APP);
                 if (mobileData !== undefined) {
                     /// 사용자에게 메세지 발송
                     const to = mobileData.token;
