@@ -20,6 +20,7 @@ import {
     ContractWithdrawStatus,
     LoyaltyPaymentTaskData,
     LoyaltyPaymentTaskStatus,
+    MobileType,
     PaymentResultData,
     TaskResultCode,
     TaskResultType,
@@ -614,7 +615,7 @@ export class PaymentRouter {
             const shopContract = await this.getShopContract();
             const shopInfo = await shopContract.shopOf(item.shopId);
 
-            const mobileData = await this._storage.getMobile(item.account);
+            const mobileData = await this._storage.getMobile(item.account, MobileType.USER_APP);
             if (mobileData !== undefined) {
                 /// 사용자에게 메세지 발송
                 const to = mobileData.token;
@@ -1104,7 +1105,7 @@ export class PaymentRouter {
                 const shopContract = await this.getShopContract();
                 const shopInfo = await shopContract.shopOf(item.shopId);
 
-                const mobileData = await this._storage.getMobile(shopInfo.account);
+                const mobileData = await this._storage.getMobile(shopInfo.account, MobileType.SHOP_APP);
                 if (mobileData !== undefined) {
                     /// 상점주에게 메세지 발송
                     const to = mobileData.token;

@@ -627,6 +627,7 @@ export class RelayStorage extends Storage {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("mobile", "postMobile", {
                 account: item.account,
+                type: item.type,
                 token: item.token,
                 language: item.language,
                 os: item.os,
@@ -641,14 +642,15 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getMobile(account: string): Promise<MobileData | undefined> {
+    public getMobile(account: string, type: number): Promise<MobileData | undefined> {
         return new Promise<MobileData | undefined>(async (resolve, reject) => {
-            this.queryForMapper("mobile", "getMobile", { account })
+            this.queryForMapper("mobile", "getMobile", { account, type })
                 .then((result) => {
                     if (result.rows.length > 0) {
                         const m = result.rows[0];
                         return resolve({
                             account: m.account,
+                            type: m.type,
                             token: m.token,
                             language: m.language,
                             os: m.os,
