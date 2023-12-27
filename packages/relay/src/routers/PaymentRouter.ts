@@ -121,6 +121,23 @@ export class PaymentRouter {
         );
 
         this.app.get(
+            "/v1/payment/phone/balance",
+            [
+                query("phone")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.phone_balance.bind(this)
+        );
+
+        this.app.get(
+            "/v1/payment/convert/currency",
+            [query("amount").exists().custom(Validation.isAmount), query("from").exists(), query("to").exists()],
+            this.convert_currency.bind(this)
+        );
+
+        this.app.get(
             "/v1/payment/shop/info",
             [
                 query("shopId")
@@ -355,7 +372,58 @@ export class PaymentRouter {
                 .json(this.makeResponseData(0, { account, loyaltyType, balance: balance.toString() }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/balance : ${msg.error.message}`);
+            logger.error(`GET /v1/payment/user/balance : ${msg.error.message}`);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    /**
+     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
+     * GET /v1/payment/phone/balance
+     * @private
+     */
+    private async phone_balance(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/phone/balance`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const phone: string = String(req.query.phone).trim();
+            const balance = await (await this.getLedgerContract()).unPayablePointBalanceOf(phone);
+            return res.status(200).json(this.makeResponseData(0, { phone, balance: balance.toString() }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/phone/balance : ${msg.error.message}`);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    /**
+     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
+     * GET /v1/payment/convert/currency
+     * @private
+     */
+    private async convert_currency(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/convert/currency`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const amount: BigNumber = BigNumber.from(req.query.amount);
+            const from: string = String(req.query.from).trim();
+            const to: string = String(req.query.to).trim();
+
+            const result = await (await this.getCurrencyRateContract()).convertCurrency(amount, from, to);
+            return res.status(200).json(this.makeResponseData(0, { amount: result.toString() }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/convert/currency : ${msg.error.message}`);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
