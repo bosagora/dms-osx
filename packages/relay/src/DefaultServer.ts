@@ -49,7 +49,7 @@ export class DefaultServer extends WebService {
         this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
         this.shopRouter = new ShopRouter(this, this.config, this.storage, this.relaySigners, this.sender);
         this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners, this.sender);
-        this.etcRouter = new ETCRouter(this, this.config, this.storage);
+        this.etcRouter = new ETCRouter(this, this.config, this.storage, this.sender);
 
         if (schedules) {
             schedules.forEach((m) => this.schedules.push(m));
