@@ -6,6 +6,7 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { body, validationResult } from "express-validator";
 
 import express from "express";
+import { INotificationSender } from "../delegator/NotificationSender";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ResponseMessage } from "../utils/Errors";
 
@@ -24,16 +25,20 @@ export class ETCRouter {
 
     private _storage: RelayStorage;
 
+    private readonly _sender: INotificationSender;
+
     /**
      *
      * @param service  WebService
      * @param config Configuration
      * @param storage
+     * @param sender
      */
-    constructor(service: WebService, config: Config, storage: RelayStorage) {
+    constructor(service: WebService, config: Config, storage: RelayStorage, sender: INotificationSender) {
         this._web_service = service;
         this._config = config;
         this._storage = storage;
+        this._sender = sender;
     }
 
     private get app(): express.Application {
@@ -70,6 +75,18 @@ export class ETCRouter {
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.mobile_register.bind(this)
+        );
+
+        // 포인트의 종류를 선택하는 기능
+        this.app.post(
+            "/v1/mobile/send",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("type").exists(),
+                body("title").exists(),
+                body("contents").exists(),
+            ],
+            this.mobile_send.bind(this)
         );
     }
 
@@ -110,6 +127,41 @@ export class ETCRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/mobile/register : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * POST /v1/mobile/send
+     * @private
+     */
+    private async mobile_send(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/mobile/send`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const accessKey: string = String(req.body.accessKey).trim();
+        if (accessKey !== this._config.relay.accessKey) {
+            return res.json(ResponseMessage.getErrorMessage("2002"));
+        }
+
+        try {
+            const account: string = String(req.body.account).trim();
+            const type: number = Number(req.body.type);
+            const title: string = String(req.body.title).trim();
+            const contents: string = String(req.body.contents).trim();
+
+            const mobileData = await this._storage.getMobile(account, type);
+            if (mobileData !== undefined) {
+                await this._sender.send(mobileData.token, title, contents, {});
+            }
+            return res.status(200).json(this.makeResponseData(0, {}));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/mobile/send : ${msg.error.message}`);
             return res.status(200).json(msg);
         }
     }
