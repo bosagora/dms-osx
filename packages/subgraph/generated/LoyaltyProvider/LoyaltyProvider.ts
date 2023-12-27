@@ -170,6 +170,21 @@ export class LoyaltyProvider extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBytes());
   }
 
+  QUORUM(): BigInt {
+    let result = super.call("QUORUM", "QUORUM():(uint256)", []);
+
+    return result[0].toBigInt();
+  }
+
+  try_QUORUM(): ethereum.CallResult<BigInt> {
+    let result = super.tryCall("QUORUM", "QUORUM():(uint256)", []);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   owner(): Address {
     let result = super.call("owner", "owner():(address)", []);
 
@@ -286,8 +301,8 @@ export class SavePurchaseCall__Inputs {
     this._call = call;
   }
 
-  get data(): SavePurchaseCallDataStruct {
-    return changetype<SavePurchaseCallDataStruct>(
+  get _data(): SavePurchaseCall_dataStruct {
+    return changetype<SavePurchaseCall_dataStruct>(
       this._call.inputValues[0].value.toTuple()
     );
   }
@@ -301,7 +316,7 @@ export class SavePurchaseCall__Outputs {
   }
 }
 
-export class SavePurchaseCallDataStruct extends ethereum.Tuple {
+export class SavePurchaseCall_dataStruct extends ethereum.Tuple {
   get purchaseId(): string {
     return this[0].toString();
   }
@@ -328,6 +343,10 @@ export class SavePurchaseCallDataStruct extends ethereum.Tuple {
 
   get phone(): Bytes {
     return this[6].toBytes();
+  }
+
+  get signatures(): Array<Bytes> {
+    return this[7].toBytesArray();
   }
 }
 
