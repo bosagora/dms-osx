@@ -8,16 +8,15 @@ import { Validation } from "../validation";
 import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
-import { BigNumber, ContractTransaction } from "ethers";
+import { ContractTransaction } from "ethers";
 import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { INotificationSender } from "../delegator/NotificationSender";
+import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
 import {
     ContractShopStatus,
-    ContractShopStatusEvent,
     ContractShopUpdateEvent,
-    LoyaltyPaymentTaskStatus,
     MobileType,
     ShopTaskData,
     ShopTaskStatus,
@@ -49,6 +48,7 @@ export class ShopRouter {
     private _shopContract: Shop | undefined;
 
     private _storage: RelayStorage;
+    private _graph: GraphStorage;
 
     private readonly _sender: INotificationSender;
 
@@ -57,6 +57,7 @@ export class ShopRouter {
      * @param service  WebService
      * @param config Configuration
      * @param storage
+     * @param graph
      * @param relaySigners
      * @param sender
      */
@@ -64,6 +65,7 @@ export class ShopRouter {
         service: WebService,
         config: Config,
         storage: RelayStorage,
+        graph: GraphStorage,
         relaySigners: RelaySigners,
         sender: INotificationSender
     ) {
@@ -71,6 +73,7 @@ export class ShopRouter {
         this._config = config;
 
         this._storage = storage;
+        this._graph = graph;
         this._relaySigners = relaySigners;
         this._sender = sender;
     }
@@ -215,6 +218,15 @@ export class ShopRouter {
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
             this.shop_withdrawal_close.bind(this)
+        );
+        this.app.get(
+            "/v1/shop/list",
+            [
+                query("accessKey").exists(),
+                query("pageNumber").exists().trim().isNumeric(),
+                query("pageSize").exists().trim().isNumeric(),
+            ],
+            this.shop_list.bind(this)
         );
     }
 
@@ -840,6 +852,59 @@ export class ShopRouter {
             } else {
                 logger.error(`sendTaskResult : ${JSON.stringify(error)}`);
             }
+        }
+    }
+
+    /**
+     * GET /v1/shop/list
+     * @private
+     */
+    private async shop_list(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/shop/list ${req.ip}:${JSON.stringify(req.query)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const accessKey: string = String(req.query.accessKey).trim();
+            if (accessKey !== this._config.relay.accessKey) {
+                return res.json(ResponseMessage.getErrorMessage("2002"));
+            }
+
+            let pageSize = Number(req.query.pageSize);
+            if (pageSize > 50) pageSize = 50;
+            let pageNumber = Number(req.query.pageNumber);
+            if (pageNumber < 1) pageNumber = 1;
+
+            const shops = await this._graph.getShopList(pageNumber, pageSize);
+            const pageInfo = await this._graph.getShopPageInfo(pageSize);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    pageInfo,
+                    shops: shops.map((m) => {
+                        return {
+                            shopId: m.shopId,
+                            name: m.name,
+                            currency: m.currency,
+                            status: m.status,
+                            account: m.account,
+                            providedAmount: m.providedAmount.toString(),
+                            usedAmount: m.usedAmount.toString(),
+                            settledAmount: m.settledAmount.toString(),
+                            withdrawnAmount: m.withdrawnAmount.toString(),
+                            withdrawReqId: m.withdrawReqId.toString(),
+                            withdrawReqAmount: m.withdrawReqAmount.toString(),
+                            withdrawReqStatus: m.withdrawReqStatus,
+                        };
+                    }),
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/shop/list : ${msg.error.message}`);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 }

@@ -207,3 +207,23 @@ export interface MobileData {
     language: string;
     os: string;
 }
+
+export interface IGraphShopData {
+    shopId: string;
+    name: string;
+    currency: string;
+    status: ContractShopStatus;
+    account: string;
+    providedAmount: BigNumber;
+    usedAmount: BigNumber;
+    settledAmount: BigNumber;
+    withdrawnAmount: BigNumber;
+    withdrawReqId: BigNumber;
+    withdrawReqAmount: BigNumber;
+    withdrawReqStatus: ContractWithdrawStatus;
+}
+
+export interface IGraphPageInfo {
+    totalCount: number;
+    totalPages: number;
+}

@@ -1,5 +1,6 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
+import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
@@ -243,7 +244,8 @@ describe("Test for Shop", () => {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            server = new TestServer(config, storage);
+            const graph = await GraphStorage.make(config.graph);
+            server = new TestServer(config, storage, graph);
         });
 
         before("Start TestServer", async () => {

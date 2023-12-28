@@ -12,6 +12,7 @@ import { WebService } from "./service/WebService";
 
 import { RelaySigners } from "./contract/Signers";
 import { INotificationEventHandler, INotificationSender, NotificationSender } from "./delegator/NotificationSender";
+import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
 
 export class DefaultServer extends WebService {
@@ -28,6 +29,7 @@ export class DefaultServer extends WebService {
     public readonly paymentRouter: PaymentRouter;
     public readonly relaySigners: RelaySigners;
     public readonly storage: RelayStorage;
+    public readonly graph: GraphStorage;
     private readonly sender: INotificationSender;
     public readonly etcRouter: ETCRouter;
 
@@ -35,21 +37,36 @@ export class DefaultServer extends WebService {
      * Constructor
      * @param config Configuration
      * @param storage
+     * @param graph
      * @param schedules
      * @param handler
      */
-    constructor(config: Config, storage: RelayStorage, schedules?: Scheduler[], handler?: INotificationEventHandler) {
+    constructor(
+        config: Config,
+        storage: RelayStorage,
+        graph: GraphStorage,
+        schedules?: Scheduler[],
+        handler?: INotificationEventHandler
+    ) {
         super(config.server.port, config.server.address);
 
         this.config = config;
         this.storage = storage;
+        this.graph = graph;
         this.sender = new NotificationSender(this.config, handler);
         this.relaySigners = new RelaySigners(this.config);
         this.defaultRouter = new DefaultRouter(this);
-        this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.relaySigners);
-        this.shopRouter = new ShopRouter(this, this.config, this.storage, this.relaySigners, this.sender);
-        this.paymentRouter = new PaymentRouter(this, this.config, this.storage, this.relaySigners, this.sender);
-        this.etcRouter = new ETCRouter(this, this.config, this.storage, this.sender);
+        this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.graph, this.relaySigners);
+        this.shopRouter = new ShopRouter(this, this.config, this.storage, this.graph, this.relaySigners, this.sender);
+        this.paymentRouter = new PaymentRouter(
+            this,
+            this.config,
+            this.storage,
+            this.graph,
+            this.relaySigners,
+            this.sender
+        );
+        this.etcRouter = new ETCRouter(this, this.config, this.storage, this.graph, this.sender);
 
         if (schedules) {
             schedules.forEach((m) => this.schedules.push(m));
@@ -57,6 +74,7 @@ export class DefaultServer extends WebService {
                 m.setOption({
                     config: this.config,
                     storage: this.storage,
+                    graph: this.graph,
                     signers: this.relaySigners,
                 })
             );

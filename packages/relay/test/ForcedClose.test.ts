@@ -1,5 +1,6 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
+import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
@@ -156,7 +157,8 @@ describe("Test of Server", function () {
             const schedulers: Scheduler[] = [];
             schedulers.push(new CloseScheduler("*/1 * * * * *"));
             schedulers.push(new WatchScheduler("*/1 * * * * *"));
-            server = new TestServer(config, storage, schedulers);
+            const graph = await GraphStorage.make(config.graph);
+            server = new TestServer(config, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -344,7 +346,8 @@ describe("Test of Server", function () {
             schedulers.push(new ApprovalScheduler("*/1 * * * * *"));
             schedulers.push(new CloseScheduler("*/1 * * * * *"));
             schedulers.push(new WatchScheduler("*/1 * * * * *"));
-            server = new TestServer(config, storage, schedulers);
+            const graph = await GraphStorage.make(config.graph);
+            server = new TestServer(config, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {

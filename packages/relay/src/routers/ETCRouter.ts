@@ -9,6 +9,7 @@ import express from "express";
 import { INotificationSender } from "../delegator/NotificationSender";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ResponseMessage } from "../utils/Errors";
+import { GraphStorage } from "../storage/GraphStorage";
 
 export class ETCRouter {
     /**
@@ -24,6 +25,7 @@ export class ETCRouter {
     private readonly _config: Config;
 
     private _storage: RelayStorage;
+    private _graph: GraphStorage;
 
     private readonly _sender: INotificationSender;
 
@@ -32,12 +34,20 @@ export class ETCRouter {
      * @param service  WebService
      * @param config Configuration
      * @param storage
+     * @param graph
      * @param sender
      */
-    constructor(service: WebService, config: Config, storage: RelayStorage, sender: INotificationSender) {
+    constructor(
+        service: WebService,
+        config: Config,
+        storage: RelayStorage,
+        graph: GraphStorage,
+        sender: INotificationSender
+    ) {
         this._web_service = service;
         this._config = config;
         this._storage = storage;
+        this._graph = graph;
         this._sender = sender;
     }
 

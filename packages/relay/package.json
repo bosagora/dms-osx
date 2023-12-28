@@ -72,6 +72,7 @@
         "dms-osx-artifacts": "^2.0.3",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
+        "ethereumjs-util": "^7.1.5",
         "ethers": "npm:boa-ethers2@^5.7.9",
         "expo-server-sdk": "^3.7.0",
         "express": "^4.17.1",

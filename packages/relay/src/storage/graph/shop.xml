@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shop">
+    <select id="getShopList">
+        WITH ShopWithdraw AS (
+            SELECT DISTINCT ON (id) *
+            FROM ${scheme}.shop_withdraw
+            ORDER BY id, vid DESC
+        )
+        , RankedShop AS (
+            SELECT DISTINCT ON (id) *
+            FROM ${scheme}.shop
+            ORDER BY id, vid DESC
+        )
+        SELECT
+            RankedShop.id AS "shopId",
+            RankedShop.name,
+            RankedShop.currency,
+            RankedShop.status,
+            RankedShop.account AS account,
+            RankedShop.provided_amount AS "providedAmount",
+            RankedShop.used_amount AS "usedAmount",
+            RankedShop.settled_amount AS "settledAmount",
+            RankedShop.withdrawn_amount AS "withdrawnAmount",
+            coalesce(ShopWithdraw.withdraw_id, 0) as "withdrawReqId",
+            coalesce(ShopWithdraw.amount, 0) as "withdrawReqAmount",
+            coalesce(ShopWithdraw.status, 0) as "withdrawReqStatus"
+        FROM RankedShop LEFT OUTER JOIN ShopWithdraw
+        ON RankedShop.id = ShopWithdraw.id
+        ORDER BY RankedShop.id, RankedShop.vid DESC
+        LIMIT ${pageSize}
+        OFFSET (${pageNumber} - 1) * ${pageSize};
+    </select>
+
+    <select id="getShopPageInfo">
+        WITH RankedShop AS (
+            SELECT DISTINCT ON (id) *
+            FROM ${scheme}.shop
+            ORDER BY id, vid DESC
+        ), RowInfo AS (
+            SELECT COUNT(*) AS total_count
+            FROM RankedShop
+        )
+        SELECT
+            RowInfo.total_count as "totalCount",
+            CEIL(RowInfo.total_count / ${pageSize}) AS "totalPages"
+        FROM RowInfo;
+    </select>
+</mapper>

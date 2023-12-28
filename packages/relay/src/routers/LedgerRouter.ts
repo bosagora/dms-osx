@@ -11,6 +11,7 @@ import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ResponseMessage } from "../utils/Errors";
+import { GraphStorage } from "../storage/GraphStorage";
 
 export class LedgerRouter {
     /**
@@ -58,17 +59,28 @@ export class LedgerRouter {
     private _currencyRateContract: CurrencyRate | undefined;
 
     private _storage: RelayStorage;
+    private _graph: GraphStorage;
 
     /**
      *
      * @param service  WebService
      * @param config Configuration
+     * @param storage
+     * @param graph
+     * @param relaySigners
      */
-    constructor(service: WebService, config: Config, storage: RelayStorage, relaySigners: RelaySigners) {
+    constructor(
+        service: WebService,
+        config: Config,
+        storage: RelayStorage,
+        graph: GraphStorage,
+        relaySigners: RelaySigners
+    ) {
         this._web_service = service;
         this._config = config;
 
         this._storage = storage;
+        this._graph = graph;
         this._relaySigners = relaySigners;
     }
 

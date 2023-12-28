@@ -15,7 +15,18 @@ database:
   user: "${DATABASE_USER}"
   password: "${DATABASE_PASSWORD}"
   database: "${DATABASE_NAME}"
+  scheme: "${DATABASE_SCHEME}"
   port: "${DATABASE_PORT}"
+  connectionTimeoutMillis: 2000
+  max: 100
+
+graph:
+  host: "${GRAPH_DATABASE_HOST}"
+  user: "${GRAPH_DATABASE_USER}"
+  password: "${GRAPH_DATABASE_PASSWORD}"
+  database: "${GRAPH_DATABASE_NAME}"
+  scheme: "${GRAPH_DATABASE_SCHEME}"
+  port: "${GRAPH_DATABASE_PORT}"
   connectionTimeoutMillis: 2000
   max: 100
 
