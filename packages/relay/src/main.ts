@@ -1,13 +1,14 @@
 import { Config } from "./common/Config";
 import { logger, Logger } from "./common/Logger";
 import { DefaultServer } from "./DefaultServer";
+import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
 import { ContractUtils } from "./utils/ContractUtils";
 
 import { ApprovalScheduler } from "./scheduler/ApprovalScheduler";
 import { CloseScheduler } from "./scheduler/CloseScheduler";
-import { WatchScheduler } from "./scheduler/WatchScheduler";
 import { Scheduler } from "./scheduler/Scheduler";
+import { WatchScheduler } from "./scheduler/WatchScheduler";
 
 let server: DefaultServer;
 
@@ -24,6 +25,7 @@ async function main() {
 
     await ContractUtils.delay(3000);
     const storage = await RelayStorage.make(config.database);
+    const graph = await GraphStorage.make(config.graph);
 
     const schedulers: Scheduler[] = [];
     if (config.scheduler.enable) {
@@ -41,7 +43,7 @@ async function main() {
         }
     }
 
-    server = new DefaultServer(config, storage, schedulers);
+    server = new DefaultServer(config, storage, graph, schedulers);
     return server.start().catch((error: any) => {
         // handle specific listen errors with friendly messages
         switch (error.code) {

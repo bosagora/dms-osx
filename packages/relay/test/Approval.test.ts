@@ -3,6 +3,7 @@ import { Config } from "../src/common/Config";
 import { ApprovalScheduler } from "../src/scheduler/ApprovalScheduler";
 import { Scheduler } from "../src/scheduler/Scheduler";
 import { WatchScheduler } from "../src/scheduler/WatchScheduler";
+import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import {
     ContractLoyaltyType,
@@ -30,7 +31,7 @@ import {
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
-import { BigNumber, Wallet } from "ethers";
+import { Wallet } from "ethers";
 import { ethers } from "hardhat";
 
 import { Deployments } from "./helper/Deployments";
@@ -156,11 +157,12 @@ describe("Test of Server", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             console.log(`serverURL: ${serverURL}`);
             storage = await RelayStorage.make(config.database);
+            const graph = await GraphStorage.make(config.graph);
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new ApprovalScheduler("*/1 * * * * *"));
             schedulers.push(new WatchScheduler("*/1 * * * * *"));
-            server = new TestServer(config, storage, schedulers);
+            server = new TestServer(config, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {

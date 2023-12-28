@@ -13,6 +13,7 @@ import path from "path";
 
 import assert from "assert";
 import * as hre from "hardhat";
+import { GraphStorage } from "../src/storage/GraphStorage";
 
 describe("Test for ETC", function () {
     this.timeout(1000 * 60 * 5);
@@ -35,8 +36,8 @@ describe("Test for ETC", function () {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
 
             storage = await RelayStorage.make(config.database);
-            server = new TestServer(config, storage);
-            server = new TestServer(config, storage);
+            const graph = await GraphStorage.make(config.graph);
+            server = new TestServer(config, storage, graph);
         });
 
         before("Start TestServer", async () => {

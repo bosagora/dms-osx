@@ -1,4 +1,5 @@
 import { Config } from "../src/common/Config";
+import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
@@ -154,10 +155,10 @@ describe("Test for Shop", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            server = new TestServer(config, storage);
+            const graph = await GraphStorage.make(config.graph);
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler("*/1 * * * * *"));
-            server = new TestServer(config, storage, schedulers);
+            server = new TestServer(config, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {

@@ -19,6 +19,7 @@
     -   [3.2. 지불에 사용될 예상 로열티 산출](#32-지불에-사용될-예상-로열티-산출)
     -   [3.3. 상점의 정보](#33-상점의-정보)
     -   [3.4. 상점의 인출 요청정보](#34-상점의-인출-요청정보)
+    -   [3.5. 모든 상점의 정보(정산 요청 정보 포함)](#35-모든-상점의-정보)
 
 -   [4. KIOSK 를 위한 결제관련 엔드포인트](#4-kiosk-를-위한-결제관련-엔드포인트)
 
@@ -323,6 +324,46 @@
 | shopId         | string | Yes  | 상점 아이디                                                                 |
 | withdrawAmount | string | Yes  | 인출요청이 된 금액                                                          |
 | withdrawStatus | int    | Yes  | 누적된 상점에서 사용된 로열티 포인트 (0: 인출진행중이 아님 , 1: 인출진행중) |
+
+[상단으로 이동](#로열티를-사용한-결제-프로세스)
+
+---
+
+### 3.5. 모든 상점의 정보
+
+정산요청정보를 포함여 모든 상점의 정보를 제공한다.
+
+#### - HTTP Request
+
+`GET /v1/shop/list`
+
+#### - 입력 파라메타들
+
+| 파라메타명      | 유형     | 필수 | 설명                       |
+|------------|--------| ---- |--------------------------|
+| accessKey  | string | Yes  | 접근 비밀키                   |
+| pageNumber | number | Yes  | 페이지 번호, 1부터 시작됨          |                                                                                                                                                                                                     |
+| pageSize   | number | Yes  | 페이지당 레코드 갯수, 최소 1, 최대 50 |
+
+#### - 결과
+
+| 필드명      | 하부필드명               | 유형     | 필수  | 설명                        |
+|----------|---------------------|--------|-----|---------------------------|
+| pageInfo | totalCount          | number | Yes | 전체 레코드의 갯수                |
+| pageInfo | totalPages          | number | Yes | 전체 페이지의 갯수                |
+|          |                     |        |     | 아래 레코드는 배열이고, 여러번 반복된다.   |
+| shops    | shopId              | string | Yes | 상점 아이디                    |
+| shops    | name                | string | Yes | 상점 이름                     |
+| shops    | currency            | string | Yes | 상점의 결제통화의 심벌              |
+| shops    | status              | string | Yes | 상점의 상태                    |
+| shops    | account             | string | Yes | 상점주의 지갑주소                 |
+| shops    | providedAmount      | string | Yes | 상점에서 제공된 로열티의 금액(결제통화단위)  |
+| shops    | usedAmount          | string | Yes | 상점에서 사용된 로열티의 금액(결제통화단위)  |
+| shops    | settledAmount       | string | Yes | 정산되어야 할 금액(결제통화단위)        |
+| shops    | withdrawnAmount     | string | Yes | 이미 정산된 금액(결제통화단위)         |
+| shops    | withdrawReqId       | string | Yes | 신규 정산 요청아이디               |
+| shops    | withdrawReqAmount   | string | Yes | 신규 정산 요청금액                |
+| shops    | withdrawReqStatus   | number | Yes | 신규 정산 요청상태(0: 완료, 1: 진행중) |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 

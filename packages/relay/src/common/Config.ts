@@ -32,6 +32,11 @@ export class Config implements IConfig {
     public database: DatabaseConfig;
 
     /**
+     * Database config
+     */
+    public graph: DatabaseConfig;
+
+    /**
      * Logging config
      */
     public logging: LoggingConfig;
@@ -51,6 +56,7 @@ export class Config implements IConfig {
     constructor() {
         this.server = new ServerConfig();
         this.database = new DatabaseConfig();
+        this.graph = new DatabaseConfig();
         this.logging = new LoggingConfig();
         this.scheduler = new SchedulerConfig();
         this.relay = new RelayConfig();
@@ -99,6 +105,7 @@ export class Config implements IConfig {
         }) as IConfig;
         this.server.readFromObject(cfg.server);
         this.database.readFromObject(cfg.database);
+        this.graph.readFromObject(cfg.graph);
         this.logging.readFromObject(cfg.logging);
         this.scheduler.readFromObject(cfg.scheduler);
         this.relay.readFromObject(cfg.relay);
@@ -187,7 +194,9 @@ export class DatabaseConfig implements IDatabaseConfig {
     /**
      * The database name
      */
-    database?: string;
+    database: string;
+
+    scheme: string;
 
     /**
      * The host database port
@@ -212,6 +221,7 @@ export class DatabaseConfig implements IDatabaseConfig {
      * @param user Postgresql database user
      * @param password Postgresql database password
      * @param database Postgresql database name
+     * @param scheme
      * @param port Postgresql database port
      * @param connectionTimeoutMillis Number of milliseconds to wait before
      * timing out when connecting a new client.
@@ -224,6 +234,7 @@ export class DatabaseConfig implements IDatabaseConfig {
         user?: string,
         password?: string,
         database?: string,
+        scheme?: string,
         port?: number,
         connectionTimeoutMillis?: number,
         max?: number
@@ -234,6 +245,7 @@ export class DatabaseConfig implements IDatabaseConfig {
             user,
             password,
             database,
+            scheme,
             port,
             connectionTimeoutMillis,
             max,
@@ -242,6 +254,7 @@ export class DatabaseConfig implements IDatabaseConfig {
         this.user = conf.user;
         this.password = conf.password;
         this.database = conf.database;
+        this.scheme = conf.scheme;
         this.port = conf.port;
         this.connectionTimeoutMillis = conf.connectionTimeoutMillis;
         this.max = conf.max;
@@ -256,6 +269,7 @@ export class DatabaseConfig implements IDatabaseConfig {
             user: "root",
             password: "12345678",
             database: "relay",
+            scheme: "",
             port: 5432,
             connectionTimeoutMillis: 2000,
             max: 20,
@@ -273,6 +287,7 @@ export class DatabaseConfig implements IDatabaseConfig {
         this.user = conf.user;
         this.password = conf.password;
         this.database = conf.database;
+        this.scheme = conf.scheme;
         this.port = conf.port;
         this.connectionTimeoutMillis = conf.connectionTimeoutMillis;
         this.max = conf.max;
@@ -538,7 +553,9 @@ export interface IDatabaseConfig {
     /**
      * The database name
      */
-    database?: string;
+    database: string;
+
+    scheme: string;
 
     /**
      * The host database port
@@ -644,6 +661,8 @@ export interface IConfig {
      * Database config
      */
     database: IDatabaseConfig;
+
+    graph: DatabaseConfig;
 
     /**
      * Logging config

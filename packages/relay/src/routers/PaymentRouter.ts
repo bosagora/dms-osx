@@ -36,6 +36,7 @@ import * as hre from "hardhat";
 
 import express from "express";
 import { Amount } from "../common/Amount";
+import { GraphStorage } from "../storage/GraphStorage";
 
 export class PaymentRouter {
     /**
@@ -83,6 +84,7 @@ export class PaymentRouter {
     private _currencyRateContract: CurrencyRate | undefined;
 
     private _storage: RelayStorage;
+    private _graph: GraphStorage;
 
     private readonly _sender: INotificationSender;
 
@@ -91,13 +93,16 @@ export class PaymentRouter {
      * @param service  WebService
      * @param config Configuration
      * @param storage
+     * @param graph
      * @param relaySigners
+     * @param sender
      * @param sender
      */
     constructor(
         service: WebService,
         config: Config,
         storage: RelayStorage,
+        graph: GraphStorage,
         relaySigners: RelaySigners,
         sender: INotificationSender
     ) {
@@ -105,6 +110,7 @@ export class PaymentRouter {
         this._config = config;
 
         this._storage = storage;
+        this._graph = graph;
         this._relaySigners = relaySigners;
         this._sender = sender;
     }
