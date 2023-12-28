@@ -1,10 +1,12 @@
 # Introduction
 
-A smart contract framework that decentralized loyalty system
+A smart contract framework that decentralized loyalty point system
+
+![img.png](packages%2Fdocs%2Fimg.png)
 
 This project contains a number of packages.
 
-## Contract
+## Contracts
 
 This package contains the code for the smart contract.
 
