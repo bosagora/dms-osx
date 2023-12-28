@@ -53,8 +53,7 @@ export class DefaultScheduler extends Scheduler {
         this._users.push(...(JSON.parse(fs.readFileSync("./src/data/users.json", "utf8")) as IUserData[]));
         this._users.push(...(JSON.parse(fs.readFileSync("./src/data/users_mobile.json", "utf8")) as IUserData[]));
         this._shops.push(...(JSON.parse(fs.readFileSync("./src/data/shops.json", "utf8")) as IShopData[]));
-
-        this.validatorWallets = this._config.setting.validatorKeys.map((m) => new Wallet(m));
+        this.validatorWallets = [];
     }
 
     /**
@@ -75,7 +74,9 @@ export class DefaultScheduler extends Scheduler {
      */
     public setOption(options: any) {
         if (options) {
-            if (options.config && options.config instanceof Config) this._config = options.config;
+            if (options.config && options.config instanceof Config) {
+                this._config = options.config;
+            }
         }
     }
 
@@ -129,6 +130,16 @@ export class DefaultScheduler extends Scheduler {
         return new NonceManager(new GasPriceManager(hre.ethers.provider.getSigner(wallet.address)));
     }
 
+    private getValidators(): Signer[] {
+        if (this.validatorWallets.length === 0) {
+            this.validatorWallets.push(
+                ...this.config.setting.validatorKeys.map((m) => new Wallet(m, hre.ethers.provider))
+            );
+        }
+
+        return this.validatorWallets;
+    }
+
     /**
      * This function is repeatedly executed by the scheduler.
      * @protected
@@ -137,12 +148,15 @@ export class DefaultScheduler extends Scheduler {
         try {
             const enable = Math.random() < 0.7;
             if (enable) {
+                const randomIdx = Math.floor(Math.random() * 1000);
                 this._purchaseIdx += 100;
                 const amount = Amount.make((Math.floor(Math.random() * 10) + 1) * 1_000, 18);
                 const userIdx = Math.floor(Math.random() * this._users.length);
                 const phoneHash = ContractUtils.getPhoneHash(this._users[userIdx].phone);
                 const data: IPurchaseData = {
-                    purchaseId: `FAKER${this._purchaseIdx.toString().padStart(6, "0")}`,
+                    purchaseId: `FAKER${randomIdx.toString().padStart(6, "0")}${this._purchaseIdx
+                        .toString()
+                        .padStart(6, "0")}`,
                     amount: amount.value,
                     loyalty: amount.value.mul(5).div(100),
                     currency: "krw",
@@ -160,10 +174,10 @@ export class DefaultScheduler extends Scheduler {
                     data.phone
                 );
 
-                const signatures = this.validatorWallets.map((m) => ContractUtils.signMessage(m, message));
+                const signatures = this.getValidators().map((m) => ContractUtils.signMessage(m, message));
 
                 const tx = await (await this.getProviderContract())
-                    .connect(await this.getSigner())
+                    .connect(this.getValidators()[0])
                     .savePurchase({ ...data, signatures });
 
                 console.log(
