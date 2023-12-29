@@ -539,7 +539,7 @@ export class PaymentRouter {
             if (loyaltyType === ContractLoyaltyType.POINT) {
                 balance = await (await this.getLedgerContract()).pointBalanceOf(account);
                 paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
-                feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(100));
+                feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
                 totalPoint = paidPoint.add(feePoint);
                 paidToken = BigNumber.from(0);
                 feeToken = BigNumber.from(0);
@@ -549,14 +549,14 @@ export class PaymentRouter {
                 const symbol = await (await this.getTokenContract()).symbol();
                 const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
                 paidToken = ContractUtils.zeroGWEI(amount.mul(rate).div(tokenRate));
-                feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(100));
+                feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(10000));
                 totalToken = paidToken.add(feeToken);
                 paidPoint = BigNumber.from(0);
                 feePoint = BigNumber.from(0);
                 totalPoint = BigNumber.from(0);
             }
             paidValue = BigNumber.from(amount);
-            feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(100));
+            feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(10000));
             totalValue = paidValue.add(feeValue);
 
             return res.status(200).json(
@@ -575,7 +575,7 @@ export class PaymentRouter {
                     totalPoint: totalPoint.toString(),
                     totalToken: totalToken.toString(),
                     totalValue: totalValue.toString(),
-                    feeRate: feeRate / 100,
+                    feeRate: feeRate / 10000,
                 })
             );
         } catch (error: any) {
@@ -629,7 +629,7 @@ export class PaymentRouter {
             if (loyaltyType === ContractLoyaltyType.POINT) {
                 balance = await contract.pointBalanceOf(account);
                 paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
-                feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(100));
+                feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
                 totalPoint = paidPoint.add(feePoint);
                 if (totalPoint.gt(balance)) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
@@ -642,7 +642,7 @@ export class PaymentRouter {
                 const symbol = await (await this.getTokenContract()).symbol();
                 const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
                 paidToken = ContractUtils.zeroGWEI(amount.mul(rate).div(tokenRate));
-                feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(100));
+                feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(10000));
                 totalToken = paidToken.add(feeToken);
                 if (totalToken.gt(balance)) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
@@ -652,7 +652,7 @@ export class PaymentRouter {
                 totalPoint = BigNumber.from(0);
             }
             paidValue = BigNumber.from(amount);
-            feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(100));
+            feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(10000));
             totalValue = paidValue.add(feeValue);
 
             const paymentId = await this.getPaymentId(account);

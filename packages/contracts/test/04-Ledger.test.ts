@@ -1516,7 +1516,7 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
-                const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 await expect(
@@ -1571,7 +1571,7 @@ describe("Test for Ledger", () => {
             let feeToken: BigNumber;
 
             it("Pay", async () => {
-                feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
 
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
@@ -1753,7 +1753,7 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
-                const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 await expect(
@@ -1816,7 +1816,7 @@ describe("Test for Ledger", () => {
 
             it("Pay", async () => {
                 oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
-                feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
 
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
