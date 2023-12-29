@@ -318,7 +318,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
 
     {
         const multiple = await contract.multiple();
-        const timestamp = ContractUtils.getTimeStamp();
+        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10 - 5;
         const symbols = ["the9", "usd", "jpy", "krw", "point"];
         const rates = [multiple.mul(150), multiple.mul(1000), multiple.mul(10), multiple.mul(1), multiple.mul(1)];
         const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
@@ -597,7 +597,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 }
 
                 const balance = await (deployment.getContract("Token") as Token).balanceOf(user.address);
-                const depositedToken = balance.div(2);
+                const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
                 const tx8 = await (deployment.getContract("Token") as Token)
                     .connect(signer)
                     .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
@@ -670,7 +670,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 }
 
                 const balance = await (deployment.getContract("Token") as Token).balanceOf(user.address);
-                const depositedToken = balance.div(2);
+                const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
                 const tx8 = await (deployment.getContract("Token") as Token)
                     .connect(signer)
                     .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);

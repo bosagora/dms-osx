@@ -256,4 +256,8 @@ export class ContractUtils {
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
+
+    public static zeroGWEI(value: BigNumber): BigNumber {
+        return value.div(1000000000).mul(1000000000);
+    }
 }

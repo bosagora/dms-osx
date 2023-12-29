@@ -18,6 +18,8 @@ import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
 import "./LoyaltyProviderStorage.sol";
 
+import "../lib/DMS.sol";
+
 contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     uint256 public constant QUORUM = (uint256(2000) / uint256(3));
     struct PurchaseData {
@@ -88,9 +90,10 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
     /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
     function savePurchase(PurchaseData calldata _data) external onlyValidator(_msgSender()) {
         require(purchases[_data.purchaseId] == false, "1160");
+        require(_data.loyalty % 1 gwei == 0, "1030");
         if (_data.loyalty > 0) {
             PurchaseData memory data = _data;
-            require(data.loyalty <= data.amount / 10, "1161");
+            require(data.loyalty <= DMS.zeroGWEI(data.amount / 10), "1161");
             uint256 numberOfVoters = validatorContract.lengthOfCurrentActiveValidator();
             require(numberOfVoters > 0, "1162");
             require(data.signatures.length <= numberOfVoters, "1163");

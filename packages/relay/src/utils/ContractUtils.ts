@@ -1,4 +1,4 @@
-import { BigNumberish, BytesLike, ethers, Signer } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, ethers, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
@@ -474,5 +474,9 @@ export class ContractUtils {
             [timestamp, symbols, rates]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static zeroGWEI(value: BigNumber): BigNumber {
+        return value.div(1000000000).mul(1000000000);
     }
 }

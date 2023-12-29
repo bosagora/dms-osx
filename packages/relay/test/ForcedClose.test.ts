@@ -203,7 +203,7 @@ describe("Test of Server", function () {
         });
 
         it("Deposit token", async () => {
-            const depositAmount = amount.value.div(2);
+            const depositAmount = ContractUtils.zeroGWEI(amount.value.div(2));
             for (const user of userData) {
                 const sender = new Wallet(user.privateKey, ethers.provider);
                 await tokenContract.connect(sender).approve(ledgerContract.address, depositAmount);
@@ -392,7 +392,7 @@ describe("Test of Server", function () {
         });
 
         it("Deposit token", async () => {
-            const depositAmount = amount.value.div(2);
+            const depositAmount = ContractUtils.zeroGWEI(amount.value.div(2));
             for (const user of userData) {
                 const sender = new Wallet(user.privateKey, ethers.provider);
                 await tokenContract.connect(sender).approve(ledgerContract.address, depositAmount);

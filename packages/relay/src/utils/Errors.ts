@@ -9,6 +9,7 @@ export class ResponseMessage {
         ["1003", "Validator is already exist"],
         ["1010", "The last validator cannot be removed"],
         ["1020", "Not allowed deposit"],
+        ["1030", "Amount not multiple of gwei"],
         ["1050", "Sender is not authorized to execute"],
         ["1160", "ProvideLoyalty-This is a purchase data that has already been processed"],
         ["1161", "ProvideLoyalty-Too much royalty paid"],

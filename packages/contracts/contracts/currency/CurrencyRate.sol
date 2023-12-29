@@ -11,6 +11,8 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "../interfaces/ICurrencyRate.sol";
 import "./CurrencyStorage.sol";
 
+import "../lib/DMS.sol";
+
 /// @notice 토큰 가격을 제공하는 스마트컨트랙트
 contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ICurrencyRate {
     uint256 public constant QUORUM = (uint256(2000) / uint256(3));
@@ -103,13 +105,13 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     /// @notice 포인트를 토큰으로 환산한다.
     /// @param _amount 포인트량
     function convertPointToToken(uint256 _amount) external view override returns (uint256) {
-        return (_amount * MULTIPLE) / _get(tokenSymbol);
+        return DMS.zeroGWEI((_amount * MULTIPLE) / _get(tokenSymbol));
     }
 
     /// @notice 토큰을 포인트로 환산한다.
     /// @param _amount 토큰량
     function convertTokenToPoint(uint256 _amount) external view override returns (uint256) {
-        return (_amount * _get(tokenSymbol)) / MULTIPLE;
+        return DMS.zeroGWEI((_amount * _get(tokenSymbol)) / MULTIPLE);
     }
 
     /// @notice 화폐를 포인트로 환산한다.
@@ -120,7 +122,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         if ((byteCurrency == BASE_CURRENCY) || (byteCurrency == NULL_CURRENCY)) {
             return _amount;
         } else {
-            return (_amount * _get(_symbol)) / MULTIPLE;
+            return DMS.zeroGWEI((_amount * _get(_symbol)) / MULTIPLE);
         }
     }
 
@@ -153,7 +155,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         if (bSymbol1 == bSymbol2) return _amount;
         uint256 rate1 = ((bSymbol1 == BASE_CURRENCY) || (bSymbol1 == NULL_CURRENCY)) ? MULTIPLE : _get(_symbol1);
         uint256 rate2 = ((bSymbol2 == BASE_CURRENCY) || (bSymbol2 == NULL_CURRENCY)) ? MULTIPLE : _get(_symbol2);
-        return (_amount * rate1) / rate2;
+        return DMS.zeroGWEI((_amount * rate1) / rate2);
     }
 
     /// @notice 환률은 실수이기 때문에 이를 정수로 관리하기 위해 배수를 곱한 값을 사용한다
