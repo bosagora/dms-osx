@@ -262,8 +262,8 @@ describe("Test for Shop", () => {
                 for (const purchase of purchaseData) {
                     const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const loyaltyAmount = purchaseAmount.mul(purchase.providePercent).div(100);
-                    const amt = purchaseAmount.mul(purchase.providePercent).div(100);
+                    const loyaltyAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
+                    const amt = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
                     const userAccount =
                         userData[purchase.userIndex].address.trim() !== ""
                             ? userData[purchase.userIndex].address.trim()
@@ -441,7 +441,7 @@ describe("Test for Shop", () => {
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
                 const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address, nonce);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const tokenAmount = purchaseAmount.mul(multiple).div(price);
+                const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
                     deployments.accounts.foundation.address
                 );
@@ -487,7 +487,7 @@ describe("Test for Shop", () => {
                 expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value);
                 expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
 
-                const settledToken = shopInfo2.settledAmount.mul(multiple).div(price);
+                const settledToken = ContractUtils.zeroGWEI(shopInfo2.settledAmount.mul(multiple).div(price));
                 expect(
                     (await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).toString()
                 ).to.deep.equal(oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString());

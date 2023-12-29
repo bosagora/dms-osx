@@ -15,6 +15,8 @@ import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
 import "./LedgerStorage.sol";
 
+import "../lib/DMS.sol";
+
 /// @notice 포인트와 토큰의 원장
 contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ILedger {
     /// @notice 포인트가 지급될 때 발생되는 이벤트
@@ -127,6 +129,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     /// @notice 토큰을 예치합니다.
     /// @param _amount 금액
     function deposit(uint256 _amount) external virtual {
+        require(_amount % 1 gwei == 0, "1030");
         require(loyaltyTypes[_msgSender()] == LoyaltyType.TOKEN, "1520");
         require(_amount <= tokenContract.allowance(_msgSender(), address(this)), "1512");
         tokenContract.transferFrom(_msgSender(), address(this), _amount);
@@ -144,6 +147,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     /// @notice 토큰을 인출합니다.
     /// @param _amount 금액
     function withdraw(uint256 _amount) external virtual {
+        require(_amount % 1 gwei == 0, "1030");
         require(_amount <= tokenBalances[_msgSender()], "1511");
         tokenContract.transfer(_msgSender(), _amount);
 

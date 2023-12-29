@@ -158,7 +158,7 @@ export class DefaultScheduler extends Scheduler {
                         .toString()
                         .padStart(6, "0")}`,
                     amount: amount.value,
-                    loyalty: amount.value.mul(5).div(100),
+                    loyalty: ContractUtils.zeroGWEI(amount.value.mul(5).div(100)),
                     currency: "krw",
                     shopId: this._shops[Math.floor(Math.random() * this._shops.length)].shopId,
                     account: Math.random() < 0.1 ? AddressZero : this._users[userIdx].address,

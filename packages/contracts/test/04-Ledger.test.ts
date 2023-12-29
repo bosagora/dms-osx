@@ -1516,8 +1516,8 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
-                const feeAmount = purchaseAmount.mul(await ledgerContract.getFee()).div(100);
-                const feeToken = feeAmount.mul(multiple).div(price);
+                const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 await expect(
                     consumerContract.connect(relay).openNewLoyaltyPayment({
@@ -1571,8 +1571,8 @@ describe("Test for Ledger", () => {
             let feeToken: BigNumber;
 
             it("Pay", async () => {
-                feeAmount = purchaseAmount.mul(await ledgerContract.getFee()).div(100);
-                feeToken = feeAmount.mul(multiple).div(price);
+                feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
 
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
@@ -1740,7 +1740,7 @@ describe("Test for Ledger", () => {
 
                 const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const tokenAmount = purchaseAmount.mul(multiple).div(price);
+                const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
@@ -1753,8 +1753,8 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
-                const feeAmount = purchaseAmount.mul(await ledgerContract.getFee()).div(100);
-                const feeToken = feeAmount.mul(multiple).div(price);
+                const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
                 await expect(
                     consumerContract.connect(relay).openNewLoyaltyPayment({
@@ -1808,7 +1808,7 @@ describe("Test for Ledger", () => {
 
             const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
-            const tokenAmount = purchaseAmount.mul(multiple).div(price);
+            const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
             const shop = shopData[purchase.shopIndex];
             let oldFoundationTokenBalance: BigNumber;
             let feeAmount: BigNumber;
@@ -1816,8 +1816,8 @@ describe("Test for Ledger", () => {
 
             it("Pay", async () => {
                 oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
-                feeAmount = purchaseAmount.mul(await ledgerContract.getFee()).div(100);
-                feeToken = feeAmount.mul(multiple).div(price);
+                feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(100));
+                feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
 
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
@@ -2063,9 +2063,9 @@ describe("Test for Ledger", () => {
         context("Withdraw token", () => {
             it("Withdraw token - Insufficient balance", async () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
-                await expect(ledgerContract.connect(userWallets[0]).withdraw(oldTokenBalance.add(1))).to.revertedWith(
-                    "1511"
-                );
+                await expect(
+                    ledgerContract.connect(userWallets[0]).withdraw(oldTokenBalance.add(1000000000))
+                ).to.revertedWith("1511");
             });
 
             it("Withdraw token - Success", async () => {
@@ -2335,7 +2335,6 @@ describe("Test for Ledger", () => {
 
                 const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const loyaltyAmount = purchaseAmount.mul(purchase.providePercent).div(100);
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
@@ -2348,7 +2347,6 @@ describe("Test for Ledger", () => {
                     nonce
                 );
 
-                const amt = purchaseAmount.mul(purchase.providePercent).div(100);
                 await expect(
                     consumerContract.connect(relay).openNewLoyaltyPayment({
                         paymentId,
@@ -2423,8 +2421,8 @@ describe("Test for Ledger", () => {
                 };
 
                 const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
-                const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const tokenAmount = purchaseAmount.mul(multiple).div(price);
+                const purchaseAmount = ContractUtils.zeroGWEI(Amount.make(purchase.amount, 18).value);
+                const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
@@ -2460,7 +2458,7 @@ describe("Test for Ledger", () => {
                 expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value);
                 expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
 
-                const settledToken = shopInfo2.settledAmount.mul(multiple).div(price);
+                const settledToken = ContractUtils.zeroGWEI(shopInfo2.settledAmount.mul(multiple).div(price));
                 expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
                 );
@@ -2665,16 +2663,17 @@ describe("Test for Ledger", () => {
                 for (const purchase of purchaseData) {
                     const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const loyaltyAmount = purchaseAmount.mul(purchase.providePercent).div(100);
-                    const shop = shopData[purchase.shopIndex];
+                    const loyaltyAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
                     const userAccount =
                         userData[purchase.userIndex].address.trim() !== ""
                             ? userData[purchase.userIndex].address.trim()
                             : AddressZero;
                     const currency = purchase.currency.toLowerCase();
                     const rate = await currencyContract.get(currency);
-                    const loyaltyPoint = purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100);
-                    const loyaltyValue = purchaseAmount.mul(purchase.providePercent).div(100);
+                    const loyaltyPoint = ContractUtils.zeroGWEI(
+                        purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100)
+                    );
+                    const loyaltyValue = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
                     const purchaseParam = {
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -2730,7 +2729,9 @@ describe("Test for Ledger", () => {
 
                     const rate = await currencyContract.get(purchase.currency.toLowerCase());
                     const shop = shopData[purchase.shopIndex];
-                    const point = purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100);
+                    const point = ContractUtils.zeroGWEI(
+                        purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100)
+                    );
 
                     if (oldValue !== undefined) expected.set(key, oldValue.add(point));
                     else expected.set(key, point);
@@ -2893,7 +2894,6 @@ describe("Test for Ledger", () => {
                     const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
                     const purchaseAmount = Amount.make(purchase.amount, 18).value;
                     const loyaltyAmount = purchaseAmount.mul(purchase.providePercent).div(100);
-                    const shop = shopData[purchase.shopIndex];
                     const amt = purchaseAmount.mul(purchase.providePercent).div(100);
                     const userAccount = userData[purchase.userIndex].address.trim();
                     const purchaseParam = {
@@ -2949,8 +2949,7 @@ describe("Test for Ledger", () => {
                             : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
                     const oldValue = expected.get(key);
 
-                    const shop = shopData[purchase.shopIndex];
-                    const point = purchaseAmount.mul(purchase.providePercent).div(100);
+                    const point = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
 
                     if (oldValue !== undefined) expected.set(key, oldValue.add(point));
                     else expected.set(key, point);
@@ -2965,8 +2964,8 @@ describe("Test for Ledger", () => {
                     const shop = shopData[idx];
                     const shopInfo1 = await shopContract.shopOf(shop.shopId);
                     const rate = await currencyContract.get(shop.currency);
-                    const providedAmount = Amount.make(10000, 18).value.mul(1).div(100);
-                    const exchangedAmount = providedAmount.mul(multiple).div(rate);
+                    const providedAmount = ContractUtils.zeroGWEI(Amount.make(10000, 18).value.mul(1).div(100));
+                    const exchangedAmount = ContractUtils.zeroGWEI(providedAmount.mul(multiple).div(rate));
                     expect(shopInfo1.providedAmount).to.equal(exchangedAmount);
                 }
             });
@@ -3021,8 +3020,12 @@ describe("Test for Ledger", () => {
                 const rate = await currencyContract.get(shop.currency);
                 const shopInfo = await shopContract.shopOf(shop.shopId);
                 expect(shopInfo.providedAmount).to.equal(Amount.make(0, 18).value);
-                expect(shopInfo.usedAmount).to.equal(Amount.make(100, 18).value.mul(multiple).div(rate));
-                expect(shopInfo.settledAmount).to.equal(Amount.make(100, 18).value.mul(multiple).div(rate));
+                expect(shopInfo.usedAmount).to.equal(
+                    ContractUtils.zeroGWEI(Amount.make(100, 18).value.mul(multiple).div(rate))
+                );
+                expect(shopInfo.settledAmount).to.equal(
+                    ContractUtils.zeroGWEI(Amount.make(100, 18).value.mul(multiple).div(rate))
+                );
             });
         });
 
@@ -3102,9 +3105,15 @@ describe("Test for Ledger", () => {
 
                 const rate = await currencyContract.get(shop.currency);
                 const shopInfo2 = await shopContract.shopOf(shop.shopId);
-                expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value.mul(multiple).div(rate));
-                expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value.mul(multiple).div(rate));
-                expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value.mul(multiple).div(rate));
+                expect(shopInfo2.providedAmount).to.equal(
+                    ContractUtils.zeroGWEI(Amount.make(100, 18).value.mul(multiple).div(rate))
+                );
+                expect(shopInfo2.usedAmount).to.equal(
+                    ContractUtils.zeroGWEI(Amount.make(500, 18).value.mul(multiple).div(rate))
+                );
+                expect(shopInfo2.settledAmount).to.equal(
+                    ContractUtils.zeroGWEI(Amount.make(400, 18).value.mul(multiple).div(rate))
+                );
             });
         });
 
@@ -3115,7 +3124,7 @@ describe("Test for Ledger", () => {
             let amount2: BigNumber;
             it("Check Settlement", async () => {
                 rate = await currencyContract.get(shop.currency);
-                amount2 = Amount.make(400, 18).value.mul(multiple).div(rate);
+                amount2 = ContractUtils.zeroGWEI(Amount.make(400, 18).value.mul(multiple).div(rate));
                 const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(amount2);
             });

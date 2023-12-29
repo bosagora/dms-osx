@@ -1,5 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import { BigNumberish, BytesLike, Signer } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, Signer } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
@@ -104,5 +104,9 @@ export class ContractUtils {
 
     public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
         return signer.signMessage(message);
+    }
+
+    public static zeroGWEI(value: BigNumber): BigNumber {
+        return value.div(1000000000).mul(1000000000);
     }
 }

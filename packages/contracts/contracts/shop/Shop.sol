@@ -13,6 +13,8 @@ import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/IShop.sol";
 import "./ShopStorage.sol";
 
+import "../lib/DMS.sol";
+
 /// @notice 상점컬랙션
 contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IShop {
     /// @notice 상점이 추가될 때 발생되는 이벤트
@@ -295,7 +297,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         if (shops[_shopId].status == ShopStatus.ACTIVE) {
             ShopData memory data = shops[_shopId];
             if (data.providedAmount + data.settledAmount < data.usedAmount) {
-                return (data.usedAmount - data.providedAmount - data.settledAmount);
+                return DMS.zeroGWEI(data.usedAmount - data.providedAmount - data.settledAmount);
             } else {
                 return 0;
             }
@@ -341,6 +343,8 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
         bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
+
+        require(_amount % 1 gwei == 0, "1030");
 
         ShopData memory shop = shops[_shopId];
 

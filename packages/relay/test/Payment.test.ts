@@ -229,7 +229,7 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+            const pointAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: getPurchaseId(),
@@ -685,7 +685,7 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+            const pointAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: getPurchaseId(),
@@ -1077,7 +1077,7 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+            const pointAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: getPurchaseId(),
@@ -1433,8 +1433,8 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
-            const tokenAmount = pointAmount.mul(multiple).div(price);
+            const pointAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
+            const tokenAmount = ContractUtils.zeroGWEI(pointAmount.mul(multiple).div(price));
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: getPurchaseId(),
@@ -1696,8 +1696,8 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
-            const tokenAmount = pointAmount.mul(multiple).div(price);
+            const pointAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
+            const tokenAmount = ContractUtils.zeroGWEI(pointAmount.mul(multiple).div(price));
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: getPurchaseId(),
@@ -2078,8 +2078,8 @@ describe("Test of Server", function () {
 
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
-            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
-            const tokenAmount = pointAmount.mul(multiple).div(price);
+            const pointAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
+            const tokenAmount = ContractUtils.zeroGWEI(pointAmount.mul(multiple).div(price));
 
             const purchaseOfLoyalty: IPurchaseData = {
                 purchaseId: getPurchaseId(),
@@ -2362,7 +2362,7 @@ describe("Test of Server", function () {
 
         const purchaseAmount = Amount.make(purchase.amount, 18).value;
         const shop = shopData[purchase.shopIndex];
-        const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+        const pointAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
 
         const purchaseOfLoyalty: IPurchaseData = {
             purchaseId: getPurchaseId(),

@@ -18,6 +18,8 @@ import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
 import "./LoyaltyConsumerStorage.sol";
 
+import "../lib/DMS.sol";
+
 contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     struct LoyaltyPaymentInputData {
         bytes32 paymentId;
@@ -110,7 +112,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
     function _openNewLoyaltyPaymentPoint(LoyaltyPaymentInputData memory data) internal {
         uint256 paidPoint = currencyRateContract.convertCurrencyToPoint(data.amount, data.currency);
         uint256 paidToken = currencyRateContract.convertPointToToken(paidPoint);
-        uint256 feeValue = (data.amount * ledgerContract.getFee()) / 100;
+        uint256 feeValue = DMS.zeroGWEI((data.amount * ledgerContract.getFee()) / 100);
         uint256 feePoint = currencyRateContract.convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = currencyRateContract.convertPointToToken(feePoint);
 
@@ -144,7 +146,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
     function _openNewLoyaltyPaymentToken(LoyaltyPaymentInputData memory data) internal {
         uint256 paidPoint = currencyRateContract.convertCurrencyToPoint(data.amount, data.currency);
         uint256 paidToken = currencyRateContract.convertPointToToken(paidPoint);
-        uint256 feeValue = (data.amount * ledgerContract.getFee()) / 100;
+        uint256 feeValue = DMS.zeroGWEI((data.amount * ledgerContract.getFee()) / 100);
         uint256 feePoint = currencyRateContract.convertCurrencyToPoint(feeValue, data.currency);
         uint256 feeToken = currencyRateContract.convertPointToToken(feePoint);
         uint256 totalToken = paidToken + feeToken;
