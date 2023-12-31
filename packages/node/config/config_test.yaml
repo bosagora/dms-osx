@@ -1,0 +1,58 @@
+################################################################################
+##                             Network interface                              ##
+################################################################################
+server:
+    # Address to which we bind (default: 127.0.0.1)
+    address: "${HOST_IP}"
+    # Port on which we bind (default: 7070)
+    port: 7501
+
+################################################################################
+##                               Database options                             ##
+################################################################################
+database:
+    host: "${DATABASE_HOST}"
+    user: "${DATABASE_USER}"
+    password: "${DATABASE_PASSWORD}"
+    database: "${DATABASE_NAME}"
+    scheme: "${DATABASE_SCHEME}"
+    port: "${DATABASE_PORT}"
+    connectionTimeoutMillis: 2000
+    max: 100
+
+graph:
+    host: "${GRAPH_DATABASE_HOST}"
+    user: "${GRAPH_DATABASE_USER}"
+    password: "${GRAPH_DATABASE_PASSWORD}"
+    database: "${GRAPH_DATABASE_NAME}"
+    scheme: "${GRAPH_DATABASE_SCHEME}"
+    port: "${GRAPH_DATABASE_PORT}"
+    connectionTimeoutMillis: 2000
+    max: 100
+
+################################################################################
+##                               Logging options                              ##
+################################################################################
+logging:
+    # Values: error, warn, info, http, verbose, debug, silly
+    level: verbose
+
+################################################################################
+##                             Scheduler options                              ##
+################################################################################
+scheduler:
+    enable: true
+    items:
+        - name: purchase
+          enable: true
+          expression: "*/10 * * * * *"
+
+contracts:
+    tokenAddress: "${TOKEN_CONTRACT_ADDRESS}"
+    ledgerAddress: "${LEDGER_CONTRACT_ADDRESS}"
+    phoneLinkerAddress: "${PHONE_LINKER_CONTRACT_ADDRESS}"
+    shopAddress: "${SHOP_CONTRACT_ADDRESS}"
+    currencyRateAddress: "${CURRENCY_RATE_CONTRACT_ADDRESS}"
+    providerAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
+    consumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
+    exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"

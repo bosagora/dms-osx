@@ -1,0 +1,54 @@
+################################################################################
+##                             Network interface                              ##
+################################################################################
+server:
+    # Address to which we bind (default: 127.0.0.1)
+    address: "${HOST_IP}"
+    # Port on which we bind (default: 7070)
+    port: "${HOST_PORT}"
+
+################################################################################
+##                               Database options                             ##
+################################################################################
+database:
+    host: "${DATABASE_HOST}"
+    user: "${DATABASE_USER}"
+    password: "${DATABASE_PASSWORD}"
+    database: "${DATABASE_NAME}"
+    scheme: "${DATABASE_SCHEME}"
+    port: "${DATABASE_PORT}"
+    connectionTimeoutMillis: 2000
+    max: 100
+
+################################################################################
+##                               Logging options                              ##
+################################################################################
+logging:
+    # Values: error, warn, info, http, verbose, debug, silly
+    level: verbose
+
+################################################################################
+##                             Scheduler options                              ##
+################################################################################
+scheduler:
+    enable: true
+    items:
+        - name: approval
+          enable: true
+          expression: "*/3 * * * * *"
+        - name: close
+          enable: true
+          expression: "*/10 * * * * *"
+        - name: watch
+          enable: true
+          expression: "*/1 * * * * *"
+
+contracts:
+    tokenAddress: "${TOKEN_CONTRACT_ADDRESS}"
+    ledgerAddress: "${LEDGER_CONTRACT_ADDRESS}"
+    phoneLinkerAddress: "${PHONE_LINKER_CONTRACT_ADDRESS}"
+    shopAddress: "${SHOP_CONTRACT_ADDRESS}"
+    currencyRateAddress: "${CURRENCY_RATE_CONTRACT_ADDRESS}"
+    providerAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
+    consumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
+    exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
