@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="table">
+    <sql id="purchases">
+        CREATE TABLE IF NOT EXISTS purchases
+        (
+            "purchaseId"            VARCHAR(66) NOT NULL,
+            PRIMARY KEY ("purchaseId")
+        );
+    </sql>
+
+    <select id="create_table">
+        <include refid="purchases"/>
+    </select>
+
+    <select id="drop_table">
+        DROP TABLE purchases;
+    </select>
+
+</mapper>

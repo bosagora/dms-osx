@@ -3486,6 +3486,11 @@ discontinuous-range@1.0.0:
   resolved "https://registry.yarnpkg.com/discontinuous-range/-/discontinuous-range-1.0.0.tgz#e38331f0844bba49b9a9cb71c771585aab1bc65a"
   integrity sha512-c68LpLbO+7kP/b1Hr1qs8/BJ09F5khZGTxqxZuhzxpmwJKOgRFHJWIb9/KmqnqHhLdO55aOxFH/EGBvUQbL/RQ==
 
+dms-store-purchase-contracts@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/dms-store-purchase-contracts/-/dms-store-purchase-contracts-1.0.2.tgz#cb749f290c7e66f64e73c316272a96e698f3efc9"
+  integrity sha512-S7jV+W9akqSTEUBw8wJFDVcNg/+DrTk4Y+OfeGkaiOF9CswAQnrwrjD7uBWyzqVRtJQLbzpLhUnvDZytsex3og==
+
 dns-over-http-resolver@^1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/dns-over-http-resolver/-/dns-over-http-resolver-1.2.3.tgz#194d5e140a42153f55bb79ac5a64dd2768c36af9"
