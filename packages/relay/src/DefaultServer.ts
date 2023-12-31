@@ -1,7 +1,6 @@
 import bodyParser from "body-parser";
 import cors from "cors";
 import { Config } from "./common/Config";
-import { cors_options } from "./option/cors";
 import { DefaultRouter } from "./routers/DefaultRouter";
 import { ETCRouter } from "./routers/ETCRouter";
 import { LedgerRouter } from "./routers/LedgerRouter";
@@ -89,7 +88,15 @@ export class DefaultServer extends WebService {
         this.app.use(bodyParser.urlencoded({ extended: false, limit: "1mb" }));
         // parse application/json
         this.app.use(bodyParser.json({ limit: "1mb" }));
-        this.app.use(cors(cors_options));
+        this.app.use(
+            cors({
+                allowedHeaders: "*",
+                credentials: true,
+                methods: "GET, POST",
+                origin: "*",
+                preflightContinue: false,
+            })
+        );
 
         this.defaultRouter.registerRoutes();
         this.ledgerRouter.registerRoutes();
