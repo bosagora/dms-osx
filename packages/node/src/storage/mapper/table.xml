@@ -1,20 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="table">
-    <sql id="purchases">
-        CREATE TABLE IF NOT EXISTS purchases
+    <sql id="purchase_blocks">
+        CREATE TABLE IF NOT EXISTS purchase_blocks
         (
-            "purchaseId"            VARCHAR(66) NOT NULL,
+            "height"            INTEGER NOT NULL,
+            "curBlock"          VARCHAR(66) NOT NULL,
+            "prevBlock"         VARCHAR(66) NOT NULL,
+            "merkleRoot"        VARCHAR(66) NOT NULL,
+            "timestamp"         INTEGER NOT NULL,
+            PRIMARY KEY ("height")
+        );
+    </sql>
+
+    <sql id="purchase_transactions">
+        CREATE TABLE IF NOT EXISTS purchase_transactions
+        (
+            "purchaseId"        VARCHAR(66) NOT NULL,
+            "timestamp"         INTEGER NOT NULL,
+            "height"            INTEGER NOT NULL,
+            "hash"              VARCHAR(66) NOT NULL,
+            "cancel"            VARCHAR(1) DEFAULT 'N',
+            "contents"          TEXT,
             PRIMARY KEY ("purchaseId")
         );
     </sql>
 
+    <sql id="exchange_rates">
+        CREATE TABLE IF NOT EXISTS exchange_rates
+        (
+            "symbol"            VARCHAR(12) NOT NULL,
+            "rate"              VARCHAR(64) NOT NULL,
+            PRIMARY KEY ("symbol")
+       );
+    </sql>
+
     <select id="create_table">
-        <include refid="purchases"/>
+        <include refid="purchase_blocks"/>
+        <include refid="purchase_transactions"/>
+        <include refid="exchange_rates"/>
     </select>
 
     <select id="drop_table">
-        DROP TABLE purchases;
+        DROP TABLE purchase_blocks;
+        DROP TABLE purchase_transactions;
+        DROP TABLE exchange_rates;
     </select>
 
 </mapper>

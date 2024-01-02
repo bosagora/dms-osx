@@ -16,8 +16,9 @@
         "start:devnet": "TESTING=false NODE_ENV=production hardhat run src/main.ts --network bosagora_devnet",
         "start:localhost": "TESTING=false NODE_ENV=production hardhat run src/main.ts --network localhost",
         "start": "TESTING=false NODE_ENV=production hardhat run src/main.ts --network production_net",
-        "formatting:check": "prettier '**/*.{json,sol,ts,js}' -c",
-        "formatting:write": "prettier '**/*.{json,sol,ts,js}' --write"
+        "formatting:check": "prettier '**/*.{json,sol,ts,js,yaml}' -c",
+        "formatting:write": "prettier '**/*.{json,sol,ts,js,yaml}' --write",
+        "test2": "npx ts-node scripts/exchange.ts"
     },
     "repository": {
         "type": "git",
@@ -63,6 +64,8 @@
         "del-osx-artifacts": "^2.0.0",
         "dms-osx-artifacts": "^2.1.0",
         "dms-store-purchase-contracts": "^1.0.2",
+        "dms-store-purchase-sdk": "^1.0.1",
+        "dom-parser": "^1.1.5",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
         "ethereumjs-util": "^7.1.5",

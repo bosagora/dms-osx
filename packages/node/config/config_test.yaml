@@ -45,7 +45,10 @@ scheduler:
     items:
         - name: purchase
           enable: true
-          expression: "*/10 * * * * *"
+          expression: "*/1 * * * * *"
+        - name: exchange
+          enable: true
+          expression: "*/1 * * * * *"
 
 contracts:
     tokenAddress: "${TOKEN_CONTRACT_ADDRESS}"
@@ -56,3 +59,14 @@ contracts:
     providerAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
     consumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
     exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
+
+setting:
+    ipfs_gateway_url: "${NODE_IPFS_GATEWAY_URL}"
+
+validator:
+    keys:
+        - "${VALIDATOR1}"
+        - "${VALIDATOR2}"
+        - "${VALIDATOR3}"
+        - "${VALIDATOR4}"
+        - "${VALIDATOR5}"

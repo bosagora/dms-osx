@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="purchase_blocks">
+
+    <insert id="postBlock">
+        INSERT INTO purchase_blocks
+        (
+            "height"                ,
+            "curBlock"              ,
+            "prevBlock"             ,
+            "merkleRoot"            ,
+            "timestamp"
+        )
+        VALUES
+            (
+                ${height}           ,
+                #{curBlock}         ,
+                #{prevBlock}        ,
+                #{merkleRoot}       ,
+                ${timestamp}
+            )
+            ON CONFLICT ("height")  DO NOTHING;
+    </insert>
+
+    <insert id="postTransaction">
+        INSERT INTO purchase_transactions
+        (
+            "purchaseId"        ,
+            "timestamp"            ,
+            "height"            ,
+            "hash"              ,
+            "contents"
+        )
+        VALUES
+            (
+                #{purchaseId}   ,
+                ${timestamp}       ,
+                ${height}       ,
+                #{hash}         ,
+                #{contents}
+            )
+            ON CONFLICT ("purchaseId")  DO NOTHING;
+    </insert>
+
+    <insert id="cancelTransaction">
+        UPDATE purchase_transactions
+        SET
+            "cancel" = 'Y'
+        WHERE "purchaseId" = #{purchaseId}
+    </insert>
+
+    <select id="getLatestHeight">
+        SELECT coalesce(max(height), 0) as height FROM purchase_blocks;
+    </select>
+
+</mapper>
