@@ -4,6 +4,8 @@ import { DefaultServer } from "./DefaultServer";
 import { Scheduler } from "./scheduler/Scheduler";
 import { NodeStorage } from "./storage/NodeStorage";
 import { ContractUtils } from "./utils/ContractUtils";
+import { CollectPurchaseScheduler } from "./scheduler/CollectPurchaseScheduler";
+import { CollectExchangeRateScheduler } from "./scheduler/CollectExchangeRateScheduler";
 
 let server: DefaultServer;
 
@@ -23,7 +25,14 @@ async function main() {
 
     const schedulers: Scheduler[] = [];
     if (config.scheduler.enable) {
-        //
+        let scheduler = config.scheduler.getScheduler("purchase");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new CollectPurchaseScheduler(scheduler.expression));
+        }
+        scheduler = config.scheduler.getScheduler("exchange");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new CollectExchangeRateScheduler(scheduler.expression));
+        }
     }
 
     server = new DefaultServer(config, storage, schedulers);

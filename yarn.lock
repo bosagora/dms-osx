@@ -587,7 +587,7 @@
     "@ethersproject/constants" "^5.7.0"
     "@ethersproject/logger" "^5.7.0"
 
-"@ethersproject/wallet@5.7.0":
+"@ethersproject/wallet@5.7.0", "@ethersproject/wallet@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/wallet/-/wallet-5.7.0.tgz#4e5d0790d96fe21d61d38fb40324e6c7ef350b2d"
   integrity sha512-MhmXlJXEJFBFVKrDLB4ZdDzxcBxQ3rLyCkhNqVu3CDYvR97E+8r01UgrI+TI99Le+aYm/in/0vp86guJuM7FCA==
@@ -3491,6 +3491,23 @@ dms-store-purchase-contracts@^1.0.2:
   resolved "https://registry.yarnpkg.com/dms-store-purchase-contracts/-/dms-store-purchase-contracts-1.0.2.tgz#cb749f290c7e66f64e73c316272a96e698f3efc9"
   integrity sha512-S7jV+W9akqSTEUBw8wJFDVcNg/+DrTk4Y+OfeGkaiOF9CswAQnrwrjD7uBWyzqVRtJQLbzpLhUnvDZytsex3og==
 
+dms-store-purchase-sdk@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/dms-store-purchase-sdk/-/dms-store-purchase-sdk-1.0.1.tgz#67bc9f9ed26196aaf773124887e08e17959dc27d"
+  integrity sha512-3vgf6aUVZi0rGNOS0YVw3iyJayRumw/cORiimPkvxXTxPI3RX3HXWvNjfFB8CgEs6YAMIqyAYeYVXVqGO74D0A==
+  dependencies:
+    "@ethersproject/abi" "^5.7.0"
+    "@ethersproject/abstract-signer" "^5.7.0"
+    "@ethersproject/bignumber" "^5.7.0"
+    "@ethersproject/bytes" "^5.7.0"
+    "@ethersproject/hash" "^5.7.0"
+    "@ethersproject/keccak256" "^5.7.0"
+    "@ethersproject/random" "^5.7.0"
+    "@ethersproject/wallet" "^5.7.0"
+    ajv "^6.12.6"
+    smart-buffer "^4.1.0"
+    urijs "^1.19.7"
+
 dns-over-http-resolver@^1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/dns-over-http-resolver/-/dns-over-http-resolver-1.2.3.tgz#194d5e140a42153f55bb79ac5a64dd2768c36af9"
@@ -3525,6 +3542,11 @@ dockerode@2.5.8:
     concat-stream "~1.6.2"
     docker-modem "^1.0.8"
     tar-fs "~1.16.3"
+
+dom-parser@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/dom-parser/-/dom-parser-1.1.5.tgz#cba785f2235e769750996ae3d35d08b9f35f82d8"
+  integrity sha512-lCiFG48ZUzGXjKN0qhSkxD/i3ndyV6I37zQ3W2VFYLjF1ob8A+QgSsM7Ps2UT0d3LpJxLMmMHiJJ34z5hkKLiA==
 
 dom-walk@^0.1.0:
   version "0.1.2"

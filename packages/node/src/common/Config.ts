@@ -48,6 +48,10 @@ export class Config implements IConfig {
 
     public contracts: ContractsConfig;
 
+    public setting: Setting;
+
+    public validator: Validator;
+
     /**
      * Constructor
      */
@@ -58,6 +62,8 @@ export class Config implements IConfig {
         this.logging = new LoggingConfig();
         this.scheduler = new SchedulerConfig();
         this.contracts = new ContractsConfig();
+        this.setting = new Setting();
+        this.validator = new Validator();
     }
 
     /**
@@ -106,6 +112,7 @@ export class Config implements IConfig {
         this.logging.readFromObject(cfg.logging);
         this.scheduler.readFromObject(cfg.scheduler);
         this.contracts.readFromObject(cfg.contracts);
+        this.setting.readFromObject(cfg.setting);
     }
 }
 
@@ -446,6 +453,56 @@ export class SchedulerConfig implements ISchedulerConfig {
     }
 }
 
+export class Setting implements ISetting {
+    public ipfs_gateway_url: string;
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        const defaults = Setting.defaultValue();
+        this.ipfs_gateway_url = defaults.ipfs_gateway_url;
+    }
+
+    public readFromObject(config: ISetting) {
+        if (config.ipfs_gateway_url !== undefined) this.ipfs_gateway_url = config.ipfs_gateway_url;
+    }
+
+    /**
+     * Returns default value
+     */
+    public static defaultValue(): ISetting {
+        return {
+            ipfs_gateway_url: "",
+        } as unknown as ISetting;
+    }
+}
+
+export class Validator implements IValidator {
+    public keys: string[];
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        const defaults = Validator.defaultValue();
+        this.keys = defaults.keys;
+    }
+
+    public readFromObject(config: IValidator) {
+        if (config.keys !== undefined) this.keys = config.keys;
+    }
+
+    /**
+     * Returns default value
+     */
+    public static defaultValue(): IValidator {
+        return {
+            keys: [],
+        } as unknown as IValidator;
+    }
+}
+
 /**
  * The interface of server config
  */
@@ -568,6 +625,14 @@ export interface ISchedulerConfig {
     getScheduler(name: string): ISchedulerItemConfig | undefined;
 }
 
+export interface ISetting {
+    ipfs_gateway_url: string;
+}
+
+export interface IValidator {
+    keys: string[];
+}
+
 /**
  * The interface of main config
  */
@@ -595,4 +660,8 @@ export interface IConfig {
     scheduler: ISchedulerConfig;
 
     contracts: IContractsConfig;
+
+    setting: ISetting;
+
+    validator: IValidator;
 }
