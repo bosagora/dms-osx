@@ -26,7 +26,7 @@
         INSERT INTO purchase_transactions
         (
             "purchaseId"        ,
-            "timestamp"            ,
+            "timestamp"         ,
             "height"            ,
             "hash"              ,
             "contents"
@@ -34,7 +34,7 @@
         VALUES
             (
                 #{purchaseId}   ,
-                ${timestamp}       ,
+                ${timestamp}    ,
                 ${height}       ,
                 #{hash}         ,
                 #{contents}
@@ -42,15 +42,29 @@
             ON CONFLICT ("purchaseId")  DO NOTHING;
     </insert>
 
-    <insert id="cancelTransaction">
+    <update id="canceledTransaction">
         UPDATE purchase_transactions
         SET
-            "cancel" = 'Y'
+            "canceled" = 'Y'
         WHERE "purchaseId" = #{purchaseId}
-    </insert>
+    </update>
 
     <select id="getLatestHeight">
         SELECT coalesce(max(height), 0) as height FROM purchase_blocks;
     </select>
+
+    <select id="getTransaction">
+        SELECT * FROM purchase_transactions
+        WHERE "timestamp" <![CDATA[<]]> ${timestamp}
+            AND "canceled" = 'N'
+            AND "stored" = 'N';
+    </select>
+
+    <update id="storedTransaction">
+        UPDATE purchase_transactions
+        SET
+            "stored" = 'Y'
+        WHERE "purchaseId" = #{purchaseId}
+    </update>
 
 </mapper>

@@ -20,7 +20,8 @@
             "timestamp"         INTEGER NOT NULL,
             "height"            INTEGER NOT NULL,
             "hash"              VARCHAR(66) NOT NULL,
-            "cancel"            VARCHAR(1) DEFAULT 'N',
+            "canceled"          VARCHAR(1) DEFAULT 'N',
+            "stored"            VARCHAR(1) DEFAULT 'N',
             "contents"          TEXT,
             PRIMARY KEY ("purchaseId")
         );

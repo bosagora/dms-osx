@@ -6,9 +6,7 @@ import { IExchangeRate } from "../types";
 import { HTTPClient } from "../utils/HTTPClient";
 import { Scheduler } from "./Scheduler";
 import { parseFromString } from "dom-parser";
-/**
- * Creates blocks at regular intervals and stores them in IPFS and databases.
- */
+
 export class CollectExchangeRateScheduler extends Scheduler {
     private multiple: bigint = 1000000000n;
     private _config: Config | undefined;
@@ -71,6 +69,7 @@ export class CollectExchangeRateScheduler extends Scheduler {
         const res = await client.get(url);
         const rates = [];
         if (res.status === 200) {
+            logger.info("CollectExchangeRateScheduler");
             const text: string = res.data;
             const pos0 = text.indexOf('<table class="table table-bordered text-center table-fixed">');
             if (pos0 < 0) throw new Error("Error, Parse Exchange Rate");
@@ -79,7 +78,7 @@ export class CollectExchangeRateScheduler extends Scheduler {
             if (pos1 < 0) throw new Error("Error, Parse Exchange Rate");
             const text1 = text0.substring(0, pos1 + 8);
             const dom = parseFromString(text1);
-            if (text1 === undefined) throw new Error("Error, Parse Exchange Rate");
+            if (dom === undefined) throw new Error("Error, Parse Exchange Rate");
             const tbody = dom.getElementsByTagName("tbody");
             if (tbody === undefined || tbody.length === 0) throw new Error("Error, Parse Exchange Rate");
 

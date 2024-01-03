@@ -32,11 +32,6 @@ export class Config implements IConfig {
     public database: DatabaseConfig;
 
     /**
-     * Database config
-     */
-    public graph: DatabaseConfig;
-
-    /**
      * Logging config
      */
     public logging: LoggingConfig;
@@ -58,7 +53,6 @@ export class Config implements IConfig {
     constructor() {
         this.server = new ServerConfig();
         this.database = new DatabaseConfig();
-        this.graph = new DatabaseConfig();
         this.logging = new LoggingConfig();
         this.scheduler = new SchedulerConfig();
         this.contracts = new ContractsConfig();
@@ -108,11 +102,11 @@ export class Config implements IConfig {
         }) as IConfig;
         this.server.readFromObject(cfg.server);
         this.database.readFromObject(cfg.database);
-        this.graph.readFromObject(cfg.graph);
         this.logging.readFromObject(cfg.logging);
         this.scheduler.readFromObject(cfg.scheduler);
         this.contracts.readFromObject(cfg.contracts);
         this.setting.readFromObject(cfg.setting);
+        this.validator.readFromObject(cfg.validator);
     }
 }
 
@@ -455,6 +449,7 @@ export class SchedulerConfig implements ISchedulerConfig {
 
 export class Setting implements ISetting {
     public ipfs_gateway_url: string;
+    public waitedProvide: number;
 
     /**
      * Constructor
@@ -462,10 +457,12 @@ export class Setting implements ISetting {
     constructor() {
         const defaults = Setting.defaultValue();
         this.ipfs_gateway_url = defaults.ipfs_gateway_url;
+        this.waitedProvide = defaults.waitedProvide;
     }
 
     public readFromObject(config: ISetting) {
         if (config.ipfs_gateway_url !== undefined) this.ipfs_gateway_url = config.ipfs_gateway_url;
+        if (config.waitedProvide !== undefined) this.waitedProvide = config.waitedProvide;
     }
 
     /**
@@ -474,6 +471,7 @@ export class Setting implements ISetting {
     public static defaultValue(): ISetting {
         return {
             ipfs_gateway_url: "",
+            waitedProvide: 86400 * 8,
         } as unknown as ISetting;
     }
 }
@@ -627,6 +625,7 @@ export interface ISchedulerConfig {
 
 export interface ISetting {
     ipfs_gateway_url: string;
+    waitedProvide: number;
 }
 
 export interface IValidator {
@@ -646,8 +645,6 @@ export interface IConfig {
      * Database config
      */
     database: IDatabaseConfig;
-
-    graph: DatabaseConfig;
 
     /**
      * Logging config
