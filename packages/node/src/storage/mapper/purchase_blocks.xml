@@ -57,14 +57,18 @@
         SELECT * FROM purchase_transactions
         WHERE "timestamp" <![CDATA[<]]> ${timestamp}
             AND "canceled" = 'N'
-            AND "stored" = 'N';
+            AND "stored" = 'N'
+        LIMIT 64;
     </select>
 
     <update id="storedTransaction">
         UPDATE purchase_transactions
         SET
             "stored" = 'Y'
-        WHERE "purchaseId" = #{purchaseId}
+        WHERE "purchaseId"  in
+        <foreach collection="purchaseIds" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
     </update>
 
 </mapper>

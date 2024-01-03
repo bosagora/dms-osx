@@ -12,7 +12,6 @@ import { BigNumber, BigNumberish, BytesLike, Signer, utils } from "ethers";
 // tslint:disable-next-line:no-submodule-imports
 import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
-import { PromiseOrValue } from "../../typechain-types/common";
 
 export class ContractUtils {
     /**
@@ -229,18 +228,28 @@ export class ContractUtils {
         return hre.ethers.utils.keccak256(encodedResult);
     }
 
-    public static getPurchaseMessage(
-        purchaseId: string,
-        amount: BigNumberish,
-        loyalty: BigNumberish,
-        currency: string,
-        shopId: BytesLike,
-        account: string,
-        phone: BytesLike
+    public static getPurchasesMessage(
+        purchases: {
+            purchaseId: string;
+            amount: BigNumberish;
+            loyalty: BigNumberish;
+            currency: string;
+            shopId: BytesLike;
+            account: string;
+            phone: BytesLike;
+        }[]
     ): Uint8Array {
+        const messages: BytesLike[] = [];
+        for (const elem of purchases) {
+            const encodedData = hre.ethers.utils.defaultAbiCoder.encode(
+                ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
+                [elem.purchaseId, elem.amount, elem.loyalty, elem.currency, elem.shopId, elem.account, elem.phone]
+            );
+            messages.push(hre.ethers.utils.keccak256(encodedData));
+        }
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
-            [purchaseId, amount, loyalty, currency, shopId, account, phone]
+            ["uint256", "bytes32[]"],
+            [purchases.length, messages]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }

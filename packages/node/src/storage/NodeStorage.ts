@@ -93,9 +93,9 @@ export class NodeStorage extends Storage {
         });
     }
 
-    public async storedTransaction(purchaseId: string) {
+    public async storedTransaction(purchaseIds: string[]) {
         await this.queryForMapper("purchase_blocks", "storedTransaction", {
-            purchaseId: purchaseId,
+            purchaseIds: purchaseIds,
         });
     }
 

@@ -301,10 +301,14 @@ export class SavePurchaseCall__Inputs {
     this._call = call;
   }
 
-  get _data(): SavePurchaseCall_dataStruct {
-    return changetype<SavePurchaseCall_dataStruct>(
-      this._call.inputValues[0].value.toTuple()
-    );
+  get _data(): Array<SavePurchaseCall_dataStruct> {
+    return this._call.inputValues[0].value.toTupleArray<
+      SavePurchaseCall_dataStruct
+    >();
+  }
+
+  get _signatures(): Array<Bytes> {
+    return this._call.inputValues[1].value.toBytesArray();
   }
 }
 
@@ -343,10 +347,6 @@ export class SavePurchaseCall_dataStruct extends ethereum.Tuple {
 
   get phone(): Bytes {
     return this[6].toBytes();
-  }
-
-  get signatures(): Array<Bytes> {
-    return this[7].toBytesArray();
   }
 }
 

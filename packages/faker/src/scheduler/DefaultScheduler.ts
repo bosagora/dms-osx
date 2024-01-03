@@ -164,21 +164,13 @@ export class DefaultScheduler extends Scheduler {
                     account: Math.random() < 0.1 ? AddressZero : this._users[userIdx].address,
                     phone: phoneHash,
                 };
-                const message = ContractUtils.getPurchaseMessage(
-                    data.purchaseId,
-                    data.amount,
-                    data.loyalty,
-                    data.currency,
-                    data.shopId,
-                    data.account,
-                    data.phone
-                );
+                const message = ContractUtils.getPurchasesMessage([data]);
 
                 const signatures = this.getValidators().map((m) => ContractUtils.signMessage(m, message));
 
                 const tx = await (await this.getProviderContract())
                     .connect(this.getValidators()[0])
-                    .savePurchase({ ...data, signatures });
+                    .savePurchase([data], signatures);
 
                 console.log(
                     `Send purchase data (account: ${data.account}, phone: ${data.phone}, purchaseId: ${
