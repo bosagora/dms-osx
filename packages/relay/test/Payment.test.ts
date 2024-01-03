@@ -256,20 +256,12 @@ describe("Test of Server", function () {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchaseMessage(
-                    purchaseParam.purchaseId,
-                    purchaseParam.amount,
-                    purchaseParam.loyalty,
-                    purchaseParam.currency,
-                    purchaseParam.shopId,
-                    purchaseParam.account,
-                    purchaseParam.phone
-                );
+                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
 
-                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
+                await expect(providerContract.connect(validators[0]).savePurchase([purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -713,20 +705,12 @@ describe("Test of Server", function () {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchaseMessage(
-                    purchaseParam.purchaseId,
-                    purchaseParam.amount,
-                    purchaseParam.loyalty,
-                    purchaseParam.currency,
-                    purchaseParam.shopId,
-                    purchaseParam.account,
-                    purchaseParam.phone
-                );
+                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
 
-                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
+                await expect(providerContract.connect(validators[0]).savePurchase([purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1105,19 +1089,11 @@ describe("Test of Server", function () {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchaseMessage(
-                    purchaseParam.purchaseId,
-                    purchaseParam.amount,
-                    purchaseParam.loyalty,
-                    purchaseParam.currency,
-                    purchaseParam.shopId,
-                    purchaseParam.account,
-                    purchaseParam.phone
-                );
+                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
-                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
+                await expect(providerContract.connect(validators[0]).savePurchase([purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1475,19 +1451,11 @@ describe("Test of Server", function () {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchaseMessage(
-                    purchaseParam.purchaseId,
-                    purchaseParam.amount,
-                    purchaseParam.loyalty,
-                    purchaseParam.currency,
-                    purchaseParam.shopId,
-                    purchaseParam.account,
-                    purchaseParam.phone
-                );
+                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
-                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
+                await expect(providerContract.connect(validators[0]).savePurchase([purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1739,19 +1707,11 @@ describe("Test of Server", function () {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchaseMessage(
-                    purchaseParam.purchaseId,
-                    purchaseParam.amount,
-                    purchaseParam.loyalty,
-                    purchaseParam.currency,
-                    purchaseParam.shopId,
-                    purchaseParam.account,
-                    purchaseParam.phone
-                );
+                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
-                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
+                await expect(providerContract.connect(validators[0]).savePurchase([purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -2121,19 +2081,11 @@ describe("Test of Server", function () {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchaseMessage(
-                    purchaseParam.purchaseId,
-                    purchaseParam.amount,
-                    purchaseParam.loyalty,
-                    purchaseParam.currency,
-                    purchaseParam.shopId,
-                    purchaseParam.account,
-                    purchaseParam.phone
-                );
+                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
-                await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
+                await expect(providerContract.connect(validators[0]).savePurchase([purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -2571,19 +2523,11 @@ describe("Test of Server", function () {
                 account: userAccount,
                 phone: phoneHash,
             };
-            const purchaseMessage = ContractUtils.getPurchaseMessage(
-                purchaseParam.purchaseId,
-                purchaseParam.amount,
-                purchaseParam.loyalty,
-                purchaseParam.currency,
-                purchaseParam.shopId,
-                purchaseParam.account,
-                purchaseParam.phone
-            );
+            const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
             const signatures = deployments.accounts.validators.map((m) =>
                 ContractUtils.signMessage(m, purchaseMessage)
             );
-            await expect(providerContract.connect(validators[0]).savePurchase({ ...purchaseParam, signatures }))
+            await expect(providerContract.connect(validators[0]).savePurchase([purchaseParam], signatures))
                 .to.emit(providerContract, "SavedPurchase")
                 .withNamedArgs({
                     purchaseId: purchase.purchaseId,

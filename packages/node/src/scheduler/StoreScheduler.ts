@@ -88,9 +88,7 @@ export class StoreScheduler extends Scheduler {
         const txs = await this.storage.getPurchaseTransaction(this.config.setting.waitedProvide);
         if (txs.length > 0) {
             logger.info("onStorePurchase");
-            for (const tx of txs) {
-                await this.storePurchase(tx);
-            }
+            await this.storePurchase(txs);
         }
     }
 
@@ -104,34 +102,29 @@ export class StoreScheduler extends Scheduler {
         return sum.mul(tx.cashAmount).div(tx.totalAmount).div(10000);
     }
 
-    private async storePurchase(tx: NewTransaction) {
+    private async storePurchase(txs: NewTransaction[]) {
         const contract = await this.getLoyaltyProviderContract();
         const validators = this.getValidators();
         const sender = new NonceManager(new GasPriceManager(validators[0]));
-        const loyalty = this.getLoyaltyInTransaction(tx);
-        const purchaseParam = {
-            purchaseId: tx.purchaseId,
-            amount: tx.totalAmount,
-            loyalty: loyalty,
-            currency: tx.currency.toLowerCase(),
-            shopId: tx.shopId,
-            account: tx.userAccount,
-            phone: tx.userPhoneHash,
-        };
-        const purchaseMessage = ContractUtils.getPurchaseMessage(
-            purchaseParam.purchaseId,
-            purchaseParam.amount,
-            purchaseParam.loyalty,
-            purchaseParam.currency,
-            purchaseParam.shopId,
-            purchaseParam.account,
-            purchaseParam.phone
-        );
+        const purchases = [];
+        for (const tx of txs) {
+            const loyalty = this.getLoyaltyInTransaction(tx);
+            purchases.push({
+                purchaseId: tx.purchaseId,
+                amount: tx.totalAmount,
+                loyalty: loyalty,
+                currency: tx.currency.toLowerCase(),
+                shopId: tx.shopId,
+                account: tx.userAccount,
+                phone: tx.userPhoneHash,
+            });
+        }
+        const purchaseMessage = ContractUtils.getPurchasesMessage(purchases);
         const signatures = validators.map((m) => ContractUtils.signMessage(m, purchaseMessage));
         try {
-            const contactTx = await contract.connect(sender).savePurchase({ ...purchaseParam, signatures });
+            const contactTx = await contract.connect(sender).savePurchase(purchases, signatures);
             await contactTx.wait();
-            await this.storage.storedTransaction(tx.purchaseId);
+            await this.storage.storedTransaction(txs.map((m) => m.purchaseId));
             logger.info("onStorePurchase Success");
         } catch (error) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
