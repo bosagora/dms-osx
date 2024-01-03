@@ -6,6 +6,7 @@ import { NodeStorage } from "./storage/NodeStorage";
 import { ContractUtils } from "./utils/ContractUtils";
 import { CollectPurchaseScheduler } from "./scheduler/CollectPurchaseScheduler";
 import { CollectExchangeRateScheduler } from "./scheduler/CollectExchangeRateScheduler";
+import { StoreScheduler } from "./scheduler/StoreScheduler";
 
 let server: DefaultServer;
 
@@ -25,13 +26,17 @@ async function main() {
 
     const schedulers: Scheduler[] = [];
     if (config.scheduler.enable) {
-        let scheduler = config.scheduler.getScheduler("purchase");
+        let scheduler = config.scheduler.getScheduler("collectPurchase");
         if (scheduler && scheduler.enable) {
             schedulers.push(new CollectPurchaseScheduler(scheduler.expression));
         }
-        scheduler = config.scheduler.getScheduler("exchange");
+        scheduler = config.scheduler.getScheduler("collectExchangeRate");
         if (scheduler && scheduler.enable) {
             schedulers.push(new CollectExchangeRateScheduler(scheduler.expression));
+        }
+        scheduler = config.scheduler.getScheduler("store");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new StoreScheduler(scheduler.expression));
         }
     }
 

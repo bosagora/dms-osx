@@ -11,9 +11,6 @@ import { Scheduler } from "./Scheduler";
 import * as hre from "hardhat";
 import URI from "urijs";
 
-/**
- * Creates blocks at regular intervals and stores them in IPFS and databases.
- */
 export class CollectPurchaseScheduler extends Scheduler {
     private _config: Config | undefined;
     private _storage: NodeStorage | undefined;
@@ -47,6 +44,14 @@ export class CollectPurchaseScheduler extends Scheduler {
         }
     }
 
+    private async getContract(): Promise<StorePurchase> {
+        if (this._contract === undefined) {
+            const factory = await hre.ethers.getContractFactory("StorePurchase");
+            this._contract = factory.attach(this.config.contracts.purchaseAddress);
+        }
+        return this._contract;
+    }
+
     protected async work() {
         try {
             let latestHeight = (await this.storage.getLatestHeight()) - this._offset;
@@ -54,6 +59,7 @@ export class CollectPurchaseScheduler extends Scheduler {
             this._offset = 0n;
             const header = await this.getBlockHeader(latestHeight + 1n);
             if (header !== undefined) {
+                logger.info("CollectPurchaseScheduler");
                 logger.info(`${header.height.toString()} - ${header.CID}`);
                 const block = await this.getBlock(header.CID);
                 if (block !== undefined) {
@@ -64,15 +70,6 @@ export class CollectPurchaseScheduler extends Scheduler {
             logger.error(`Failed to execute the CollectPurchaseScheduler: ${error}`);
         }
     }
-
-    private async getContract(): Promise<StorePurchase> {
-        if (this._contract === undefined) {
-            const factory = await hre.ethers.getContractFactory("StorePurchase");
-            this._contract = factory.attach(this.config.contracts.purchaseAddress);
-        }
-        return this._contract;
-    }
-
     private async getBlockHeader(height: bigint): Promise<ContractPurchaseBlockHeader | undefined> {
         const contract = await this.getContract();
         try {

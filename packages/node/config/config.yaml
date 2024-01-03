@@ -33,12 +33,15 @@ logging:
 scheduler:
     enable: true
     items:
-        - name: purchase
-          enable: false
-          expression: "*/1 * * * * *"
-        - name: exchange
+        - name: collectPurchase
           enable: true
-          expression: "*/1 * * * * *"
+          expression: "*/10 * * * * *"
+        - name: collectExchangeRate
+          enable: true
+          expression: "*/10 * * * * *"
+        - name: store
+          enable: true
+          expression: "*/10 * * * * *"
 
 contracts:
     tokenAddress: "${TOKEN_CONTRACT_ADDRESS}"
@@ -52,6 +55,7 @@ contracts:
 
 setting:
     ipfs_gateway_url: "${NODE_IPFS_GATEWAY_URL}"
+    waitedProvide: ${WAITED_PROVIDE}
 
 validator:
     keys:

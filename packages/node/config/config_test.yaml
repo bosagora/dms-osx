@@ -62,6 +62,7 @@ contracts:
 
 setting:
     ipfs_gateway_url: "${NODE_IPFS_GATEWAY_URL}"
+    waitedProvide: ${WAITED_PROVIDE}
 
 validator:
     keys:

@@ -1,12 +1,14 @@
-import { Block, hashFull, Transaction, TransactionType } from "dms-store-purchase-sdk";
+import { Block, hashFull, NewTransaction, Transaction, TransactionType } from "dms-store-purchase-sdk";
 import { IDatabaseConfig } from "../common/Config";
 import { Utils } from "../utils/Utils";
 import { Storage } from "./Storage";
+import { logger } from "../common/Logger";
 
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
 import { IExchangeRate } from "../types";
+import { ContractUtils } from "../utils/ContractUtils";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -79,10 +81,31 @@ export class NodeStorage extends Storage {
                 contents: JSON.stringify(tx.toJSON()),
             });
         } else {
-            await this.queryForMapper("purchases", "cancelTransaction", {
+            await this.queryForMapper("purchases", "canceledTransaction", {
                 purchaseId: tx.purchaseId,
             });
         }
+    }
+
+    public async canceledTransaction(purchaseId: string) {
+        await this.queryForMapper("purchase_blocks", "canceledTransaction", {
+            purchaseId: purchaseId,
+        });
+    }
+
+    public async storedTransaction(purchaseId: string) {
+        await this.queryForMapper("purchase_blocks", "storedTransaction", {
+            purchaseId: purchaseId,
+        });
+    }
+
+    public async getPurchaseTransaction(waiting: number): Promise<NewTransaction[]> {
+        const res = await this.queryForMapper("purchase_blocks", "getTransaction", {
+            timestamp: ContractUtils.getTimeStamp() - waiting,
+        });
+        return res.rows.map((m) => {
+            return NewTransaction.reviver("", JSON.parse(m.contents.replace(/[\\]/gi, "")));
+        });
     }
     /// endregion
 
