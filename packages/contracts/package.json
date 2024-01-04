@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-artifacts",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"
