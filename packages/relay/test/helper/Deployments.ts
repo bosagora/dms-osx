@@ -294,8 +294,8 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
     {
-        const amount = Amount.make(100_000, 18);
-        const depositedToken = Amount.make(20_000, 18);
+        const amount = Amount.make(200_000, 18);
+        const depositedToken = Amount.make(100_000, 18);
 
         for (const elem of accounts.validators) {
             const tx1 = await (deployment.getContract("Token") as Token)

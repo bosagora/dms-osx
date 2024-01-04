@@ -20,8 +20,8 @@ describe("Test for Validator", () => {
     let contract: Validator;
     let tokenContract: Token;
 
-    const amount = Amount.make(20000, 18);
-    const halfAmount = Amount.make(10000, 18);
+    const amount = Amount.make(100_000, 18);
+    const halfAmount = Amount.make(50_000, 18);
 
     before(async () => {
         const tokenFactory = await ethers.getContractFactory("Token");
