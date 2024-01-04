@@ -9,6 +9,7 @@ import MybatisMapper from "mybatis-mapper";
 import path from "path";
 import { IExchangeRate } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
+import { BigNumber } from "ethers";
 
 /**
  * The class that inserts and reads the ledger into the database.

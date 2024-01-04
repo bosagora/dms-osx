@@ -1,24 +1,20 @@
-import { ContractShopStatus } from "../src/types";
-import { Amount } from "../src/utils/Amount";
-import { ContractUtils } from "../src/utils/ContractUtils";
-import { Certifier, CurrencyRate, Shop, Token, Validator } from "../typechain-types";
-
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades, waffle } from "hardhat";
 
+import { ContractShopStatus } from "../src/types";
+import { Amount } from "../src/utils/Amount";
+import { ContractUtils } from "../src/utils/ContractUtils";
+import { Certifier, CurrencyRate, Shop, Token, Validator } from "../typechain-types";
+
+import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
-// tslint:disable-next-line:no-duplicate-imports
-import * as hre from "hardhat";
-
-import { AddressZero } from "@ethersproject/constants";
-
 import { BigNumber, Wallet } from "ethers";
 
-import assert from "assert";
+import { AddressZero } from "@ethersproject/constants";
 
 chai.use(solidity);
 
@@ -58,7 +54,7 @@ describe("Test for Shop", () => {
     const assetAmount = Amount.make(10_000_000, 18);
 
     const deployToken = async () => {
-        const tokenFactory = await hre.ethers.getContractFactory("Token");
+        const tokenFactory = await ethers.getContractFactory("Token");
         tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
         await tokenContract.deployed();
         await tokenContract.deployTransaction.wait();
@@ -68,7 +64,7 @@ describe("Test for Shop", () => {
     };
 
     const deployValidatorCollection = async () => {
-        const validatorFactory = await hre.ethers.getContractFactory("Validator");
+        const validatorFactory = await ethers.getContractFactory("Validator");
         validatorContract = (await upgrades.deployProxy(
             validatorFactory.connect(deployer),
             [tokenContract.address, validatorWallets.map((m) => m.address)],
@@ -95,7 +91,7 @@ describe("Test for Shop", () => {
     };
 
     const deployCurrencyRate = async () => {
-        const currencyRateFactory = await hre.ethers.getContractFactory("CurrencyRate");
+        const currencyRateFactory = await ethers.getContractFactory("CurrencyRate");
         currencyContract = (await upgrades.deployProxy(
             currencyRateFactory.connect(deployer),
             [validatorContract.address, await tokenContract.symbol()],
@@ -108,15 +104,31 @@ describe("Test for Shop", () => {
         await currencyContract.deployTransaction.wait();
 
         const timestamp = ContractUtils.getTimeStamp();
-        const symbols = [await tokenContract.symbol(), "usd", "jpy", "eur"];
-        const rates = [price, multiple.mul(1000), multiple.mul(1000), multiple.mul(900)];
-        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const rates = [
+            {
+                symbol: await tokenContract.symbol(),
+                rate: price,
+            },
+            {
+                symbol: "usd",
+                rate: multiple.mul(1000),
+            },
+            {
+                symbol: "jpy",
+                rate: multiple.mul(1000),
+            },
+            {
+                symbol: "eur",
+                rate: multiple.mul(900),
+            },
+        ];
+        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
         const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-        await currencyContract.connect(validatorWallets[0]).set({ timestamp, symbols, rates, signatures });
+        await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
     };
 
     const deployCertifier = async () => {
-        const factory = await hre.ethers.getContractFactory("Certifier");
+        const factory = await ethers.getContractFactory("Certifier");
         certifierContract = (await upgrades.deployProxy(factory.connect(deployer), [certifier.address], {
             initializer: "initialize",
             kind: "uups",
@@ -192,7 +204,7 @@ describe("Test for Shop", () => {
     });
 
     before(async () => {
-        const factory = await hre.ethers.getContractFactory("Shop");
+        const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
             factory.connect(deployer),
             [certifierContract.address, currencyContract.address, AddressZero, AddressZero],

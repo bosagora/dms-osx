@@ -318,12 +318,24 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
 
     {
         const multiple = await contract.multiple();
-        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10 - 5;
-        const symbols = ["the9", "usd", "jpy", "krw", "point"];
-        const rates = [multiple.mul(150), multiple.mul(1000), multiple.mul(10), multiple.mul(1), multiple.mul(1)];
-        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const rates = [
+            {
+                symbol: "the9",
+                rate: multiple.mul(150),
+            },
+            {
+                symbol: "usd",
+                rate: multiple.mul(1000),
+            },
+            {
+                symbol: "jpy",
+                rate: multiple.mul(10),
+            },
+        ];
+        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
         const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-        const tx = await contract.connect(accounts.validators[0]).set({ timestamp, symbols, rates, signatures });
+        const tx = await contract.connect(accounts.validators[0]).set(timestamp, rates, signatures);
         console.log(`Set currency rate (tx: ${tx.hash})...`);
         await tx.wait();
     }

@@ -45,20 +45,30 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     }
 
     /// @notice 통화에 대한 가격을 저장한다.
-    function set(CurrencyData calldata _data) external override onlyValidator(_msgSender()) {
-        require(_data.symbols.length == _data.rates.length, "1170");
-        require(_data.timestamp >= prevTimestamp && _data.timestamp <= block.timestamp, "1171");
+    function set(
+        uint256 _timestamp,
+        CurrencyData[] calldata _data,
+        bytes[] calldata _signatures
+    ) external override onlyValidator(_msgSender()) {
+        require(_timestamp >= prevTimestamp, "1171");
 
-        bytes32 dataHash = keccak256(abi.encode(_data.timestamp, _data.symbols, _data.rates));
-
+        // Check the number of voters and signatories
         uint256 numberOfVoters = validator.lengthOfCurrentActiveValidator();
         require(numberOfVoters > 0, "1172");
-        require(_data.signatures.length <= numberOfVoters, "1173");
+        require(_signatures.length <= numberOfVoters, "1173");
 
-        address[] memory participants = new address[](_data.signatures.length);
+        // Get a hash of all the data
+        bytes32[] memory messages = new bytes32[](_data.length);
+        for (uint256 i = 0; i < _data.length; i++) {
+            messages[i] = keccak256(abi.encode(_data[i].symbol, _data[i].rate));
+        }
+        bytes32 dataHash = keccak256(abi.encode(_timestamp, messages.length, messages));
+
+        // Counting by signature
+        address[] memory participants = new address[](_signatures.length);
         uint256 length = 0;
-        for (uint256 idx = 0; idx < _data.signatures.length; idx++) {
-            address participant = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _data.signatures[idx]);
+        for (uint256 idx = 0; idx < _signatures.length; idx++) {
+            address participant = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signatures[idx]);
             bool exist = false;
             for (uint256 j = 0; j < length; j++) {
                 if (participants[j] == participant) {
@@ -74,12 +84,14 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
 
         require(((length * 1000) / numberOfVoters) >= QUORUM, "1174");
 
-        prevTimestamp = _data.timestamp;
+        prevTimestamp = _timestamp;
 
-        for (uint256 idx = 0; idx < _data.symbols.length; idx++) {
-            rates[_data.symbols[idx]] = _data.rates[idx];
-            emit SetRate(_data.symbols[idx], _data.rates[idx]);
+        for (uint256 idx = 0; idx < _data.length; idx++) {
+            rates[_data[idx].symbol] = _data[idx].rate;
+            emit SetRate(_data[idx].symbol, _data[idx].rate);
         }
+        rates["krw"] = MULTIPLE;
+        rates["point"] = MULTIPLE;
     }
 
     /// @notice 통화에 대한 가격을 제공한다.

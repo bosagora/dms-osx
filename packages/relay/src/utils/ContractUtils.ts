@@ -32,6 +32,10 @@ export class ContractUtils {
         return Math.floor(new Date().getTime() / 1000);
     }
 
+    public static getTimeStamp10(): number {
+        return Math.floor(new Date().getTime() / 10000) * 10;
+    }
+
     public static delay(interval: number): Promise<void> {
         return new Promise<void>((resolve, _) => {
             setTimeout(resolve, interval);
@@ -478,10 +482,21 @@ export class ContractUtils {
         return signer.signMessage(message);
     }
 
-    public static getCurrencyMessage(timestamp: BigNumberish, symbols: string[], rates: BigNumberish[]): Uint8Array {
+    public static getCurrencyMessage(
+        timestamp: BigNumberish,
+        rates: { symbol: string; rate: BigNumberish }[]
+    ): Uint8Array {
+        const messages: BytesLike[] = [];
+        for (const elem of rates) {
+            const encodedData = hre.ethers.utils.defaultAbiCoder.encode(
+                ["string", "uint256"],
+                [elem.symbol, elem.rate]
+            );
+            messages.push(hre.ethers.utils.keccak256(encodedData));
+        }
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["uint256", "string[]", "uint256[]"],
-            [timestamp, symbols, rates]
+            ["uint256", "uint256", "bytes32[]"],
+            [timestamp, rates.length, messages]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }

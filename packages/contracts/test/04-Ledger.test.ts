@@ -167,11 +167,15 @@ describe("Test for Ledger", () => {
         await currencyContract.deployTransaction.wait();
 
         const timestamp = ContractUtils.getTimeStamp();
-        const symbols = [await tokenContract.symbol()];
-        const rates = [price];
-        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const rates = [
+            {
+                symbol: await tokenContract.symbol(),
+                rate: price,
+            },
+        ];
+        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
         const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-        await currencyContract.connect(validatorWallets[0]).set({ timestamp, symbols, rates, signatures });
+        await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
     };
 
     const deployCertifier = async () => {
@@ -2592,11 +2596,27 @@ describe("Test for Ledger", () => {
 
         before("Set Other Currency", async () => {
             const timestamp = ContractUtils.getTimeStamp();
-            const symbols = ["usd", "jpy", "cny", "krw"];
-            const rates = [multiple.mul(3), multiple.mul(2), multiple.mul(1), multiple.mul(1)];
-            const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+            const rates = [
+                {
+                    symbol: "usd",
+                    rate: multiple.mul(3),
+                },
+                {
+                    symbol: "jpy",
+                    rate: multiple.mul(2),
+                },
+                {
+                    symbol: "cny",
+                    rate: multiple.mul(1),
+                },
+                {
+                    symbol: "krw",
+                    rate: multiple.mul(1),
+                },
+            ];
+            const message = ContractUtils.getCurrencyMessage(timestamp, rates);
             const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(validatorWallets[0]).set({ timestamp, symbols, rates, signatures });
+            await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
         });
 
         context("Save Purchase Data", () => {
@@ -2805,11 +2825,24 @@ describe("Test for Ledger", () => {
             await deployCurrencyRate();
 
             const timestamp = ContractUtils.getTimeStamp() + 1;
-            const symbols = [await tokenContract.symbol(), "usd", "jpy"];
-            const rates = [multiple.mul(100), multiple.mul(1000), multiple.mul(10)];
-            const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+
+            const rates = [
+                {
+                    symbol: await tokenContract.symbol(),
+                    rate: multiple.mul(100),
+                },
+                {
+                    symbol: "usd",
+                    rate: multiple.mul(1000),
+                },
+                {
+                    symbol: "jpy",
+                    rate: multiple.mul(10),
+                },
+            ];
+            const message = ContractUtils.getCurrencyMessage(timestamp, rates);
             const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(validatorWallets[0]).set({ timestamp, symbols, rates, signatures });
+            await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
 
             await deployCertifier();
             await deployProvider();
