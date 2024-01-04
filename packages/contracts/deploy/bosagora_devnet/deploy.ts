@@ -66,11 +66,6 @@ class Deployments {
         const [
             deployer,
             owner,
-            validator1,
-            validator2,
-            validator3,
-            validator4,
-            validator5,
             foundation,
             settlements,
             fee,
@@ -85,6 +80,22 @@ class Deployments {
             certifier08,
             certifier09,
             certifier10,
+            validator01,
+            validator02,
+            validator03,
+            validator04,
+            validator05,
+            validator06,
+            validator07,
+            validator08,
+            validator09,
+            validator10,
+            validator11,
+            validator12,
+            validator13,
+            validator14,
+            validator15,
+            validator16,
             linkValidator1,
             linkValidator2,
             linkValidator3,
@@ -97,7 +108,24 @@ class Deployments {
             foundation,
             settlements,
             fee,
-            validators: [validator1, validator2, validator3, validator4, validator5],
+            validators: [
+                validator01,
+                validator02,
+                validator03,
+                validator04,
+                validator05,
+                validator06,
+                validator07,
+                validator08,
+                validator09,
+                validator10,
+                validator11,
+                validator12,
+                validator13,
+                validator14,
+                validator15,
+                validator16,
+            ],
             linkValidators: [linkValidator1, linkValidator2, linkValidator3],
             certifiers: [
                 certifier01,
@@ -271,8 +299,8 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
     {
-        const amount = Amount.make(100_000, 18);
-        const depositedToken = Amount.make(20_000, 18);
+        const amount = Amount.make(200_000, 18);
+        const depositedToken = Amount.make(100_000, 18);
 
         for (const elem of accounts.validators) {
             const tx1 = await (deployment.getContract("Token") as Token)
