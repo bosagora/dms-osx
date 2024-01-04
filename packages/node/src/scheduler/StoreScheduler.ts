@@ -6,13 +6,13 @@ import { Scheduler } from "./Scheduler";
 import { CurrencyRate, LoyaltyProvider } from "../../typechain-types";
 import { ethers } from "hardhat";
 import { ContractUtils } from "../utils/ContractUtils";
+import { ResponseMessage } from "../utils/Errors";
 import { GasPriceManager } from "../contract/GasPriceManager";
 
 import { NonceManager } from "@ethersproject/experimental";
 import { BigNumber, Wallet } from "ethers";
 
 import { NewTransaction } from "dms-store-purchase-sdk";
-import { ResponseMessage } from "dms-osx-relay/src/utils/Errors";
 
 export class StoreScheduler extends Scheduler {
     private _config: Config | undefined;

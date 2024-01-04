@@ -1,5 +1,5 @@
 {
-    "name": "dms-osx-relay",
+    "name": "dms-relay",
     "version": "1.0.0",
     "description": "Relay the transaction for the decentralized mileage system",
     "main": "src/main.js",
