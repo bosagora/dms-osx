@@ -52,6 +52,7 @@ contracts:
     providerAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
     consumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
     exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
+    purchaseAddress: "${STORE_PURCHASE_CONTRACT_ADDRESS}"
 
 setting:
     ipfs_gateway_url: "${NODE_IPFS_GATEWAY_URL}"
