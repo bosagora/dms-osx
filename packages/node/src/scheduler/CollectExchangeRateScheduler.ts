@@ -42,14 +42,6 @@ export class CollectExchangeRateScheduler extends Scheduler {
     protected async work() {
         try {
             const rates = await this.getExchangeRateData();
-            rates.push({
-                symbol: "point",
-                rate: this.multiple,
-            });
-            rates.push({
-                symbol: "krw",
-                rate: this.multiple,
-            });
             let usd = 1300n * this.multiple;
             const item = rates.find((m) => m.symbol === "usd");
             if (item !== undefined) {

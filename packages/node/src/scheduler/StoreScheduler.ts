@@ -136,17 +136,14 @@ export class StoreScheduler extends Scheduler {
         const exchangeRates = await this.storage.getExchangeRate();
         if (exchangeRates.length > 0) {
             logger.info("onStoreExchangeRate");
-            const block = await ethers.provider.getBlock("latest");
-            const timestamp = block.timestamp;
-            const symbols = exchangeRates.map((m) => m.symbol);
-            const rates = exchangeRates.map((m) => BigNumber.from(m.rate));
+            const timestamp = ContractUtils.getTimeStamp10();
             const validators = this.getValidators();
-            const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+            const message = ContractUtils.getCurrencyMessage(timestamp, exchangeRates);
             const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
             const contract = await this.getCurrencyRateContract();
             const sender = new NonceManager(new GasPriceManager(validators[0]));
             try {
-                const contactTx = await contract.connect(sender).set({ timestamp, symbols, rates, signatures });
+                const contactTx = await contract.connect(sender).set(timestamp, exchangeRates, signatures);
                 await contactTx.wait();
                 logger.info("onStoreExchangeRate Success");
             } catch (error) {

@@ -3,7 +3,6 @@ import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades, waffle } from "hardhat";
 
-import { Amount } from "../src/utils/Amount";
 import { Certifier } from "../typechain-types";
 
 import assert from "assert";

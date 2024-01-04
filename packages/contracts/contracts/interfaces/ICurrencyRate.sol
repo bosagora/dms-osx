@@ -4,13 +4,11 @@ pragma solidity ^0.8.2;
 
 interface ICurrencyRate {
     struct CurrencyData {
-        uint256 timestamp;
-        string[] symbols;
-        uint256[] rates;
-        bytes[] signatures;
+        string symbol;
+        uint256 rate;
     }
 
-    function set(CurrencyData calldata _data) external;
+    function set(uint256 _timestamp, CurrencyData[] calldata _data, bytes[] calldata _signatures) external;
 
     function get(string calldata _symbol) external view returns (uint256);
 
