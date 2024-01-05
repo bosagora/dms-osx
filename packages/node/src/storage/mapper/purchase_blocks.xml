@@ -22,7 +22,7 @@
             ON CONFLICT ("height")  DO NOTHING;
     </insert>
 
-    <insert id="postTransaction">
+    <insert id="postTransactions">
         INSERT INTO purchase_transactions
         (
             "purchaseId"        ,
@@ -32,14 +32,16 @@
             "contents"
         )
         VALUES
-            (
-                #{purchaseId}   ,
-                ${timestamp}    ,
-                ${height}       ,
-                #{hash}         ,
-                #{contents}
-            )
-            ON CONFLICT ("purchaseId")  DO NOTHING;
+        <foreach item="item" collection="purchases" separator=",">
+        (
+            #{item.purchaseId}   ,
+            ${item.timestamp}    ,
+            ${item.height}       ,
+            #{item.hash}         ,
+            #{item.contents}
+        )
+        </foreach>
+        ON CONFLICT ("purchaseId")  DO NOTHING;
     </insert>
 
     <update id="canceledTransaction">

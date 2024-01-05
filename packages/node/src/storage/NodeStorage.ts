@@ -66,32 +66,48 @@ export class NodeStorage extends Storage {
             merkleRoot: block.header.merkleRoot.toString(),
             timestamp: block.header.timestamp,
         });
-        for (const tx of block.txs) {
-            await this.postPurchaseTransaction(block, tx);
+        await this.postNewPurchases(
+            block,
+            block.txs.filter((m) => m.type === TransactionType.NEW)
+        );
+        await this.postCancelPurchases(
+            block,
+            block.txs.filter((m) => m.type === TransactionType.CANCEL)
+        );
+    }
+
+    public async postNewPurchases(block: Block, txs: Transaction[]) {
+        if (txs.length === 0) return;
+        const pageSize = 16;
+        const maxPage = Math.ceil(txs.length / pageSize);
+
+        for (let pageIndex = 1; pageIndex <= maxPage; pageIndex++) {
+            const purchases = [];
+            for (let idx = (pageIndex - 1) * pageSize; idx < pageIndex * pageSize && idx < txs.length; idx++) {
+                purchases.push(txs[idx]);
+            }
+            if (purchases.length > 0) {
+                await this.queryForMapper("purchase_blocks", "postTransactions", {
+                    purchases: purchases.map((purchase) => {
+                        return {
+                            purchaseId: purchase.purchaseId.toString(),
+                            timestamp: purchase.timestamp.toString(),
+                            height: block.header.height.toString(),
+                            hash: hashFull(purchase).toString(),
+                            contents: JSON.stringify(purchase.toJSON()),
+                        };
+                    }) as any,
+                });
+            }
         }
     }
 
-    public async postPurchaseTransaction(block: Block, tx: Transaction) {
-        if (tx.type === TransactionType.NEW) {
-            const hash = hashFull(tx);
-            await this.queryForMapper("purchase_blocks", "postTransaction", {
-                purchaseId: tx.purchaseId,
-                timestamp: tx.timestamp,
-                height: block.header.height.toString(),
-                hash: hash.toString(),
-                contents: JSON.stringify(tx.toJSON()),
-            });
-        } else {
+    public async postCancelPurchases(block: Block, txs: Transaction[]) {
+        for (const tx of txs) {
             await this.queryForMapper("purchases", "canceledTransaction", {
                 purchaseId: tx.purchaseId,
             });
         }
-    }
-
-    public async canceledTransaction(purchaseId: string) {
-        await this.queryForMapper("purchase_blocks", "canceledTransaction", {
-            purchaseId: purchaseId,
-        });
     }
 
     public async storedTransaction(purchaseIds: string[]) {
@@ -112,12 +128,14 @@ export class NodeStorage extends Storage {
 
     /// region Exchange Rate
     public async postExchangeRate(rates: IExchangeRate[]) {
-        for (const elem of rates) {
-            await this.queryForMapper("exchange_rates", "postExchangeRate", {
-                symbol: elem.symbol,
-                rate: elem.rate.toString(),
-            });
-        }
+        await this.queryForMapper("exchange_rates", "postExchangeRates", {
+            rates: rates.map((m) => {
+                return {
+                    symbol: m.symbol,
+                    rate: m.rate.toString(),
+                };
+            }) as any,
+        });
     }
 
     public async getExchangeRate(): Promise<IExchangeRate[]> {

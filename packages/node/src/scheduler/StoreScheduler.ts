@@ -87,7 +87,7 @@ export class StoreScheduler extends Scheduler {
     private async onStorePurchase() {
         const txs = await this.storage.getPurchaseTransaction(this.config.setting.waitedProvide);
         if (txs.length > 0) {
-            logger.info("onStorePurchase");
+            logger.info(`onStorePurchase, Length of txs: ${txs.length}`);
             await this.storePurchase(txs);
         }
     }
@@ -135,7 +135,7 @@ export class StoreScheduler extends Scheduler {
     private async onStoreExchangeRate() {
         const exchangeRates = await this.storage.getExchangeRate();
         if (exchangeRates.length > 0) {
-            logger.info("onStoreExchangeRate");
+            logger.info(`onStoreExchangeRate, Length of exchange rates: ${exchangeRates.length}`);
             const timestamp = ContractUtils.getTimeStamp10();
             const validators = this.getValidators();
             const message = ContractUtils.getCurrencyMessage(timestamp, exchangeRates);

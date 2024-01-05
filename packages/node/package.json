@@ -18,7 +18,7 @@
         "start": "TESTING=false NODE_ENV=production hardhat run src/main.ts --network production_net",
         "formatting:check": "prettier '**/*.{json,sol,ts,js,yaml}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js,yaml}' --write",
-        "test2": "npx ts-node scripts/exchange.ts"
+        "test:Node": "TESTING=true hardhat test test/Node.test.ts"
     },
     "repository": {
         "type": "git",
