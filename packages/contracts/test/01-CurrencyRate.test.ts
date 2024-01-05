@@ -71,7 +71,7 @@ describe("Test for CurrencyRate", () => {
 
     it("Set Array - revert", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
         const rates = [
             {
                 symbol: "usd",
@@ -90,16 +90,16 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(150),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = [validator1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures)).to.be.revertedWith(
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
             "1174"
         );
     });
 
     it("Set Array - revert", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
         const rates = [
             {
                 symbol: "usd",
@@ -118,16 +118,16 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(150),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = [validator1, validator1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures)).to.be.revertedWith(
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
             "1174"
         );
     });
 
     it("Set Array - revert", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = ContractUtils.getTimeStamp();
+        const height = ContractUtils.getTimeStamp();
         const rates = [
             {
                 symbol: "usd",
@@ -146,16 +146,16 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(150),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = [validator1, user1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures)).to.be.revertedWith(
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
             "1174"
         );
     });
 
     it("Set Array - revert", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
         const rates = [
             {
                 symbol: "usd",
@@ -174,16 +174,16 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(150),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = [deployer, user1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures)).to.be.revertedWith(
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
             "1174"
         );
     });
 
     it("Set Array", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
         const rates = [
             {
                 symbol: "usd",
@@ -202,9 +202,9 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(150),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = [validator1, validator2].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures))
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures))
             .to.emit(currencyRateContract, "SetRate")
             .withNamedArgs({ currency: rates[0].symbol, rate: rates[0].rate })
             .to.emit(currencyRateContract, "SetRate")
@@ -217,7 +217,7 @@ describe("Test for CurrencyRate", () => {
 
     it("Set Array", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
         const rates = [
             {
                 symbol: "usd",
@@ -236,16 +236,16 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(150),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = [validator1, validator2, user1, deployer].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures)).to.be.revertedWith(
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
             "1173"
         );
     });
 
     it("Set Array - revert", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = ContractUtils.getTimeStamp() - 100;
+        const height = ContractUtils.getTimeStamp() - 100;
         const rates = [
             {
                 symbol: "usd",
@@ -264,9 +264,9 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(150),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures)).to.be.revertedWith(
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
             "1171"
         );
     });
@@ -278,7 +278,7 @@ describe("Test for CurrencyRate", () => {
 
     it("Function", async () => {
         const multiple = await currencyRateContract.multiple();
-        const timestamp = ContractUtils.getTimeStamp();
+        const height = ContractUtils.getTimeStamp();
         const rates = [
             {
                 symbol: await tokenContract.symbol(),
@@ -297,9 +297,9 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(timestamp, rates, signatures))
+        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures))
             .to.emit(currencyRateContract, "SetRate")
             .withNamedArgs({ currency: rates[0].symbol, rate: rates[0].rate })
             .to.emit(currencyRateContract, "SetRate")

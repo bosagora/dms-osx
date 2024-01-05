@@ -88,6 +88,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
     /// @notice 구매내역을 저장합니다.
     /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
     function savePurchase(
+        uint256 _height,
         PurchaseData[] calldata _data,
         bytes[] calldata _signatures
     ) external onlyValidator(_msgSender()) {
@@ -120,7 +121,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                 )
             );
         }
-        bytes32 dataHash = keccak256(abi.encode(messages.length, messages));
+        bytes32 dataHash = keccak256(abi.encode(_height, messages.length, messages));
 
         // Counting by signature
         address[] memory participants = new address[](_signatures.length);

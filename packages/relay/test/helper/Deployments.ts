@@ -340,7 +340,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
 
     {
         const multiple = await contract.multiple();
-        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
         const rates = [
             {
                 symbol: "the9",
@@ -355,9 +355,9 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
                 rate: multiple.mul(10),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-        const tx1 = await contract.connect(accounts.validators[0]).set(timestamp, rates, signatures);
+        const tx1 = await contract.connect(accounts.validators[0]).set(height, rates, signatures);
         await tx1.wait();
     }
 }

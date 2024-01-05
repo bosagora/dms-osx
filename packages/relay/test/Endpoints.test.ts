@@ -293,7 +293,7 @@ describe("Test of Server", function () {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
@@ -301,7 +301,7 @@ describe("Test of Server", function () {
                 await expect(
                     providerContract
                         .connect(deployments.accounts.validators[0])
-                        .savePurchase([purchaseParam], signatures)
+                        .savePurchase(0, [purchaseParam], signatures)
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({

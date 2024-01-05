@@ -32,7 +32,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         rates["krw"] = MULTIPLE;
         rates["point"] = MULTIPLE;
 
-        prevTimestamp = block.timestamp - 3600;
+        prevHeight = 0;
     }
 
     function _authorizeUpgrade(address newImplementation) internal virtual override {
@@ -46,11 +46,11 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
 
     /// @notice 통화에 대한 가격을 저장한다.
     function set(
-        uint256 _timestamp,
+        uint256 _height,
         CurrencyData[] calldata _data,
         bytes[] calldata _signatures
     ) external override onlyValidator(_msgSender()) {
-        require(_timestamp >= prevTimestamp, "1171");
+        require(_height >= prevHeight, "1171");
 
         // Check the number of voters and signatories
         uint256 numberOfVoters = validator.lengthOfCurrentActiveValidator();
@@ -62,7 +62,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         for (uint256 i = 0; i < _data.length; i++) {
             messages[i] = keccak256(abi.encode(_data[i].symbol, _data[i].rate));
         }
-        bytes32 dataHash = keccak256(abi.encode(_timestamp, messages.length, messages));
+        bytes32 dataHash = keccak256(abi.encode(_height, messages.length, messages));
 
         // Counting by signature
         address[] memory participants = new address[](_signatures.length);
@@ -84,7 +84,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
 
         require(((length * 1000) / numberOfVoters) >= QUORUM, "1174");
 
-        prevTimestamp = _timestamp;
+        prevHeight = _height;
 
         for (uint256 idx = 0; idx < _data.length; idx++) {
             rates[_data[idx].symbol] = _data[idx].rate;

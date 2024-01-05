@@ -229,6 +229,7 @@ export class ContractUtils {
     }
 
     public static getPurchasesMessage(
+        height: BigNumberish,
         purchases: {
             purchaseId: string;
             amount: BigNumberish;
@@ -248,8 +249,8 @@ export class ContractUtils {
             messages.push(hre.ethers.utils.keccak256(encodedData));
         }
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["uint256", "bytes32[]"],
-            [purchases.length, messages]
+            ["uint256", "uint256", "bytes32[]"],
+            [height, purchases.length, messages]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
@@ -259,7 +260,7 @@ export class ContractUtils {
     }
 
     public static getCurrencyMessage(
-        timestamp: BigNumberish,
+        height: BigNumberish,
         rates: { symbol: string; rate: BigNumberish }[]
     ): Uint8Array {
         const messages: BytesLike[] = [];
@@ -272,7 +273,7 @@ export class ContractUtils {
         }
         const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
             ["uint256", "uint256", "bytes32[]"],
-            [timestamp, rates.length, messages]
+            [height, rates.length, messages]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }

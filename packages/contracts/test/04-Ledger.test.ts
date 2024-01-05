@@ -166,16 +166,16 @@ describe("Test for Ledger", () => {
         await currencyContract.deployed();
         await currencyContract.deployTransaction.wait();
 
-        const timestamp = ContractUtils.getTimeStamp();
+        const height = ContractUtils.getTimeStamp();
         const rates = [
             {
                 symbol: await tokenContract.symbol(),
                 rate: price,
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-        await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
+        await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
     };
 
     const deployCertifier = async () => {
@@ -464,10 +464,10 @@ describe("Test for Ledger", () => {
                         account: userAccount,
                         phone: phoneHash,
                     };
-                    const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                    const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
                     await expect(
-                        providerContract.connect(deployer).savePurchase([purchaseParam], signatures)
+                        providerContract.connect(deployer).savePurchase(0, [purchaseParam], signatures)
                     ).to.be.revertedWith("1000");
                 }
             });
@@ -493,10 +493,10 @@ describe("Test for Ledger", () => {
                             account: userAccount,
                             phone: phoneHash,
                         };
-                        const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                        const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                         const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
                         await expect(
-                            providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures)
+                            providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
@@ -525,10 +525,10 @@ describe("Test for Ledger", () => {
                             account: userAccount,
                             phone: phoneHash,
                         };
-                        const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                        const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                         const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
                         await expect(
-                            providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures)
+                            providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
@@ -605,9 +605,9 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -676,10 +676,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -779,10 +779,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -846,10 +846,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -924,10 +924,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -987,10 +987,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1059,10 +1059,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1162,10 +1162,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1225,10 +1225,10 @@ describe("Test for Ledger", () => {
                     account: userAccount,
                     phone: phoneHash,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures))
+                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1853,9 +1853,9 @@ describe("Test for Ledger", () => {
                 });
             }
 
-            const purchaseMessage = ContractUtils.getPurchasesMessage(purchases);
+            const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchases);
             const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
-            const tx = await providerContract.connect(validatorWallets[0]).savePurchase(purchases, signatures);
+            const tx = await providerContract.connect(validatorWallets[0]).savePurchase(0, purchases, signatures);
             await tx.wait();
         });
 
@@ -2187,11 +2187,11 @@ describe("Test for Ledger", () => {
                         account: userAccount,
                         phone: phoneHash,
                     };
-                    const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                    const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
                     await expect(
-                        providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures)
+                        providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -2595,7 +2595,7 @@ describe("Test for Ledger", () => {
         });
 
         before("Set Other Currency", async () => {
-            const timestamp = ContractUtils.getTimeStamp();
+            const height = ContractUtils.getTimeStamp();
             const rates = [
                 {
                     symbol: "usd",
@@ -2614,9 +2614,9 @@ describe("Test for Ledger", () => {
                     rate: multiple.mul(1),
                 },
             ];
-            const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+            const message = ContractUtils.getCurrencyMessage(height, rates);
             const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
+            await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
         });
 
         context("Save Purchase Data", () => {
@@ -2644,11 +2644,11 @@ describe("Test for Ledger", () => {
                         account: userAccount,
                         phone: phoneHash,
                     };
-                    const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                    const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
                     await expect(
-                        providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures)
+                        providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -2824,7 +2824,7 @@ describe("Test for Ledger", () => {
             await deployLinkCollection();
             await deployCurrencyRate();
 
-            const timestamp = ContractUtils.getTimeStamp() + 1;
+            const height = ContractUtils.getTimeStamp() + 1;
 
             const rates = [
                 {
@@ -2840,9 +2840,9 @@ describe("Test for Ledger", () => {
                     rate: multiple.mul(10),
                 },
             ];
-            const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+            const message = ContractUtils.getCurrencyMessage(height, rates);
             const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
+            await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
 
             await deployCertifier();
             await deployProvider();
@@ -2871,11 +2871,11 @@ describe("Test for Ledger", () => {
                         account: userAccount,
                         phone: phoneHash,
                     };
-                    const purchaseMessage = ContractUtils.getPurchasesMessage([purchaseParam]);
+                    const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
 
                     await expect(
-                        providerContract.connect(validatorWallets[0]).savePurchase([purchaseParam], signatures)
+                        providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
