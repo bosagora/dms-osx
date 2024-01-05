@@ -103,7 +103,7 @@ describe("Test for Shop", () => {
         await currencyContract.deployed();
         await currencyContract.deployTransaction.wait();
 
-        const timestamp = ContractUtils.getTimeStamp();
+        const height = ContractUtils.getTimeStamp();
         const rates = [
             {
                 symbol: await tokenContract.symbol(),
@@ -122,9 +122,9 @@ describe("Test for Shop", () => {
                 rate: multiple.mul(900),
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
+        const message = ContractUtils.getCurrencyMessage(height, rates);
         const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-        await currencyContract.connect(validatorWallets[0]).set(timestamp, rates, signatures);
+        await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
     };
 
     const deployCertifier = async () => {

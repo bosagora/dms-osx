@@ -111,7 +111,7 @@ export class StoreScheduler extends Scheduler {
             const loyalty = this.getLoyaltyInTransaction(tx);
             purchases.push({
                 purchaseId: tx.purchaseId,
-                amount: tx.totalAmount,
+                amount: tx.cashAmount,
                 loyalty: loyalty,
                 currency: tx.currency.toLowerCase(),
                 shopId: tx.shopId,
@@ -119,10 +119,10 @@ export class StoreScheduler extends Scheduler {
                 phone: tx.userPhoneHash,
             });
         }
-        const purchaseMessage = ContractUtils.getPurchasesMessage(purchases);
+        const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchases);
         const signatures = validators.map((m) => ContractUtils.signMessage(m, purchaseMessage));
         try {
-            const contactTx = await contract.connect(sender).savePurchase(purchases, signatures);
+            const contactTx = await contract.connect(sender).savePurchase(0, purchases, signatures);
             await contactTx.wait();
             await this.storage.storedTransaction(txs.map((m) => m.purchaseId));
             logger.info("onStorePurchase Success");
@@ -136,14 +136,14 @@ export class StoreScheduler extends Scheduler {
         const exchangeRates = await this.storage.getExchangeRate();
         if (exchangeRates.length > 0) {
             logger.info(`onStoreExchangeRate, Length of exchange rates: ${exchangeRates.length}`);
-            const timestamp = ContractUtils.getTimeStamp10();
+            const height = ContractUtils.getTimeStamp10();
             const validators = this.getValidators();
-            const message = ContractUtils.getCurrencyMessage(timestamp, exchangeRates);
+            const message = ContractUtils.getCurrencyMessage(height, exchangeRates);
             const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
             const contract = await this.getCurrencyRateContract();
             const sender = new NonceManager(new GasPriceManager(validators[0]));
             try {
-                const contactTx = await contract.connect(sender).set(timestamp, exchangeRates, signatures);
+                const contactTx = await contract.connect(sender).set(height, exchangeRates, signatures);
                 await contactTx.wait();
                 logger.info("onStoreExchangeRate Success");
             } catch (error) {
