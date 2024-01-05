@@ -163,7 +163,6 @@ export class Deployments {
         };
 
         this.addDeployer(deployPhoneLink);
-        this.addDeployer(deployPhoneLink);
         this.addDeployer(deployToken);
         this.addDeployer(deployValidator);
         this.addDeployer(deployCurrencyRate);

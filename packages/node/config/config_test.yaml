@@ -20,16 +20,6 @@ database:
     connectionTimeoutMillis: 2000
     max: 100
 
-graph:
-    host: "${GRAPH_DATABASE_HOST}"
-    user: "${GRAPH_DATABASE_USER}"
-    password: "${GRAPH_DATABASE_PASSWORD}"
-    database: "${GRAPH_DATABASE_NAME}"
-    scheme: "${GRAPH_DATABASE_SCHEME}"
-    port: "${GRAPH_DATABASE_PORT}"
-    connectionTimeoutMillis: 2000
-    max: 100
-
 ################################################################################
 ##                               Logging options                              ##
 ################################################################################
@@ -43,10 +33,13 @@ logging:
 scheduler:
     enable: true
     items:
-        - name: purchase
+        - name: collectPurchase
           enable: true
           expression: "*/1 * * * * *"
-        - name: exchange
+        - name: collectExchangeRate
+          enable: true
+          expression: "*/1 * * * * *"
+        - name: store
           enable: true
           expression: "*/1 * * * * *"
 

@@ -19,6 +19,7 @@ import {
     Shop,
     Token,
     Validator,
+    StorePurchase,
 } from "../../typechain-types";
 
 interface IShopData {
@@ -44,6 +45,7 @@ export interface IAccount {
     validators: Wallet[];
     linkValidators: Wallet[];
     certifiers: Wallet[];
+    purchaseManager: Wallet;
     users: Wallet[];
     shops: Wallet[];
 }
@@ -65,11 +67,6 @@ export class Deployments {
         const [
             deployer,
             owner,
-            validator1,
-            validator2,
-            validator3,
-            validator4,
-            validator5,
             foundation,
             settlements,
             fee,
@@ -84,9 +81,26 @@ export class Deployments {
             certifier08,
             certifier09,
             certifier10,
+            validator01,
+            validator02,
+            validator03,
+            validator04,
+            validator05,
+            validator06,
+            validator07,
+            validator08,
+            validator09,
+            validator10,
+            validator11,
+            validator12,
+            validator13,
+            validator14,
+            validator15,
+            validator16,
             linkValidator1,
             linkValidator2,
             linkValidator3,
+            purchaseManager,
             user01,
             user02,
             user03,
@@ -116,7 +130,24 @@ export class Deployments {
             foundation,
             settlements,
             fee,
-            validators: [validator1, validator2, validator3, validator4, validator5],
+            validators: [
+                validator01,
+                validator02,
+                validator03,
+                validator04,
+                validator05,
+                validator06,
+                validator07,
+                validator08,
+                validator09,
+                validator10,
+                validator11,
+                validator12,
+                validator13,
+                validator14,
+                validator15,
+                validator16,
+            ],
             linkValidators: [linkValidator1, linkValidator2, linkValidator3],
             certifiers: [
                 certifier01,
@@ -130,11 +161,11 @@ export class Deployments {
                 certifier09,
                 certifier10,
             ],
+            purchaseManager,
             users: [user01, user02, user03, user04, user05, user06, user07, user08, user09, user10],
             shops: [shop01, shop02, shop03, shop04, shop05, shop06, shop07, shop08, shop09, shop10],
         };
 
-        this.addDeployer(deployPhoneLink);
         this.addDeployer(deployPhoneLink);
         this.addDeployer(deployToken);
         this.addDeployer(deployValidator);
@@ -145,6 +176,7 @@ export class Deployments {
         this.addDeployer(deployLoyaltyExchanger);
         this.addDeployer(deployShop);
         this.addDeployer(deployLedger);
+        this.addDeployer(deployStorePurchase);
     }
 
     public setShopData(shopData: IShopData[]) {
@@ -266,8 +298,8 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
     {
-        const amount = Amount.make(100_000, 18);
-        const depositedToken = Amount.make(20_000, 18);
+        const amount = Amount.make(200_000, 18);
+        const depositedToken = Amount.make(100_000, 18);
 
         for (const elem of accounts.validators) {
             const tx1 = await (deployment.getContract("Token") as Token)
@@ -313,12 +345,24 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
 
     {
         const multiple = await contract.multiple();
-        const timestamp = ContractUtils.getTimeStamp();
-        const symbols = ["the9", "usd", "jpy", "krw", "point"];
-        const rates = [multiple.mul(150), multiple.mul(1000), multiple.mul(100), multiple.mul(1), multiple.mul(1)];
-        const message = ContractUtils.getCurrencyMessage(timestamp, symbols, rates);
+        const timestamp = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const rates = [
+            {
+                symbol: "the9",
+                rate: multiple.mul(150),
+            },
+            {
+                symbol: "usd",
+                rate: multiple.mul(1000),
+            },
+            {
+                symbol: "jpy",
+                rate: multiple.mul(10),
+            },
+        ];
+        const message = ContractUtils.getCurrencyMessage(timestamp, rates);
         const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-        const tx1 = await contract.connect(accounts.validators[0]).set({ timestamp, symbols, rates, signatures });
+        const tx1 = await contract.connect(accounts.validators[0]).set(timestamp, rates, signatures);
         await tx1.wait();
     }
 }
@@ -556,4 +600,18 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         console.log(`Deposit foundation's amount (tx: ${tx5.hash})...`);
         await tx5.wait();
     }
+}
+
+async function deployStorePurchase(accounts: IAccount, deployment: Deployments) {
+    const contractName = "StorePurchase";
+    console.log(`Deploy ${contractName}...`);
+    const factory = await ethers.getContractFactory("StorePurchase");
+    const contract = (await upgrades.deployProxy(factory.connect(accounts.purchaseManager), [], {
+        initializer: "initialize",
+        kind: "uups",
+    })) as StorePurchase;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
 }

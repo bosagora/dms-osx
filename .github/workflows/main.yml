@@ -56,6 +56,17 @@ jobs:
           REPORT_GAS: true
         run: cd packages/relay && yarn run test
 
+      - name: Copy env of Node
+        run: cp packages/node/env/.env.sample packages/node/env/.env
+      - name: Check formatting of Node
+        run: cd packages/node && yarn run formatting:check
+      - name: Compile of Node
+        run: cd packages/node && yarn run build
+      - name: Run Hardhat Tests of Node
+        env:
+          REPORT_GAS: true
+        run: cd packages/node && yarn run test
+
       - name: Copy env of Faker
         run: cp packages/faker/env/.env.sample packages/faker/env/.env
       - name: Check formatting of Faker

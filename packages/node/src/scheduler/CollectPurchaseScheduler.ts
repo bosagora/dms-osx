@@ -63,6 +63,7 @@ export class CollectPurchaseScheduler extends Scheduler {
                 logger.info(`${header.height.toString()} - ${header.CID}`);
                 const block = await this.getBlock(header.CID);
                 if (block !== undefined) {
+                    logger.info(`${block.header.height.toString()} - ${block.txs.length}`);
                     await this.storage.postPurchaseBlock(block);
                 }
             }

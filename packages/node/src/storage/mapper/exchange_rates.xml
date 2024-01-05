@@ -1,20 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="exchange_rates">
-    <insert id="postExchangeRate">
-        INSERT INTO exchange_rates
-        (
-            "symbol"                ,
-            "rate"
-        )
+    <insert id="postExchangeRates">
+        INSERT INTO exchange_rates (symbol, rate)
         VALUES
-            (
-                #{symbol}           ,
-                ${rate}
-            )
-        ON CONFLICT ("symbol")
+        <foreach item="item" collection="rates" separator=",">
+        (
+            #{item.symbol},
+            ${item.rate}
+        )
+        </foreach>
+        ON CONFLICT (symbol)
         DO UPDATE
-            SET "rate" = ${rate};
+            SET rate = EXCLUDED.rate;
     </insert>
 
     <select id="getExchangeRate">

@@ -393,6 +393,17 @@ function getAccounts() {
         accounts.push(process.env.LINK_VALIDATOR3);
     }
 
+    if (
+        process.env.PURCHASE_STORE_KEY !== undefined &&
+        process.env.PURCHASE_STORE_KEY.trim() !== "" &&
+        reg_bytes64.test(process.env.PURCHASE_STORE_KEY)
+    ) {
+        accounts.push(process.env.PURCHASE_STORE_KEY);
+    } else {
+        process.env.PURCHASE_STORE_KEY = Wallet.createRandom().privateKey;
+        accounts.push(process.env.PURCHASE_STORE_KEY);
+    }
+
     while (accounts.length < 100) {
         accounts.push(Wallet.createRandom().privateKey);
     }

@@ -1,0 +1,5002 @@
+[
+    {
+        "productId": "PD000000",
+        "amount": 3300,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000001",
+        "amount": 1300,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000002",
+        "amount": 9200,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000003",
+        "amount": 1000,
+        "providerPercent": 1.8
+    },
+    {
+        "productId": "PD000004",
+        "amount": 9900,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000005",
+        "amount": 6200,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000006",
+        "amount": 7000,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000007",
+        "amount": 5900,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000008",
+        "amount": 7300,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000009",
+        "amount": 7900,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000010",
+        "amount": 8900,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000011",
+        "amount": 2400,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000012",
+        "amount": 3200,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000013",
+        "amount": 9700,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000014",
+        "amount": 7700,
+        "providerPercent": 0.5
+    },
+    {
+        "productId": "PD000015",
+        "amount": 7700,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000016",
+        "amount": 8200,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000017",
+        "amount": 6100,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000018",
+        "amount": 5900,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000019",
+        "amount": 2500,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000020",
+        "amount": 2900,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000021",
+        "amount": 5300,
+        "providerPercent": 4
+    },
+    {
+        "productId": "PD000022",
+        "amount": 7300,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000023",
+        "amount": 1700,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000024",
+        "amount": 2800,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000025",
+        "amount": 1000,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000026",
+        "amount": 1800,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000027",
+        "amount": 1000,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000028",
+        "amount": 2400,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000029",
+        "amount": 3900,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000030",
+        "amount": 8100,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000031",
+        "amount": 3200,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000032",
+        "amount": 3400,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000033",
+        "amount": 200,
+        "providerPercent": 5.1
+    },
+    {
+        "productId": "PD000034",
+        "amount": 7500,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000035",
+        "amount": 8600,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000036",
+        "amount": 3000,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000037",
+        "amount": 2300,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000038",
+        "amount": 1600,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000039",
+        "amount": 7500,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000040",
+        "amount": 1300,
+        "providerPercent": 3.6
+    },
+    {
+        "productId": "PD000041",
+        "amount": 2700,
+        "providerPercent": 9.4
+    },
+    {
+        "productId": "PD000042",
+        "amount": 7400,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000043",
+        "amount": 1400,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000044",
+        "amount": 8000,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000045",
+        "amount": 3000,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000046",
+        "amount": 400,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000047",
+        "amount": 4800,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000048",
+        "amount": 5800,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000049",
+        "amount": 5200,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000050",
+        "amount": 4700,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000051",
+        "amount": 8100,
+        "providerPercent": 3.1
+    },
+    {
+        "productId": "PD000052",
+        "amount": 5100,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000053",
+        "amount": 9100,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000054",
+        "amount": 6100,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000055",
+        "amount": 200,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000056",
+        "amount": 3600,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000057",
+        "amount": 8500,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000058",
+        "amount": 1100,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000059",
+        "amount": 9600,
+        "providerPercent": 2.4
+    },
+    {
+        "productId": "PD000060",
+        "amount": 9600,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000061",
+        "amount": 4000,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000062",
+        "amount": 6100,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000063",
+        "amount": 500,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000064",
+        "amount": 9600,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000065",
+        "amount": 100,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000066",
+        "amount": 6400,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000067",
+        "amount": 200,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000068",
+        "amount": 900,
+        "providerPercent": 5.1
+    },
+    {
+        "productId": "PD000069",
+        "amount": 8200,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000070",
+        "amount": 1600,
+        "providerPercent": 0.2
+    },
+    {
+        "productId": "PD000071",
+        "amount": 600,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000072",
+        "amount": 300,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000073",
+        "amount": 2000,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000074",
+        "amount": 7900,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000075",
+        "amount": 7700,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000076",
+        "amount": 4900,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000077",
+        "amount": 5700,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000078",
+        "amount": 7600,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000079",
+        "amount": 1200,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000080",
+        "amount": 9000,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000081",
+        "amount": 4200,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000082",
+        "amount": 3600,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000083",
+        "amount": 5700,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000084",
+        "amount": 7800,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000085",
+        "amount": 2200,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000086",
+        "amount": 1800,
+        "providerPercent": 3.2
+    },
+    {
+        "productId": "PD000087",
+        "amount": 3700,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000088",
+        "amount": 5200,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000089",
+        "amount": 9300,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000090",
+        "amount": 3000,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000091",
+        "amount": 1800,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000092",
+        "amount": 9200,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000093",
+        "amount": 6000,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000094",
+        "amount": 3700,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000095",
+        "amount": 2500,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000096",
+        "amount": 2600,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000097",
+        "amount": 1400,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000098",
+        "amount": 7700,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000099",
+        "amount": 4000,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000100",
+        "amount": 2000,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000101",
+        "amount": 7000,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000102",
+        "amount": 6100,
+        "providerPercent": 0.2
+    },
+    {
+        "productId": "PD000103",
+        "amount": 8600,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000104",
+        "amount": 9900,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000105",
+        "amount": 5900,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000106",
+        "amount": 5800,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000107",
+        "amount": 2700,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000108",
+        "amount": 2200,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000109",
+        "amount": 100,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000110",
+        "amount": 4300,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000111",
+        "amount": 4000,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000112",
+        "amount": 1200,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000113",
+        "amount": 5400,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000114",
+        "amount": 5900,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000115",
+        "amount": 8100,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000116",
+        "amount": 8700,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000117",
+        "amount": 4600,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000118",
+        "amount": 6700,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000119",
+        "amount": 3900,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000120",
+        "amount": 300,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000121",
+        "amount": 7400,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000122",
+        "amount": 8900,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000123",
+        "amount": 1900,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000124",
+        "amount": 6300,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000125",
+        "amount": 800,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000126",
+        "amount": 6600,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000127",
+        "amount": 5200,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000128",
+        "amount": 3800,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000129",
+        "amount": 2900,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000130",
+        "amount": 9500,
+        "providerPercent": 9.4
+    },
+    {
+        "productId": "PD000131",
+        "amount": 8600,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000132",
+        "amount": 4300,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000133",
+        "amount": 5600,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000134",
+        "amount": 1200,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000135",
+        "amount": 500,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000136",
+        "amount": 2200,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000137",
+        "amount": 2700,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000138",
+        "amount": 1400,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000139",
+        "amount": 7000,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000140",
+        "amount": 6400,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000141",
+        "amount": 5700,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000142",
+        "amount": 5000,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000143",
+        "amount": 5200,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000144",
+        "amount": 3700,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000145",
+        "amount": 6600,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000146",
+        "amount": 8500,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000147",
+        "amount": 4200,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000148",
+        "amount": 300,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000149",
+        "amount": 5100,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000150",
+        "amount": 6400,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000151",
+        "amount": 7800,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000152",
+        "amount": 7800,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000153",
+        "amount": 6700,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000154",
+        "amount": 1300,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000155",
+        "amount": 8300,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000156",
+        "amount": 1300,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000157",
+        "amount": 3500,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000158",
+        "amount": 3400,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000159",
+        "amount": 9100,
+        "providerPercent": 9.4
+    },
+    {
+        "productId": "PD000160",
+        "amount": 9900,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000161",
+        "amount": 5100,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000162",
+        "amount": 1500,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000163",
+        "amount": 9400,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000164",
+        "amount": 9700,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000165",
+        "amount": 5500,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000166",
+        "amount": 3500,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000167",
+        "amount": 6400,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000168",
+        "amount": 5200,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000169",
+        "amount": 6000,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000170",
+        "amount": 1000,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000171",
+        "amount": 8600,
+        "providerPercent": 3.6
+    },
+    {
+        "productId": "PD000172",
+        "amount": 7000,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000173",
+        "amount": 7100,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000174",
+        "amount": 2500,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000175",
+        "amount": 200,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000176",
+        "amount": 4700,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000177",
+        "amount": 5700,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000178",
+        "amount": 500,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000179",
+        "amount": 1000,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000180",
+        "amount": 700,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000181",
+        "amount": 600,
+        "providerPercent": 4
+    },
+    {
+        "productId": "PD000182",
+        "amount": 0,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000183",
+        "amount": 7500,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000184",
+        "amount": 2500,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000185",
+        "amount": 8700,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000186",
+        "amount": 1200,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000187",
+        "amount": 8800,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000188",
+        "amount": 1000,
+        "providerPercent": 7.4
+    },
+    {
+        "productId": "PD000189",
+        "amount": 8600,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000190",
+        "amount": 500,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000191",
+        "amount": 200,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000192",
+        "amount": 1400,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000193",
+        "amount": 3300,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000194",
+        "amount": 8800,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000195",
+        "amount": 8500,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000196",
+        "amount": 1500,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000197",
+        "amount": 7700,
+        "providerPercent": 7.4
+    },
+    {
+        "productId": "PD000198",
+        "amount": 5600,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000199",
+        "amount": 9800,
+        "providerPercent": 0.9
+    },
+    {
+        "productId": "PD000200",
+        "amount": 2000,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000201",
+        "amount": 9300,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000202",
+        "amount": 5200,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000203",
+        "amount": 4000,
+        "providerPercent": 3.3
+    },
+    {
+        "productId": "PD000204",
+        "amount": 5100,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000205",
+        "amount": 9000,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000206",
+        "amount": 5100,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000207",
+        "amount": 2300,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000208",
+        "amount": 1500,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000209",
+        "amount": 5900,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000210",
+        "amount": 4900,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000211",
+        "amount": 700,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000212",
+        "amount": 5000,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000213",
+        "amount": 700,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000214",
+        "amount": 0,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000215",
+        "amount": 6000,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000216",
+        "amount": 5600,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000217",
+        "amount": 2800,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000218",
+        "amount": 7500,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000219",
+        "amount": 3400,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000220",
+        "amount": 9300,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000221",
+        "amount": 6700,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000222",
+        "amount": 1100,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000223",
+        "amount": 9700,
+        "providerPercent": 0.2
+    },
+    {
+        "productId": "PD000224",
+        "amount": 900,
+        "providerPercent": 3.1
+    },
+    {
+        "productId": "PD000225",
+        "amount": 1100,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000226",
+        "amount": 7900,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000227",
+        "amount": 1100,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000228",
+        "amount": 1700,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000229",
+        "amount": 4900,
+        "providerPercent": 0.9
+    },
+    {
+        "productId": "PD000230",
+        "amount": 1800,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000231",
+        "amount": 7600,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000232",
+        "amount": 7300,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000233",
+        "amount": 3000,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000234",
+        "amount": 9900,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000235",
+        "amount": 5100,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000236",
+        "amount": 7100,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000237",
+        "amount": 5800,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000238",
+        "amount": 1800,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000239",
+        "amount": 5500,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000240",
+        "amount": 1100,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000241",
+        "amount": 8800,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000242",
+        "amount": 200,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000243",
+        "amount": 6200,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000244",
+        "amount": 9900,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000245",
+        "amount": 8600,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000246",
+        "amount": 5600,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000247",
+        "amount": 2600,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000248",
+        "amount": 300,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000249",
+        "amount": 5400,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000250",
+        "amount": 8100,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000251",
+        "amount": 100,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000252",
+        "amount": 5200,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000253",
+        "amount": 900,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000254",
+        "amount": 7000,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000255",
+        "amount": 5400,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000256",
+        "amount": 0,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000257",
+        "amount": 4000,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000258",
+        "amount": 900,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000259",
+        "amount": 9900,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000260",
+        "amount": 6000,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000261",
+        "amount": 1100,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000262",
+        "amount": 6900,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000263",
+        "amount": 8100,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000264",
+        "amount": 4900,
+        "providerPercent": 2.4
+    },
+    {
+        "productId": "PD000265",
+        "amount": 4200,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000266",
+        "amount": 600,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000267",
+        "amount": 4400,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000268",
+        "amount": 4900,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000269",
+        "amount": 7500,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000270",
+        "amount": 2700,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000271",
+        "amount": 9300,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000272",
+        "amount": 6100,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000273",
+        "amount": 0,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000274",
+        "amount": 6200,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000275",
+        "amount": 500,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000276",
+        "amount": 3400,
+        "providerPercent": 2.1
+    },
+    {
+        "productId": "PD000277",
+        "amount": 9800,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000278",
+        "amount": 4300,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000279",
+        "amount": 1700,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000280",
+        "amount": 1400,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000281",
+        "amount": 5500,
+        "providerPercent": 0.5
+    },
+    {
+        "productId": "PD000282",
+        "amount": 8200,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000283",
+        "amount": 5400,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000284",
+        "amount": 2200,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000285",
+        "amount": 3300,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000286",
+        "amount": 3700,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000287",
+        "amount": 9900,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000288",
+        "amount": 8900,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000289",
+        "amount": 4400,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000290",
+        "amount": 6700,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000291",
+        "amount": 7600,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000292",
+        "amount": 9400,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000293",
+        "amount": 8400,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000294",
+        "amount": 9400,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000295",
+        "amount": 800,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000296",
+        "amount": 3200,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000297",
+        "amount": 6400,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000298",
+        "amount": 8500,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000299",
+        "amount": 8500,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000300",
+        "amount": 4700,
+        "providerPercent": 1.8
+    },
+    {
+        "productId": "PD000301",
+        "amount": 3900,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000302",
+        "amount": 2500,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000303",
+        "amount": 1900,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000304",
+        "amount": 700,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000305",
+        "amount": 600,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000306",
+        "amount": 9900,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000307",
+        "amount": 7700,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000308",
+        "amount": 3800,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000309",
+        "amount": 900,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000310",
+        "amount": 3500,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000311",
+        "amount": 3800,
+        "providerPercent": 4
+    },
+    {
+        "productId": "PD000312",
+        "amount": 2300,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000313",
+        "amount": 5200,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000314",
+        "amount": 4500,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000315",
+        "amount": 500,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000316",
+        "amount": 600,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000317",
+        "amount": 1200,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000318",
+        "amount": 6000,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000319",
+        "amount": 6600,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000320",
+        "amount": 1000,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000321",
+        "amount": 6100,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000322",
+        "amount": 6100,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000323",
+        "amount": 9500,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000324",
+        "amount": 6200,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000325",
+        "amount": 3800,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000326",
+        "amount": 1100,
+        "providerPercent": 3.2
+    },
+    {
+        "productId": "PD000327",
+        "amount": 8400,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000328",
+        "amount": 600,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000329",
+        "amount": 9500,
+        "providerPercent": 2.1
+    },
+    {
+        "productId": "PD000330",
+        "amount": 2300,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000331",
+        "amount": 1500,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000332",
+        "amount": 500,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000333",
+        "amount": 1200,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000334",
+        "amount": 4400,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000335",
+        "amount": 7400,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000336",
+        "amount": 5800,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000337",
+        "amount": 8300,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000338",
+        "amount": 900,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000339",
+        "amount": 8400,
+        "providerPercent": 7.4
+    },
+    {
+        "productId": "PD000340",
+        "amount": 1900,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000341",
+        "amount": 4500,
+        "providerPercent": 0.2
+    },
+    {
+        "productId": "PD000342",
+        "amount": 4400,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000343",
+        "amount": 5100,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000344",
+        "amount": 4700,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000345",
+        "amount": 5300,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000346",
+        "amount": 6900,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000347",
+        "amount": 6500,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000348",
+        "amount": 1100,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000349",
+        "amount": 4400,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000350",
+        "amount": 800,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000351",
+        "amount": 1500,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000352",
+        "amount": 5600,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000353",
+        "amount": 5200,
+        "providerPercent": 2.1
+    },
+    {
+        "productId": "PD000354",
+        "amount": 7000,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000355",
+        "amount": 4500,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000356",
+        "amount": 2300,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000357",
+        "amount": 6600,
+        "providerPercent": 1.8
+    },
+    {
+        "productId": "PD000358",
+        "amount": 8000,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000359",
+        "amount": 8600,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000360",
+        "amount": 5000,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000361",
+        "amount": 6100,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000362",
+        "amount": 5400,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000363",
+        "amount": 1900,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000364",
+        "amount": 8200,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000365",
+        "amount": 400,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000366",
+        "amount": 8100,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000367",
+        "amount": 900,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000368",
+        "amount": 6700,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000369",
+        "amount": 5300,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000370",
+        "amount": 3700,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000371",
+        "amount": 6200,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000372",
+        "amount": 1000,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000373",
+        "amount": 7400,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000374",
+        "amount": 6300,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000375",
+        "amount": 1000,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000376",
+        "amount": 3000,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000377",
+        "amount": 5300,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000378",
+        "amount": 3200,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000379",
+        "amount": 6000,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000380",
+        "amount": 1700,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000381",
+        "amount": 3600,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000382",
+        "amount": 2200,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000383",
+        "amount": 2300,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000384",
+        "amount": 3900,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000385",
+        "amount": 3800,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000386",
+        "amount": 2300,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000387",
+        "amount": 4700,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000388",
+        "amount": 4700,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000389",
+        "amount": 3100,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000390",
+        "amount": 9800,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000391",
+        "amount": 5100,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000392",
+        "amount": 3200,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000393",
+        "amount": 7400,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000394",
+        "amount": 3400,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000395",
+        "amount": 4500,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000396",
+        "amount": 4500,
+        "providerPercent": 0.2
+    },
+    {
+        "productId": "PD000397",
+        "amount": 2900,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000398",
+        "amount": 4500,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000399",
+        "amount": 800,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000400",
+        "amount": 5100,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000401",
+        "amount": 7300,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000402",
+        "amount": 800,
+        "providerPercent": 3.1
+    },
+    {
+        "productId": "PD000403",
+        "amount": 3000,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000404",
+        "amount": 1200,
+        "providerPercent": 5.9
+    },
+    {
+        "productId": "PD000405",
+        "amount": 1100,
+        "providerPercent": 8.2
+    },
+    {
+        "productId": "PD000406",
+        "amount": 3500,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000407",
+        "amount": 7400,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000408",
+        "amount": 1200,
+        "providerPercent": 5.1
+    },
+    {
+        "productId": "PD000409",
+        "amount": 5700,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000410",
+        "amount": 7500,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000411",
+        "amount": 4900,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000412",
+        "amount": 1200,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000413",
+        "amount": 6600,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000414",
+        "amount": 9600,
+        "providerPercent": 3.6
+    },
+    {
+        "productId": "PD000415",
+        "amount": 5200,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000416",
+        "amount": 1200,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000417",
+        "amount": 3600,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000418",
+        "amount": 3800,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000419",
+        "amount": 9100,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000420",
+        "amount": 6700,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000421",
+        "amount": 1200,
+        "providerPercent": 0.9
+    },
+    {
+        "productId": "PD000422",
+        "amount": 4100,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000423",
+        "amount": 5900,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000424",
+        "amount": 2500,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000425",
+        "amount": 4100,
+        "providerPercent": 0.2
+    },
+    {
+        "productId": "PD000426",
+        "amount": 2400,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000427",
+        "amount": 8100,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000428",
+        "amount": 8900,
+        "providerPercent": 8.2
+    },
+    {
+        "productId": "PD000429",
+        "amount": 9300,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000430",
+        "amount": 9400,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000431",
+        "amount": 3900,
+        "providerPercent": 6.3
+    },
+    {
+        "productId": "PD000432",
+        "amount": 1600,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000433",
+        "amount": 9600,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000434",
+        "amount": 1600,
+        "providerPercent": 6.3
+    },
+    {
+        "productId": "PD000435",
+        "amount": 400,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000436",
+        "amount": 6400,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000437",
+        "amount": 500,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000438",
+        "amount": 9600,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000439",
+        "amount": 2400,
+        "providerPercent": 0.5
+    },
+    {
+        "productId": "PD000440",
+        "amount": 4600,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000441",
+        "amount": 4700,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000442",
+        "amount": 5600,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000443",
+        "amount": 5600,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000444",
+        "amount": 3200,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000445",
+        "amount": 5300,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000446",
+        "amount": 400,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000447",
+        "amount": 7400,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000448",
+        "amount": 3800,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000449",
+        "amount": 6300,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000450",
+        "amount": 7900,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000451",
+        "amount": 9500,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000452",
+        "amount": 1100,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000453",
+        "amount": 5000,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000454",
+        "amount": 6300,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000455",
+        "amount": 9800,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000456",
+        "amount": 5100,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000457",
+        "amount": 3400,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000458",
+        "amount": 8300,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000459",
+        "amount": 3000,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000460",
+        "amount": 3400,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000461",
+        "amount": 3700,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000462",
+        "amount": 3100,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000463",
+        "amount": 7400,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000464",
+        "amount": 5200,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000465",
+        "amount": 7500,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000466",
+        "amount": 200,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000467",
+        "amount": 7800,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000468",
+        "amount": 3500,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000469",
+        "amount": 5800,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000470",
+        "amount": 9200,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000471",
+        "amount": 5300,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000472",
+        "amount": 8200,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000473",
+        "amount": 2300,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000474",
+        "amount": 7600,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000475",
+        "amount": 2100,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000476",
+        "amount": 2000,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000477",
+        "amount": 8400,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000478",
+        "amount": 1700,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000479",
+        "amount": 1300,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000480",
+        "amount": 2600,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000481",
+        "amount": 4200,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000482",
+        "amount": 5600,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000483",
+        "amount": 1000,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000484",
+        "amount": 9300,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000485",
+        "amount": 2000,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000486",
+        "amount": 5600,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000487",
+        "amount": 4500,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000488",
+        "amount": 3900,
+        "providerPercent": 1.8
+    },
+    {
+        "productId": "PD000489",
+        "amount": 8400,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000490",
+        "amount": 8700,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000491",
+        "amount": 2400,
+        "providerPercent": 2.4
+    },
+    {
+        "productId": "PD000492",
+        "amount": 700,
+        "providerPercent": 0.2
+    },
+    {
+        "productId": "PD000493",
+        "amount": 5300,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000494",
+        "amount": 3500,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000495",
+        "amount": 5000,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000496",
+        "amount": 6900,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000497",
+        "amount": 8300,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000498",
+        "amount": 8700,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000499",
+        "amount": 6300,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000500",
+        "amount": 900,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000501",
+        "amount": 4100,
+        "providerPercent": 5.9
+    },
+    {
+        "productId": "PD000502",
+        "amount": 3000,
+        "providerPercent": 9.4
+    },
+    {
+        "productId": "PD000503",
+        "amount": 3600,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000504",
+        "amount": 2200,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000505",
+        "amount": 4800,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000506",
+        "amount": 8500,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000507",
+        "amount": 1100,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000508",
+        "amount": 6400,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000509",
+        "amount": 8300,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000510",
+        "amount": 6200,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000511",
+        "amount": 4600,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000512",
+        "amount": 100,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000513",
+        "amount": 4700,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000514",
+        "amount": 3500,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000515",
+        "amount": 2100,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000516",
+        "amount": 5600,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000517",
+        "amount": 7400,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000518",
+        "amount": 1000,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000519",
+        "amount": 100,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000520",
+        "amount": 100,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000521",
+        "amount": 9000,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000522",
+        "amount": 8700,
+        "providerPercent": 6.3
+    },
+    {
+        "productId": "PD000523",
+        "amount": 2200,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000524",
+        "amount": 8200,
+        "providerPercent": 3.6
+    },
+    {
+        "productId": "PD000525",
+        "amount": 3400,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000526",
+        "amount": 3600,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000527",
+        "amount": 9900,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000528",
+        "amount": 5000,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000529",
+        "amount": 6900,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000530",
+        "amount": 2500,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000531",
+        "amount": 8000,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000532",
+        "amount": 3200,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000533",
+        "amount": 4200,
+        "providerPercent": 3.3
+    },
+    {
+        "productId": "PD000534",
+        "amount": 3500,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000535",
+        "amount": 2400,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000536",
+        "amount": 7500,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000537",
+        "amount": 3100,
+        "providerPercent": 3.3
+    },
+    {
+        "productId": "PD000538",
+        "amount": 5100,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000539",
+        "amount": 4800,
+        "providerPercent": 5.9
+    },
+    {
+        "productId": "PD000540",
+        "amount": 200,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000541",
+        "amount": 1600,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000542",
+        "amount": 3000,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000543",
+        "amount": 7400,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000544",
+        "amount": 1400,
+        "providerPercent": 4.2
+    },
+    {
+        "productId": "PD000545",
+        "amount": 8600,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000546",
+        "amount": 2500,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000547",
+        "amount": 6600,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000548",
+        "amount": 3500,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000549",
+        "amount": 3200,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000550",
+        "amount": 4000,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000551",
+        "amount": 8300,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000552",
+        "amount": 7500,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000553",
+        "amount": 5700,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000554",
+        "amount": 400,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000555",
+        "amount": 4000,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000556",
+        "amount": 400,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000557",
+        "amount": 7300,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000558",
+        "amount": 3100,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000559",
+        "amount": 4300,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000560",
+        "amount": 0,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000561",
+        "amount": 9900,
+        "providerPercent": 8.2
+    },
+    {
+        "productId": "PD000562",
+        "amount": 7900,
+        "providerPercent": 8.2
+    },
+    {
+        "productId": "PD000563",
+        "amount": 8500,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000564",
+        "amount": 2000,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000565",
+        "amount": 6500,
+        "providerPercent": 0.9
+    },
+    {
+        "productId": "PD000566",
+        "amount": 2900,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000567",
+        "amount": 1700,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000568",
+        "amount": 1900,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000569",
+        "amount": 7100,
+        "providerPercent": 5.1
+    },
+    {
+        "productId": "PD000570",
+        "amount": 2200,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000571",
+        "amount": 6000,
+        "providerPercent": 6.3
+    },
+    {
+        "productId": "PD000572",
+        "amount": 2300,
+        "providerPercent": 5.9
+    },
+    {
+        "productId": "PD000573",
+        "amount": 2300,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000574",
+        "amount": 7100,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000575",
+        "amount": 8300,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000576",
+        "amount": 5000,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000577",
+        "amount": 2000,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000578",
+        "amount": 5200,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000579",
+        "amount": 5200,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000580",
+        "amount": 5500,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000581",
+        "amount": 2800,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000582",
+        "amount": 1200,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000583",
+        "amount": 9000,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000584",
+        "amount": 4900,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000585",
+        "amount": 1200,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000586",
+        "amount": 6600,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000587",
+        "amount": 1700,
+        "providerPercent": 1.8
+    },
+    {
+        "productId": "PD000588",
+        "amount": 8200,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000589",
+        "amount": 7700,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000590",
+        "amount": 2300,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000591",
+        "amount": 5600,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000592",
+        "amount": 6300,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000593",
+        "amount": 3800,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000594",
+        "amount": 400,
+        "providerPercent": 6.3
+    },
+    {
+        "productId": "PD000595",
+        "amount": 400,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000596",
+        "amount": 8100,
+        "providerPercent": 9.4
+    },
+    {
+        "productId": "PD000597",
+        "amount": 9800,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000598",
+        "amount": 5300,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000599",
+        "amount": 3100,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000600",
+        "amount": 5000,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000601",
+        "amount": 3100,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000602",
+        "amount": 4700,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000603",
+        "amount": 8400,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000604",
+        "amount": 1400,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000605",
+        "amount": 6300,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000606",
+        "amount": 300,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000607",
+        "amount": 7700,
+        "providerPercent": 3.1
+    },
+    {
+        "productId": "PD000608",
+        "amount": 2800,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000609",
+        "amount": 9200,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000610",
+        "amount": 100,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000611",
+        "amount": 6500,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000612",
+        "amount": 400,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000613",
+        "amount": 2300,
+        "providerPercent": 3.1
+    },
+    {
+        "productId": "PD000614",
+        "amount": 3100,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000615",
+        "amount": 3700,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000616",
+        "amount": 100,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000617",
+        "amount": 2100,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000618",
+        "amount": 3700,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000619",
+        "amount": 5900,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000620",
+        "amount": 9900,
+        "providerPercent": 0.5
+    },
+    {
+        "productId": "PD000621",
+        "amount": 9800,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000622",
+        "amount": 8800,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000623",
+        "amount": 7400,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000624",
+        "amount": 1800,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000625",
+        "amount": 4400,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000626",
+        "amount": 1700,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000627",
+        "amount": 8900,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000628",
+        "amount": 8900,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000629",
+        "amount": 3900,
+        "providerPercent": 4.2
+    },
+    {
+        "productId": "PD000630",
+        "amount": 1700,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000631",
+        "amount": 3600,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000632",
+        "amount": 1300,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000633",
+        "amount": 3100,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000634",
+        "amount": 1400,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000635",
+        "amount": 200,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000636",
+        "amount": 5100,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000637",
+        "amount": 1400,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000638",
+        "amount": 3600,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000639",
+        "amount": 8100,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000640",
+        "amount": 4900,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000641",
+        "amount": 7600,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000642",
+        "amount": 9500,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000643",
+        "amount": 7100,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000644",
+        "amount": 9900,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000645",
+        "amount": 6100,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000646",
+        "amount": 1400,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000647",
+        "amount": 1300,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000648",
+        "amount": 7500,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000649",
+        "amount": 3000,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000650",
+        "amount": 6900,
+        "providerPercent": 3.2
+    },
+    {
+        "productId": "PD000651",
+        "amount": 7700,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000652",
+        "amount": 7000,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000653",
+        "amount": 8600,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000654",
+        "amount": 4200,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000655",
+        "amount": 7600,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000656",
+        "amount": 9200,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000657",
+        "amount": 7100,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000658",
+        "amount": 1000,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000659",
+        "amount": 9700,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000660",
+        "amount": 1100,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000661",
+        "amount": 8000,
+        "providerPercent": 8.2
+    },
+    {
+        "productId": "PD000662",
+        "amount": 2600,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000663",
+        "amount": 7400,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000664",
+        "amount": 2300,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000665",
+        "amount": 6400,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000666",
+        "amount": 5300,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000667",
+        "amount": 7100,
+        "providerPercent": 5.1
+    },
+    {
+        "productId": "PD000668",
+        "amount": 9700,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000669",
+        "amount": 8500,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000670",
+        "amount": 4500,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000671",
+        "amount": 4200,
+        "providerPercent": 2.4
+    },
+    {
+        "productId": "PD000672",
+        "amount": 500,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000673",
+        "amount": 1800,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000674",
+        "amount": 3300,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000675",
+        "amount": 8900,
+        "providerPercent": 0.9
+    },
+    {
+        "productId": "PD000676",
+        "amount": 3600,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000677",
+        "amount": 5800,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000678",
+        "amount": 7000,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000679",
+        "amount": 3200,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000680",
+        "amount": 7600,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000681",
+        "amount": 1600,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000682",
+        "amount": 6300,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000683",
+        "amount": 7400,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000684",
+        "amount": 2300,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000685",
+        "amount": 1800,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000686",
+        "amount": 9400,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000687",
+        "amount": 8800,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000688",
+        "amount": 4100,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000689",
+        "amount": 3100,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000690",
+        "amount": 9000,
+        "providerPercent": 9.7
+    },
+    {
+        "productId": "PD000691",
+        "amount": 6900,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000692",
+        "amount": 7500,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000693",
+        "amount": 8400,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000694",
+        "amount": 700,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000695",
+        "amount": 4300,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000696",
+        "amount": 6700,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000697",
+        "amount": 7000,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000698",
+        "amount": 4200,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000699",
+        "amount": 8300,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000700",
+        "amount": 600,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000701",
+        "amount": 1700,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000702",
+        "amount": 200,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000703",
+        "amount": 4700,
+        "providerPercent": 3.6
+    },
+    {
+        "productId": "PD000704",
+        "amount": 5400,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000705",
+        "amount": 3600,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000706",
+        "amount": 1100,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000707",
+        "amount": 1700,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000708",
+        "amount": 6200,
+        "providerPercent": 8.9
+    },
+    {
+        "productId": "PD000709",
+        "amount": 6600,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000710",
+        "amount": 100,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000711",
+        "amount": 4900,
+        "providerPercent": 5.1
+    },
+    {
+        "productId": "PD000712",
+        "amount": 5400,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000713",
+        "amount": 7400,
+        "providerPercent": 3.6
+    },
+    {
+        "productId": "PD000714",
+        "amount": 3800,
+        "providerPercent": 2.4
+    },
+    {
+        "productId": "PD000715",
+        "amount": 2600,
+        "providerPercent": 3.2
+    },
+    {
+        "productId": "PD000716",
+        "amount": 1000,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000717",
+        "amount": 8300,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000718",
+        "amount": 8700,
+        "providerPercent": 2.1
+    },
+    {
+        "productId": "PD000719",
+        "amount": 0,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000720",
+        "amount": 7300,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000721",
+        "amount": 9200,
+        "providerPercent": 4
+    },
+    {
+        "productId": "PD000722",
+        "amount": 9600,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000723",
+        "amount": 1500,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000724",
+        "amount": 7700,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000725",
+        "amount": 5200,
+        "providerPercent": 3.3
+    },
+    {
+        "productId": "PD000726",
+        "amount": 9300,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000727",
+        "amount": 7200,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000728",
+        "amount": 8600,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000729",
+        "amount": 100,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000730",
+        "amount": 5900,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000731",
+        "amount": 2700,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000732",
+        "amount": 0,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000733",
+        "amount": 2100,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000734",
+        "amount": 600,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000735",
+        "amount": 3700,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000736",
+        "amount": 9900,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000737",
+        "amount": 1100,
+        "providerPercent": 8.6
+    },
+    {
+        "productId": "PD000738",
+        "amount": 7600,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000739",
+        "amount": 5000,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000740",
+        "amount": 100,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000741",
+        "amount": 2300,
+        "providerPercent": 9.1
+    },
+    {
+        "productId": "PD000742",
+        "amount": 5500,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000743",
+        "amount": 2500,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000744",
+        "amount": 3600,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000745",
+        "amount": 9500,
+        "providerPercent": 4.2
+    },
+    {
+        "productId": "PD000746",
+        "amount": 6000,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000747",
+        "amount": 4600,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000748",
+        "amount": 5900,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000749",
+        "amount": 1700,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000750",
+        "amount": 1300,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000751",
+        "amount": 7500,
+        "providerPercent": 8.2
+    },
+    {
+        "productId": "PD000752",
+        "amount": 7900,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000753",
+        "amount": 8800,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000754",
+        "amount": 9800,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000755",
+        "amount": 5800,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000756",
+        "amount": 6900,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000757",
+        "amount": 8000,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000758",
+        "amount": 9700,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000759",
+        "amount": 4800,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000760",
+        "amount": 9400,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000761",
+        "amount": 3400,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000762",
+        "amount": 3000,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000763",
+        "amount": 9700,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000764",
+        "amount": 2700,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000765",
+        "amount": 100,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000766",
+        "amount": 8300,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000767",
+        "amount": 3100,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000768",
+        "amount": 8500,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000769",
+        "amount": 4000,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000770",
+        "amount": 8900,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000771",
+        "amount": 1500,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000772",
+        "amount": 8200,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000773",
+        "amount": 8800,
+        "providerPercent": 2.9
+    },
+    {
+        "productId": "PD000774",
+        "amount": 700,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000775",
+        "amount": 7700,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000776",
+        "amount": 9000,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000777",
+        "amount": 4800,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000778",
+        "amount": 3900,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000779",
+        "amount": 9800,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000780",
+        "amount": 2400,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000781",
+        "amount": 5200,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000782",
+        "amount": 200,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000783",
+        "amount": 8700,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000784",
+        "amount": 7500,
+        "providerPercent": 3.8
+    },
+    {
+        "productId": "PD000785",
+        "amount": 6500,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000786",
+        "amount": 5900,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000787",
+        "amount": 2100,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000788",
+        "amount": 7300,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000789",
+        "amount": 3100,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000790",
+        "amount": 7400,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000791",
+        "amount": 6000,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000792",
+        "amount": 3600,
+        "providerPercent": 0.9
+    },
+    {
+        "productId": "PD000793",
+        "amount": 9400,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000794",
+        "amount": 4200,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000795",
+        "amount": 1100,
+        "providerPercent": 6.3
+    },
+    {
+        "productId": "PD000796",
+        "amount": 9900,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000797",
+        "amount": 400,
+        "providerPercent": 3.2
+    },
+    {
+        "productId": "PD000798",
+        "amount": 6500,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000799",
+        "amount": 3800,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000800",
+        "amount": 8600,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000801",
+        "amount": 800,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000802",
+        "amount": 0,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000803",
+        "amount": 6300,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000804",
+        "amount": 9800,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000805",
+        "amount": 3500,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000806",
+        "amount": 6900,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000807",
+        "amount": 5800,
+        "providerPercent": 6.8
+    },
+    {
+        "productId": "PD000808",
+        "amount": 2400,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000809",
+        "amount": 400,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000810",
+        "amount": 6800,
+        "providerPercent": 4
+    },
+    {
+        "productId": "PD000811",
+        "amount": 4700,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000812",
+        "amount": 7000,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000813",
+        "amount": 7100,
+        "providerPercent": 3.3
+    },
+    {
+        "productId": "PD000814",
+        "amount": 6500,
+        "providerPercent": 9.3
+    },
+    {
+        "productId": "PD000815",
+        "amount": 5900,
+        "providerPercent": 5.3
+    },
+    {
+        "productId": "PD000816",
+        "amount": 2200,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000817",
+        "amount": 6200,
+        "providerPercent": 9
+    },
+    {
+        "productId": "PD000818",
+        "amount": 8900,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000819",
+        "amount": 1800,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000820",
+        "amount": 9700,
+        "providerPercent": 7.3
+    },
+    {
+        "productId": "PD000821",
+        "amount": 6300,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000822",
+        "amount": 2500,
+        "providerPercent": 5.9
+    },
+    {
+        "productId": "PD000823",
+        "amount": 5500,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000824",
+        "amount": 9500,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000825",
+        "amount": 300,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000826",
+        "amount": 7600,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000827",
+        "amount": 9300,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000828",
+        "amount": 500,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000829",
+        "amount": 5300,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000830",
+        "amount": 2600,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000831",
+        "amount": 9000,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000832",
+        "amount": 600,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000833",
+        "amount": 1000,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000834",
+        "amount": 7300,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000835",
+        "amount": 7900,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000836",
+        "amount": 9000,
+        "providerPercent": 4.2
+    },
+    {
+        "productId": "PD000837",
+        "amount": 2300,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000838",
+        "amount": 2900,
+        "providerPercent": 7.7
+    },
+    {
+        "productId": "PD000839",
+        "amount": 700,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000840",
+        "amount": 900,
+        "providerPercent": 7.4
+    },
+    {
+        "productId": "PD000841",
+        "amount": 400,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000842",
+        "amount": 3500,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000843",
+        "amount": 300,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000844",
+        "amount": 2500,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000845",
+        "amount": 6400,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000846",
+        "amount": 6400,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000847",
+        "amount": 7100,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000848",
+        "amount": 6100,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000849",
+        "amount": 7800,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000850",
+        "amount": 4500,
+        "providerPercent": 1.1
+    },
+    {
+        "productId": "PD000851",
+        "amount": 7600,
+        "providerPercent": 1.3
+    },
+    {
+        "productId": "PD000852",
+        "amount": 8300,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000853",
+        "amount": 3800,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000854",
+        "amount": 8400,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000855",
+        "amount": 1400,
+        "providerPercent": 3.3
+    },
+    {
+        "productId": "PD000856",
+        "amount": 5100,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000857",
+        "amount": 7600,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000858",
+        "amount": 6800,
+        "providerPercent": 2.2
+    },
+    {
+        "productId": "PD000859",
+        "amount": 200,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000860",
+        "amount": 7700,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000861",
+        "amount": 2700,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000862",
+        "amount": 9300,
+        "providerPercent": 4.2
+    },
+    {
+        "productId": "PD000863",
+        "amount": 9100,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000864",
+        "amount": 5500,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000865",
+        "amount": 400,
+        "providerPercent": 3.7
+    },
+    {
+        "productId": "PD000866",
+        "amount": 3600,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000867",
+        "amount": 3800,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000868",
+        "amount": 9000,
+        "providerPercent": 2.1
+    },
+    {
+        "productId": "PD000869",
+        "amount": 8100,
+        "providerPercent": 5.4
+    },
+    {
+        "productId": "PD000870",
+        "amount": 6200,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000871",
+        "amount": 3300,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000872",
+        "amount": 9300,
+        "providerPercent": 7.4
+    },
+    {
+        "productId": "PD000873",
+        "amount": 8500,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000874",
+        "amount": 4800,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000875",
+        "amount": 4000,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000876",
+        "amount": 2500,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000877",
+        "amount": 9000,
+        "providerPercent": 8.5
+    },
+    {
+        "productId": "PD000878",
+        "amount": 9800,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000879",
+        "amount": 900,
+        "providerPercent": 2.1
+    },
+    {
+        "productId": "PD000880",
+        "amount": 9400,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000881",
+        "amount": 2200,
+        "providerPercent": 8.1
+    },
+    {
+        "productId": "PD000882",
+        "amount": 6500,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000883",
+        "amount": 8300,
+        "providerPercent": 4.9
+    },
+    {
+        "productId": "PD000884",
+        "amount": 5100,
+        "providerPercent": 3.2
+    },
+    {
+        "productId": "PD000885",
+        "amount": 9600,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000886",
+        "amount": 300,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000887",
+        "amount": 1600,
+        "providerPercent": 4.2
+    },
+    {
+        "productId": "PD000888",
+        "amount": 7700,
+        "providerPercent": 2.4
+    },
+    {
+        "productId": "PD000889",
+        "amount": 5800,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000890",
+        "amount": 5300,
+        "providerPercent": 2.7
+    },
+    {
+        "productId": "PD000891",
+        "amount": 1200,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000892",
+        "amount": 8800,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000893",
+        "amount": 7600,
+        "providerPercent": 4.2
+    },
+    {
+        "productId": "PD000894",
+        "amount": 7500,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000895",
+        "amount": 2200,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000896",
+        "amount": 5600,
+        "providerPercent": 7
+    },
+    {
+        "productId": "PD000897",
+        "amount": 9100,
+        "providerPercent": 7.2
+    },
+    {
+        "productId": "PD000898",
+        "amount": 8900,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000899",
+        "amount": 100,
+        "providerPercent": 3.5
+    },
+    {
+        "productId": "PD000900",
+        "amount": 7600,
+        "providerPercent": 8
+    },
+    {
+        "productId": "PD000901",
+        "amount": 4200,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000902",
+        "amount": 3100,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000903",
+        "amount": 500,
+        "providerPercent": 4.5
+    },
+    {
+        "productId": "PD000904",
+        "amount": 5300,
+        "providerPercent": 5.8
+    },
+    {
+        "productId": "PD000905",
+        "amount": 5100,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000906",
+        "amount": 6600,
+        "providerPercent": 7.6
+    },
+    {
+        "productId": "PD000907",
+        "amount": 900,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000908",
+        "amount": 6600,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000909",
+        "amount": 700,
+        "providerPercent": 5
+    },
+    {
+        "productId": "PD000910",
+        "amount": 5200,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000911",
+        "amount": 1000,
+        "providerPercent": 3.4
+    },
+    {
+        "productId": "PD000912",
+        "amount": 9500,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000913",
+        "amount": 2600,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000914",
+        "amount": 9600,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000915",
+        "amount": 1900,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000916",
+        "amount": 100,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000917",
+        "amount": 7600,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000918",
+        "amount": 1500,
+        "providerPercent": 4.7
+    },
+    {
+        "productId": "PD000919",
+        "amount": 1500,
+        "providerPercent": 5.1
+    },
+    {
+        "productId": "PD000920",
+        "amount": 5000,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000921",
+        "amount": 3800,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000922",
+        "amount": 2300,
+        "providerPercent": 5.6
+    },
+    {
+        "productId": "PD000923",
+        "amount": 4800,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000924",
+        "amount": 700,
+        "providerPercent": 7.4
+    },
+    {
+        "productId": "PD000925",
+        "amount": 2800,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000926",
+        "amount": 7900,
+        "providerPercent": 3
+    },
+    {
+        "productId": "PD000927",
+        "amount": 2400,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000928",
+        "amount": 5200,
+        "providerPercent": 2.5
+    },
+    {
+        "productId": "PD000929",
+        "amount": 1900,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000930",
+        "amount": 2400,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000931",
+        "amount": 1600,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000932",
+        "amount": 400,
+        "providerPercent": 6.7
+    },
+    {
+        "productId": "PD000933",
+        "amount": 2500,
+        "providerPercent": 3.9
+    },
+    {
+        "productId": "PD000934",
+        "amount": 6000,
+        "providerPercent": 7.1
+    },
+    {
+        "productId": "PD000935",
+        "amount": 7800,
+        "providerPercent": 5.9
+    },
+    {
+        "productId": "PD000936",
+        "amount": 1500,
+        "providerPercent": 7.9
+    },
+    {
+        "productId": "PD000937",
+        "amount": 3200,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000938",
+        "amount": 1400,
+        "providerPercent": 0.3
+    },
+    {
+        "productId": "PD000939",
+        "amount": 1900,
+        "providerPercent": 4.1
+    },
+    {
+        "productId": "PD000940",
+        "amount": 2800,
+        "providerPercent": 6.9
+    },
+    {
+        "productId": "PD000941",
+        "amount": 3000,
+        "providerPercent": 1.7
+    },
+    {
+        "productId": "PD000942",
+        "amount": 7400,
+        "providerPercent": 9.2
+    },
+    {
+        "productId": "PD000943",
+        "amount": 600,
+        "providerPercent": 0.1
+    },
+    {
+        "productId": "PD000944",
+        "amount": 6900,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000945",
+        "amount": 1500,
+        "providerPercent": 6.3
+    },
+    {
+        "productId": "PD000946",
+        "amount": 6800,
+        "providerPercent": 2.6
+    },
+    {
+        "productId": "PD000947",
+        "amount": 6300,
+        "providerPercent": 1.5
+    },
+    {
+        "productId": "PD000948",
+        "amount": 9700,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000949",
+        "amount": 3600,
+        "providerPercent": 5.9
+    },
+    {
+        "productId": "PD000950",
+        "amount": 8500,
+        "providerPercent": 3.6
+    },
+    {
+        "productId": "PD000951",
+        "amount": 4000,
+        "providerPercent": 9.9
+    },
+    {
+        "productId": "PD000952",
+        "amount": 2800,
+        "providerPercent": 6.6
+    },
+    {
+        "productId": "PD000953",
+        "amount": 4600,
+        "providerPercent": 0
+    },
+    {
+        "productId": "PD000954",
+        "amount": 3300,
+        "providerPercent": 2.8
+    },
+    {
+        "productId": "PD000955",
+        "amount": 900,
+        "providerPercent": 0.4
+    },
+    {
+        "productId": "PD000956",
+        "amount": 8800,
+        "providerPercent": 6.1
+    },
+    {
+        "productId": "PD000957",
+        "amount": 7100,
+        "providerPercent": 8.3
+    },
+    {
+        "productId": "PD000958",
+        "amount": 6000,
+        "providerPercent": 4.3
+    },
+    {
+        "productId": "PD000959",
+        "amount": 3200,
+        "providerPercent": 4.8
+    },
+    {
+        "productId": "PD000960",
+        "amount": 7600,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000961",
+        "amount": 2800,
+        "providerPercent": 3.3
+    },
+    {
+        "productId": "PD000962",
+        "amount": 5400,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000963",
+        "amount": 4400,
+        "providerPercent": 7.4
+    },
+    {
+        "productId": "PD000964",
+        "amount": 6500,
+        "providerPercent": 9.5
+    },
+    {
+        "productId": "PD000965",
+        "amount": 4400,
+        "providerPercent": 0.8
+    },
+    {
+        "productId": "PD000966",
+        "amount": 8800,
+        "providerPercent": 1.6
+    },
+    {
+        "productId": "PD000967",
+        "amount": 9800,
+        "providerPercent": 2
+    },
+    {
+        "productId": "PD000968",
+        "amount": 1600,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000969",
+        "amount": 9700,
+        "providerPercent": 8.4
+    },
+    {
+        "productId": "PD000970",
+        "amount": 3900,
+        "providerPercent": 1
+    },
+    {
+        "productId": "PD000971",
+        "amount": 9700,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000972",
+        "amount": 4400,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000973",
+        "amount": 400,
+        "providerPercent": 6.4
+    },
+    {
+        "productId": "PD000974",
+        "amount": 9600,
+        "providerPercent": 4.6
+    },
+    {
+        "productId": "PD000975",
+        "amount": 6300,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000976",
+        "amount": 5000,
+        "providerPercent": 6
+    },
+    {
+        "productId": "PD000977",
+        "amount": 6200,
+        "providerPercent": 4
+    },
+    {
+        "productId": "PD000978",
+        "amount": 3100,
+        "providerPercent": 7.5
+    },
+    {
+        "productId": "PD000979",
+        "amount": 0,
+        "providerPercent": 0.7
+    },
+    {
+        "productId": "PD000980",
+        "amount": 6100,
+        "providerPercent": 0.5
+    },
+    {
+        "productId": "PD000981",
+        "amount": 3600,
+        "providerPercent": 4
+    },
+    {
+        "productId": "PD000982",
+        "amount": 8700,
+        "providerPercent": 6.5
+    },
+    {
+        "productId": "PD000983",
+        "amount": 9400,
+        "providerPercent": 8.8
+    },
+    {
+        "productId": "PD000984",
+        "amount": 1700,
+        "providerPercent": 6.2
+    },
+    {
+        "productId": "PD000985",
+        "amount": 2100,
+        "providerPercent": 0.6
+    },
+    {
+        "productId": "PD000986",
+        "amount": 8400,
+        "providerPercent": 5.5
+    },
+    {
+        "productId": "PD000987",
+        "amount": 7300,
+        "providerPercent": 4.4
+    },
+    {
+        "productId": "PD000988",
+        "amount": 6900,
+        "providerPercent": 2.3
+    },
+    {
+        "productId": "PD000989",
+        "amount": 1600,
+        "providerPercent": 1.2
+    },
+    {
+        "productId": "PD000990",
+        "amount": 6100,
+        "providerPercent": 9.6
+    },
+    {
+        "productId": "PD000991",
+        "amount": 3400,
+        "providerPercent": 1.4
+    },
+    {
+        "productId": "PD000992",
+        "amount": 7100,
+        "providerPercent": 5.2
+    },
+    {
+        "productId": "PD000993",
+        "amount": 7000,
+        "providerPercent": 7.8
+    },
+    {
+        "productId": "PD000994",
+        "amount": 6400,
+        "providerPercent": 8.7
+    },
+    {
+        "productId": "PD000995",
+        "amount": 6100,
+        "providerPercent": 9.8
+    },
+    {
+        "productId": "PD000996",
+        "amount": 5000,
+        "providerPercent": 1.8
+    },
+    {
+        "productId": "PD000997",
+        "amount": 900,
+        "providerPercent": 5.7
+    },
+    {
+        "productId": "PD000998",
+        "amount": 4100,
+        "providerPercent": 1.9
+    },
+    {
+        "productId": "PD000999",
+        "amount": 3800,
+        "providerPercent": 5.9
+    }
+]
