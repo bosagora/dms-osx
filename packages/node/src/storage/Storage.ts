@@ -35,7 +35,6 @@ export class Storage {
         return new Promise<QueryResult<R>>(async (resolve, reject) => {
             try {
                 const sql = MybatisMapper.getStatement(namespace, sql_id, param, { language: "sql", indent: "  " });
-                // console.log(sql);
                 const res = await this.pool.query(sql);
                 resolve(res);
             } catch (err) {

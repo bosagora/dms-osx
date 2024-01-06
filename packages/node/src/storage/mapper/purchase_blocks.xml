@@ -56,11 +56,11 @@
     </select>
 
     <select id="getTransaction">
-        SELECT * FROM purchase_transactions
+        SELECT "contents" FROM purchase_transactions
         WHERE "timestamp" <![CDATA[<]]> ${timestamp}
             AND "canceled" = 'N'
             AND "stored" = 'N'
-        LIMIT 64;
+        LIMIT 256;
     </select>
 
     <update id="storedTransaction">

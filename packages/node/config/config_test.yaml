@@ -17,7 +17,7 @@ database:
     database: "${DATABASE_NAME}"
     scheme: "${DATABASE_SCHEME}"
     port: "${DATABASE_PORT}"
-    connectionTimeoutMillis: 2000
+    connectionTimeoutMillis: 5000
     max: 100
 
 ################################################################################
@@ -57,6 +57,7 @@ contracts:
 setting:
     ipfs_gateway_url: "${NODE_IPFS_GATEWAY_URL}"
     waitedProvide: ${WAITED_PROVIDE}
+    blockInterval: ${BLOCK_INTERVAL}
 
 validator:
     keys:

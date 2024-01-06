@@ -1,20 +1,13 @@
-// tslint:disable-next-line:no-implicit-dependencies
-import { Interface } from "@ethersproject/abi";
-// tslint:disable-next-line:no-implicit-dependencies
-import { ContractReceipt } from "@ethersproject/contracts";
-// tslint:disable-next-line:no-implicit-dependencies
-import { id } from "@ethersproject/hash";
-// tslint:disable-next-line:no-implicit-dependencies
-import { Log } from "@ethersproject/providers";
-
-import { defaultAbiCoder } from "@ethersproject/abi";
+import { defaultAbiCoder, Interface } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
-import { BytesLike } from "@ethersproject/bytes";
-import { arrayify } from "@ethersproject/bytes";
+import { arrayify, BytesLike } from "@ethersproject/bytes";
+import { ContractReceipt } from "@ethersproject/contracts";
+import { id } from "@ethersproject/hash";
 import { keccak256 } from "@ethersproject/keccak256";
-import { verifyMessage } from "@ethersproject/wallet";
+import { Log } from "@ethersproject/providers";
 import { randomBytes } from "@ethersproject/random";
+import { verifyMessage } from "@ethersproject/wallet";
 
 export class ContractUtils {
     public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {

@@ -1,4 +1,3 @@
-import * as path from "path";
 import * as winston from "winston";
 
 const { combine, timestamp, printf, colorize } = winston.format;
