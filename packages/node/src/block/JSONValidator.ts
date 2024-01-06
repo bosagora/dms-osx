@@ -76,7 +76,7 @@ export class JSONValidator {
                     },
                 },
                 additionalProperties: false,
-                required: ["branches"],
+                required: ["branches", "signatures"],
             },
         ],
         [
@@ -93,7 +93,7 @@ export class JSONValidator {
                     },
                 },
                 additionalProperties: false,
-                required: ["items", "signatures"],
+                required: ["items"],
             },
         ],
         [
@@ -148,7 +148,7 @@ export class JSONValidator {
                     },
                 },
                 additionalProperties: false,
-                required: ["branches"],
+                required: ["branches", "signatures"],
             },
         ],
         [
@@ -165,7 +165,7 @@ export class JSONValidator {
                     },
                 },
                 additionalProperties: false,
-                required: ["items", "signatures"],
+                required: ["items"],
             },
         ],
         [
@@ -205,7 +205,7 @@ export class JSONValidator {
                     },
                 },
                 additionalProperties: false,
-                required: ["branches"],
+                required: ["branches", "signatures"],
             },
         ],
         [
@@ -222,7 +222,7 @@ export class JSONValidator {
                     },
                 },
                 additionalProperties: false,
-                required: ["items", "signatures"],
+                required: ["items"],
             },
         ],
         [

@@ -9,6 +9,7 @@ import {
     Certifier,
     CurrencyRate,
     Ledger,
+    LoyaltyBurner,
     LoyaltyConsumer,
     LoyaltyExchanger,
     LoyaltyProvider,
@@ -99,6 +100,7 @@ describe("Test for Ledger", () => {
     let providerContract: LoyaltyProvider;
     let consumerContract: LoyaltyConsumer;
     let exchangerContract: LoyaltyExchanger;
+    let burnerContract: LoyaltyBurner;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -232,6 +234,20 @@ describe("Test for Ledger", () => {
         await exchangerContract.deployTransaction.wait();
     };
 
+    const deployBurner = async () => {
+        const factory = await ethers.getContractFactory("LoyaltyBurner");
+        burnerContract = (await upgrades.deployProxy(
+            factory.connect(deployer),
+            [validatorContract.address, linkContract.address],
+            {
+                initializer: "initialize",
+                kind: "uups",
+            }
+        )) as unknown as LoyaltyBurner;
+        await burnerContract.deployed();
+        await burnerContract.deployTransaction.wait();
+    };
+
     const deployShop = async () => {
         const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
@@ -262,6 +278,7 @@ describe("Test for Ledger", () => {
                 providerContract.address,
                 consumerContract.address,
                 exchangerContract.address,
+                burnerContract.address,
             ],
             {
                 initializer: "initialize",
@@ -304,6 +321,7 @@ describe("Test for Ledger", () => {
         await deployProvider();
         await deployConsumer();
         await deployExchanger();
+        await deployBurner();
         await deployShop();
         await deployLedger();
         await addShopData(shopData);
@@ -2848,6 +2866,7 @@ describe("Test for Ledger", () => {
             await deployProvider();
             await deployConsumer();
             await deployExchanger();
+            await deployBurner();
             await deployShop();
             await deployLedger();
             await addShopData(shopData);

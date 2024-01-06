@@ -27,6 +27,7 @@ contract LedgerStorage {
     address public providerAddress;
     address public consumerAddress;
     address public exchangerAddress;
+    address public burnerAddress;
 
     uint32 internal fee;
     address internal temporaryAddress;

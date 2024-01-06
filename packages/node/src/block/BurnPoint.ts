@@ -1,16 +1,16 @@
 import { JSONValidator } from "./JSONValidator";
+import { BranchSignature } from "./Types";
 
 import { defaultAbiCoder } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber } from "@ethersproject/bignumber";
 import { arrayify } from "@ethersproject/bytes";
-import { HashZero } from "@ethersproject/constants";
+import { AddressZero, HashZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/keccak256";
-import { BranchSignature } from "./Types";
 
 export enum BurnPointType {
     PhoneNumber = 0,
-    Account = 0,
+    Account = 1,
 }
 
 export class BurnPoint {
@@ -43,10 +43,16 @@ export class BurnPoint {
     }
 
     public computeHash(): string {
-        const encodedData = defaultAbiCoder.encode(
-            ["uint256", "address", "uint256"],
-            [this.type, this.account, this.amount]
-        );
+        const encodedData =
+            this.type === 0
+                ? defaultAbiCoder.encode(
+                      ["uint256", "address", "bytes32", "uint256"],
+                      [this.type, AddressZero, this.account, this.amount]
+                  )
+                : defaultAbiCoder.encode(
+                      ["uint256", "address", "bytes32", "uint256"],
+                      [this.type, this.account, HashZero, this.amount]
+                  );
         return keccak256(encodedData);
     }
 }

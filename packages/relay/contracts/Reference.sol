@@ -3,6 +3,7 @@
 pragma solidity ^0.8.2;
 
 import "dms-osx-artifacts/contracts/certifier/Certifier.sol";
+import "dms-osx-artifacts/contracts/controllers/LoyaltyBurner.sol";
 import "dms-osx-artifacts/contracts/controllers/LoyaltyConsumer.sol";
 import "dms-osx-artifacts/contracts/controllers/LoyaltyProvider.sol";
 import "dms-osx-artifacts/contracts/controllers/LoyaltyExchanger.sol";

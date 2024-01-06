@@ -12,6 +12,7 @@ import {
     Certifier,
     CurrencyRate,
     Ledger,
+    LoyaltyBurner,
     LoyaltyConsumer,
     LoyaltyExchanger,
     LoyaltyProvider,
@@ -174,6 +175,7 @@ export class Deployments {
         this.addDeployer(deployLoyaltyProvider);
         this.addDeployer(deployLoyaltyConsumer);
         this.addDeployer(deployLoyaltyExchanger);
+        this.addDeployer(deployLoyaltyBurner);
         this.addDeployer(deployShop);
         this.addDeployer(deployLedger);
         this.addDeployer(deployStorePurchase);
@@ -472,6 +474,32 @@ async function deployLoyaltyExchanger(accounts: IAccount, deployment: Deployment
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
+async function deployLoyaltyBurner(accounts: IAccount, deployment: Deployments) {
+    const contractName = "LoyaltyBurner";
+    console.log(`Deploy ${contractName}...`);
+    if (
+        deployment.getContract("Validator") === undefined ||
+        deployment.getContract("PhoneLinkCollection") === undefined
+    ) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+
+    const factory = await ethers.getContractFactory("LoyaltyBurner");
+    const contract = (await upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [await deployment.getContractAddress("Validator"), await deployment.getContractAddress("PhoneLinkCollection")],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as LoyaltyBurner;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+}
+
 async function deployShop(accounts: IAccount, deployment: Deployments) {
     const contractName = "Shop";
     console.log(`Deploy ${contractName}...`);
@@ -539,7 +567,8 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         deployment.getContract("CurrencyRate") === undefined ||
         deployment.getContract("LoyaltyProvider") === undefined ||
         deployment.getContract("LoyaltyConsumer") === undefined ||
-        deployment.getContract("LoyaltyExchanger") === undefined
+        deployment.getContract("LoyaltyExchanger") === undefined ||
+        deployment.getContract("LoyaltyBurner") === undefined
     ) {
         console.error("Contract is not deployed!");
         return;
@@ -558,6 +587,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
             await deployment.getContractAddress("LoyaltyProvider"),
             await deployment.getContractAddress("LoyaltyConsumer"),
             await deployment.getContractAddress("LoyaltyExchanger"),
+            await deployment.getContractAddress("LoyaltyBurner"),
         ],
         {
             initializer: "initialize",
@@ -586,19 +616,25 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     console.log(`Set address of LoyaltyExchanger (tx: ${tx3.hash})...`);
     await tx3.wait();
 
+    const tx4 = await (deployment.getContract("LoyaltyBurner") as LoyaltyBurner)
+        .connect(accounts.deployer)
+        .setLedger(contract.address);
+    console.log(`Set address of LoyaltyBurner (tx: ${tx4.hash})...`);
+    await tx4.wait();
+
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
     {
         const assetAmount = Amount.make(100_000_000, 18);
-        const tx4 = await (deployment.getContract("Token") as Token)
+        const tx11 = await (deployment.getContract("Token") as Token)
             .connect(accounts.foundation)
             .approve(contract.address, assetAmount.value);
-        console.log(`Approve foundation's amount (tx: ${tx4.hash})...`);
-        await tx4.wait();
+        console.log(`Approve foundation's amount (tx: ${tx11.hash})...`);
+        await tx11.wait();
 
-        const tx5 = await contract.connect(accounts.foundation).deposit(assetAmount.value);
-        console.log(`Deposit foundation's amount (tx: ${tx5.hash})...`);
-        await tx5.wait();
+        const tx12 = await contract.connect(accounts.foundation).deposit(assetAmount.value);
+        console.log(`Deposit foundation's amount (tx: ${tx12.hash})...`);
+        await tx12.wait();
     }
 }
 

@@ -47,7 +47,7 @@ interface ILedger {
 
     function transferToken(address _from, address _to, uint256 _amount) external;
 
-    function unPayablePointBalanceOf(bytes32 _hash) external view returns (uint256);
+    function unPayablePointBalanceOf(bytes32 _phone) external view returns (uint256);
 
     function pointBalanceOf(address _account) external view returns (uint256);
 
@@ -70,4 +70,8 @@ interface ILedger {
     function getSettlementAccount() external view returns (address);
 
     function getFeeAccount() external view returns (address);
+
+    function burnUnPayablePoint(bytes32 _phone, uint256 _amount) external;
+
+    function burnPoint(address _account, uint256 _amount) external;
 }
