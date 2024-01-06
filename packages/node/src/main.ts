@@ -1,12 +1,12 @@
 import { Config } from "./common/Config";
 import { logger, Logger } from "./common/Logger";
 import { DefaultServer } from "./DefaultServer";
+import { CollectExchangeRateScheduler } from "./scheduler/CollectExchangeRateScheduler";
+import { CollectPurchaseScheduler } from "./scheduler/CollectPurchaseScheduler";
 import { Scheduler } from "./scheduler/Scheduler";
+import { StoreScheduler } from "./scheduler/StoreScheduler";
 import { NodeStorage } from "./storage/NodeStorage";
 import { ContractUtils } from "./utils/ContractUtils";
-import { CollectPurchaseScheduler } from "./scheduler/CollectPurchaseScheduler";
-import { CollectExchangeRateScheduler } from "./scheduler/CollectExchangeRateScheduler";
-import { StoreScheduler } from "./scheduler/StoreScheduler";
 
 let server: DefaultServer;
 

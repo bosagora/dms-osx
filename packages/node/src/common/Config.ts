@@ -450,6 +450,7 @@ export class SchedulerConfig implements ISchedulerConfig {
 export class Setting implements ISetting {
     public ipfs_gateway_url: string;
     public waitedProvide: number;
+    public blockInterval: number;
 
     /**
      * Constructor
@@ -458,11 +459,13 @@ export class Setting implements ISetting {
         const defaults = Setting.defaultValue();
         this.ipfs_gateway_url = defaults.ipfs_gateway_url;
         this.waitedProvide = defaults.waitedProvide;
+        this.blockInterval = defaults.blockInterval;
     }
 
     public readFromObject(config: ISetting) {
         if (config.ipfs_gateway_url !== undefined) this.ipfs_gateway_url = config.ipfs_gateway_url;
         if (config.waitedProvide !== undefined) this.waitedProvide = config.waitedProvide;
+        if (config.blockInterval !== undefined) this.blockInterval = config.blockInterval;
     }
 
     /**
@@ -472,6 +475,7 @@ export class Setting implements ISetting {
         return {
             ipfs_gateway_url: "",
             waitedProvide: 86400 * 8,
+            blockInterval: 10,
         } as unknown as ISetting;
     }
 }
@@ -626,6 +630,7 @@ export interface ISchedulerConfig {
 export interface ISetting {
     ipfs_gateway_url: string;
     waitedProvide: number;
+    blockInterval: number;
 }
 
 export interface IValidator {

@@ -1,16 +1,13 @@
 import { Block, hashFull, NewTransaction, Transaction, TransactionType } from "dms-store-purchase-sdk";
 import { IDatabaseConfig } from "../common/Config";
+import { IExchangeRate } from "../types";
+import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Storage } from "./Storage";
-import { logger } from "../common/Logger";
 
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
-import { IExchangeRate } from "../types";
-import { ContractUtils } from "../utils/ContractUtils";
-import { BigNumber } from "ethers";
-
 /**
  * The class that inserts and reads the ledger into the database.
  */
@@ -112,7 +109,7 @@ export class NodeStorage extends Storage {
 
     public async storedTransaction(purchaseIds: string[]) {
         await this.queryForMapper("purchase_blocks", "storedTransaction", {
-            purchaseIds: purchaseIds,
+            purchaseIds,
         });
     }
 

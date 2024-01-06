@@ -228,4 +228,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
             );
         }
     }
+
+    function purchasesOf(string calldata _purchaseId) external view returns (bool) {
+        return purchases[_purchaseId];
+    }
 }

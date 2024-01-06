@@ -169,10 +169,14 @@ describe("Test of Server", function () {
     });
 
     it("Create purchase block", async () => {
-        await fakerStoreServer.storePurchaseBlock(64);
+        await fakerStoreServer.storePurchaseBlock(256);
+    });
+
+    it("Create purchase block", async () => {
+        await fakerStoreServer.storePurchaseBlock(256);
     });
 
     it("Test of Node", async () => {
-        await ContractUtils.delay(5 * 1000);
+        await ContractUtils.delay(30 * 1000);
     });
 });

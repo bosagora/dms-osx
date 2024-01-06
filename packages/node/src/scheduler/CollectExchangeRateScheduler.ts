@@ -1,11 +1,11 @@
 import "@nomiclabs/hardhat-ethers";
+import { parseFromString } from "dom-parser";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { NodeStorage } from "../storage/NodeStorage";
 import { IExchangeRate } from "../types";
 import { HTTPClient } from "../utils/HTTPClient";
 import { Scheduler } from "./Scheduler";
-import { parseFromString } from "dom-parser";
 
 export class CollectExchangeRateScheduler extends Scheduler {
     private multiple: bigint = 1000000000n;
@@ -63,7 +63,8 @@ export class CollectExchangeRateScheduler extends Scheduler {
         if (res.status === 200) {
             logger.info("CollectExchangeRateScheduler");
             const text: string = res.data;
-            const pos0 = text.indexOf('<table class="table table-bordered text-center table-fixed">');
+
+            const pos0 = text.indexOf(`<table class="table table-bordered text-center table-fixed">`);
             if (pos0 < 0) throw new Error("Error, Parse Exchange Rate");
             const text0 = text.substring(pos0);
             const pos1 = text0.indexOf("</table>");

@@ -17,9 +17,9 @@ import {
     LoyaltyProvider,
     PhoneLinkCollection,
     Shop,
+    StorePurchase,
     Token,
     Validator,
-    StorePurchase,
 } from "../../typechain-types";
 
 interface IShopData {
@@ -345,7 +345,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
 
     {
         const multiple = await contract.multiple();
-        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = 0;
         const rates = [
             {
                 symbol: "the9",
