@@ -73,7 +73,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address _currencyRateAddress,
         address _providerAddress,
         address _consumerAddress,
-        address _exchangerAddress
+        address _exchangerAddress,
+        address _burnerAddress
     ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
@@ -84,6 +85,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         providerAddress = _providerAddress;
         consumerAddress = _consumerAddress;
         exchangerAddress = _exchangerAddress;
+        burnerAddress = _burnerAddress;
 
         tokenContract = IERC20(_tokenAddress);
         linkContract = IPhoneLinkCollection(_linkAddress);
@@ -123,6 +125,11 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     modifier onlyAccessLedger() {
         require(_msgSender() == consumerAddress || _msgSender() == exchangerAddress, "1007");
+        _;
+    }
+
+    modifier onlyAccessBurner() {
+        require(_msgSender() == burnerAddress, "1007");
         _;
     }
 
@@ -301,9 +308,9 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 포인트의 잔고를 리턴한다
-    /// @param _hash 전화번호의 해시
-    function unPayablePointBalanceOf(bytes32 _hash) external view override returns (uint256) {
-        return unPayablePointBalances[_hash];
+    /// @param _phone 전화번호의 해시
+    function unPayablePointBalanceOf(bytes32 _phone) external view override returns (uint256) {
+        return unPayablePointBalances[_phone];
     }
 
     /// @notice 포인트의 잔고를 리턴한다
@@ -371,5 +378,13 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     function getFeeAccount() external view override returns (address) {
         return feeAccount;
+    }
+
+    function burnUnPayablePoint(bytes32 _phone, uint256 _amount) external override onlyAccessBurner {
+        if (unPayablePointBalances[_phone] >= _amount) unPayablePointBalances[_phone] -= _amount;
+    }
+
+    function burnPoint(address _account, uint256 _amount) external override onlyAccessBurner {
+        if (pointBalances[_account] >= _amount) pointBalances[_account] -= _amount;
     }
 }

@@ -21,7 +21,6 @@ import "./LoyaltyProviderStorage.sol";
 import "../lib/DMS.sol";
 
 contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
-    uint256 public constant QUORUM = (uint256(2000) / uint256(3));
     struct PurchaseData {
         string purchaseId;
         uint256 amount;
@@ -141,7 +140,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
             }
         }
 
-        require(((length * 1000) / numberOfVoters) >= QUORUM, "1164");
+        require(((length * 1000) / numberOfVoters) >= DMS.QUORUM, "1164");
 
         for (uint256 i = 0; i < _data.length; i++) {
             PurchaseData memory data = _data[i];
@@ -176,7 +175,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                             currencyRateContract.convertCurrency(loyaltyValue, data.currency, shop.currency),
                             data.purchaseId
                         );
-                    } else if (data.phone != NULL) {
+                    } else if (data.phone != DMS.NULL) {
                         address account = linkContract.toAddress(data.phone);
                         if (account == address(0x00)) {
                             ledgerContract.provideUnPayablePoint(
