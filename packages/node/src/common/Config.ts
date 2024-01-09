@@ -450,7 +450,10 @@ export class SchedulerConfig implements ISchedulerConfig {
 export class Setting implements ISetting {
     public ipfs_gateway_url: string;
     public waitedProvide: number;
-    public blockInterval: number;
+    public nptServer: string;
+    public nptInterval: number;
+    public SECONDS_PER_BLOCK: number;
+    public GENESIS_TIME: bigint;
 
     /**
      * Constructor
@@ -459,13 +462,19 @@ export class Setting implements ISetting {
         const defaults = Setting.defaultValue();
         this.ipfs_gateway_url = defaults.ipfs_gateway_url;
         this.waitedProvide = defaults.waitedProvide;
-        this.blockInterval = defaults.blockInterval;
+        this.nptServer = defaults.nptServer;
+        this.nptInterval = defaults.nptInterval;
+        this.SECONDS_PER_BLOCK = defaults.SECONDS_PER_BLOCK;
+        this.GENESIS_TIME = BigInt(defaults.GENESIS_TIME);
     }
 
     public readFromObject(config: ISetting) {
         if (config.ipfs_gateway_url !== undefined) this.ipfs_gateway_url = config.ipfs_gateway_url;
         if (config.waitedProvide !== undefined) this.waitedProvide = config.waitedProvide;
-        if (config.blockInterval !== undefined) this.blockInterval = config.blockInterval;
+        if (config.nptServer !== undefined) this.nptServer = config.nptServer;
+        if (config.nptInterval !== undefined) this.nptInterval = config.nptInterval;
+        if (config.SECONDS_PER_BLOCK !== undefined) this.SECONDS_PER_BLOCK = config.SECONDS_PER_BLOCK;
+        if (config.GENESIS_TIME !== undefined) this.GENESIS_TIME = BigInt(config.GENESIS_TIME);
     }
 
     /**
@@ -475,7 +484,10 @@ export class Setting implements ISetting {
         return {
             ipfs_gateway_url: "",
             waitedProvide: 86400 * 8,
-            blockInterval: 10,
+            SECONDS_PER_BLOCK: 10,
+            GENESIS_TIME: 1704067200,
+            nptServer: "kr.pool.ntp.org",
+            nptInterval: 10000,
         } as unknown as ISetting;
     }
 }
@@ -630,7 +642,10 @@ export interface ISchedulerConfig {
 export interface ISetting {
     ipfs_gateway_url: string;
     waitedProvide: number;
-    blockInterval: number;
+    nptServer: string;
+    nptInterval: number;
+    SECONDS_PER_BLOCK: number;
+    GENESIS_TIME: bigint;
 }
 
 export interface IValidator {
@@ -641,24 +656,12 @@ export interface IValidator {
  * The interface of main config
  */
 export interface IConfig {
-    /**
-     * Server config
-     */
     server: IServerConfig;
 
-    /**
-     * Database config
-     */
     database: IDatabaseConfig;
 
-    /**
-     * Logging config
-     */
     logging: ILoggingConfig;
 
-    /**
-     * Scheduler
-     */
     scheduler: ISchedulerConfig;
 
     contracts: IContractsConfig;

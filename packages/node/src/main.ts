@@ -4,7 +4,6 @@ import { DefaultServer } from "./DefaultServer";
 import { CollectExchangeRateScheduler } from "./scheduler/CollectExchangeRateScheduler";
 import { CollectPurchaseScheduler } from "./scheduler/CollectPurchaseScheduler";
 import { Scheduler } from "./scheduler/Scheduler";
-import { StoreScheduler } from "./scheduler/StoreScheduler";
 import { NodeStorage } from "./storage/NodeStorage";
 import { ContractUtils } from "./utils/ContractUtils";
 
@@ -33,10 +32,6 @@ async function main() {
         scheduler = config.scheduler.getScheduler("collectExchangeRate");
         if (scheduler && scheduler.enable) {
             schedulers.push(new CollectExchangeRateScheduler(scheduler.expression));
-        }
-        scheduler = config.scheduler.getScheduler("store");
-        if (scheduler && scheduler.enable) {
-            schedulers.push(new StoreScheduler(scheduler.expression));
         }
     }
 

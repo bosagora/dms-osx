@@ -1,5 +1,5 @@
 import { JSONValidator } from "./JSONValidator";
-import { BranchSignature } from "./Types";
+import { BranchSignature } from "./BranchSignature";
 
 import { defaultAbiCoder } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
