@@ -6,7 +6,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { arrayify } from "@ethersproject/bytes";
 import { HashZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/keccak256";
-import { BranchSignature } from "./Types";
+import { BranchSignature } from "./BranchSignature";
 
 export class ExchangeRate {
     public symbol: string;

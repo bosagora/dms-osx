@@ -61,7 +61,6 @@ export class CollectExchangeRateScheduler extends Scheduler {
         const res = await client.get(url);
         const rates = [];
         if (res.status === 200) {
-            logger.info("CollectExchangeRateScheduler");
             const text: string = res.data;
 
             const pos0 = text.indexOf(`<table class="table table-bordered text-center table-fixed">`);

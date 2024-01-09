@@ -107,9 +107,10 @@ export class NodeStorage extends Storage {
         }
     }
 
-    public async storedTransaction(purchaseIds: string[]) {
-        await this.queryForMapper("purchase_blocks", "storedTransaction", {
+    public async updateStep(purchaseIds: string[], step: number) {
+        await this.queryForMapper("purchase_blocks", "updateStep", {
             purchaseIds,
+            step,
         });
     }
 

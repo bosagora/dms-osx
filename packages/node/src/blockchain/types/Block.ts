@@ -1,9 +1,6 @@
-import { ContractUtils } from "../utils/ContractUtils";
-import { BlockHeader } from "./BlockHeader";
-import { BurnPointRoot } from "./BurnPoint";
-import { ExchangeRateRoot } from "./ExchangeRate";
+import { ContractUtils } from "../../utils/ContractUtils";
+import { BlockHeader, BurnPointRoot, ExchangeRateRoot, PurchaseRoot } from "./";
 import { JSONValidator } from "./JSONValidator";
-import { PurchaseRoot } from "./Purchase";
 
 export class Block {
     public header: BlockHeader;

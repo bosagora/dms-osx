@@ -1,5 +1,7 @@
 import bodyParser from "body-parser";
 import cors from "cors";
+import { Node } from "./blockchain/node/Node";
+import { NodeScheduler } from "./blockchain/node/NodeScheduler";
 import { Config } from "./common/Config";
 import { DefaultRouter } from "./routers/DefaultRouter";
 import { Scheduler } from "./scheduler/Scheduler";
@@ -16,6 +18,7 @@ export class DefaultServer extends WebService {
 
     public readonly defaultRouter: DefaultRouter;
     public readonly storage: NodeStorage;
+    public node: Node;
 
     /**
      * Constructor
@@ -29,16 +32,17 @@ export class DefaultServer extends WebService {
         this.config = config;
         this.storage = storage;
         this.defaultRouter = new DefaultRouter(this);
+        this.node = new Node(this.config, this.storage);
 
-        if (schedules) {
-            schedules.forEach((m) => this.schedules.push(m));
-            this.schedules.forEach((m) =>
-                m.setOption({
-                    config: this.config,
-                    storage: this.storage,
-                })
-            );
-        }
+        if (!schedules) schedules = [];
+        schedules.push(new NodeScheduler(this.node));
+        schedules.forEach((m) => this.schedules.push(m));
+        this.schedules.forEach((m) =>
+            m.setOption({
+                config: this.config,
+                storage: this.storage,
+            })
+        );
     }
 
     /**

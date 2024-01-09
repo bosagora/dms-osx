@@ -35,13 +35,10 @@ scheduler:
     items:
         - name: collectPurchase
           enable: true
-          expression: "*/1 * * * * *"
+          expression: "*/10 * * * * *"
         - name: collectExchangeRate
           enable: true
-          expression: "*/1 * * * * *"
-        - name: store
-          enable: true
-          expression: "*/1 * * * * *"
+          expression: "*/10 * * * * *"
 
 contracts:
     tokenAddress: "${TOKEN_CONTRACT_ADDRESS}"
@@ -57,7 +54,10 @@ contracts:
 setting:
     ipfs_gateway_url: "${NODE_IPFS_GATEWAY_URL}"
     waitedProvide: ${WAITED_PROVIDE}
-    blockInterval: ${BLOCK_INTERVAL}
+    nptServer: "kr.pool.ntp.org"
+    nptInterval: 10
+    SECONDS_PER_BLOCK: ${SECONDS_PER_BLOCK}
+    GENESIS_TIME: ${GENESIS_TIME}
 
 validator:
     keys:

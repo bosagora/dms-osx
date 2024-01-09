@@ -59,18 +59,17 @@
         SELECT "contents" FROM purchase_transactions
         WHERE "timestamp" <![CDATA[<]]> ${timestamp}
             AND "canceled" = 'N'
-            AND "stored" = 'N'
+            AND ("step" = 0 OR "step" = 4)
         LIMIT 256;
     </select>
 
-    <update id="storedTransaction">
+    <update id="updateStep">
         UPDATE purchase_transactions
         SET
-            "stored" = 'Y'
+            "step" = ${step}
         WHERE "purchaseId"  in
         <foreach collection="purchaseIds" item="item" index="index" open="(" close=")" separator=",">
             #{item}
         </foreach>
     </update>
-
 </mapper>

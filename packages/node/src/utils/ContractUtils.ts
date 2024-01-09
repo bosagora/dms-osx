@@ -8,6 +8,7 @@ import { keccak256 } from "@ethersproject/keccak256";
 import { Log } from "@ethersproject/providers";
 import { randomBytes } from "@ethersproject/random";
 import { verifyMessage } from "@ethersproject/wallet";
+import { AddressZero } from "@ethersproject/constants";
 
 export class ContractUtils {
     public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {
@@ -25,6 +26,10 @@ export class ContractUtils {
 
     public static getTimeStamp(): number {
         return Math.floor(new Date().getTime() / 1000);
+    }
+
+    public static getTimeStampBigInt(): bigint {
+        return BigInt(new Date().getTime()) / 1000n;
     }
 
     public static getTimeStamp10(): number {
@@ -461,6 +466,16 @@ export class ContractUtils {
 
     public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
         return signer.signMessage(message);
+    }
+
+    public static verifySignature(message: Uint8Array, signature: BytesLike): string {
+        let res: string;
+        try {
+            res = verifyMessage(message, signature);
+        } catch (error) {
+            return AddressZero;
+        }
+        return res;
     }
 
     public static getCurrencyMessage(

@@ -1,5 +1,7 @@
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
+import { CollectExchangeRateScheduler } from "../src/scheduler/CollectExchangeRateScheduler";
+import { CollectPurchaseScheduler } from "../src/scheduler/CollectPurchaseScheduler";
 import { Scheduler } from "../src/scheduler/Scheduler";
 import { NodeStorage } from "../src/storage/NodeStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
@@ -16,9 +18,6 @@ import {
     Token,
     Validator,
 } from "../typechain-types";
-import { CollectPurchaseScheduler } from "../src/scheduler/CollectPurchaseScheduler";
-import { CollectExchangeRateScheduler } from "../src/scheduler/CollectExchangeRateScheduler";
-import { StoreScheduler } from "../src/scheduler/StoreScheduler";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
@@ -34,6 +33,8 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { URL } from "url";
+import { BlockElementType } from "../src/blockchain/node/tasks";
+import { BranchStatus } from "../src/blockchain/storage/BranchStatusStorage";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -58,9 +59,6 @@ describe("Test of Server", function () {
 
     let fakerStoreServer: FakerStoreServer;
 
-    const amount = Amount.make(100_000, 18);
-
-    const client = new TestClient();
     let storage: NodeStorage;
     let server: TestServer;
     let serverURL: URL;
@@ -146,7 +144,6 @@ describe("Test of Server", function () {
         const schedulers: Scheduler[] = [];
         schedulers.push(new CollectPurchaseScheduler("*/1 * * * * *"));
         schedulers.push(new CollectExchangeRateScheduler("*/1 * * * * *"));
-        schedulers.push(new StoreScheduler("*/1 * * * * *"));
         server = new TestServer(config, storage, schedulers);
     });
 
@@ -172,11 +169,55 @@ describe("Test of Server", function () {
         await fakerStoreServer.storePurchaseBlock(256);
     });
 
-    it("Create purchase block", async () => {
-        await fakerStoreServer.storePurchaseBlock(256);
+    it("Waiting...", async () => {
+        const t1 = ContractUtils.getTimeStamp();
+        while (true) {
+            const latestHeight = server.node.blockStorage.getLatestBlockHeight();
+            if (latestHeight === 1n) break;
+            else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+            await ContractUtils.delay(1000);
+        }
     });
 
-    it("Test of Node", async () => {
-        await ContractUtils.delay(30 * 1000);
+    it("Check Block", async () => {
+        const block = server.node.blockStorage.getLatestBlock();
+        assert.ok(block !== undefined);
+        assert.deepStrictEqual(block.header.height, 1n);
+    });
+
+    it("Waiting...", async () => {
+        const t1 = ContractUtils.getTimeStamp();
+        while (true) {
+            const latestHeight = server.node.blockStorage.getLatestBlockHeight();
+            if (latestHeight === 2n) break;
+            else if (ContractUtils.getTimeStamp() - t1 > 60) break;
+            await ContractUtils.delay(1000);
+        }
+    });
+
+    it("Check Block", async () => {
+        const block = server.node.blockStorage.getLatestBlock();
+        assert.ok(block !== undefined);
+        assert.deepStrictEqual(block.header.height, 2n);
+    });
+
+    it("Check Status", async () => {
+        const status = server.node.branchStatusStorage.get({ height: 1n, type: BlockElementType.PURCHASE, branch: 0 });
+        assert.deepStrictEqual(status, BranchStatus.EXECUTED);
+    });
+
+    it("Waiting...", async () => {
+        const t1 = ContractUtils.getTimeStamp();
+        while (true) {
+            const latestHeight = server.node.blockStorage.getLatestBlockHeight();
+            if (latestHeight === 7n) break;
+            else if (ContractUtils.getTimeStamp() - t1 > 240) break;
+            await ContractUtils.delay(1000);
+        }
+    });
+
+    it("Check Status", async () => {
+        const status = server.node.branchStatusStorage.get({ height: 1n, type: BlockElementType.PURCHASE, branch: 0 });
+        assert.deepStrictEqual(status, BranchStatus.FINALIZED);
     });
 });
