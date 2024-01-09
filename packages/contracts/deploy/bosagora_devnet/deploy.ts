@@ -488,7 +488,7 @@ async function deployLoyaltyBurner(accounts: IAccount, deployment: Deployments) 
 
     const factory = await ethers.getContractFactory("LoyaltyBurner");
     const contract = (await upgrades.deployProxy(
-        factory.connect(accounts.deployer),
+        factory.connect(accounts.owner),
         [await deployment.getContractAddress("Validator"), await deployment.getContractAddress("PhoneLinkCollection")],
         {
             initializer: "initialize",
@@ -631,7 +631,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     await tx3.wait();
 
     const tx4 = await (deployment.getContract("LoyaltyBurner") as LoyaltyBurner)
-        .connect(accounts.deployer)
+        .connect(accounts.owner)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyBurner (tx: ${tx4.hash})...`);
     await tx4.wait();
