@@ -155,36 +155,6 @@ export class LoyaltyProvider extends ethereum.SmartContract {
     return new LoyaltyProvider("LoyaltyProvider", address);
   }
 
-  NULL(): Bytes {
-    let result = super.call("NULL", "NULL():(bytes32)", []);
-
-    return result[0].toBytes();
-  }
-
-  try_NULL(): ethereum.CallResult<Bytes> {
-    let result = super.tryCall("NULL", "NULL():(bytes32)", []);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBytes());
-  }
-
-  QUORUM(): BigInt {
-    let result = super.call("QUORUM", "QUORUM():(uint256)", []);
-
-    return result[0].toBigInt();
-  }
-
-  try_QUORUM(): ethereum.CallResult<BigInt> {
-    let result = super.tryCall("QUORUM", "QUORUM():(uint256)", []);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
   owner(): Address {
     let result = super.call("owner", "owner():(address)", []);
 
@@ -217,6 +187,25 @@ export class LoyaltyProvider extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBytes());
+  }
+
+  purchasesOf(_purchaseId: string): boolean {
+    let result = super.call("purchasesOf", "purchasesOf(string):(bool)", [
+      ethereum.Value.fromString(_purchaseId)
+    ]);
+
+    return result[0].toBoolean();
+  }
+
+  try_purchasesOf(_purchaseId: string): ethereum.CallResult<boolean> {
+    let result = super.tryCall("purchasesOf", "purchasesOf(string):(bool)", [
+      ethereum.Value.fromString(_purchaseId)
+    ]);
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBoolean());
   }
 }
 
@@ -301,14 +290,18 @@ export class SavePurchaseCall__Inputs {
     this._call = call;
   }
 
+  get _height(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
   get _data(): Array<SavePurchaseCall_dataStruct> {
-    return this._call.inputValues[0].value.toTupleArray<
+    return this._call.inputValues[1].value.toTupleArray<
       SavePurchaseCall_dataStruct
     >();
   }
 
   get _signatures(): Array<Bytes> {
-    return this._call.inputValues[1].value.toBytesArray();
+    return this._call.inputValues[2].value.toBytesArray();
   }
 }
 

@@ -314,6 +314,25 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  burnerAddress(): Address {
+    let result = super.call("burnerAddress", "burnerAddress():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_burnerAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "burnerAddress",
+      "burnerAddress():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
   consumerAddress(): Address {
     let result = super.call(
       "consumerAddress",
@@ -644,21 +663,21 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
-  unPayablePointBalanceOf(_hash: Bytes): BigInt {
+  unPayablePointBalanceOf(_phone: Bytes): BigInt {
     let result = super.call(
       "unPayablePointBalanceOf",
       "unPayablePointBalanceOf(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(_hash)]
+      [ethereum.Value.fromFixedBytes(_phone)]
     );
 
     return result[0].toBigInt();
   }
 
-  try_unPayablePointBalanceOf(_hash: Bytes): ethereum.CallResult<BigInt> {
+  try_unPayablePointBalanceOf(_phone: Bytes): ethereum.CallResult<BigInt> {
     let result = super.tryCall(
       "unPayablePointBalanceOf",
       "unPayablePointBalanceOf(bytes32):(uint256)",
-      [ethereum.Value.fromFixedBytes(_hash)]
+      [ethereum.Value.fromFixedBytes(_phone)]
     );
     if (result.reverted) {
       return new ethereum.CallResult();
@@ -732,6 +751,74 @@ export class AddTokenBalanceCall__Outputs {
   _call: AddTokenBalanceCall;
 
   constructor(call: AddTokenBalanceCall) {
+    this._call = call;
+  }
+}
+
+export class BurnPointCall extends ethereum.Call {
+  get inputs(): BurnPointCall__Inputs {
+    return new BurnPointCall__Inputs(this);
+  }
+
+  get outputs(): BurnPointCall__Outputs {
+    return new BurnPointCall__Outputs(this);
+  }
+}
+
+export class BurnPointCall__Inputs {
+  _call: BurnPointCall;
+
+  constructor(call: BurnPointCall) {
+    this._call = call;
+  }
+
+  get _account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class BurnPointCall__Outputs {
+  _call: BurnPointCall;
+
+  constructor(call: BurnPointCall) {
+    this._call = call;
+  }
+}
+
+export class BurnUnPayablePointCall extends ethereum.Call {
+  get inputs(): BurnUnPayablePointCall__Inputs {
+    return new BurnUnPayablePointCall__Inputs(this);
+  }
+
+  get outputs(): BurnUnPayablePointCall__Outputs {
+    return new BurnUnPayablePointCall__Outputs(this);
+  }
+}
+
+export class BurnUnPayablePointCall__Inputs {
+  _call: BurnUnPayablePointCall;
+
+  constructor(call: BurnUnPayablePointCall) {
+    this._call = call;
+  }
+
+  get _phone(): Bytes {
+    return this._call.inputValues[0].value.toBytes();
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[1].value.toBigInt();
+  }
+}
+
+export class BurnUnPayablePointCall__Outputs {
+  _call: BurnUnPayablePointCall;
+
+  constructor(call: BurnUnPayablePointCall) {
     this._call = call;
   }
 }
@@ -911,6 +998,10 @@ export class InitializeCall__Inputs {
 
   get _exchangerAddress(): Address {
     return this._call.inputValues[8].value.toAddress();
+  }
+
+  get _burnerAddress(): Address {
+    return this._call.inputValues[9].value.toAddress();
   }
 }
 
