@@ -1,6 +1,7 @@
 import { Config } from "../../../common/Config";
 import { logger } from "../../../common/Logger";
 import { NodeStorage } from "../../../storage/NodeStorage";
+import { PurchaseTransactionStep } from "../../../types";
 import { ContractUtils } from "../../../utils/ContractUtils";
 import { Block, ExchangeRate, ExchangeRateRoot, Purchase, PurchaseRoot } from "../../types";
 import { Node } from "../Node";
@@ -10,7 +11,6 @@ import { BlockElementType } from "./Types";
 import { NewTransaction } from "dms-store-purchase-sdk";
 
 import { BigNumber } from "ethers";
-import { PurchaseTransactionStep } from "../../../types";
 
 export class Proposal extends NodeTask {
     constructor(config: Config, storage: NodeStorage, node: Node) {
@@ -23,7 +23,10 @@ export class Proposal extends NodeTask {
         if (this.node.getLatestBlockHeight() < this.node.getExpectedHeight(current)) {
             const latestHash = this.node.getLatestBlockHash();
             const latestHeight = this.node.getLatestBlockHeight();
-            const block = Block.createBlankBlock(latestHash, latestHeight);
+            const timestamp =
+                this.node.blockConfig.GENESIS_TIME +
+                BigInt(this.node.blockConfig.SECONDS_PER_BLOCK) * (latestHeight + 1n);
+            const block = Block.createBlankBlock(latestHash, latestHeight, timestamp);
             try {
                 await this.loadPurchase(block.purchases);
                 await this.loadExchangeRate(block.exchangeRates);

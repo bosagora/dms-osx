@@ -2,82 +2,97 @@ import { Config } from "../../../common/Config";
 import { logger } from "../../../common/Logger";
 import { GasPriceManager } from "../../../contract/GasPriceManager";
 import { NodeStorage } from "../../../storage/NodeStorage";
+import { PurchaseTransactionStep } from "../../../types";
 import { ResponseMessage } from "../../../utils/Errors";
 import { Event } from "../../event/EventDispatcher";
+import { BranchStatus } from "../../storage/BranchStatusStorage";
 import { Block } from "../../types";
 import { Node } from "../Node";
 import { NodeTask } from "./NodeTask";
 import { BlockElementType, IBlockElement } from "./Types";
 
 import { NonceManager } from "@ethersproject/experimental";
-import { PurchaseTransactionStep } from "../../../types";
-import { BranchStatus } from "../../storage/BranchStatusStorage";
 
 export class Execution extends NodeTask {
     constructor(config: Config, storage: NodeStorage, node: Node) {
         super(config, storage, node);
-        this.node.addEventListener(Event.APPROVED, this.onApproved.bind(this));
+        this.node.addEventListener(Event.APPROVED, this.execute.bind(this));
     }
 
-    private async onApproved(event: string, data: IBlockElement) {
+    private async execute(event: string, data: IBlockElement) {
+        logger.info(`execute`);
         const status = this.node.branchStatusStorage.get(data);
-        if (status !== undefined && status === BranchStatus.EXECUTED) return;
 
-        if (data.type === BlockElementType.PURCHASE) {
-            const block = this.node.getBlock(data.height);
-            if (block !== undefined && data.branch < block.purchases.branches.length) {
-                await this.savePurchaseToContract(block, data);
-            }
-        } else if (data.type === BlockElementType.EXCHANGE_RATE) {
-            const block = this.node.getBlock(data.height);
-            if (block !== undefined && data.branch < block.exchangeRates.branches.length) {
-                await this.saveExchangeRateToContract(block, data);
+        if (status !== undefined && status === BranchStatus.APPROVED) {
+            if (data.type === BlockElementType.PURCHASE) {
+                const approvedBlock = this.node.getBlock(data.height);
+                const proofedBlock = this.node.getBlock(data.height + 1n);
+                if (
+                    approvedBlock !== undefined &&
+                    proofedBlock !== undefined &&
+                    data.branch < approvedBlock.purchases.branches.length
+                ) {
+                    await this.savePurchaseToContract(approvedBlock, proofedBlock, data);
+                }
+            } else if (data.type === BlockElementType.EXCHANGE_RATE) {
+                const approvedBlock = this.node.getBlock(data.height);
+                const proofedBlock = this.node.getBlock(data.height + 1n);
+                if (
+                    approvedBlock !== undefined &&
+                    proofedBlock !== undefined &&
+                    data.branch < approvedBlock.exchangeRates.branches.length
+                ) {
+                    await this.saveExchangeRateToContract(approvedBlock, proofedBlock, data);
+                }
             }
         }
     }
 
-    private async savePurchaseToContract(block: Block, data: IBlockElement) {
+    private async savePurchaseToContract(approvedBlock: Block, proofedBlock: Block, data: IBlockElement) {
         const contract = await this.getLoyaltyProviderContract();
         const validators = this.getValidators();
         const sender = new NonceManager(new GasPriceManager(validators[0]));
-        const branch = block.purchases.branches[data.branch];
+        const branch = approvedBlock.purchases.branches[data.branch];
         try {
-            const signatures = this.node.signatureStorage.load(block.header.height, BlockElementType.PURCHASE);
-            if (signatures !== undefined) {
-                const filtered = signatures.filter((m) => m.index === data.branch).map((m) => m.signature);
-                const contactTx = await contract
-                    .connect(sender)
-                    .savePurchase(block.header.height, branch.items, filtered);
-                await contactTx.wait();
-                await this.storage.updateStep(
-                    branch.items.map((m) => m.purchaseId),
-                    PurchaseTransactionStep.EXECUTED
-                );
-                await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
-                logger.info("Execution Purchase Success");
-            }
+            const signatures = proofedBlock.purchases.signatures
+                .filter((m) => m.index === data.branch)
+                .map((m) => m.signature);
+            const contactTx = await contract
+                .connect(sender)
+                .savePurchase(approvedBlock.header.height, branch.items, signatures);
+            await contactTx.wait();
+            await this.storage.updateStep(
+                branch.items.map((m) => m.purchaseId),
+                PurchaseTransactionStep.EXECUTED
+            );
+            await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
+            logger.info("Execution Purchase Success");
         } catch (error) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.info(`Execution Purchase Fail - ${msg.code}, ${msg.error.message}`);
         }
     }
 
-    private async saveExchangeRateToContract(block: Block, data: IBlockElement) {
+    private async saveExchangeRateToContract(approvedBlock: Block, proofedBlock: Block, data: IBlockElement) {
         const latestHeight = this.node.blockStorage.getLatestBlockHeight();
-        if (block.header.height === latestHeight - 1n) {
+        logger.info(
+            `latestHeight: ${latestHeight.toString()}, block.header.height: ${approvedBlock.header.height.toString()}`
+        );
+        if (approvedBlock.header.height >= latestHeight - 1n) {
             const contract = await this.getCurrencyRateContract();
             const validators = this.getValidators();
             const sender = new NonceManager(new GasPriceManager(validators[0]));
-            const branch = block.exchangeRates.branches[data.branch];
+            const branch = approvedBlock.exchangeRates.branches[data.branch];
             try {
-                const signatures = this.node.signatureStorage.load(block.header.height, BlockElementType.EXCHANGE_RATE);
-                if (signatures !== undefined) {
-                    const filtered = signatures.filter((m) => m.index === data.branch).map((m) => m.signature);
-                    const contactTx = await contract.connect(sender).set(block.header.height, branch.items, filtered);
-                    await contactTx.wait();
-                    await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
-                    logger.info("Execution Exchange Rate Success");
-                }
+                const signatures = proofedBlock.exchangeRates.signatures
+                    .filter((m) => m.index === data.branch)
+                    .map((m) => m.signature);
+                const contactTx = await contract
+                    .connect(sender)
+                    .set(approvedBlock.header.height, branch.items, signatures);
+                await contactTx.wait();
+                await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
+                logger.info("Execution Exchange Rate Success");
             } catch (error) {
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.info(`Execution Exchange Rate Fail - ${msg.code}, ${msg.error.message}`);

@@ -54,10 +54,10 @@ export class Block {
         return new Block(blockHeader, purchases, exchangeRates, burnPoints);
     }
 
-    public static createBlankBlock(prevHash: string, prevHeight: bigint): Block {
+    public static createBlankBlock(prevHash: string, prevHeight: bigint, timestamp: bigint): Block {
         const height = prevHeight + 1n;
 
-        const blockHeader = new BlockHeader(prevHash, height, BigInt(ContractUtils.getTimeStamp()));
+        const blockHeader = new BlockHeader(prevHash, height, timestamp);
         return new Block(blockHeader, new PurchaseRoot(), new ExchangeRateRoot(), new BurnPointRoot());
     }
 

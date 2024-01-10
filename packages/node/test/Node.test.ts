@@ -189,7 +189,7 @@ describe("Test of Server", function () {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
             const latestHeight = server.node.blockStorage.getLatestBlockHeight();
-            if (latestHeight === 2n) break;
+            if (latestHeight === 3n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 60) break;
             await ContractUtils.delay(1000);
         }
@@ -198,7 +198,7 @@ describe("Test of Server", function () {
     it("Check Block", async () => {
         const block = server.node.blockStorage.getLatestBlock();
         assert.ok(block !== undefined);
-        assert.deepStrictEqual(block.header.height, 2n);
+        assert.deepStrictEqual(block.header.height, 3n);
     });
 
     it("Check Status", async () => {
