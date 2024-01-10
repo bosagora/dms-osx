@@ -67,30 +67,4 @@ export class BlockStorage {
     public getBlock(height: bigint): Block | undefined {
         return this.blocks.find((m) => m.header.height === height);
     }
-
-    public proof(data: IBlockElementProof) {
-        const block = this.getBlock(data.height);
-        if (block !== undefined) {
-            switch (data.type) {
-                case BlockElementType.PURCHASE:
-                    block.purchases.signatures.push({
-                        index: data.branch,
-                        signature: data.signature,
-                    });
-                    break;
-                case BlockElementType.EXCHANGE_RATE:
-                    block.exchangeRates.signatures.push({
-                        index: data.branch,
-                        signature: data.signature,
-                    });
-                    break;
-                case BlockElementType.BURN_POINT:
-                    block.burnPoints.signatures.push({
-                        index: data.branch,
-                        signature: data.signature,
-                    });
-                    break;
-            }
-        }
-    }
 }

@@ -26,13 +26,14 @@ export class Attestation extends NodeTask {
 
         for (const validator of validators) {
             if (validator === proposer) continue;
+            const account = (await validator.getAddress()).toLowerCase();
             for (let index = 0; index < block.purchases.branches.length; index++) {
                 const branch = block.purchases.branches[index];
                 proofs.push({
                     height,
                     type: BlockElementType.PURCHASE,
-                    branch: index,
-                    account: await validator.getAddress(),
+                    branchIndex: index,
+                    account,
                     signature: await branch.sign(validator, block.header.height),
                 });
             }
@@ -41,8 +42,8 @@ export class Attestation extends NodeTask {
                 proofs.push({
                     height,
                     type: BlockElementType.EXCHANGE_RATE,
-                    branch: index,
-                    account: await validator.getAddress(),
+                    branchIndex: index,
+                    account,
                     signature: await branch.sign(validator, block.header.height),
                 });
             }
@@ -51,8 +52,8 @@ export class Attestation extends NodeTask {
                 proofs.push({
                     height,
                     type: BlockElementType.BURN_POINT,
-                    branch: index,
-                    account: await validator.getAddress(),
+                    branchIndex: index,
+                    account,
                     signature: await branch.sign(validator, block.header.height),
                 });
             }

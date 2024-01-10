@@ -1,12 +1,11 @@
-import { JSONValidator } from "./JSONValidator";
-import { BranchSignature } from "./BranchSignature";
-
 import { defaultAbiCoder } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber } from "@ethersproject/bignumber";
 import { arrayify } from "@ethersproject/bytes";
 import { AddressZero, HashZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/keccak256";
+import { BranchSignature } from "./BranchSignature";
+import { JSONValidator } from "./JSONValidator";
 
 export enum BurnPointType {
     PhoneNumber = 0,

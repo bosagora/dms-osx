@@ -33,7 +33,7 @@ export class Finalization extends NodeTask {
                 const element = {
                     height,
                     type: BlockElementType.PURCHASE,
-                    branch: branchIdx,
+                    branchIndex: branchIdx,
                 };
                 const status = this.node.branchStatusStorage.get(element);
                 if (status === undefined || status !== BranchStatus.EXECUTED) {
@@ -51,7 +51,7 @@ export class Finalization extends NodeTask {
                 const element = {
                     height,
                     type: BlockElementType.EXCHANGE_RATE,
-                    branch: branchIdx,
+                    branchIndex: branchIdx,
                 };
                 const status = this.node.branchStatusStorage.get(element);
                 if (status === undefined || status !== BranchStatus.EXECUTED) {
@@ -65,7 +65,7 @@ export class Finalization extends NodeTask {
                 const element = {
                     height,
                     type: BlockElementType.BURN_POINT,
-                    branch: branchIdx,
+                    branchIndex: branchIdx,
                 };
                 const status = this.node.branchStatusStorage.get(element);
                 if (status === undefined || status !== BranchStatus.EXECUTED) {
