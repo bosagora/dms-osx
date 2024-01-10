@@ -109,7 +109,8 @@ export class Proposal extends NodeTask {
 
     private async signFromProposer(block: Block) {
         const validators = this.getValidators();
-        const idx = Number(block.header.height - block.header.height / BigInt(validators.length));
+        const size = BigInt(validators.length);
+        const idx = Number(block.header.height - (block.header.height / size) * size);
         const proposer = validators[idx];
         await block.header.sign(proposer);
     }

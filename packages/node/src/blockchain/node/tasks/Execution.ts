@@ -64,7 +64,7 @@ export class Execution extends NodeTask {
 
     private async saveExchangeRateToContract(block: Block, data: IBlockElement) {
         const latestHeight = this.node.blockStorage.getLatestBlockHeight();
-        if (block.header.height - 1n === latestHeight) {
+        if (block.header.height === latestHeight - 1n) {
             const contract = await this.getCurrencyRateContract();
             const validators = this.getValidators();
             const sender = new NonceManager(new GasPriceManager(validators[0]));
