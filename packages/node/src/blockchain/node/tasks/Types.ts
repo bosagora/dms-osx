@@ -7,7 +7,7 @@ export enum BlockElementType {
 export interface IBlockElement {
     height: bigint;
     type: BlockElementType;
-    branch: number;
+    branchIndex: number;
 }
 
 export interface IBlockElementProof extends IBlockElement {

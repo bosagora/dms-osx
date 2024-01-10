@@ -202,7 +202,11 @@ describe("Test of Server", function () {
     });
 
     it("Check Status", async () => {
-        const status = server.node.branchStatusStorage.get({ height: 1n, type: BlockElementType.PURCHASE, branch: 0 });
+        const status = server.node.branchStatusStorage.get({
+            height: 1n,
+            type: BlockElementType.PURCHASE,
+            branchIndex: 0,
+        });
         assert.deepStrictEqual(status, BranchStatus.EXECUTED);
     });
 
@@ -217,7 +221,11 @@ describe("Test of Server", function () {
     });
 
     it("Check Status", async () => {
-        const status = server.node.branchStatusStorage.get({ height: 1n, type: BlockElementType.PURCHASE, branch: 0 });
+        const status = server.node.branchStatusStorage.get({
+            height: 1n,
+            type: BlockElementType.PURCHASE,
+            branchIndex: 0,
+        });
         assert.deepStrictEqual(status, BranchStatus.FINALIZED);
     });
 });

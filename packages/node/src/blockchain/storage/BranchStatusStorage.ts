@@ -45,12 +45,12 @@ export class BranchStatusStorage {
     }
 
     public set(data: IBlockElement, status: BranchStatus) {
-        const key = this.makeKey(data.height, data.type, data.branch);
+        const key = this.makeKey(data.height, data.type, data.branchIndex);
         this.approvals.set(key, status);
     }
 
     public get(data: IBlockElement): BranchStatus | undefined {
-        const key = this.makeKey(data.height, data.type, data.branch);
+        const key = this.makeKey(data.height, data.type, data.branchIndex);
         return this.approvals.get(key);
     }
 }

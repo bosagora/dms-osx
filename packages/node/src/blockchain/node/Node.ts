@@ -63,14 +63,22 @@ export class Node extends EventDispatcher {
     }
 
     public async proofed(data: IBlockElementProof) {
-        this.signatureStorage.save(data.height, data.type, { index: data.branch, signature: data.signature });
+        this.signatureStorage.save(data.height, data.type, {
+            branchIndex: data.branchIndex,
+            account: data.account,
+            signature: data.signature,
+        });
         this.branchStatusStorage.set(data, BranchStatus.PROOFED);
         await this.dispatchEvent(Event.PROOFED, data);
     }
 
     public async proofedBlock(proofs: IBlockElementProof[], block: Block) {
         for (const elem of proofs) {
-            this.signatureStorage.save(elem.height, elem.type, { index: elem.branch, signature: elem.signature });
+            this.signatureStorage.save(elem.height, elem.type, {
+                branchIndex: elem.branchIndex,
+                account: elem.account,
+                signature: elem.signature,
+            });
             this.branchStatusStorage.set(elem, BranchStatus.PROOFED);
         }
         await this.dispatchEvent(Event.PROOFED_BLOCK, block);

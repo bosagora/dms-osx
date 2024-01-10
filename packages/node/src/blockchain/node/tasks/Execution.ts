@@ -30,7 +30,7 @@ export class Execution extends NodeTask {
                 if (
                     approvedBlock !== undefined &&
                     proofedBlock !== undefined &&
-                    data.branch < approvedBlock.purchases.branches.length
+                    data.branchIndex < approvedBlock.purchases.branches.length
                 ) {
                     await this.savePurchaseToContract(approvedBlock, proofedBlock, data);
                 }
@@ -40,7 +40,7 @@ export class Execution extends NodeTask {
                 if (
                     approvedBlock !== undefined &&
                     proofedBlock !== undefined &&
-                    data.branch < approvedBlock.exchangeRates.branches.length
+                    data.branchIndex < approvedBlock.exchangeRates.branches.length
                 ) {
                     await this.saveExchangeRateToContract(approvedBlock, proofedBlock, data);
                 }
@@ -52,10 +52,10 @@ export class Execution extends NodeTask {
         const contract = await this.getLoyaltyProviderContract();
         const validators = this.getValidators();
         const sender = new NonceManager(new GasPriceManager(validators[0]));
-        const branch = approvedBlock.purchases.branches[data.branch];
+        const branch = approvedBlock.purchases.branches[data.branchIndex];
         try {
             const signatures = proofedBlock.purchases.signatures
-                .filter((m) => m.index === data.branch)
+                .filter((m) => m.branchIndex === data.branchIndex)
                 .map((m) => m.signature);
             const contactTx = await contract
                 .connect(sender)
@@ -82,10 +82,10 @@ export class Execution extends NodeTask {
             const contract = await this.getCurrencyRateContract();
             const validators = this.getValidators();
             const sender = new NonceManager(new GasPriceManager(validators[0]));
-            const branch = approvedBlock.exchangeRates.branches[data.branch];
+            const branch = approvedBlock.exchangeRates.branches[data.branchIndex];
             try {
                 const signatures = proofedBlock.exchangeRates.signatures
-                    .filter((m) => m.index === data.branch)
+                    .filter((m) => m.branchIndex === data.branchIndex)
                     .map((m) => m.signature);
                 const contactTx = await contract
                     .connect(sender)
