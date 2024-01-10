@@ -11,11 +11,11 @@ export class Attestation extends NodeTask {
     constructor(config: Config, storage: NodeStorage, node: Node) {
         super(config, storage, node);
 
-        this.node.addEventListener(Event.PROPOSED, this.onProposed.bind(this));
+        this.node.addEventListener(Event.PROPOSED, this.prove.bind(this));
     }
 
-    private async onProposed(event: string, block: Block) {
-        logger.info(`onProposed`);
+    private async prove(event: string, block: Block) {
+        logger.info(`prove`);
         const validators = this.getValidators();
 
         const proofs: IBlockElementProof[] = [];

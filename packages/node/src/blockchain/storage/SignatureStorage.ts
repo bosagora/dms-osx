@@ -14,9 +14,9 @@ export class SignatureStorage {
 
     public save(height: bigint, type: BlockElementType, signature: BranchSignature) {
         const key = this.makeKey(height, type);
-        const ph = this.proofs.get(key);
-        if (ph !== undefined) {
-            ph.push(signature);
+        const signatures = this.proofs.get(key);
+        if (signatures !== undefined) {
+            signatures.push(signature);
         } else {
             this.proofs.set(key, [signature]);
         }

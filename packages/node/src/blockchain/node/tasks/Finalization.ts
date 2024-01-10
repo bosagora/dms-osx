@@ -1,4 +1,5 @@
 import { Config } from "../../../common/Config";
+import { logger } from "../../../common/Logger";
 import { NodeStorage } from "../../../storage/NodeStorage";
 import { PurchaseTransactionStep } from "../../../types";
 import { Event } from "../../event/EventDispatcher";
@@ -15,6 +16,7 @@ export class Finalization extends NodeTask {
     }
 
     private async finalize(event: string, block: Block) {
+        logger.info(`finalize`);
         const cycleSize = this.node.blockConfig.CYCLE_SIZE;
         const idx = Number(block.header.height - (block.header.height / BigInt(cycleSize)) * BigInt(cycleSize));
         const cycle = block.header.height / BigInt(cycleSize) - 2n;
