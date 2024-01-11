@@ -3491,10 +3491,10 @@ dms-store-purchase-contracts@^1.0.2:
   resolved "https://registry.yarnpkg.com/dms-store-purchase-contracts/-/dms-store-purchase-contracts-1.0.2.tgz#cb749f290c7e66f64e73c316272a96e698f3efc9"
   integrity sha512-S7jV+W9akqSTEUBw8wJFDVcNg/+DrTk4Y+OfeGkaiOF9CswAQnrwrjD7uBWyzqVRtJQLbzpLhUnvDZytsex3og==
 
-dms-store-purchase-sdk@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/dms-store-purchase-sdk/-/dms-store-purchase-sdk-1.1.0.tgz#b03085eb51a49d4251de322fe642c496c7208864"
-  integrity sha512-wPedyqU1kS9rQkC4HKIhznfkvSx7dpqKRyr3C89hQKul4TaVI7iahlNYSy7gcKBU/n2gowqVEzk3/pzvhR1qgQ==
+dms-store-purchase-sdk@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/dms-store-purchase-sdk/-/dms-store-purchase-sdk-1.2.0.tgz#da3d9212ac8034eab3be000a03b391ecebb8d42e"
+  integrity sha512-ZxJlQUdE36zUzXXgm458o4hNmpymzpuz9X0cXxlqyfKd3YyjN1TI4AkdPS9Ix6HxFN7sjnFL4T4gGkcEyrmlGA==
   dependencies:
     "@ethersproject/abi" "^5.7.0"
     "@ethersproject/abstract-signer" "^5.7.0"
