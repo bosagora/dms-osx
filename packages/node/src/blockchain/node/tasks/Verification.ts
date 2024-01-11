@@ -71,7 +71,7 @@ export class Verification extends NodeTask {
         }
 
         for (let idx = 0; idx < prevBlock.purchases.branches.length; idx++) {
-            const status = this.node.branchStatusStorage.get({
+            const status = await this.node.branchStatusStorage.get({
                 height: prevBlock.header.height,
                 type: BlockElementType.PURCHASE,
                 branchIndex: idx,
@@ -81,7 +81,7 @@ export class Verification extends NodeTask {
         }
 
         for (let idx = 0; idx < prevBlock.exchangeRates.branches.length; idx++) {
-            const status = this.node.branchStatusStorage.get({
+            const status = await this.node.branchStatusStorage.get({
                 height: prevBlock.header.height,
                 type: BlockElementType.EXCHANGE_RATE,
                 branchIndex: idx,
@@ -91,7 +91,7 @@ export class Verification extends NodeTask {
         }
 
         for (let idx = 0; idx < prevBlock.burnPoints.branches.length; idx++) {
-            const status = this.node.branchStatusStorage.get({
+            const status = await this.node.branchStatusStorage.get({
                 height: prevBlock.header.height,
                 type: BlockElementType.BURN_POINT,
                 branchIndex: idx,

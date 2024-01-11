@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dms_branch_status">
+
+    <insert id="setBranchStatus">
+        INSERT INTO dms.dms_branch_status
+        (
+            "height",
+            "type",
+            "branchIndex",
+            "status"
+        )
+        VALUES
+        (
+            #{height},
+            ${type},
+            ${branchIndex},
+            ${status}
+        )
+        ON CONFLICT ("height", "type", "branchIndex")
+        DO UPDATE
+            SET status = EXCLUDED.status;
+    </insert>
+
+    <select id="getBranchStatus">
+        SELECT * FROM dms.dms_branch_status
+        WHERE "height" = #{height} AND  "type" = #{type} AND "branchIndex" = #{branchIndex};
+    </select>
+
+</mapper>

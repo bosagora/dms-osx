@@ -62,6 +62,18 @@
             );
     </sql>
 
+
+    <sql id="dms_branch_status">
+        CREATE TABLE IF NOT EXISTS dms.dms_branch_status
+        (
+            "height"            bigint NOT NULL,
+            "type"              INTEGER NOT NULL,
+            "branchIndex"       INTEGER NOT NULL,
+            "status"            INTEGER NOT NULL,
+            PRIMARY KEY ("height", "type", "branchIndex")
+        );
+    </sql>
+
     <select id="create_table">
         <include refid="schema_dms"/>
         <include refid="purchase_blocks"/>
@@ -69,6 +81,7 @@
         <include refid="exchange_rates"/>
         <include refid="dms_blocks"/>
         <include refid="dms_signatures"/>
+        <include refid="dms_branch_status"/>
     </select>
 
     <select id="drop_table">
@@ -77,6 +90,7 @@
         DROP TABLE dms.exchange_rates;
         DROP TABLE dms.dms_blocks;
         DROP TABLE dms.dms_signatures;
+        DROP TABLE dms.dms_branch_status;
     </select>
 
     <select id="clear_table">
@@ -85,6 +99,7 @@
         TRUNCATE TABLE dms.exchange_rates;
         TRUNCATE TABLE dms.dms_blocks;
         TRUNCATE TABLE dms.dms_signatures;
+        TRUNCATE TABLE dms.dms_branch_status;
     </select>
 
 </mapper>
