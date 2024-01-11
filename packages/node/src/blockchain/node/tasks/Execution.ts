@@ -72,7 +72,6 @@ export class Execution extends NodeTask {
             await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
             logger.info("Execution Purchase Success");
         } catch (error) {
-            console.log(error);
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.info(`Execution Purchase Fail - ${msg.code}, ${msg.error.message}`);
         }
@@ -100,7 +99,6 @@ export class Execution extends NodeTask {
                 await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
                 logger.info("Execution Exchange Rate Success");
             } catch (error) {
-                console.log(error);
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.info(`Execution Exchange Rate Fail - ${msg.code}, ${msg.error.message}`);
             }
