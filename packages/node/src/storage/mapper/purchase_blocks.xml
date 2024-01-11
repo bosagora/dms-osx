@@ -3,7 +3,7 @@
 <mapper namespace="purchase_blocks">
 
     <insert id="postBlock">
-        INSERT INTO purchase_blocks
+        INSERT INTO dms.purchase_blocks
         (
             "height"                ,
             "curBlock"              ,
@@ -13,7 +13,7 @@
         )
         VALUES
             (
-                ${height}           ,
+                #{height}           ,
                 #{curBlock}         ,
                 #{prevBlock}        ,
                 #{merkleRoot}       ,
@@ -23,7 +23,7 @@
     </insert>
 
     <insert id="postTransactions">
-        INSERT INTO purchase_transactions
+        INSERT INTO dms.purchase_transactions
         (
             "purchaseId"        ,
             "timestamp"         ,
@@ -36,7 +36,7 @@
         (
             #{item.purchaseId}   ,
             #{item.timestamp}    ,
-            ${item.height}       ,
+            #{item.height}       ,
             #{item.hash}         ,
             #{item.contents}
         )
@@ -45,18 +45,18 @@
     </insert>
 
     <update id="canceledTransaction">
-        UPDATE purchase_transactions
+        UPDATE dms.purchase_transactions
         SET
             "canceled" = 'Y'
         WHERE "purchaseId" = #{purchaseId}
     </update>
 
     <select id="getLatestHeight">
-        SELECT coalesce(max(height), 0) as height FROM purchase_blocks;
+        SELECT coalesce(max(height), 0) as height FROM dms.purchase_blocks;
     </select>
 
     <select id="getTransaction">
-        SELECT "contents" FROM purchase_transactions
+        SELECT "contents" FROM dms.purchase_transactions
         WHERE "timestamp" <![CDATA[<]]> #{timestamp}
             AND "canceled" = 'N'
             AND ("step" = 0 OR "step" = 4)
@@ -64,7 +64,7 @@
     </select>
 
     <update id="updateStep">
-        UPDATE purchase_transactions
+        UPDATE dms.purchase_transactions
         SET
             "step" = ${step}
         WHERE "purchaseId"  in

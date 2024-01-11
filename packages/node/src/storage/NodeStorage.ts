@@ -21,6 +21,7 @@ export class NodeStorage extends Storage {
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/purchase_blocks.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/exchange_rates.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_blocks.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_signatures.xml")]);
         this.createTables()
             .then(() => {
                 if (callback != null) callback(null);

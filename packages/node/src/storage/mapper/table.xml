@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="table">
+
+    <sql id="schema_dms">
+        CREATE SCHEMA IF NOT EXISTS dms;
+    </sql>
+
     <sql id="purchase_blocks">
-        CREATE TABLE IF NOT EXISTS purchase_blocks
+        CREATE TABLE IF NOT EXISTS dms.purchase_blocks
         (
             "height"            bigint NOT NULL,
             "curBlock"          VARCHAR(66) NOT NULL,
@@ -14,7 +19,7 @@
     </sql>
 
     <sql id="purchase_transactions">
-        CREATE TABLE IF NOT EXISTS purchase_transactions
+        CREATE TABLE IF NOT EXISTS dms.purchase_transactions
         (
             "purchaseId"        VARCHAR(66) NOT NULL,
             "timestamp"         bigint NOT NULL,
@@ -28,7 +33,7 @@
     </sql>
 
     <sql id="exchange_rates">
-        CREATE TABLE IF NOT EXISTS exchange_rates
+        CREATE TABLE IF NOT EXISTS dms.exchange_rates
         (
             "symbol"            VARCHAR(12) NOT NULL,
             "rate"              bigint NOT NULL,
@@ -37,7 +42,7 @@
     </sql>
 
     <sql id="dms_blocks">
-        CREATE TABLE IF NOT EXISTS dms_blocks
+        CREATE TABLE IF NOT EXISTS dms.dms_blocks
         (
             "height"            bigint NOT NULL,
             "contents"          TEXT NOT NULL,
@@ -45,25 +50,41 @@
         );
     </sql>
 
+    <sql id="dms_signatures">
+        CREATE TABLE IF NOT EXISTS dms.dms_signatures
+        (
+            "height"            bigint NOT NULL,
+            "type"              INTEGER NOT NULL,
+            "branchIndex"       INTEGER NOT NULL,
+            "account"           VARCHAR(42) NOT NULL,
+            "signature"         VARCHAR(66) NOT NULL,
+            PRIMARY KEY ("height", "type", "branchIndex", "account")
+            );
+    </sql>
+
     <select id="create_table">
+        <include refid="schema_dms"/>
         <include refid="purchase_blocks"/>
         <include refid="purchase_transactions"/>
         <include refid="exchange_rates"/>
         <include refid="dms_blocks"/>
+        <include refid="dms_signatures"/>
     </select>
 
     <select id="drop_table">
-        DROP TABLE purchase_blocks;
-        DROP TABLE purchase_transactions;
-        DROP TABLE exchange_rates;
-        DROP TABLE dms_blocks;
+        DROP TABLE dms.purchase_blocks;
+        DROP TABLE dms.purchase_transactions;
+        DROP TABLE dms.exchange_rates;
+        DROP TABLE dms.dms_blocks;
+        DROP TABLE dms.dms_signatures;
     </select>
 
     <select id="clear_table">
-        TRUNCATE TABLE purchase_blocks;
-        TRUNCATE TABLE purchase_transactions;
-        TRUNCATE TABLE exchange_rates;
-        TRUNCATE TABLE dms_blocks;
+        TRUNCATE TABLE dms.purchase_blocks;
+        TRUNCATE TABLE dms.purchase_transactions;
+        TRUNCATE TABLE dms.exchange_rates;
+        TRUNCATE TABLE dms.dms_blocks;
+        TRUNCATE TABLE dms.dms_signatures;
     </select>
 
 </mapper>
