@@ -19,8 +19,7 @@ export class Verification extends NodeTask {
     }
 
     private async verify(event: string, proposedBlock: Block) {
-        logger.info(`verify`);
-        if (proposedBlock === undefined) return;
+        logger.info(`Verify [slot:${proposedBlock.header.slot}]`);
 
         const prevBlock = await this.node.getBlock(proposedBlock.header.slot - 1n);
         if (prevBlock === undefined) return;
@@ -32,7 +31,7 @@ export class Verification extends NodeTask {
 
             for (const proof of proofs) {
                 const account = ContractUtils.verifySignature(arrayify(hash), proof.signature).toLowerCase();
-                this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.PURCHASE, {
+                await this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.PURCHASE, {
                     branchIndex,
                     account,
                     signature: proof.signature,
@@ -47,7 +46,7 @@ export class Verification extends NodeTask {
 
             for (const proof of proofs) {
                 const account = ContractUtils.verifySignature(arrayify(hash), proof.signature).toLowerCase();
-                this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.EXCHANGE_RATE, {
+                await this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.EXCHANGE_RATE, {
                     branchIndex,
                     account,
                     signature: proof.signature,
@@ -62,7 +61,7 @@ export class Verification extends NodeTask {
 
             for (const proof of proofs) {
                 const account = ContractUtils.verifySignature(arrayify(hash), proof.signature).toLowerCase();
-                this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.BURN_POINT, {
+                await this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.BURN_POINT, {
                     branchIndex,
                     account,
                     signature: proof.signature,

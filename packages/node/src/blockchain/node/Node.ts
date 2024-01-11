@@ -37,7 +37,8 @@ export class Node extends EventDispatcher {
         this.storage = storage;
         this.blockConfig = new BlockConfig(
             this.config.setting.GENESIS_TIME,
-            this.config.setting.SECONDS_PER_BLOCK,
+            this.config.setting.SECONDS_PER_SLOT,
+            this.config.setting.SLOTS_PER_EPOCH,
             this.config.setting.waitedProvide
         );
         this.blockStorage = new BlockStorage(this.blockConfig, this.storage);
@@ -106,8 +107,8 @@ export class Node extends EventDispatcher {
         await this.dispatchEvent(Event.CANCELED, data);
     }
 
-    public getExpectedHeight(timestamp: bigint): bigint {
-        return (timestamp - BigInt(this.blockConfig.GENESIS_TIME)) / BigInt(this.blockConfig.SECONDS_PER_BLOCK);
+    public getExpectedSlot(timestamp: bigint): bigint {
+        return (timestamp - BigInt(this.blockConfig.GENESIS_TIME)) / BigInt(this.blockConfig.SECONDS_PER_SLOT);
     }
 
     public getLatestSlot(): bigint {

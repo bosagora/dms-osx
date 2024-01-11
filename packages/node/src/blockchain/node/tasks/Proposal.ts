@@ -20,12 +20,11 @@ export class Proposal extends NodeTask {
     public async work() {
         await this.dispatcher();
         const current = ContractUtils.getTimeStampBigInt();
-        if (this.node.getLatestSlot() < this.node.getExpectedHeight(current)) {
+        if (this.node.getLatestSlot() < this.node.getExpectedSlot(current)) {
             const latestHash = this.node.getLatestBlockHash();
             const latestSlot = this.node.getLatestSlot();
             const timestamp =
-                this.node.blockConfig.GENESIS_TIME +
-                BigInt(this.node.blockConfig.SECONDS_PER_BLOCK) * (latestSlot + 1n);
+                this.node.blockConfig.GENESIS_TIME + BigInt(this.node.blockConfig.SECONDS_PER_SLOT) * (latestSlot + 1n);
             const block = Block.createBlankBlock(latestHash, latestSlot, timestamp);
             try {
                 await this.loadPurchase(block.purchases);
