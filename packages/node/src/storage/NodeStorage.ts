@@ -10,6 +10,8 @@ import { Block } from "../blockchain/types/Block";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
+import { BlockElementType } from "../blockchain/node/tasks";
+import { IBranchSignatureWithAccount } from "../blockchain/types";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -157,7 +159,7 @@ export class NodeStorage extends Storage {
 
     /// endregion
 
-    /// region DMS PurchaseBlock
+    /// region DMS Block
     public async postBlock(block: Block) {
         await this.queryForMapper("dms_blocks", "postBlock", {
             height: block.header.height.toString(),
@@ -181,6 +183,35 @@ export class NodeStorage extends Storage {
         } else {
             return undefined;
         }
+    }
+    /// endregion
+
+    /// region DMS Signature
+    public async postSignature(
+        height: bigint,
+        type: BlockElementType,
+        branchIndex: number,
+        account: string,
+        signature: string
+    ) {
+        await this.queryForMapper("dms_signatures", "postSignature", {
+            height: height.toString(),
+            type,
+            branchIndex,
+            account,
+            signature,
+        });
+    }
+
+    public async getSignatures(height: bigint, type: BlockElementType): Promise<IBranchSignatureWithAccount[]> {
+        const res = await this.queryForMapper("dms_signatures", "getSignature", { height: height.toString(), type });
+        return res.rows.map((m) => {
+            return {
+                branchIndex: m.branchIndex,
+                account: m.account,
+                signature: m.signature,
+            };
+        });
     }
     /// endregion
 }

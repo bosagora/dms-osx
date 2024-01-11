@@ -41,7 +41,7 @@ export class Node extends EventDispatcher {
             this.config.setting.waitedProvide
         );
         this.blockStorage = new BlockStorage(this.blockConfig, this.storage);
-        this.signatureStorage = new SignatureStorage();
+        this.signatureStorage = new SignatureStorage(this.storage);
         this.branchStatusStorage = new BranchStatusStorage();
         this.tasks = [];
 

@@ -108,7 +108,7 @@ export class Verification extends NodeTask {
             voters.set(validator.address.toLowerCase(), false);
         }
 
-        const signatures = this.node.signatureStorage.load(prevBlock.header.height, BlockElementType.PURCHASE);
+        const signatures = await this.node.signatureStorage.load(prevBlock.header.height, BlockElementType.PURCHASE);
         if (signatures === undefined) return;
         const proofs = signatures.filter((m) => m.branchIndex === branchIndex);
 
@@ -144,7 +144,10 @@ export class Verification extends NodeTask {
             voters.set(validator.address.toLowerCase(), false);
         }
 
-        const signatures = this.node.signatureStorage.load(prevBlock.header.height, BlockElementType.EXCHANGE_RATE);
+        const signatures = await this.node.signatureStorage.load(
+            prevBlock.header.height,
+            BlockElementType.EXCHANGE_RATE
+        );
         if (signatures === undefined) return;
 
         const proofs = signatures.filter((m) => m.branchIndex === branchIndex);
@@ -175,7 +178,7 @@ export class Verification extends NodeTask {
             voters.set(validator.address.toLowerCase(), false);
         }
 
-        const signatures = this.node.signatureStorage.load(prevBlock.header.height, BlockElementType.BURN_POINT);
+        const signatures = await this.node.signatureStorage.load(prevBlock.header.height, BlockElementType.BURN_POINT);
         if (signatures === undefined) return;
 
         const proofs = signatures.filter((m) => m.branchIndex === branchIndex);
