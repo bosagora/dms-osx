@@ -42,7 +42,7 @@ export class Node extends EventDispatcher {
         );
         this.blockStorage = new BlockStorage(this.blockConfig, this.storage);
         this.signatureStorage = new SignatureStorage(this.storage);
-        this.branchStatusStorage = new BranchStatusStorage();
+        this.branchStatusStorage = new BranchStatusStorage(this.storage);
         this.tasks = [];
 
         this.tasks.push(new Proposal(this.config, this.storage, this));
@@ -59,50 +59,50 @@ export class Node extends EventDispatcher {
             block.header.prevBlockHash === this.blockStorage.getLatestBlockHash()
         ) {
             await this.blockStorage.save(block);
-            this.branchStatusStorage.setAllInBlock(block, BranchStatus.PROPOSED);
+            await this.branchStatusStorage.setAllInBlock(block, BranchStatus.PROPOSED);
             await this.dispatchEvent(Event.PROPOSED, block);
         }
     }
 
     public async proofed(data: IBlockElementProof) {
-        this.signatureStorage.save(data.height, data.type, {
+        await this.signatureStorage.save(data.height, data.type, {
             branchIndex: data.branchIndex,
             account: data.account,
             signature: data.signature,
         });
-        this.branchStatusStorage.set(data, BranchStatus.PROOFED);
+        await this.branchStatusStorage.set(data, BranchStatus.PROOFED);
         await this.dispatchEvent(Event.PROOFED, data);
     }
 
     public async proofedBlock(proofs: IBlockElementProof[], block: Block) {
         for (const elem of proofs) {
-            this.signatureStorage.save(elem.height, elem.type, {
+            await this.signatureStorage.save(elem.height, elem.type, {
                 branchIndex: elem.branchIndex,
                 account: elem.account,
                 signature: elem.signature,
             });
-            this.branchStatusStorage.set(elem, BranchStatus.PROOFED);
+            await this.branchStatusStorage.set(elem, BranchStatus.PROOFED);
         }
         await this.dispatchEvent(Event.PROOFED_BLOCK, block);
     }
 
     public async approved(data: IBlockElement) {
-        this.branchStatusStorage.set(data, BranchStatus.APPROVED);
+        await this.branchStatusStorage.set(data, BranchStatus.APPROVED);
         await this.dispatchEvent(Event.APPROVED, data);
     }
 
     public async executed(data: IBlockElement) {
-        this.branchStatusStorage.set(data, BranchStatus.EXECUTED);
+        await this.branchStatusStorage.set(data, BranchStatus.EXECUTED);
         await this.dispatchEvent(Event.EXECUTED, data);
     }
 
     public async finalized(data: IBlockElement) {
-        this.branchStatusStorage.set(data, BranchStatus.FINALIZED);
+        await this.branchStatusStorage.set(data, BranchStatus.FINALIZED);
         await this.dispatchEvent(Event.FINALIZED, data);
     }
 
     public async canceled(data: IBlockElement) {
-        this.branchStatusStorage.set(data, BranchStatus.CANCELED);
+        await this.branchStatusStorage.set(data, BranchStatus.CANCELED);
         await this.dispatchEvent(Event.CANCELED, data);
     }
 

@@ -35,7 +35,7 @@ export class Finalization extends NodeTask {
                     type: BlockElementType.PURCHASE,
                     branchIndex: branchIdx,
                 };
-                const status = this.node.branchStatusStorage.get(element);
+                const status = await this.node.branchStatusStorage.get(element);
                 if (status === undefined || status !== BranchStatus.EXECUTED) {
                     await this.node.canceled(element);
                     await this.storage.updateStep(
@@ -53,7 +53,7 @@ export class Finalization extends NodeTask {
                     type: BlockElementType.EXCHANGE_RATE,
                     branchIndex: branchIdx,
                 };
-                const status = this.node.branchStatusStorage.get(element);
+                const status = await this.node.branchStatusStorage.get(element);
                 if (status === undefined || status !== BranchStatus.EXECUTED) {
                     await this.node.canceled(element);
                 } else {
@@ -67,7 +67,7 @@ export class Finalization extends NodeTask {
                     type: BlockElementType.BURN_POINT,
                     branchIndex: branchIdx,
                 };
-                const status = this.node.branchStatusStorage.get(element);
+                const status = await this.node.branchStatusStorage.get(element);
                 if (status === undefined || status !== BranchStatus.EXECUTED) {
                     await this.node.canceled(element);
                 } else {

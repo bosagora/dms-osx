@@ -21,7 +21,7 @@ export class Execution extends NodeTask {
 
     private async execute(event: string, data: IBlockElement) {
         logger.info(`execute`);
-        const status = this.node.branchStatusStorage.get(data);
+        const status = await this.node.branchStatusStorage.get(data);
 
         if (status !== undefined && status === BranchStatus.APPROVED) {
             if (data.type === BlockElementType.PURCHASE) {

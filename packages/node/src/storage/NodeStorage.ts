@@ -1,17 +1,17 @@
 import { Block as PurchaseBlock, hashFull, NewTransaction, Transaction, TransactionType } from "dms-store-purchase-sdk";
+import { Block } from "../blockchain";
+import { BlockElementType } from "../blockchain/node/tasks";
+import { BranchStatus } from "../blockchain/storage/BranchStatusStorage";
+import { IBranchSignatureWithAccount } from "../blockchain/types";
 import { IDatabaseConfig } from "../common/Config";
 import { IExchangeRate } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Storage } from "./Storage";
 
-import { Block } from "../blockchain/types/Block";
-
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
-import { BlockElementType } from "../blockchain/node/tasks";
-import { IBranchSignatureWithAccount } from "../blockchain/types";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -24,6 +24,7 @@ export class NodeStorage extends Storage {
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/exchange_rates.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_blocks.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_signatures.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_branch_status.xml")]);
         this.createTables()
             .then(() => {
                 if (callback != null) callback(null);
@@ -212,6 +213,34 @@ export class NodeStorage extends Storage {
                 signature: m.signature,
             };
         });
+    }
+    /// endregion
+
+    /// region DMS BranchStatus
+    public async setBranchStatus(height: bigint, type: BlockElementType, branchIndex: number, status: number) {
+        await this.queryForMapper("dms_branch_status", "setBranchStatus", {
+            height: height.toString(),
+            type,
+            branchIndex,
+            status,
+        });
+    }
+
+    public async getBranchStatus(
+        height: bigint,
+        type: BlockElementType,
+        branchIndex: number
+    ): Promise<BranchStatus | undefined> {
+        const res = await this.queryForMapper("dms_branch_status", "getBranchStatus", {
+            height: height.toString(),
+            type,
+            branchIndex,
+        });
+        if (res.rows.length > 0) {
+            return res.rows[0].status;
+        } else {
+            return undefined;
+        }
     }
     /// endregion
 }

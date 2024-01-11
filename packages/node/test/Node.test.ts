@@ -203,7 +203,7 @@ describe("Test of Server", function () {
     });
 
     it("Check Status 1", async () => {
-        const status = server.node.branchStatusStorage.get({
+        const status = await server.node.branchStatusStorage.get({
             height: 1n,
             type: BlockElementType.PURCHASE,
             branchIndex: 0,
@@ -222,7 +222,7 @@ describe("Test of Server", function () {
     });
 
     it("Check Status 2", async () => {
-        const status = server.node.branchStatusStorage.get({
+        const status = await server.node.branchStatusStorage.get({
             height: 1n,
             type: BlockElementType.PURCHASE,
             branchIndex: 0,
