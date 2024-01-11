@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dms_blocks">
+
+    <insert id="postSignature">
+        INSERT INTO dms.dms_signatures
+        (
+            "height",
+            "type",
+            "branchIndex",
+            "account",
+            "signature"
+        )
+        VALUES
+        (
+            #{height},
+            ${type},
+            ${branchIndex},
+            #{account},
+            #{signature}
+        )
+        ON CONFLICT ("height", "type", "branchIndex", "account")
+        DO UPDATE
+            SET signature = EXCLUDED.signature;
+    </insert>
+
+    <select id="getSignature">
+        SELECT * FROM dms.dms_signatures
+        WHERE "height" = #{height} AND "type" = ${type};
+    </select>
+
+</mapper>

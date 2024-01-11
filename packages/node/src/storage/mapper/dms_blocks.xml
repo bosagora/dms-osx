@@ -3,7 +3,7 @@
 <mapper namespace="dms_blocks">
 
     <insert id="postBlock">
-        INSERT INTO dms_blocks
+        INSERT INTO dms.dms_blocks
         (
             height,
             contents
@@ -19,12 +19,12 @@
     </insert>
 
     <select id="getBlock">
-        SELECT contents FROM dms_blocks
+        SELECT contents FROM dms.dms_blocks
         WHERE height = #{height};
     </select>
 
     <select id="getLatestBlock">
-        SELECT contents FROM dms_blocks
+        SELECT contents FROM dms.dms_blocks
         ORDER BY height DESC LIMIT 1;
     </select>
 
