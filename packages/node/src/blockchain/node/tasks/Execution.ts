@@ -51,7 +51,11 @@ export class Execution extends NodeTask {
     private async savePurchaseToContract(approvedBlock: Block, proofedBlock: Block, data: IBlockElement) {
         const contract = await this.getLoyaltyProviderContract();
         const validators = this.getValidators();
-        const sender = new NonceManager(new GasPriceManager(validators[0]));
+        const idx = Number(
+            approvedBlock.header.height -
+                (approvedBlock.header.height / BigInt(validators.length)) * BigInt(validators.length)
+        );
+        const sender = new NonceManager(new GasPriceManager(validators[idx]));
         const branch = approvedBlock.purchases.branches[data.branchIndex];
         try {
             const signatures = proofedBlock.purchases.signatures
@@ -82,7 +86,11 @@ export class Execution extends NodeTask {
         if (approvedBlock.header.height >= latestHeight - 1n) {
             const contract = await this.getCurrencyRateContract();
             const validators = this.getValidators();
-            const sender = new NonceManager(new GasPriceManager(validators[0]));
+            const idx = Number(
+                approvedBlock.header.height -
+                    (approvedBlock.header.height / BigInt(validators.length)) * BigInt(validators.length)
+            );
+            const sender = new NonceManager(new GasPriceManager(validators[idx]));
             const branch = approvedBlock.exchangeRates.branches[data.branchIndex];
             try {
                 const signatures = proofedBlock.exchangeRates.signatures
