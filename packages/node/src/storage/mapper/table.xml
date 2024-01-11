@@ -57,7 +57,7 @@
             "type"              INTEGER NOT NULL,
             "branchIndex"       INTEGER NOT NULL,
             "account"           VARCHAR(42) NOT NULL,
-            "signature"         VARCHAR(66) NOT NULL,
+            "signature"         VARCHAR(132) NOT NULL,
             PRIMARY KEY ("height", "type", "branchIndex", "account")
             );
     </sql>
