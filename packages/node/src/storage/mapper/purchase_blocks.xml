@@ -17,7 +17,7 @@
                 #{curBlock}         ,
                 #{prevBlock}        ,
                 #{merkleRoot}       ,
-                ${timestamp}
+                #{timestamp}
             )
             ON CONFLICT ("height")  DO NOTHING;
     </insert>
@@ -35,7 +35,7 @@
         <foreach item="item" collection="purchases" separator=",">
         (
             #{item.purchaseId}   ,
-            ${item.timestamp}    ,
+            #{item.timestamp}    ,
             ${item.height}       ,
             #{item.hash}         ,
             #{item.contents}
@@ -57,7 +57,7 @@
 
     <select id="getTransaction">
         SELECT "contents" FROM purchase_transactions
-        WHERE "timestamp" <![CDATA[<]]> ${timestamp}
+        WHERE "timestamp" <![CDATA[<]]> #{timestamp}
             AND "canceled" = 'N'
             AND ("step" = 0 OR "step" = 4)
         LIMIT 256;

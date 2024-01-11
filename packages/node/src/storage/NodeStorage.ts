@@ -8,6 +8,7 @@ import { Storage } from "./Storage";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
+
 /**
  * The class that inserts and reads the ledger into the database.
  */
@@ -61,7 +62,7 @@ export class NodeStorage extends Storage {
             curBlock: hash.toString(),
             prevBlock: block.header.prevBlock.toString(),
             merkleRoot: block.header.merkleRoot.toString(),
-            timestamp: block.header.timestamp,
+            timestamp: block.header.timestamp.toString(),
         });
         await this.postNewPurchases(
             block,
@@ -116,7 +117,7 @@ export class NodeStorage extends Storage {
 
     public async getPurchaseTransaction(waiting: number): Promise<NewTransaction[]> {
         const res = await this.queryForMapper("purchase_blocks", "getTransaction", {
-            timestamp: ContractUtils.getTimeStamp() - waiting,
+            timestamp: (ContractUtils.getTimeStampBigInt() - BigInt(waiting)).toString(),
         });
         return res.rows.map((m) => {
             return NewTransaction.reviver("", JSON.parse(m.contents.replace(/[\\]/gi, "")));
