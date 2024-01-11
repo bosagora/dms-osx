@@ -20,9 +20,9 @@
             "timestamp"         bigint NOT NULL,
             "height"            bigint NOT NULL,
             "hash"              VARCHAR(66) NOT NULL,
+            "contents"          JSON NOT NULL,
             "canceled"          VARCHAR(1) DEFAULT 'N',
             "step"              INTEGER DEFAULT 0,
-            "contents"          TEXT,
             PRIMARY KEY ("purchaseId")
         );
     </sql>
