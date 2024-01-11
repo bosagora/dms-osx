@@ -96,7 +96,7 @@ export class PurchaseBranch {
         if (key !== "") return value;
         JSONValidator.isValidOtherwiseThrow("PurchaseBranch", value);
         const purchases: Purchase[] = [];
-        for (const elem of value.purchases) {
+        for (const elem of value.items) {
             purchases.push(Purchase.reviver("", elem));
         }
         return new PurchaseBranch(purchases);
@@ -140,7 +140,11 @@ export class PurchaseRoot {
         for (const elem of value.branches) {
             branches.push(PurchaseBranch.reviver("", elem));
         }
-        return new PurchaseRoot(branches);
+        const signatures: BranchSignature[] = [];
+        for (const elem of value.signatures) {
+            signatures.push(BranchSignature.reviver("", elem));
+        }
+        return new PurchaseRoot(branches, signatures);
     }
 
     public toJSON(): any {

@@ -44,7 +44,8 @@ export class BlockHeader {
             BigInt(value.timestamp),
             value.purchaseHash,
             value.exchangeRateHash,
-            value.burnPointHash
+            value.burnPointHash,
+            value.signature
         );
     }
 

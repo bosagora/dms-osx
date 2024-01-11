@@ -112,7 +112,11 @@ export class BurnPointRoot {
         for (const elem of value.branches) {
             branches.push(BurnPointBranch.reviver("", elem));
         }
-        return new BurnPointRoot(branches);
+        const signatures: BranchSignature[] = [];
+        for (const elem of value.signatures) {
+            signatures.push(BranchSignature.reviver("", elem));
+        }
+        return new BurnPointRoot(branches, signatures);
     }
 
     public toJSON(): any {

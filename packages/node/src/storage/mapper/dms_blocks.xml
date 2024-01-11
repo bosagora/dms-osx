@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dms_blocks">
+
+    <insert id="postBlock">
+        INSERT INTO dms_blocks
+        (
+            height,
+            contents
+        )
+        VALUES
+        (
+            #{height},
+            #{contents}
+        )
+        ON CONFLICT (height)
+        DO UPDATE
+            SET contents = EXCLUDED.contents;
+    </insert>
+
+    <select id="getBlock">
+        SELECT contents FROM dms_blocks
+        WHERE height = #{height};
+    </select>
+
+    <select id="getLatestBlock">
+        SELECT contents FROM dms_blocks
+        ORDER BY height DESC LIMIT 1;
+    </select>
+
+</mapper>

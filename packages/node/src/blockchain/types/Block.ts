@@ -31,6 +31,15 @@ export class Block {
         );
     }
 
+    public toJSON(): any {
+        return {
+            header: this.header,
+            purchases: this.purchases,
+            exchangeRates: this.exchangeRates,
+            burnPoints: this.burnPoints,
+        };
+    }
+
     public static createBlock(
         prevHash: string,
         prevHeight: bigint,

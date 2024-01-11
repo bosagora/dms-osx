@@ -36,6 +36,12 @@ export class JSONValidator {
                     prevBlockHash: {
                         type: "string",
                     },
+                    height: {
+                        type: "string",
+                    },
+                    timestamp: {
+                        type: "string",
+                    },
                     purchaseHash: {
                         type: "string",
                     },
@@ -45,21 +51,26 @@ export class JSONValidator {
                     burnPointHash: {
                         type: "string",
                     },
-                    height: {
-                        type: "string",
-                    },
-                    timestamp: {
+                    signature: {
                         type: "string",
                     },
                 },
                 additionalProperties: false,
-                required: ["prevBlockHash", "purchaseHash", "exchangeRateHash", "burnPointHash", "height", "timestamp"],
+                required: [
+                    "prevBlockHash",
+                    "height",
+                    "timestamp",
+                    "purchaseHash",
+                    "exchangeRateHash",
+                    "burnPointHash",
+                    "signature",
+                ],
             },
         ],
         [
-            "purchaseRoot",
+            "PurchaseRoot",
             {
-                title: "purchaseRoot",
+                title: "PurchaseRoot",
                 type: "object",
                 properties: {
                     branches: {
@@ -243,6 +254,23 @@ export class JSONValidator {
                 },
                 additionalProperties: false,
                 required: ["type", "account", "amount"],
+            },
+        ],
+        [
+            "BranchSignature",
+            {
+                title: "BranchSignature",
+                type: "object",
+                properties: {
+                    branchIndex: {
+                        type: "number",
+                    },
+                    signature: {
+                        type: "string",
+                    },
+                },
+                additionalProperties: false,
+                required: ["branchIndex", "signature"],
             },
         ],
     ]);

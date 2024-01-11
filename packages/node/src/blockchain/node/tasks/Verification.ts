@@ -22,7 +22,7 @@ export class Verification extends NodeTask {
         logger.info(`verify`);
         if (proposedBlock === undefined) return;
 
-        const prevBlock = this.node.blockStorage.getBlock(proposedBlock.header.height - 1n);
+        const prevBlock = await this.node.getBlock(proposedBlock.header.height - 1n);
         if (prevBlock === undefined) return;
 
         for (let branchIndex = 0; branchIndex < prevBlock.purchases.branches.length; branchIndex++) {

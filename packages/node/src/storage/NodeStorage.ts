@@ -1,9 +1,11 @@
-import { Block, hashFull, NewTransaction, Transaction, TransactionType } from "dms-store-purchase-sdk";
+import { Block as PurchaseBlock, hashFull, NewTransaction, Transaction, TransactionType } from "dms-store-purchase-sdk";
 import { IDatabaseConfig } from "../common/Config";
 import { IExchangeRate } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Utils } from "../utils/Utils";
 import { Storage } from "./Storage";
+
+import { Block } from "../blockchain/types/Block";
 
 import MybatisMapper from "mybatis-mapper";
 
@@ -18,6 +20,7 @@ export class NodeStorage extends Storage {
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/table.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/purchase_blocks.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/exchange_rates.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_blocks.xml")]);
         this.createTables()
             .then(() => {
                 if (callback != null) callback(null);
@@ -41,11 +44,15 @@ export class NodeStorage extends Storage {
         return this.queryForMapper("table", "create_table", {});
     }
 
+    public async clearTestDB(): Promise<any> {
+        await this.queryForMapper("table", "clear_table", {});
+    }
+
     public async dropTestDB(): Promise<any> {
         await this.queryForMapper("table", "drop_table", {});
     }
 
-    /// region Purchases Block
+    /// region Purchases PurchaseBlock
     public async getLatestHeight(): Promise<bigint> {
         const res = await this.queryForMapper("purchase_blocks", "getLatestHeight", {});
         if (res.rows.length > 0) {
@@ -55,7 +62,7 @@ export class NodeStorage extends Storage {
         }
     }
 
-    public async postPurchaseBlock(block: Block) {
+    public async postPurchaseBlock(block: PurchaseBlock) {
         const hash = hashFull(block.header);
         await this.queryForMapper("purchase_blocks", "postBlock", {
             height: block.header.height.toString(),
@@ -74,7 +81,7 @@ export class NodeStorage extends Storage {
         );
     }
 
-    public async postNewPurchases(block: Block, txs: Transaction[]) {
+    public async postNewPurchases(block: PurchaseBlock, txs: Transaction[]) {
         if (txs.length === 0) return;
         const pageSize = 16;
         const maxPage = Math.ceil(txs.length / pageSize);
@@ -92,7 +99,7 @@ export class NodeStorage extends Storage {
                             timestamp: purchase.timestamp.toString(),
                             height: block.header.height.toString(),
                             hash: hashFull(purchase).toString(),
-                            contents: purchase.toJSON(),
+                            contents: JSON.stringify(purchase.toJSON()),
                         };
                     }) as any,
                 });
@@ -100,7 +107,7 @@ export class NodeStorage extends Storage {
         }
     }
 
-    public async postCancelPurchases(block: Block, txs: Transaction[]) {
+    public async postCancelPurchases(block: PurchaseBlock, txs: Transaction[]) {
         for (const tx of txs) {
             await this.queryForMapper("purchases", "canceledTransaction", {
                 purchaseId: tx.purchaseId,
@@ -120,7 +127,7 @@ export class NodeStorage extends Storage {
             timestamp: (ContractUtils.getTimeStampBigInt() - BigInt(waiting)).toString(),
         });
         return res.rows.map((m) => {
-            return NewTransaction.reviver("", m.contents);
+            return NewTransaction.reviver("", JSON.parse(m.contents.replace(/[\\]/gi, "")));
         });
     }
     /// endregion
@@ -146,5 +153,33 @@ export class NodeStorage extends Storage {
             };
         });
     }
-    ///
+
+    /// endregion
+
+    /// region DMS PurchaseBlock
+    public async postBlock(block: Block) {
+        await this.queryForMapper("dms_blocks", "postBlock", {
+            height: block.header.height.toString(),
+            contents: JSON.stringify(block.toJSON()),
+        });
+    }
+
+    public async getBlock(height: bigint): Promise<Block | undefined> {
+        const res = await this.queryForMapper("dms_blocks", "getBlock", { height: height.toString() });
+        if (res.rows.length > 0) {
+            return Block.reviver("", JSON.parse(res.rows[0].contents.replace(/[\\]/gi, "")));
+        } else {
+            return undefined;
+        }
+    }
+
+    public async getLatestBlock(): Promise<Block | undefined> {
+        const res = await this.queryForMapper("dms_blocks", "getLatestBlock", {});
+        if (res.rows.length > 0) {
+            return Block.reviver("", JSON.parse(res.rows[0].contents.replace(/[\\]/gi, "")));
+        } else {
+            return undefined;
+        }
+    }
+    /// endregion
 }

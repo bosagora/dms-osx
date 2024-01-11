@@ -5,4 +5,4 @@ export { BlockHeader } from "./types/BlockHeader";
 export { BurnPointType, BurnPoint, BurnPointBranch, BurnPointRoot } from "./types/BurnPoint";
 export { ExchangeRate, ExchangeRateBranch, ExchangeRateRoot } from "./types/ExchangeRate";
 export { Purchase, PurchaseBranch, PurchaseRoot } from "./types/Purchase";
-export { BranchSignature } from "./types/BranchSignature";
+export { BranchSignature, IBranchSignature } from "./types/BranchSignature";
