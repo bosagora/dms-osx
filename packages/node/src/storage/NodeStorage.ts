@@ -12,6 +12,7 @@ import { Storage } from "./Storage";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
+import { logger } from "../common/Logger";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -93,19 +94,17 @@ export class NodeStorage extends Storage {
         for (let pageIndex = 1; pageIndex <= maxPage; pageIndex++) {
             const purchases = [];
             for (let idx = (pageIndex - 1) * pageSize; idx < pageIndex * pageSize && idx < txs.length; idx++) {
-                purchases.push(txs[idx]);
+                purchases.push({
+                    purchaseId: txs[idx].purchaseId.toString(),
+                    timestamp: txs[idx].timestamp.toString(),
+                    height: block.header.height.toString(),
+                    hash: hashFull(txs[idx]).toString(),
+                    contents: JSON.stringify(txs[idx].toJSON()),
+                });
             }
             if (purchases.length > 0) {
                 await this.queryForMapper("purchase_blocks", "postTransactions", {
-                    purchases: purchases.map((purchase) => {
-                        return {
-                            purchaseId: purchase.purchaseId.toString(),
-                            timestamp: purchase.timestamp.toString(),
-                            height: block.header.height.toString(),
-                            hash: hashFull(purchase).toString(),
-                            contents: JSON.stringify(purchase.toJSON()),
-                        };
-                    }) as any,
+                    purchases: purchases as any,
                 });
             }
         }
