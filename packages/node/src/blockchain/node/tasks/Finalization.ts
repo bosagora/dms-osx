@@ -26,7 +26,7 @@ export class Finalization extends NodeTask {
         for (let height = cycle * BigInt(cycleSize); height < (cycle + 1n) * BigInt(cycleSize); height++) {
             if (height <= 0n) continue;
 
-            const prevBlock = this.node.getBlock(height);
+            const prevBlock = await this.node.getBlock(height);
             if (prevBlock === undefined) continue;
 
             for (let branchIdx = 0; branchIdx < prevBlock.purchases.branches.length; branchIdx++) {

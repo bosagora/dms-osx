@@ -1,29 +1,39 @@
+import { NodeStorage } from "../../storage/NodeStorage";
 import { ContractUtils } from "../../utils/ContractUtils";
-import { BlockElementType, IBlockElementProof } from "../node/tasks";
+import { BlockConfig } from "../node/BlockConfig";
 import { Block, BlockHeader, BurnPointRoot, ExchangeRateRoot, PurchaseRoot } from "../types";
 
 import { HashZero } from "@ethersproject/constants";
-import { BlockConfig } from "../node/BlockConfig";
 
 export class BlockStorage {
-    private readonly blocks: Block[];
+    protected readonly storage: NodeStorage;
     private latestHeight: bigint;
     private latestTimestamp: bigint;
     private latestHash: string;
     private blockConfig: BlockConfig;
 
-    constructor(blockConfig: BlockConfig) {
+    constructor(blockConfig: BlockConfig, storage: NodeStorage) {
         this.blockConfig = blockConfig;
-        const genesis = this.createGenesisBlock();
-        this.blocks = [genesis];
+        this.storage = storage;
+        this.latestHeight = 0n;
+        this.latestTimestamp = this.blockConfig.GENESIS_TIME;
+        this.latestHash = HashZero;
+    }
+
+    public async initialize() {
+        let genesis = await this.getGenesisBlock();
+        if (genesis === undefined) {
+            genesis = this.createGenesisBlock();
+            await this.storage.postBlock(genesis);
+        }
         this.latestHeight = genesis.header.height;
         this.latestTimestamp = genesis.header.timestamp;
         this.latestHash = genesis.computeHash();
     }
 
-    public save(block: Block) {
+    public async save(block: Block) {
         if (block.header.height - this.latestHeight === 1n && block.header.prevBlockHash === this.latestHash) {
-            this.blocks.push(block);
+            await this.storage.postBlock(block);
             this.latestHeight = block.header.height;
             this.latestTimestamp = block.header.timestamp;
             this.latestHash = block.computeHash();
@@ -55,16 +65,27 @@ export class BlockStorage {
     public getLatestBlockTimestamp(): bigint {
         return this.latestTimestamp;
     }
-    public getLatestBlock(): Block | undefined {
-        if (this.blocks.length === 0) return undefined;
-        return this.blocks[this.blocks.length - 1];
+    public getLatestBlock(): Promise<Block | undefined> {
+        try {
+            return this.storage.getLatestBlock();
+        } catch (e) {
+            return Promise.resolve(undefined);
+        }
     }
 
-    public getGenesisBlock(): Block {
-        return this.blocks[0];
+    public getGenesisBlock(): Promise<Block | undefined> {
+        try {
+            return this.storage.getBlock(0n);
+        } catch (e) {
+            return Promise.resolve(undefined);
+        }
     }
 
-    public getBlock(height: bigint): Block | undefined {
-        return this.blocks.find((m) => m.header.height === height);
+    public getBlock(height: bigint): Promise<Block | undefined> {
+        try {
+            return this.storage.getBlock(height);
+        } catch (e) {
+            return Promise.resolve(undefined);
+        }
     }
 }

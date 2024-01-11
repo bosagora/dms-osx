@@ -96,7 +96,11 @@ export class ExchangeRateRoot {
         for (const elem of value.branches) {
             branches.push(ExchangeRateBranch.reviver("", elem));
         }
-        return new ExchangeRateRoot(branches);
+        const signatures: BranchSignature[] = [];
+        for (const elem of value.signatures) {
+            signatures.push(BranchSignature.reviver("", elem));
+        }
+        return new ExchangeRateRoot(branches, signatures);
     }
 
     public toJSON(): any {

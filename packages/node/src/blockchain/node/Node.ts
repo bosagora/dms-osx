@@ -19,6 +19,8 @@ import {
     Verification,
 } from "./tasks";
 
+import * as assert from "assert";
+
 export class Node extends EventDispatcher {
     protected readonly config: Config;
     protected readonly storage: NodeStorage;
@@ -38,7 +40,7 @@ export class Node extends EventDispatcher {
             this.config.setting.SECONDS_PER_BLOCK,
             this.config.setting.waitedProvide
         );
-        this.blockStorage = new BlockStorage(this.blockConfig);
+        this.blockStorage = new BlockStorage(this.blockConfig, this.storage);
         this.signatureStorage = new SignatureStorage();
         this.branchStatusStorage = new BranchStatusStorage();
         this.tasks = [];
@@ -56,7 +58,7 @@ export class Node extends EventDispatcher {
             block.header.height === this.blockStorage.getLatestBlockHeight() + 1n &&
             block.header.prevBlockHash === this.blockStorage.getLatestBlockHash()
         ) {
-            this.blockStorage.save(block);
+            await this.blockStorage.save(block);
             this.branchStatusStorage.setAllInBlock(block, BranchStatus.PROPOSED);
             await this.dispatchEvent(Event.PROPOSED, block);
         }
@@ -120,16 +122,20 @@ export class Node extends EventDispatcher {
         return this.blockStorage.getLatestBlockTimestamp();
     }
 
-    public getLatestBlock(): Block | undefined {
+    public async getLatestBlock(): Promise<Block | undefined> {
         return this.blockStorage.getLatestBlock();
     }
 
-    public getGenesisBlock(): Block {
+    public async getGenesisBlock(): Promise<Block | undefined> {
         return this.blockStorage.getGenesisBlock();
     }
 
-    public getBlock(height: bigint): Block | undefined {
+    public async getBlock(height: bigint): Promise<Block | undefined> {
         return this.blockStorage.getBlock(height);
+    }
+
+    public async onStart() {
+        await this.blockStorage.initialize();
     }
 
     public async work() {

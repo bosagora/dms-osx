@@ -11,6 +11,10 @@ export class NodeScheduler extends Scheduler {
         this.node = node;
     }
 
+    public async onStart() {
+        await this.node.onStart();
+    }
+
     protected async work() {
         await this.node.work();
     }

@@ -3,7 +3,7 @@ import { logger } from "../../../common/Logger";
 import { NodeStorage } from "../../../storage/NodeStorage";
 import { PurchaseTransactionStep } from "../../../types";
 import { ContractUtils } from "../../../utils/ContractUtils";
-import { Block, ExchangeRate, ExchangeRateRoot, Purchase, PurchaseRoot } from "../../types";
+import { Block, BranchSignature, ExchangeRate, ExchangeRateRoot, Purchase, PurchaseRoot } from "../../types";
 import { Node } from "../Node";
 import { NodeTask } from "./NodeTask";
 import { BlockElementType } from "./Types";
@@ -92,15 +92,27 @@ export class Proposal extends NodeTask {
         block.burnPoints.signatures.length = 0;
         let signatures = this.node.signatureStorage.load(block.header.height - 1n, BlockElementType.PURCHASE);
         if (signatures !== undefined) {
-            block.purchases.signatures.push(...signatures);
+            block.purchases.signatures.push(
+                ...signatures.map((m) => {
+                    return new BranchSignature(m.branchIndex, m.signature);
+                })
+            );
         }
         signatures = this.node.signatureStorage.load(block.header.height - 1n, BlockElementType.EXCHANGE_RATE);
         if (signatures !== undefined) {
-            block.exchangeRates.signatures.push(...signatures);
+            block.exchangeRates.signatures.push(
+                ...signatures.map((m) => {
+                    return new BranchSignature(m.branchIndex, m.signature);
+                })
+            );
         }
         signatures = this.node.signatureStorage.load(block.header.height - 1n, BlockElementType.BURN_POINT);
         if (signatures !== undefined) {
-            block.burnPoints.signatures.push(...signatures);
+            block.burnPoints.signatures.push(
+                ...signatures.map((m) => {
+                    return new BranchSignature(m.branchIndex, m.signature);
+                })
+            );
         }
     }
 

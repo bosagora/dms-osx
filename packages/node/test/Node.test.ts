@@ -140,6 +140,7 @@ describe("Test of Server", function () {
         serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
         console.log(`serverURL: ${serverURL}`);
         storage = await NodeStorage.make(config.database);
+        await storage.clearTestDB();
 
         const schedulers: Scheduler[] = [];
         schedulers.push(new CollectPurchaseScheduler("*/1 * * * * *"));
@@ -179,8 +180,8 @@ describe("Test of Server", function () {
         }
     });
 
-    it("Check Block", async () => {
-        const block = server.node.blockStorage.getLatestBlock();
+    it("Check Block 1", async () => {
+        const block = await server.node.blockStorage.getLatestBlock();
         assert.ok(block !== undefined);
         assert.deepStrictEqual(block.header.height, 1n);
     });
@@ -189,19 +190,19 @@ describe("Test of Server", function () {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
             const latestHeight = server.node.blockStorage.getLatestBlockHeight();
-            if (latestHeight === 3n) break;
+            if (latestHeight >= 3n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 60) break;
             await ContractUtils.delay(1000);
         }
     });
 
-    it("Check Block", async () => {
-        const block = server.node.blockStorage.getLatestBlock();
+    it("Check Block 2", async () => {
+        const block = await server.node.blockStorage.getLatestBlock();
         assert.ok(block !== undefined);
         assert.deepStrictEqual(block.header.height, 3n);
     });
 
-    it("Check Status", async () => {
+    it("Check Status 1", async () => {
         const status = server.node.branchStatusStorage.get({
             height: 1n,
             type: BlockElementType.PURCHASE,
@@ -220,7 +221,7 @@ describe("Test of Server", function () {
         }
     });
 
-    it("Check Status", async () => {
+    it("Check Status 2", async () => {
         const status = server.node.branchStatusStorage.get({
             height: 1n,
             type: BlockElementType.PURCHASE,

@@ -25,8 +25,8 @@ export class Execution extends NodeTask {
 
         if (status !== undefined && status === BranchStatus.APPROVED) {
             if (data.type === BlockElementType.PURCHASE) {
-                const approvedBlock = this.node.getBlock(data.height);
-                const proofedBlock = this.node.getBlock(data.height + 1n);
+                const approvedBlock = await this.node.getBlock(data.height);
+                const proofedBlock = await this.node.getBlock(data.height + 1n);
                 if (
                     approvedBlock !== undefined &&
                     proofedBlock !== undefined &&
@@ -35,8 +35,8 @@ export class Execution extends NodeTask {
                     await this.savePurchaseToContract(approvedBlock, proofedBlock, data);
                 }
             } else if (data.type === BlockElementType.EXCHANGE_RATE) {
-                const approvedBlock = this.node.getBlock(data.height);
-                const proofedBlock = this.node.getBlock(data.height + 1n);
+                const approvedBlock = await this.node.getBlock(data.height);
+                const proofedBlock = await this.node.getBlock(data.height + 1n);
                 if (
                     approvedBlock !== undefined &&
                     proofedBlock !== undefined &&
@@ -68,6 +68,7 @@ export class Execution extends NodeTask {
             await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
             logger.info("Execution Purchase Success");
         } catch (error) {
+            console.log(error);
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.info(`Execution Purchase Fail - ${msg.code}, ${msg.error.message}`);
         }
@@ -94,6 +95,7 @@ export class Execution extends NodeTask {
                 await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
                 logger.info("Execution Exchange Rate Success");
             } catch (error) {
+                console.log(error);
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.info(`Execution Exchange Rate Fail - ${msg.code}, ${msg.error.message}`);
             }

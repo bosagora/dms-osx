@@ -1,18 +1,18 @@
 import { BlockElementType } from "../node/tasks";
-import { BranchSignatureWithAccount } from "../types";
+import { IBranchSignatureWithAccount } from "../types";
 
 export class SignatureStorage {
-    private proofs: Map<string, BranchSignatureWithAccount[]>;
+    private proofs: Map<string, IBranchSignatureWithAccount[]>;
 
     constructor() {
-        this.proofs = new Map<string, BranchSignatureWithAccount[]>();
+        this.proofs = new Map<string, IBranchSignatureWithAccount[]>();
     }
 
     private makeKey(height: bigint, type: BlockElementType): string {
         return height.toString().padStart(16, "0") + "_" + type.toString().padStart(3, "0");
     }
 
-    public save(height: bigint, type: BlockElementType, signature: BranchSignatureWithAccount) {
+    public save(height: bigint, type: BlockElementType, signature: IBranchSignatureWithAccount) {
         const key = this.makeKey(height, type);
         const signatures = this.proofs.get(key);
         signature.account = signature.account.toLowerCase();
@@ -27,7 +27,7 @@ export class SignatureStorage {
         }
     }
 
-    public load(height: bigint, type: BlockElementType): BranchSignatureWithAccount[] | undefined {
+    public load(height: bigint, type: BlockElementType): IBranchSignatureWithAccount[] | undefined {
         const key = this.makeKey(height, type);
         return this.proofs.get(key);
     }
