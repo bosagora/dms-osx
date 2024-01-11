@@ -44,21 +44,21 @@
     <sql id="dms_blocks">
         CREATE TABLE IF NOT EXISTS dms.dms_blocks
         (
-            "height"            bigint NOT NULL,
+            "slot"              bigint NOT NULL,
             "contents"          TEXT NOT NULL,
-            PRIMARY KEY ("height")
+            PRIMARY KEY ("slot")
         );
     </sql>
 
     <sql id="dms_signatures">
         CREATE TABLE IF NOT EXISTS dms.dms_signatures
         (
-            "height"            bigint NOT NULL,
+            "slot"              bigint NOT NULL,
             "type"              INTEGER NOT NULL,
             "branchIndex"       INTEGER NOT NULL,
             "account"           VARCHAR(42) NOT NULL,
             "signature"         VARCHAR(132) NOT NULL,
-            PRIMARY KEY ("height", "type", "branchIndex", "account")
+            PRIMARY KEY ("slot", "type", "branchIndex", "account")
             );
     </sql>
 
@@ -66,11 +66,11 @@
     <sql id="dms_branch_status">
         CREATE TABLE IF NOT EXISTS dms.dms_branch_status
         (
-            "height"            bigint NOT NULL,
+            "slot"              bigint NOT NULL,
             "type"              INTEGER NOT NULL,
             "branchIndex"       INTEGER NOT NULL,
             "status"            INTEGER NOT NULL,
-            PRIMARY KEY ("height", "type", "branchIndex")
+            PRIMARY KEY ("slot", "type", "branchIndex")
         );
     </sql>
 

@@ -42,19 +42,19 @@ export class Block {
 
     public static createBlock(
         prevHash: string,
-        prevHeight: bigint,
+        prevSlot: bigint,
         purchases: PurchaseRoot,
         exchangeRates: ExchangeRateRoot,
         burnPoints: BurnPointRoot
     ): Block {
-        const height = prevHeight + 1n;
-        const purchaseHash = purchases.computeHash(height);
-        const exchangeRateHash = exchangeRates.computeHash(height);
-        const burnPointHash = burnPoints.computeHash(height);
+        const slot = prevSlot + 1n;
+        const purchaseHash = purchases.computeHash(slot);
+        const exchangeRateHash = exchangeRates.computeHash(slot);
+        const burnPointHash = burnPoints.computeHash(slot);
 
         const blockHeader = new BlockHeader(
             prevHash,
-            height,
+            slot,
             BigInt(ContractUtils.getTimeStamp()),
             purchaseHash,
             exchangeRateHash,
@@ -63,10 +63,10 @@ export class Block {
         return new Block(blockHeader, purchases, exchangeRates, burnPoints);
     }
 
-    public static createBlankBlock(prevHash: string, prevHeight: bigint, timestamp: bigint): Block {
-        const height = prevHeight + 1n;
+    public static createBlankBlock(prevHash: string, prevSlot: bigint, timestamp: bigint): Block {
+        const slot = prevSlot + 1n;
 
-        const blockHeader = new BlockHeader(prevHash, height, timestamp);
+        const blockHeader = new BlockHeader(prevHash, slot, timestamp);
         return new Block(blockHeader, new PurchaseRoot(), new ExchangeRateRoot(), new BurnPointRoot());
     }
 

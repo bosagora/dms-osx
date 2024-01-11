@@ -18,20 +18,20 @@ export class Finalization extends NodeTask {
     private async finalize(event: string, block: Block) {
         logger.info(`finalize`);
         const cycleSize = this.node.blockConfig.CYCLE_SIZE;
-        const idx = Number(block.header.height - (block.header.height / BigInt(cycleSize)) * BigInt(cycleSize));
-        const cycle = block.header.height / BigInt(cycleSize) - 2n;
+        const idx = Number(block.header.slot - (block.header.slot / BigInt(cycleSize)) * BigInt(cycleSize));
+        const cycle = block.header.slot / BigInt(cycleSize) - 2n;
 
         if (idx !== 0 || cycle < 0) return;
 
-        for (let height = cycle * BigInt(cycleSize); height < (cycle + 1n) * BigInt(cycleSize); height++) {
-            if (height <= 0n) continue;
+        for (let slot = cycle * BigInt(cycleSize); slot < (cycle + 1n) * BigInt(cycleSize); slot++) {
+            if (slot <= 0n) continue;
 
-            const prevBlock = await this.node.getBlock(height);
+            const prevBlock = await this.node.getBlock(slot);
             if (prevBlock === undefined) continue;
 
             for (let branchIdx = 0; branchIdx < prevBlock.purchases.branches.length; branchIdx++) {
                 const element = {
-                    height,
+                    slot,
                     type: BlockElementType.PURCHASE,
                     branchIndex: branchIdx,
                 };
@@ -49,7 +49,7 @@ export class Finalization extends NodeTask {
 
             for (let branchIdx = 0; branchIdx < prevBlock.exchangeRates.branches.length; branchIdx++) {
                 const element = {
-                    height,
+                    slot,
                     type: BlockElementType.EXCHANGE_RATE,
                     branchIndex: branchIdx,
                 };
@@ -63,7 +63,7 @@ export class Finalization extends NodeTask {
 
             for (let branchIdx = 0; branchIdx < prevBlock.burnPoints.branches.length; branchIdx++) {
                 const element = {
-                    height,
+                    slot,
                     type: BlockElementType.BURN_POINT,
                     branchIndex: branchIdx,
                 };

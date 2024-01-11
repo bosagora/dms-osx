@@ -25,8 +25,8 @@ export class Execution extends NodeTask {
 
         if (status !== undefined && status === BranchStatus.APPROVED) {
             if (data.type === BlockElementType.PURCHASE) {
-                const approvedBlock = await this.node.getBlock(data.height);
-                const proofedBlock = await this.node.getBlock(data.height + 1n);
+                const approvedBlock = await this.node.getBlock(data.slot);
+                const proofedBlock = await this.node.getBlock(data.slot + 1n);
                 if (
                     approvedBlock !== undefined &&
                     proofedBlock !== undefined &&
@@ -35,8 +35,8 @@ export class Execution extends NodeTask {
                     await this.savePurchaseToContract(approvedBlock, proofedBlock, data);
                 }
             } else if (data.type === BlockElementType.EXCHANGE_RATE) {
-                const approvedBlock = await this.node.getBlock(data.height);
-                const proofedBlock = await this.node.getBlock(data.height + 1n);
+                const approvedBlock = await this.node.getBlock(data.slot);
+                const proofedBlock = await this.node.getBlock(data.slot + 1n);
                 if (
                     approvedBlock !== undefined &&
                     proofedBlock !== undefined &&
@@ -52,8 +52,8 @@ export class Execution extends NodeTask {
         const contract = await this.getLoyaltyProviderContract();
         const validators = this.getValidators();
         const idx = Number(
-            approvedBlock.header.height -
-                (approvedBlock.header.height / BigInt(validators.length)) * BigInt(validators.length)
+            approvedBlock.header.slot -
+                (approvedBlock.header.slot / BigInt(validators.length)) * BigInt(validators.length)
         );
         const sender = new NonceManager(new GasPriceManager(validators[idx]));
         const branch = approvedBlock.purchases.branches[data.branchIndex];
@@ -63,7 +63,7 @@ export class Execution extends NodeTask {
                 .map((m) => m.signature);
             const contactTx = await contract
                 .connect(sender)
-                .savePurchase(approvedBlock.header.height, branch.items, signatures);
+                .savePurchase(approvedBlock.header.slot, branch.items, signatures);
             await contactTx.wait();
             await this.storage.updateStep(
                 branch.items.map((m) => m.purchaseId),
@@ -79,16 +79,14 @@ export class Execution extends NodeTask {
     }
 
     private async saveExchangeRateToContract(approvedBlock: Block, proofedBlock: Block, data: IBlockElement) {
-        const latestHeight = this.node.blockStorage.getLatestBlockHeight();
-        logger.info(
-            `latestHeight: ${latestHeight.toString()}, block.header.height: ${approvedBlock.header.height.toString()}`
-        );
-        if (approvedBlock.header.height >= latestHeight - 1n) {
+        const latestSlot = this.node.blockStorage.getLatestSlot();
+        logger.info(`latestSlot: ${latestSlot.toString()}, block.header.slot: ${approvedBlock.header.slot.toString()}`);
+        if (approvedBlock.header.slot >= latestSlot - 1n) {
             const contract = await this.getCurrencyRateContract();
             const validators = this.getValidators();
             const idx = Number(
-                approvedBlock.header.height -
-                    (approvedBlock.header.height / BigInt(validators.length)) * BigInt(validators.length)
+                approvedBlock.header.slot -
+                    (approvedBlock.header.slot / BigInt(validators.length)) * BigInt(validators.length)
             );
             const sender = new NonceManager(new GasPriceManager(validators[idx]));
             const branch = approvedBlock.exchangeRates.branches[data.branchIndex];
@@ -98,7 +96,7 @@ export class Execution extends NodeTask {
                     .map((m) => m.signature);
                 const contactTx = await contract
                     .connect(sender)
-                    .set(approvedBlock.header.height, branch.items, signatures);
+                    .set(approvedBlock.header.slot, branch.items, signatures);
                 await contactTx.wait();
                 await this.node.branchStatusStorage.set(data, BranchStatus.EXECUTED);
                 logger.info("Execution Exchange Rate Success");

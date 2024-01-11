@@ -64,19 +64,19 @@ export class ExchangeRateBranch {
         };
     }
 
-    public computeHash(height: bigint): string {
+    public computeHash(slot: bigint): string {
         if (this.items.length > 0)
             return keccak256(
                 defaultAbiCoder.encode(
                     ["uint256", "uint256", "bytes32[]"],
-                    [height, this.items.length, this.items.map((m) => m.computeHash())]
+                    [slot, this.items.length, this.items.map((m) => m.computeHash())]
                 )
             );
         else return HashZero;
     }
 
-    public async sign(signer: Signer, height: bigint): Promise<string> {
-        return signer.signMessage(arrayify(this.computeHash(height)));
+    public async sign(signer: Signer, slot: bigint): Promise<string> {
+        return signer.signMessage(arrayify(this.computeHash(slot)));
     }
 }
 
@@ -110,12 +110,12 @@ export class ExchangeRateRoot {
         };
     }
 
-    public computeHash(height: bigint): string {
+    public computeHash(slot: bigint): string {
         if (this.branches.length > 0)
             return keccak256(
                 defaultAbiCoder.encode(
                     ["uint256", "uint256", "bytes32[]"],
-                    [height, this.branches.length, this.branches.map((m) => m.computeHash(height))]
+                    [slot, this.branches.length, this.branches.map((m) => m.computeHash(slot))]
                 )
             );
         else return HashZero;

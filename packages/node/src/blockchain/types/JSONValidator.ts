@@ -36,7 +36,7 @@ export class JSONValidator {
                     prevBlockHash: {
                         type: "string",
                     },
-                    height: {
+                    slot: {
                         type: "string",
                     },
                     timestamp: {
@@ -58,7 +58,7 @@ export class JSONValidator {
                 additionalProperties: false,
                 required: [
                     "prevBlockHash",
-                    "height",
+                    "slot",
                     "timestamp",
                     "purchaseHash",
                     "exchangeRateHash",
