@@ -133,6 +133,8 @@ describe("Test of Server", function () {
 
         config.validator.keys = deployments.accounts.validators.map((m) => m.privateKey);
         config.setting.waitedProvide = 0;
+        config.setting.SECONDS_PER_SLOT = 5;
+        config.setting.SLOTS_PER_EPOCH = 3;
         config.setting.ipfs_gateway_url = "http://127.0.0.1:8081";
     });
 
@@ -173,8 +175,8 @@ describe("Test of Server", function () {
     it("Waiting...", async () => {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
-            const latestHeight = server.node.blockStorage.getLatestSlot();
-            if (latestHeight === 1n) break;
+            const latestSlot = server.node.blockStorage.getLatestSlot();
+            if (latestSlot === 1n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 60) break;
             await ContractUtils.delay(1000);
         }
@@ -189,8 +191,8 @@ describe("Test of Server", function () {
     it("Waiting...", async () => {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
-            const latestHeight = server.node.blockStorage.getLatestSlot();
-            if (latestHeight >= 3n) break;
+            const latestSlot = server.node.blockStorage.getLatestSlot();
+            if (latestSlot >= 3n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 60) break;
             await ContractUtils.delay(1000);
         }
@@ -214,8 +216,8 @@ describe("Test of Server", function () {
     it("Waiting...", async () => {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
-            const latestHeight = server.node.blockStorage.getLatestSlot();
-            if (latestHeight === 7n) break;
+            const latestSlot = server.node.blockStorage.getLatestSlot();
+            if (latestSlot === 7n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 240) break;
             await ContractUtils.delay(1000);
         }

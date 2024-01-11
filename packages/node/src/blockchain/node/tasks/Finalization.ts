@@ -16,14 +16,15 @@ export class Finalization extends NodeTask {
     }
 
     private async finalize(event: string, block: Block) {
-        logger.info(`finalize`);
-        const cycleSize = this.node.blockConfig.CYCLE_SIZE;
-        const idx = Number(block.header.slot - (block.header.slot / BigInt(cycleSize)) * BigInt(cycleSize));
-        const cycle = block.header.slot / BigInt(cycleSize) - 2n;
+        const epochSize = BigInt(this.node.blockConfig.SLOTS_PER_EPOCH);
+        const idx = this.node.blockConfig.getNumberOfEpoch(block.header.slot);
+        const epoch = this.node.blockConfig.getEpoch(block.header.slot) - 2n;
 
-        if (idx !== 0 || cycle < 0) return;
+        if (idx !== 0 || epoch < 0) return;
 
-        for (let slot = cycle * BigInt(cycleSize); slot < (cycle + 1n) * BigInt(cycleSize); slot++) {
+        logger.info(`Finalize [epoch: ${epoch}]`);
+
+        for (let slot = epoch * epochSize; slot < (epoch + 1n) * epochSize; slot++) {
             if (slot <= 0n) continue;
 
             const prevBlock = await this.node.getBlock(slot);

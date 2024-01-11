@@ -15,7 +15,7 @@ export class Attestation extends NodeTask {
     }
 
     private async prove(event: string, block: Block) {
-        logger.info(`prove`);
+        logger.info(`Prove [slot:${block.header.slot}]`);
         const validators = this.getValidators();
 
         const proofs: IBlockElementProof[] = [];

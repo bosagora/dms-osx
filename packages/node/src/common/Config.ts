@@ -452,7 +452,8 @@ export class Setting implements ISetting {
     public waitedProvide: number;
     public nptServer: string;
     public nptInterval: number;
-    public SECONDS_PER_BLOCK: number;
+    public SECONDS_PER_SLOT: number;
+    public SLOTS_PER_EPOCH: number;
     public GENESIS_TIME: bigint;
 
     /**
@@ -464,7 +465,8 @@ export class Setting implements ISetting {
         this.waitedProvide = defaults.waitedProvide;
         this.nptServer = defaults.nptServer;
         this.nptInterval = defaults.nptInterval;
-        this.SECONDS_PER_BLOCK = defaults.SECONDS_PER_BLOCK;
+        this.SECONDS_PER_SLOT = defaults.SECONDS_PER_SLOT;
+        this.SLOTS_PER_EPOCH = defaults.SLOTS_PER_EPOCH;
         this.GENESIS_TIME = BigInt(defaults.GENESIS_TIME);
     }
 
@@ -473,7 +475,8 @@ export class Setting implements ISetting {
         if (config.waitedProvide !== undefined) this.waitedProvide = config.waitedProvide;
         if (config.nptServer !== undefined) this.nptServer = config.nptServer;
         if (config.nptInterval !== undefined) this.nptInterval = config.nptInterval;
-        if (config.SECONDS_PER_BLOCK !== undefined) this.SECONDS_PER_BLOCK = config.SECONDS_PER_BLOCK;
+        if (config.SECONDS_PER_SLOT !== undefined) this.SECONDS_PER_SLOT = config.SECONDS_PER_SLOT;
+        if (config.SLOTS_PER_EPOCH !== undefined) this.SLOTS_PER_EPOCH = config.SLOTS_PER_EPOCH;
         if (config.GENESIS_TIME !== undefined) this.GENESIS_TIME = BigInt(config.GENESIS_TIME);
     }
 
@@ -484,7 +487,8 @@ export class Setting implements ISetting {
         return {
             ipfs_gateway_url: "",
             waitedProvide: 86400 * 8,
-            SECONDS_PER_BLOCK: 10,
+            SECONDS_PER_SLOT: 12,
+            SLOTS_PER_EPOCH: 32,
             GENESIS_TIME: 1704067200,
             nptServer: "kr.pool.ntp.org",
             nptInterval: 10000,
@@ -644,7 +648,8 @@ export interface ISetting {
     waitedProvide: number;
     nptServer: string;
     nptInterval: number;
-    SECONDS_PER_BLOCK: number;
+    SECONDS_PER_SLOT: number;
+    SLOTS_PER_EPOCH: number;
     GENESIS_TIME: bigint;
 }
 

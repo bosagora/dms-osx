@@ -56,7 +56,8 @@ setting:
     waitedProvide: ${WAITED_PROVIDE}
     nptServer: "kr.pool.ntp.org"
     nptInterval: 10
-    SECONDS_PER_BLOCK: ${SECONDS_PER_BLOCK}
+    SECONDS_PER_SLOT: ${SECONDS_PER_SLOT}
+    SLOTS_PER_EPOCH: ${SLOTS_PER_EPOCH}
     GENESIS_TIME: ${GENESIS_TIME}
 
 validator:

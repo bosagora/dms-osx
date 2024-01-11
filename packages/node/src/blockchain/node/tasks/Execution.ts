@@ -20,7 +20,7 @@ export class Execution extends NodeTask {
     }
 
     private async execute(event: string, data: IBlockElement) {
-        logger.info(`execute`);
+        logger.info(`Execute [slot:${data.slot}]`);
         const status = await this.node.branchStatusStorage.get(data);
 
         if (status !== undefined && status === BranchStatus.APPROVED) {
@@ -80,7 +80,6 @@ export class Execution extends NodeTask {
 
     private async saveExchangeRateToContract(approvedBlock: Block, proofedBlock: Block, data: IBlockElement) {
         const latestSlot = this.node.blockStorage.getLatestSlot();
-        logger.info(`latestSlot: ${latestSlot.toString()}, block.header.slot: ${approvedBlock.header.slot.toString()}`);
         if (approvedBlock.header.slot >= latestSlot - 1n) {
             const contract = await this.getCurrencyRateContract();
             const validators = this.getValidators();
