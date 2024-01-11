@@ -20,13 +20,13 @@ export class Proposal extends NodeTask {
     public async work() {
         await this.dispatcher();
         const current = ContractUtils.getTimeStampBigInt();
-        if (this.node.getLatestBlockHeight() < this.node.getExpectedHeight(current)) {
+        if (this.node.getLatestSlot() < this.node.getExpectedHeight(current)) {
             const latestHash = this.node.getLatestBlockHash();
-            const latestHeight = this.node.getLatestBlockHeight();
+            const latestSlot = this.node.getLatestSlot();
             const timestamp =
                 this.node.blockConfig.GENESIS_TIME +
-                BigInt(this.node.blockConfig.SECONDS_PER_BLOCK) * (latestHeight + 1n);
-            const block = Block.createBlankBlock(latestHash, latestHeight, timestamp);
+                BigInt(this.node.blockConfig.SECONDS_PER_BLOCK) * (latestSlot + 1n);
+            const block = Block.createBlankBlock(latestHash, latestSlot, timestamp);
             try {
                 await this.loadPurchase(block.purchases);
                 await this.loadExchangeRate(block.exchangeRates);
@@ -90,7 +90,7 @@ export class Proposal extends NodeTask {
         block.purchases.signatures.length = 0;
         block.exchangeRates.signatures.length = 0;
         block.burnPoints.signatures.length = 0;
-        let signatures = await this.node.signatureStorage.load(block.header.height - 1n, BlockElementType.PURCHASE);
+        let signatures = await this.node.signatureStorage.load(block.header.slot - 1n, BlockElementType.PURCHASE);
         if (signatures !== undefined) {
             block.purchases.signatures.push(
                 ...signatures.map((m) => {
@@ -98,7 +98,7 @@ export class Proposal extends NodeTask {
                 })
             );
         }
-        signatures = await this.node.signatureStorage.load(block.header.height - 1n, BlockElementType.EXCHANGE_RATE);
+        signatures = await this.node.signatureStorage.load(block.header.slot - 1n, BlockElementType.EXCHANGE_RATE);
         if (signatures !== undefined) {
             block.exchangeRates.signatures.push(
                 ...signatures.map((m) => {
@@ -106,7 +106,7 @@ export class Proposal extends NodeTask {
                 })
             );
         }
-        signatures = await this.node.signatureStorage.load(block.header.height - 1n, BlockElementType.BURN_POINT);
+        signatures = await this.node.signatureStorage.load(block.header.slot - 1n, BlockElementType.BURN_POINT);
         if (signatures !== undefined) {
             block.burnPoints.signatures.push(
                 ...signatures.map((m) => {
@@ -117,15 +117,15 @@ export class Proposal extends NodeTask {
     }
 
     private async makeHash(block: Block) {
-        block.header.purchaseHash = block.purchases.computeHash(block.header.height);
-        block.header.exchangeRateHash = block.exchangeRates.computeHash(block.header.height);
-        block.header.burnPointHash = block.burnPoints.computeHash(block.header.height);
+        block.header.purchaseHash = block.purchases.computeHash(block.header.slot);
+        block.header.exchangeRateHash = block.exchangeRates.computeHash(block.header.slot);
+        block.header.burnPointHash = block.burnPoints.computeHash(block.header.slot);
     }
 
     private async signFromProposer(block: Block) {
         const validators = this.getValidators();
         const size = BigInt(validators.length);
-        const idx = Number(block.header.height - (block.header.height / size) * size);
+        const idx = Number(block.header.slot - (block.header.slot / size) * size);
         const proposer = validators[idx];
         await block.header.sign(proposer);
     }

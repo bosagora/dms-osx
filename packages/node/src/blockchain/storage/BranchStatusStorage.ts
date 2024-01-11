@@ -20,23 +20,23 @@ export class BranchStatusStorage {
 
     public async setAllInBlock(block: Block, status: BranchStatus) {
         for (let idx = 0; idx < block.purchases.branches.length; idx++) {
-            await this.storage.setBranchStatus(block.header.height, BlockElementType.PURCHASE, idx, status);
+            await this.storage.setBranchStatus(block.header.slot, BlockElementType.PURCHASE, idx, status);
         }
 
         for (let idx = 0; idx < block.exchangeRates.branches.length; idx++) {
-            await this.storage.setBranchStatus(block.header.height, BlockElementType.EXCHANGE_RATE, idx, status);
+            await this.storage.setBranchStatus(block.header.slot, BlockElementType.EXCHANGE_RATE, idx, status);
         }
 
         for (let idx = 0; idx < block.burnPoints.branches.length; idx++) {
-            await this.storage.setBranchStatus(block.header.height, BlockElementType.BURN_POINT, idx, status);
+            await this.storage.setBranchStatus(block.header.slot, BlockElementType.BURN_POINT, idx, status);
         }
     }
 
     public async set(data: IBlockElement, status: BranchStatus) {
-        await this.storage.setBranchStatus(data.height, data.type, data.branchIndex, status);
+        await this.storage.setBranchStatus(data.slot, data.type, data.branchIndex, status);
     }
 
     public async get(data: IBlockElement): Promise<BranchStatus | undefined> {
-        return this.storage.getBranchStatus(data.height, data.type, data.branchIndex);
+        return this.storage.getBranchStatus(data.slot, data.type, data.branchIndex);
     }
 }

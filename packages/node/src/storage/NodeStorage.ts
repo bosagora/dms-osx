@@ -163,13 +163,13 @@ export class NodeStorage extends Storage {
     /// region DMS Block
     public async postBlock(block: Block) {
         await this.queryForMapper("dms_blocks", "postBlock", {
-            height: block.header.height.toString(),
+            slot: block.header.slot.toString(),
             contents: JSON.stringify(block.toJSON()),
         });
     }
 
-    public async getBlock(height: bigint): Promise<Block | undefined> {
-        const res = await this.queryForMapper("dms_blocks", "getBlock", { height: height.toString() });
+    public async getBlock(slot: bigint): Promise<Block | undefined> {
+        const res = await this.queryForMapper("dms_blocks", "getBlock", { slot: slot.toString() });
         if (res.rows.length > 0) {
             return Block.reviver("", JSON.parse(res.rows[0].contents.replace(/[\\]/gi, "")));
         } else {
@@ -189,14 +189,14 @@ export class NodeStorage extends Storage {
 
     /// region DMS Signature
     public async postSignature(
-        height: bigint,
+        slot: bigint,
         type: BlockElementType,
         branchIndex: number,
         account: string,
         signature: string
     ) {
         await this.queryForMapper("dms_signatures", "postSignature", {
-            height: height.toString(),
+            slot: slot.toString(),
             type,
             branchIndex,
             account,
@@ -204,8 +204,8 @@ export class NodeStorage extends Storage {
         });
     }
 
-    public async getSignatures(height: bigint, type: BlockElementType): Promise<IBranchSignatureWithAccount[]> {
-        const res = await this.queryForMapper("dms_signatures", "getSignature", { height: height.toString(), type });
+    public async getSignatures(slot: bigint, type: BlockElementType): Promise<IBranchSignatureWithAccount[]> {
+        const res = await this.queryForMapper("dms_signatures", "getSignature", { slot: slot.toString(), type });
         return res.rows.map((m) => {
             return {
                 branchIndex: m.branchIndex,
@@ -217,9 +217,9 @@ export class NodeStorage extends Storage {
     /// endregion
 
     /// region DMS BranchStatus
-    public async setBranchStatus(height: bigint, type: BlockElementType, branchIndex: number, status: number) {
+    public async setBranchStatus(slot: bigint, type: BlockElementType, branchIndex: number, status: number) {
         await this.queryForMapper("dms_branch_status", "setBranchStatus", {
-            height: height.toString(),
+            slot: slot.toString(),
             type,
             branchIndex,
             status,
@@ -227,12 +227,12 @@ export class NodeStorage extends Storage {
     }
 
     public async getBranchStatus(
-        height: bigint,
+        slot: bigint,
         type: BlockElementType,
         branchIndex: number
     ): Promise<BranchStatus | undefined> {
         const res = await this.queryForMapper("dms_branch_status", "getBranchStatus", {
-            height: height.toString(),
+            slot: slot.toString(),
             type,
             branchIndex,
         });

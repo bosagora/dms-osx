@@ -22,17 +22,17 @@ export class Verification extends NodeTask {
         logger.info(`verify`);
         if (proposedBlock === undefined) return;
 
-        const prevBlock = await this.node.getBlock(proposedBlock.header.height - 1n);
+        const prevBlock = await this.node.getBlock(proposedBlock.header.slot - 1n);
         if (prevBlock === undefined) return;
 
         for (let branchIndex = 0; branchIndex < prevBlock.purchases.branches.length; branchIndex++) {
             const branch = prevBlock.purchases.branches[branchIndex];
-            const hash = branch.computeHash(prevBlock.header.height);
+            const hash = branch.computeHash(prevBlock.header.slot);
             const proofs = proposedBlock.purchases.signatures.filter((m) => m.branchIndex === branchIndex);
 
             for (const proof of proofs) {
                 const account = ContractUtils.verifySignature(arrayify(hash), proof.signature).toLowerCase();
-                this.node.signatureStorage.save(prevBlock.header.height, BlockElementType.PURCHASE, {
+                this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.PURCHASE, {
                     branchIndex,
                     account,
                     signature: proof.signature,
@@ -42,12 +42,12 @@ export class Verification extends NodeTask {
 
         for (let branchIndex = 0; branchIndex < prevBlock.exchangeRates.branches.length; branchIndex++) {
             const branch = prevBlock.exchangeRates.branches[branchIndex];
-            const hash = branch.computeHash(prevBlock.header.height);
+            const hash = branch.computeHash(prevBlock.header.slot);
             const proofs = proposedBlock.exchangeRates.signatures.filter((m) => m.branchIndex === branchIndex);
 
             for (const proof of proofs) {
                 const account = ContractUtils.verifySignature(arrayify(hash), proof.signature).toLowerCase();
-                this.node.signatureStorage.save(prevBlock.header.height, BlockElementType.EXCHANGE_RATE, {
+                this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.EXCHANGE_RATE, {
                     branchIndex,
                     account,
                     signature: proof.signature,
@@ -57,12 +57,12 @@ export class Verification extends NodeTask {
 
         for (let branchIndex = 0; branchIndex < prevBlock.burnPoints.branches.length; branchIndex++) {
             const branch = prevBlock.burnPoints.branches[branchIndex];
-            const hash = branch.computeHash(prevBlock.header.height);
+            const hash = branch.computeHash(prevBlock.header.slot);
             const proofs = proposedBlock.burnPoints.signatures.filter((m) => m.branchIndex === branchIndex);
 
             for (const proof of proofs) {
                 const account = ContractUtils.verifySignature(arrayify(hash), proof.signature).toLowerCase();
-                this.node.signatureStorage.save(prevBlock.header.height, BlockElementType.BURN_POINT, {
+                this.node.signatureStorage.save(prevBlock.header.slot, BlockElementType.BURN_POINT, {
                     branchIndex,
                     account,
                     signature: proof.signature,
@@ -72,7 +72,7 @@ export class Verification extends NodeTask {
 
         for (let idx = 0; idx < prevBlock.purchases.branches.length; idx++) {
             const status = await this.node.branchStatusStorage.get({
-                height: prevBlock.header.height,
+                slot: prevBlock.header.slot,
                 type: BlockElementType.PURCHASE,
                 branchIndex: idx,
             });
@@ -82,7 +82,7 @@ export class Verification extends NodeTask {
 
         for (let idx = 0; idx < prevBlock.exchangeRates.branches.length; idx++) {
             const status = await this.node.branchStatusStorage.get({
-                height: prevBlock.header.height,
+                slot: prevBlock.header.slot,
                 type: BlockElementType.EXCHANGE_RATE,
                 branchIndex: idx,
             });
@@ -92,7 +92,7 @@ export class Verification extends NodeTask {
 
         for (let idx = 0; idx < prevBlock.burnPoints.branches.length; idx++) {
             const status = await this.node.branchStatusStorage.get({
-                height: prevBlock.header.height,
+                slot: prevBlock.header.slot,
                 type: BlockElementType.BURN_POINT,
                 branchIndex: idx,
             });
@@ -108,7 +108,7 @@ export class Verification extends NodeTask {
             voters.set(validator.address.toLowerCase(), false);
         }
 
-        const signatures = await this.node.signatureStorage.load(prevBlock.header.height, BlockElementType.PURCHASE);
+        const signatures = await this.node.signatureStorage.load(prevBlock.header.slot, BlockElementType.PURCHASE);
         if (signatures === undefined) return;
         const proofs = signatures.filter((m) => m.branchIndex === branchIndex);
 
@@ -126,7 +126,7 @@ export class Verification extends NodeTask {
         if (Math.floor((count * 1000) / validators.length) >= Math.floor(2000 / 3)) {
             logger.info("Verification Purchase Approved");
             await this.node.approved({
-                height: prevBlock.header.height,
+                slot: prevBlock.header.slot,
                 type: BlockElementType.PURCHASE,
                 branchIndex,
             });
@@ -144,10 +144,7 @@ export class Verification extends NodeTask {
             voters.set(validator.address.toLowerCase(), false);
         }
 
-        const signatures = await this.node.signatureStorage.load(
-            prevBlock.header.height,
-            BlockElementType.EXCHANGE_RATE
-        );
+        const signatures = await this.node.signatureStorage.load(prevBlock.header.slot, BlockElementType.EXCHANGE_RATE);
         if (signatures === undefined) return;
 
         const proofs = signatures.filter((m) => m.branchIndex === branchIndex);
@@ -164,7 +161,7 @@ export class Verification extends NodeTask {
         if (Math.floor((count * 1000) / validators.length) >= Math.floor(2000 / 3)) {
             logger.info("Verification Exchange Rate Approved");
             await this.node.approved({
-                height: prevBlock.header.height,
+                slot: prevBlock.header.slot,
                 type: BlockElementType.EXCHANGE_RATE,
                 branchIndex,
             });
@@ -178,7 +175,7 @@ export class Verification extends NodeTask {
             voters.set(validator.address.toLowerCase(), false);
         }
 
-        const signatures = await this.node.signatureStorage.load(prevBlock.header.height, BlockElementType.BURN_POINT);
+        const signatures = await this.node.signatureStorage.load(prevBlock.header.slot, BlockElementType.BURN_POINT);
         if (signatures === undefined) return;
 
         const proofs = signatures.filter((m) => m.branchIndex === branchIndex);
@@ -195,7 +192,7 @@ export class Verification extends NodeTask {
         if (Math.floor((count * 1000) / validators.length) >= Math.floor(2000 / 3)) {
             logger.info("Verification Burn Point Approved");
             await this.node.approved({
-                height: prevBlock.header.height,
+                slot: prevBlock.header.slot,
                 type: BlockElementType.BURN_POINT,
                 branchIndex,
             });

@@ -19,9 +19,9 @@ export class Attestation extends NodeTask {
         const validators = this.getValidators();
 
         const proofs: IBlockElementProof[] = [];
-        const height = block.header.height;
-        const height2 = (height / BigInt(validators.length)) * BigInt(validators.length);
-        const idx = Number(height - height2);
+        const slot = block.header.slot;
+        const slot2 = (slot / BigInt(validators.length)) * BigInt(validators.length);
+        const idx = Number(slot - slot2);
         const proposer = validators[idx];
 
         for (const validator of validators) {
@@ -30,31 +30,31 @@ export class Attestation extends NodeTask {
             for (let index = 0; index < block.purchases.branches.length; index++) {
                 const branch = block.purchases.branches[index];
                 proofs.push({
-                    height,
+                    slot,
                     type: BlockElementType.PURCHASE,
                     branchIndex: index,
                     account,
-                    signature: await branch.sign(validator, block.header.height),
+                    signature: await branch.sign(validator, block.header.slot),
                 });
             }
             for (let index = 0; index < block.exchangeRates.branches.length; index++) {
                 const branch = block.exchangeRates.branches[index];
                 proofs.push({
-                    height,
+                    slot,
                     type: BlockElementType.EXCHANGE_RATE,
                     branchIndex: index,
                     account,
-                    signature: await branch.sign(validator, block.header.height),
+                    signature: await branch.sign(validator, block.header.slot),
                 });
             }
             for (let index = 0; index < block.burnPoints.branches.length; index++) {
                 const branch = block.burnPoints.branches[index];
                 proofs.push({
-                    height,
+                    slot,
                     type: BlockElementType.BURN_POINT,
                     branchIndex: index,
                     account,
-                    signature: await branch.sign(validator, block.header.height),
+                    signature: await branch.sign(validator, block.header.slot),
                 });
             }
         }

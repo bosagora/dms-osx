@@ -9,11 +9,11 @@ export class SignatureStorage {
         this.storage = storage;
     }
 
-    public async save(height: bigint, type: BlockElementType, signature: IBranchSignatureWithAccount) {
-        await this.storage.postSignature(height, type, signature.branchIndex, signature.account, signature.signature);
+    public async save(slot: bigint, type: BlockElementType, signature: IBranchSignatureWithAccount) {
+        await this.storage.postSignature(slot, type, signature.branchIndex, signature.account, signature.signature);
     }
 
-    public async load(height: bigint, type: BlockElementType): Promise<IBranchSignatureWithAccount[]> {
-        return this.storage.getSignatures(height, type);
+    public async load(slot: bigint, type: BlockElementType): Promise<IBranchSignatureWithAccount[]> {
+        return this.storage.getSignatures(slot, type);
     }
 }

@@ -5,27 +5,27 @@
     <insert id="postBlock">
         INSERT INTO dms.dms_blocks
         (
-            height,
+            slot,
             contents
         )
         VALUES
         (
-            #{height},
+            #{slot},
             #{contents}
         )
-        ON CONFLICT (height)
+        ON CONFLICT (slot)
         DO UPDATE
             SET contents = EXCLUDED.contents;
     </insert>
 
     <select id="getBlock">
         SELECT contents FROM dms.dms_blocks
-        WHERE height = #{height};
+        WHERE slot = #{slot};
     </select>
 
     <select id="getLatestBlock">
         SELECT contents FROM dms.dms_blocks
-        ORDER BY height DESC LIMIT 1;
+        ORDER BY slot DESC LIMIT 1;
     </select>
 
 </mapper>

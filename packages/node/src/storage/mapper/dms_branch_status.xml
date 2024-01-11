@@ -5,26 +5,26 @@
     <insert id="setBranchStatus">
         INSERT INTO dms.dms_branch_status
         (
-            "height",
+            "slot",
             "type",
             "branchIndex",
             "status"
         )
         VALUES
         (
-            #{height},
+            #{slot},
             ${type},
             ${branchIndex},
             ${status}
         )
-        ON CONFLICT ("height", "type", "branchIndex")
+        ON CONFLICT ("slot", "type", "branchIndex")
         DO UPDATE
             SET status = EXCLUDED.status;
     </insert>
 
     <select id="getBranchStatus">
         SELECT * FROM dms.dms_branch_status
-        WHERE "height" = #{height} AND  "type" = #{type} AND "branchIndex" = #{branchIndex};
+        WHERE "slot" = #{slot} AND  "type" = #{type} AND "branchIndex" = #{branchIndex};
     </select>
 
 </mapper>

@@ -5,7 +5,7 @@
     <insert id="postSignature">
         INSERT INTO dms.dms_signatures
         (
-            "height",
+            "slot",
             "type",
             "branchIndex",
             "account",
@@ -13,20 +13,20 @@
         )
         VALUES
         (
-            #{height},
+            #{slot},
             ${type},
             ${branchIndex},
             #{account},
             #{signature}
         )
-        ON CONFLICT ("height", "type", "branchIndex", "account")
+        ON CONFLICT ("slot", "type", "branchIndex", "account")
         DO UPDATE
             SET signature = EXCLUDED.signature;
     </insert>
 
     <select id="getSignature">
         SELECT * FROM dms.dms_signatures
-        WHERE "height" = #{height} AND "type" = ${type};
+        WHERE "slot" = #{slot} AND "type" = ${type};
     </select>
 
 </mapper>

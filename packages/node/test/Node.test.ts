@@ -173,7 +173,7 @@ describe("Test of Server", function () {
     it("Waiting...", async () => {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
-            const latestHeight = server.node.blockStorage.getLatestBlockHeight();
+            const latestHeight = server.node.blockStorage.getLatestSlot();
             if (latestHeight === 1n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 60) break;
             await ContractUtils.delay(1000);
@@ -183,13 +183,13 @@ describe("Test of Server", function () {
     it("Check Block 1", async () => {
         const block = await server.node.blockStorage.getLatestBlock();
         assert.ok(block !== undefined);
-        assert.deepStrictEqual(block.header.height, 1n);
+        assert.deepStrictEqual(block.header.slot, 1n);
     });
 
     it("Waiting...", async () => {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
-            const latestHeight = server.node.blockStorage.getLatestBlockHeight();
+            const latestHeight = server.node.blockStorage.getLatestSlot();
             if (latestHeight >= 3n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 60) break;
             await ContractUtils.delay(1000);
@@ -199,12 +199,12 @@ describe("Test of Server", function () {
     it("Check Block 2", async () => {
         const block = await server.node.blockStorage.getLatestBlock();
         assert.ok(block !== undefined);
-        assert.deepStrictEqual(block.header.height, 3n);
+        assert.deepStrictEqual(block.header.slot, 3n);
     });
 
     it("Check Status 1", async () => {
         const status = await server.node.branchStatusStorage.get({
-            height: 1n,
+            slot: 1n,
             type: BlockElementType.PURCHASE,
             branchIndex: 0,
         });
@@ -214,7 +214,7 @@ describe("Test of Server", function () {
     it("Waiting...", async () => {
         const t1 = ContractUtils.getTimeStamp();
         while (true) {
-            const latestHeight = server.node.blockStorage.getLatestBlockHeight();
+            const latestHeight = server.node.blockStorage.getLatestSlot();
             if (latestHeight === 7n) break;
             else if (ContractUtils.getTimeStamp() - t1 > 240) break;
             await ContractUtils.delay(1000);
@@ -223,7 +223,7 @@ describe("Test of Server", function () {
 
     it("Check Status 2", async () => {
         const status = await server.node.branchStatusStorage.get({
-            height: 1n,
+            slot: 1n,
             type: BlockElementType.PURCHASE,
             branchIndex: 0,
         });

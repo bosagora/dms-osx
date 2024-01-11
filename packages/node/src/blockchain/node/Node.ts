@@ -55,7 +55,7 @@ export class Node extends EventDispatcher {
 
     public async proposed(block: Block) {
         if (
-            block.header.height === this.blockStorage.getLatestBlockHeight() + 1n &&
+            block.header.slot === this.blockStorage.getLatestSlot() + 1n &&
             block.header.prevBlockHash === this.blockStorage.getLatestBlockHash()
         ) {
             await this.blockStorage.save(block);
@@ -65,7 +65,7 @@ export class Node extends EventDispatcher {
     }
 
     public async proofed(data: IBlockElementProof) {
-        await this.signatureStorage.save(data.height, data.type, {
+        await this.signatureStorage.save(data.slot, data.type, {
             branchIndex: data.branchIndex,
             account: data.account,
             signature: data.signature,
@@ -76,7 +76,7 @@ export class Node extends EventDispatcher {
 
     public async proofedBlock(proofs: IBlockElementProof[], block: Block) {
         for (const elem of proofs) {
-            await this.signatureStorage.save(elem.height, elem.type, {
+            await this.signatureStorage.save(elem.slot, elem.type, {
                 branchIndex: elem.branchIndex,
                 account: elem.account,
                 signature: elem.signature,
@@ -110,8 +110,8 @@ export class Node extends EventDispatcher {
         return (timestamp - BigInt(this.blockConfig.GENESIS_TIME)) / BigInt(this.blockConfig.SECONDS_PER_BLOCK);
     }
 
-    public getLatestBlockHeight(): bigint {
-        return this.blockStorage.getLatestBlockHeight();
+    public getLatestSlot(): bigint {
+        return this.blockStorage.getLatestSlot();
     }
 
     public getLatestBlockHash(): string {
@@ -130,8 +130,8 @@ export class Node extends EventDispatcher {
         return this.blockStorage.getGenesisBlock();
     }
 
-    public async getBlock(height: bigint): Promise<Block | undefined> {
-        return this.blockStorage.getBlock(height);
+    public async getBlock(slot: bigint): Promise<Block | undefined> {
+        return this.blockStorage.getBlock(slot);
     }
 
     public async onStart() {

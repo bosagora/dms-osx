@@ -11,13 +11,13 @@ export class BlockHeader {
     public purchaseHash: string;
     public exchangeRateHash: string;
     public burnPointHash: string;
-    public height: bigint;
+    public slot: bigint;
     public timestamp: bigint;
     public signature: string;
 
     constructor(
         prevBlockHash: string,
-        height: bigint,
+        slot: bigint,
         timestamp: bigint,
         purchaseHash?: string,
         exchangeRateHash?: string,
@@ -25,7 +25,7 @@ export class BlockHeader {
         signature?: string
     ) {
         this.prevBlockHash = prevBlockHash;
-        this.height = height;
+        this.slot = slot;
         this.timestamp = timestamp;
         this.purchaseHash = purchaseHash !== undefined ? purchaseHash : HashZero;
         this.exchangeRateHash = exchangeRateHash !== undefined ? exchangeRateHash : HashZero;
@@ -40,7 +40,7 @@ export class BlockHeader {
 
         return new BlockHeader(
             value.prevBlockHash,
-            BigInt(value.height),
+            BigInt(value.slot),
             BigInt(value.timestamp),
             value.purchaseHash,
             value.exchangeRateHash,
@@ -52,7 +52,7 @@ export class BlockHeader {
     public toJSON(): any {
         return {
             prevBlockHash: this.prevBlockHash,
-            height: this.height.toString(),
+            slot: this.slot.toString(),
             timestamp: this.timestamp.toString(),
             purchaseHash: this.purchaseHash,
             exchangeRateHash: this.exchangeRateHash,
@@ -66,7 +66,7 @@ export class BlockHeader {
             ["bytes32", "uint256", "uint256", "bytes32", "bytes32", "bytes32"],
             [
                 this.prevBlockHash,
-                this.height,
+                this.slot,
                 this.timestamp,
                 this.purchaseHash,
                 this.exchangeRateHash,

@@ -7,7 +7,7 @@ import { HashZero } from "@ethersproject/constants";
 
 export class BlockStorage {
     protected readonly storage: NodeStorage;
-    private latestHeight: bigint;
+    private latestSlot: bigint;
     private latestTimestamp: bigint;
     private latestHash: string;
     private blockConfig: BlockConfig;
@@ -15,7 +15,7 @@ export class BlockStorage {
     constructor(blockConfig: BlockConfig, storage: NodeStorage) {
         this.blockConfig = blockConfig;
         this.storage = storage;
-        this.latestHeight = 0n;
+        this.latestSlot = 0n;
         this.latestTimestamp = this.blockConfig.GENESIS_TIME;
         this.latestHash = HashZero;
     }
@@ -26,15 +26,15 @@ export class BlockStorage {
             genesis = this.createGenesisBlock();
             await this.storage.postBlock(genesis);
         }
-        this.latestHeight = genesis.header.height;
+        this.latestSlot = genesis.header.slot;
         this.latestTimestamp = genesis.header.timestamp;
         this.latestHash = genesis.computeHash();
     }
 
     public async save(block: Block) {
-        if (block.header.height - this.latestHeight === 1n && block.header.prevBlockHash === this.latestHash) {
+        if (block.header.slot - this.latestSlot === 1n && block.header.prevBlockHash === this.latestHash) {
             await this.storage.postBlock(block);
-            this.latestHeight = block.header.height;
+            this.latestSlot = block.header.slot;
             this.latestTimestamp = block.header.timestamp;
             this.latestHash = block.computeHash();
         }
@@ -54,8 +54,8 @@ export class BlockStorage {
         return genesis;
     }
 
-    public getLatestBlockHeight(): bigint {
-        return this.latestHeight;
+    public getLatestSlot(): bigint {
+        return this.latestSlot;
     }
 
     public getLatestBlockHash(): string {
@@ -81,9 +81,9 @@ export class BlockStorage {
         }
     }
 
-    public getBlock(height: bigint): Promise<Block | undefined> {
+    public getBlock(slot: bigint): Promise<Block | undefined> {
         try {
-            return this.storage.getBlock(height);
+            return this.storage.getBlock(slot);
         } catch (e) {
             return Promise.resolve(undefined);
         }
