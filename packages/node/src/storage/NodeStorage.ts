@@ -92,7 +92,7 @@ export class NodeStorage extends Storage {
                             timestamp: purchase.timestamp.toString(),
                             height: block.header.height.toString(),
                             hash: hashFull(purchase).toString(),
-                            contents: JSON.stringify(purchase.toJSON()),
+                            contents: purchase.toJSON(),
                         };
                     }) as any,
                 });
@@ -120,7 +120,7 @@ export class NodeStorage extends Storage {
             timestamp: (ContractUtils.getTimeStampBigInt() - BigInt(waiting)).toString(),
         });
         return res.rows.map((m) => {
-            return NewTransaction.reviver("", JSON.parse(m.contents.replace(/[\\]/gi, "")));
+            return NewTransaction.reviver("", m.contents);
         });
     }
     /// endregion
