@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="exchange_rates">
     <insert id="postExchangeRates">
-        INSERT INTO dms.exchange_rates (symbol, rate)
+        INSERT INTO exchange_rates (symbol, rate)
         VALUES
         <foreach item="item" collection="rates" separator=",">
         (
@@ -16,7 +16,7 @@
     </insert>
 
     <select id="getExchangeRate">
-        SELECT * FROM dms.exchange_rates;
+        SELECT * FROM exchange_rates;
     </select>
 
 </mapper>
