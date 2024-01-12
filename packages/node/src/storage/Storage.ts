@@ -1,20 +1,48 @@
 import MybatisMapper, { Params } from "mybatis-mapper";
 import pg, { QueryResult, QueryResultRow } from "pg";
+import { createdb } from "pgtools";
 import { IDatabaseConfig } from "../common/Config";
+import { logger } from "../common/Logger";
 
 export class Storage {
-    protected pool: pg.Pool;
+    protected _pool: pg.Pool | undefined;
+    protected config: IDatabaseConfig;
 
-    constructor(databaseConfig: IDatabaseConfig, callback: (err: Error | null) => void) {
-        this.pool = new pg.Pool({
-            user: databaseConfig.user,
-            password: databaseConfig.password,
-            host: databaseConfig.host,
-            port: databaseConfig.port,
-            database: databaseConfig.database,
-            max: databaseConfig.max,
-            connectionTimeoutMillis: databaseConfig.connectionTimeoutMillis,
+    constructor(config: IDatabaseConfig) {
+        this.config = config;
+    }
+
+    public async initialize() {
+        if (this.config.database !== "postgres") {
+            try {
+                await createdb(
+                    {
+                        user: this.config.user,
+                        password: this.config.password,
+                        host: this.config.host,
+                        port: this.config.port,
+                    },
+                    this.config.database
+                );
+                // tslint:disable-next-line:no-empty
+            } catch (e) {}
+        }
+
+        this._pool = new pg.Pool({
+            user: this.config.user,
+            password: this.config.password,
+            host: this.config.host,
+            port: this.config.port,
+            database: this.config.database,
+            max: this.config.max,
+            connectionTimeoutMillis: this.config.connectionTimeoutMillis,
         });
+    }
+
+    public get pool(): pg.Pool {
+        if (this._pool !== undefined) return this._pool;
+        logger.error("Storage is not ready yet.");
+        process.exit(1);
     }
 
     public createTables(): Promise<void> {

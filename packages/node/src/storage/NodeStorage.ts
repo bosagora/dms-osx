@@ -12,37 +12,30 @@ import { Storage } from "./Storage";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
-import { logger } from "../common/Logger";
 
 /**
  * The class that inserts and reads the ledger into the database.
  */
 export class NodeStorage extends Storage {
-    constructor(databaseConfig: IDatabaseConfig, callback: (err: Error | null) => void) {
-        super(databaseConfig, callback);
+    constructor(config: IDatabaseConfig) {
+        super(config);
+    }
+
+    public async initialize() {
+        await super.initialize();
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/table.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/purchase_blocks.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/exchange_rates.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_blocks.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_signatures.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/dms_branch_status.xml")]);
-        this.createTables()
-            .then(() => {
-                if (callback != null) callback(null);
-            })
-            .catch((err: any) => {
-                if (callback != null) callback(err);
-            });
+        await this.createTables();
     }
 
-    public static make(databaseConfig: IDatabaseConfig): Promise<NodeStorage> {
-        return new Promise<NodeStorage>((resolve, reject) => {
-            const result = new NodeStorage(databaseConfig, (err: Error | null) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-            return result;
-        });
+    public static async make(config: IDatabaseConfig): Promise<NodeStorage> {
+        const storage = new NodeStorage(config);
+        await storage.initialize();
+        return storage;
     }
 
     public createTables(): Promise<any> {

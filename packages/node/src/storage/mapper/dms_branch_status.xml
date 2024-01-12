@@ -3,7 +3,7 @@
 <mapper namespace="dms_branch_status">
 
     <insert id="setBranchStatus">
-        INSERT INTO dms.dms_branch_status
+        INSERT INTO dms_branch_status
         (
             "slot",
             "type",
@@ -23,7 +23,7 @@
     </insert>
 
     <select id="getBranchStatus">
-        SELECT * FROM dms.dms_branch_status
+        SELECT * FROM dms_branch_status
         WHERE "slot" = #{slot} AND  "type" = #{type} AND "branchIndex" = #{branchIndex};
     </select>
 

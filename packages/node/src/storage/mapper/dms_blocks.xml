@@ -3,7 +3,7 @@
 <mapper namespace="dms_blocks">
 
     <insert id="postBlock">
-        INSERT INTO dms.dms_blocks
+        INSERT INTO dms_blocks
         (
             slot,
             contents
@@ -19,12 +19,12 @@
     </insert>
 
     <select id="getBlock">
-        SELECT contents FROM dms.dms_blocks
+        SELECT contents FROM dms_blocks
         WHERE slot = #{slot};
     </select>
 
     <select id="getLatestBlock">
-        SELECT contents FROM dms.dms_blocks
+        SELECT contents FROM dms_blocks
         ORDER BY slot DESC LIMIT 1;
     </select>
 

@@ -95,6 +95,7 @@
         "node-cron": "^3.0.0",
         "ntp-time": "^2.0.3",
         "pg": "^8.11.3",
+        "pgtools": "^1.0.1",
         "prettier": "^2.5.1",
         "prettier-plugin-solidity": "^1.1.1",
         "smart-buffer": "^4.1.0",

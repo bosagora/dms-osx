@@ -3,7 +3,7 @@
 <mapper namespace="dms_signatures">
 
     <insert id="postSignature">
-        INSERT INTO dms.dms_signatures
+        INSERT INTO dms_signatures
         (
             "slot",
             "type",
@@ -25,7 +25,7 @@
     </insert>
 
     <select id="getSignature">
-        SELECT * FROM dms.dms_signatures
+        SELECT * FROM dms_signatures
         WHERE "slot" = #{slot} AND "type" = ${type};
     </select>
 
