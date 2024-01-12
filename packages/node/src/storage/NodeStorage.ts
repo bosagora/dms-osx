@@ -112,7 +112,7 @@ export class NodeStorage extends Storage {
 
     public async postCancelPurchases(block: PurchaseBlock, txs: Transaction[]) {
         for (const tx of txs) {
-            await this.queryForMapper("purchases", "canceledTransaction", {
+            await this.queryForMapper("purchase_blocks", "canceledTransaction", {
                 purchaseId: tx.purchaseId,
             });
         }
