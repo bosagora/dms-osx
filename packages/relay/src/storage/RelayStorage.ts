@@ -20,29 +20,23 @@ import {
  * The class that inserts and reads the ledger into the database.
  */
 export class RelayStorage extends Storage {
-    constructor(databaseConfig: IDatabaseConfig, callback: (err: Error | null) => void) {
-        super(databaseConfig, callback);
+    constructor(databaseConfig: IDatabaseConfig) {
+        super(databaseConfig);
+    }
+
+    public async initialize() {
+        await super.initialize();
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/table.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/payment.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/task.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/mobile.xml")]);
-        this.createTables()
-            .then(() => {
-                if (callback != null) callback(null);
-            })
-            .catch((err: any) => {
-                if (callback != null) callback(err);
-            });
+        await this.createTables();
     }
 
-    public static make(databaseConfig: IDatabaseConfig): Promise<RelayStorage> {
-        return new Promise<RelayStorage>((resolve, reject) => {
-            const result = new RelayStorage(databaseConfig, (err: Error | null) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-            return result;
-        });
+    public static async make(config: IDatabaseConfig): Promise<RelayStorage> {
+        const storage = new RelayStorage(config);
+        await storage.initialize();
+        return storage;
     }
 
     public createTables(): Promise<any> {

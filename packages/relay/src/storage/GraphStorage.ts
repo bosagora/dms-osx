@@ -16,27 +16,22 @@ import { toChecksumAddress } from "ethereumjs-util";
 export class GraphStorage extends Storage {
     public static AmountUnit: BigNumber = BigNumber.from("1000000000");
     private scheme: string;
-    constructor(databaseConfig: IDatabaseConfig, callback: (err: Error | null) => void) {
-        super(databaseConfig, callback);
+
+    constructor(databaseConfig: IDatabaseConfig) {
+        super(databaseConfig);
         this.scheme = databaseConfig.scheme;
-        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/graph/shop.xml")]);
-        this.createTables()
-            .then(() => {
-                if (callback != null) callback(null);
-            })
-            .catch((err: any) => {
-                if (callback != null) callback(err);
-            });
     }
 
-    public static make(databaseConfig: IDatabaseConfig): Promise<GraphStorage> {
-        return new Promise<GraphStorage>((resolve, reject) => {
-            const result = new GraphStorage(databaseConfig, (err: Error | null) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-            return result;
-        });
+    public async initialize() {
+        await super.initialize();
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/graph/shop.xml")]);
+        await this.createTables();
+    }
+
+    public static async make(config: IDatabaseConfig): Promise<GraphStorage> {
+        const storage = new GraphStorage(config);
+        await storage.initialize();
+        return storage;
     }
 
     public getShopList(pageNumber: number, pageSize: number): Promise<IGraphShopData[]> {
