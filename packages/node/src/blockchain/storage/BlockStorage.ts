@@ -2,6 +2,7 @@ import { NodeStorage } from "../../storage/NodeStorage";
 import { ContractUtils } from "../../utils/ContractUtils";
 import { BlockConfig } from "../node/BlockConfig";
 import { Block, BlockHeader, BurnPointRoot, ExchangeRateRoot, PurchaseRoot } from "../types";
+import { BlockCache } from "./BlockCache";
 
 import { HashZero } from "@ethersproject/constants";
 
@@ -11,6 +12,7 @@ export class BlockStorage {
     private latestTimestamp: bigint;
     private latestHash: string;
     private blockConfig: BlockConfig;
+    private blockCache: BlockCache;
 
     constructor(blockConfig: BlockConfig, storage: NodeStorage) {
         this.blockConfig = blockConfig;
@@ -18,17 +20,23 @@ export class BlockStorage {
         this.latestSlot = 0n;
         this.latestTimestamp = this.blockConfig.GENESIS_TIME;
         this.latestHash = HashZero;
+        this.blockCache = new BlockCache();
     }
 
     public async initialize() {
-        let genesis = await this.getGenesisBlock();
-        if (genesis === undefined) {
-            genesis = this.createGenesisBlock();
+        const block = await this.getLatestBlock(false);
+        if (block !== undefined) {
+            this.latestSlot = block.header.slot;
+            this.latestTimestamp = block.header.timestamp;
+            this.latestHash = block.computeHash();
+        } else {
+            const genesis = this.createGenesisBlock();
             await this.storage.postBlock(genesis);
+            this.latestSlot = genesis.header.slot;
+            this.latestTimestamp = genesis.header.timestamp;
+            this.latestHash = genesis.computeHash();
+            this.blockCache.set(genesis);
         }
-        this.latestSlot = genesis.header.slot;
-        this.latestTimestamp = genesis.header.timestamp;
-        this.latestHash = genesis.computeHash();
     }
 
     public async save(block: Block) {
@@ -37,6 +45,7 @@ export class BlockStorage {
             this.latestSlot = block.header.slot;
             this.latestTimestamp = block.header.timestamp;
             this.latestHash = block.computeHash();
+            this.blockCache.set(block);
         }
     }
 
@@ -65,27 +74,35 @@ export class BlockStorage {
     public getLatestBlockTimestamp(): bigint {
         return this.latestTimestamp;
     }
-    public getLatestBlock(): Promise<Block | undefined> {
+    public async getLatestBlock(useCache: boolean = true): Promise<Block | undefined> {
+        if (useCache) {
+            return this.getBlock(this.latestSlot);
+        }
         try {
-            return this.storage.getLatestBlock();
+            const block = await this.storage.getLatestBlock();
+            if (block !== undefined) this.blockCache.set(block);
+            return block;
         } catch (e) {
-            return Promise.resolve(undefined);
+            return undefined;
         }
     }
 
-    public getGenesisBlock(): Promise<Block | undefined> {
-        try {
-            return this.storage.getBlock(0n);
-        } catch (e) {
-            return Promise.resolve(undefined);
-        }
+    public async getGenesisBlock(): Promise<Block | undefined> {
+        return this.getBlock(0n);
     }
 
-    public getBlock(slot: bigint): Promise<Block | undefined> {
+    public async getBlock(slot: bigint): Promise<Block | undefined> {
         try {
-            return this.storage.getBlock(slot);
+            let block = this.blockCache.get(slot);
+            if (block !== undefined) {
+                return block;
+            } else {
+                block = await this.storage.getBlock(slot);
+                if (block !== undefined) this.blockCache.set(block);
+                return block;
+            }
         } catch (e) {
-            return Promise.resolve(undefined);
+            return undefined;
         }
     }
 }
