@@ -89,6 +89,7 @@
         "hardhat": "^2.12.7",
         "hardhat-gas-reporter": "^1.0.7",
         "ip": "^1.1.5",
+        "lru-cache": "^10.1.0",
         "moment": "^2.29.1",
         "mybatis-mapper": "^0.7.1",
         "node-cron": "^3.0.0",
