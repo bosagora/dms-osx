@@ -1,5 +1,5 @@
 {
-    "name": "dms-node",
+    "name": "dms-validator",
     "version": "1.0.0",
     "description": "Node for the decentralized loyalty point system",
     "main": "src/main.js",
