@@ -74,7 +74,7 @@ export class Proposal extends NodeTask {
         for (const elem of tx.details) {
             sum = sum.add(elem.amount.mul(elem.providePercent));
         }
-        return sum.mul(tx.cashAmount).div(tx.totalAmount).div(10000);
+        return ContractUtils.zeroGWEI(sum.mul(tx.cashAmount).div(tx.totalAmount).div(10000));
     }
 
     private async loadExchangeRate(exchangeRates: ExchangeRateRoot) {
