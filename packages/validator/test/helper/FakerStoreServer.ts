@@ -293,7 +293,7 @@ export class FakerStoreServer {
             const tx: NewTransaction = new NewTransaction(
                 this.sequence,
                 String(purchase.purchaseId).trim(),
-                Number(purchase.timestamp),
+                BigInt(purchase.timestamp),
                 Amount.make(String(purchase.totalAmount).trim(), 18).value,
                 Amount.make(String(purchase.cashAmount).trim(), 18).value,
                 String(purchase.currency).trim(),

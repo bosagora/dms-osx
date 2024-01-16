@@ -88,6 +88,7 @@ export interface LoyaltyPaymentTaskData {
     currency: string;
     shopId: string;
     account: string;
+    certifier: string;
     loyaltyType: ContractLoyaltyType;
 
     paidPoint: BigNumber;

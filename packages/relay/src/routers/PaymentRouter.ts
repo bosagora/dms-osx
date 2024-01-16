@@ -248,8 +248,8 @@ export class PaymentRouter {
      * 트팬잭션을 중계할 때 사용될 서명자
      * @private
      */
-    private async getRelaySigner(): Promise<ISignerItem> {
-        return this._relaySigners.getSigner();
+    private async getRelaySigner(account?: string): Promise<ISignerItem> {
+        return this._relaySigners.getSigner(account);
     }
 
     /***
@@ -663,6 +663,7 @@ export class PaymentRouter {
                 currency,
                 shopId,
                 account,
+                certifier: "",
                 loyaltyType,
                 paidPoint,
                 paidToken,
@@ -811,6 +812,9 @@ export class PaymentRouter {
                                 signature,
                             });
 
+                            item.certifier = signerItem.wallet.address;
+                            await this._storage.updateCertifier(item.paymentId, item.certifier);
+
                             item.openNewTxId = tx.hash;
                             item.openNewTimestamp = ContractUtils.getTimeStamp();
                             item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX;
@@ -904,19 +908,19 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const signerItem = await this.getRelaySigner();
-        try {
-            const accessKey: string = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
-                return res.json(ResponseMessage.getErrorMessage("2002"));
-            }
+        const accessKey: string = String(req.body.accessKey).trim();
+        if (accessKey !== this._config.relay.accessKey) {
+            return res.json(ResponseMessage.getErrorMessage("2002"));
+        }
 
-            const confirm: boolean = String(req.body.confirm).trim().toLowerCase() === "true";
-            const paymentId: string = String(req.body.paymentId).trim();
-            const item = await this._storage.getPayment(paymentId);
-            if (item === undefined) {
-                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
-            } else {
+        const confirm: boolean = String(req.body.confirm).trim().toLowerCase() === "true";
+        const paymentId: string = String(req.body.paymentId).trim();
+        const item = await this._storage.getPayment(paymentId);
+        if (item === undefined) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+        } else {
+            const signerItem = await this.getRelaySigner(item.certifier);
+            try {
                 const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
@@ -1082,13 +1086,13 @@ export class PaymentRouter {
                 } else {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
+            } catch (error: any) {
+                const msg = ResponseMessage.getEVMErrorMessage(error);
+                logger.error(`POST /v1/payment/new/close : ${msg.error.message}`);
+                return res.status(200).json(msg);
+            } finally {
+                this.releaseRelaySigner(signerItem);
             }
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/new/close : ${msg.error.message}`);
-            return res.status(200).json(msg);
-        } finally {
-            this.releaseRelaySigner(signerItem);
         }
     }
 
@@ -1240,15 +1244,15 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const signerItem = await this.getRelaySigner();
-        try {
-            const paymentId: string = String(req.body.paymentId).trim();
-            const approval: boolean = String(req.body.approval).trim().toLowerCase() === "true";
-            const signature: string = String(req.body.signature).trim();
-            const item = await this._storage.getPayment(paymentId);
-            if (item === undefined) {
-                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
-            } else {
+        const paymentId: string = String(req.body.paymentId).trim();
+        const approval: boolean = String(req.body.approval).trim().toLowerCase() === "true";
+        const signature: string = String(req.body.signature).trim();
+        const item = await this._storage.getPayment(paymentId);
+        if (item === undefined) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+        } else {
+            const signerItem = await this.getRelaySigner(item.certifier);
+            try {
                 if (
                     item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_CANCEL &&
                     item.paymentStatus !== LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX &&
@@ -1365,13 +1369,13 @@ export class PaymentRouter {
                         return res.status(200).json(ResponseMessage.getErrorMessage("2028"));
                     }
                 }
+            } catch (error: any) {
+                const msg = ResponseMessage.getEVMErrorMessage(error);
+                logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
+                return res.status(200).json(msg);
+            } finally {
+                this.releaseRelaySigner(signerItem);
             }
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
-            return res.status(200).json(msg);
-        } finally {
-            this.releaseRelaySigner(signerItem);
         }
     }
 
@@ -1388,19 +1392,19 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const signerItem = await this.getRelaySigner();
-        try {
-            const accessKey: string = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
-                return res.json(ResponseMessage.getErrorMessage("2002"));
-            }
+        const accessKey: string = String(req.body.accessKey).trim();
+        if (accessKey !== this._config.relay.accessKey) {
+            return res.json(ResponseMessage.getErrorMessage("2002"));
+        }
 
-            const confirm: boolean = String(req.body.confirm).trim().toLowerCase() === "true";
-            const paymentId: string = String(req.body.paymentId).trim();
-            const item = await this._storage.getPayment(paymentId);
-            if (item === undefined) {
-                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
-            } else {
+        const confirm: boolean = String(req.body.confirm).trim().toLowerCase() === "true";
+        const paymentId: string = String(req.body.paymentId).trim();
+        const item = await this._storage.getPayment(paymentId);
+        if (item === undefined) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+        } else {
+            const signerItem = await this.getRelaySigner(item.certifier);
+            try {
                 const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
@@ -1566,13 +1570,13 @@ export class PaymentRouter {
                 } else {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
+            } catch (error: any) {
+                const msg = ResponseMessage.getEVMErrorMessage(error);
+                logger.error(`POST /v1/payment/cancel/close : ${msg.error.message}`);
+                return res.status(200).json(msg);
+            } finally {
+                this.releaseRelaySigner(signerItem);
             }
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/payment/cancel/close : ${msg.error.message}`);
-            return res.status(200).json(msg);
-        } finally {
-            this.releaseRelaySigner(signerItem);
         }
     }
 

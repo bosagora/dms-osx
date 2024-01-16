@@ -6,7 +6,6 @@ import { ethers, upgrades, waffle } from "hardhat";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
-    Certifier,
     CurrencyRate,
     Ledger,
     LoyaltyBurner,
@@ -90,7 +89,6 @@ describe("Test for Ledger", () => {
         ContractUtils.getPhoneHash("08201012341005"),
         ContractUtils.getPhoneHash("08201012341006"),
     ];
-    let certifierContract: Certifier;
     let validatorContract: Validator;
     let tokenContract: Token;
     let ledgerContract: Ledger;
@@ -180,18 +178,6 @@ describe("Test for Ledger", () => {
         await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
     };
 
-    const deployCertifier = async () => {
-        const factory = await ethers.getContractFactory("Certifier");
-        certifierContract = (await upgrades.deployProxy(factory.connect(deployer), [certifier.address], {
-            initializer: "initialize",
-            kind: "uups",
-        })) as unknown as Certifier;
-        await certifierContract.deployed();
-        await certifierContract.deployTransaction.wait();
-
-        await certifierContract.connect(certifier).grantCertifier(relay.address);
-    };
-
     const deployProvider = async () => {
         const factory = await ethers.getContractFactory("LoyaltyProvider");
         providerContract = (await upgrades.deployProxy(
@@ -208,14 +194,10 @@ describe("Test for Ledger", () => {
 
     const deployConsumer = async () => {
         const factory = await ethers.getContractFactory("LoyaltyConsumer");
-        consumerContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [certifierContract.address, currencyContract.address],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as unknown as LoyaltyConsumer;
+        consumerContract = (await upgrades.deployProxy(factory.connect(deployer), [currencyContract.address], {
+            initializer: "initialize",
+            kind: "uups",
+        })) as unknown as LoyaltyConsumer;
         await consumerContract.deployed();
         await consumerContract.deployTransaction.wait();
     };
@@ -252,7 +234,7 @@ describe("Test for Ledger", () => {
         const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
             factory.connect(deployer),
-            [certifierContract.address, currencyContract.address, providerContract.address, consumerContract.address],
+            [currencyContract.address, providerContract.address, consumerContract.address],
             {
                 initializer: "initialize",
                 kind: "uups",
@@ -317,7 +299,6 @@ describe("Test for Ledger", () => {
         await depositValidators();
         await deployLinkCollection();
         await deployCurrencyRate();
-        await deployCertifier();
         await deployProvider();
         await deployConsumer();
         await deployExchanger();
@@ -2862,7 +2843,6 @@ describe("Test for Ledger", () => {
             const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
             await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
 
-            await deployCertifier();
             await deployProvider();
             await deployConsumer();
             await deployExchanger();

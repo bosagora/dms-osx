@@ -9,7 +9,6 @@ import { Amount } from "../../src/common/Amount";
 import { HardhatAccount } from "../../src/HardhatAccount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
-    Certifier,
     CurrencyRate,
     Ledger,
     LoyaltyBurner,
@@ -171,7 +170,6 @@ export class Deployments {
         this.addDeployer(deployToken);
         this.addDeployer(deployValidator);
         this.addDeployer(deployCurrencyRate);
-        this.addDeployer(deployCertifier);
         this.addDeployer(deployLoyaltyProvider);
         this.addDeployer(deployLoyaltyConsumer);
         this.addDeployer(deployLoyaltyExchanger);
@@ -369,28 +367,6 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     }
 }
 
-async function deployCertifier(accounts: IAccount, deployment: Deployments) {
-    const contractName = "Certifier";
-    console.log(`Deploy ${contractName}...`);
-    const factory = await ethers.getContractFactory("Certifier");
-    const contract = (await upgrades.deployProxy(factory.connect(accounts.deployer), [accounts.certifier.address], {
-        initializer: "initialize",
-        kind: "uups",
-    })) as Certifier;
-    await contract.deployed();
-    await contract.deployTransaction.wait();
-    deployment.addContract(contractName, contract.address, contract);
-    console.log(`Deployed ${contractName} to ${contract.address}`);
-
-    {
-        for (const elem of accounts.certifiers) {
-            const tx = await contract.connect(accounts.certifier).grantCertifier(elem.address);
-            console.log(`Grant Certifier (tx: ${tx.hash})...`);
-            await tx.wait();
-        }
-    }
-}
-
 async function deployLoyaltyProvider(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyProvider";
     console.log(`Deploy ${contractName}...`);
@@ -425,7 +401,7 @@ async function deployLoyaltyProvider(accounts: IAccount, deployment: Deployments
 async function deployLoyaltyConsumer(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyConsumer";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("Certifier") === undefined || deployment.getContract("CurrencyRate") === undefined) {
+    if (deployment.getContract("CurrencyRate") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -433,7 +409,7 @@ async function deployLoyaltyConsumer(accounts: IAccount, deployment: Deployments
     const factory = await ethers.getContractFactory("LoyaltyConsumer");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("Certifier"), await deployment.getContractAddress("CurrencyRate")],
+        [await deployment.getContractAddress("CurrencyRate")],
         {
             initializer: "initialize",
             kind: "uups",
@@ -504,7 +480,6 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
     const contractName = "Shop";
     console.log(`Deploy ${contractName}...`);
     if (
-        deployment.getContract("Certifier") === undefined ||
         deployment.getContract("CurrencyRate") === undefined ||
         deployment.getContract("LoyaltyProvider") === undefined ||
         deployment.getContract("LoyaltyConsumer") === undefined
@@ -517,7 +492,6 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [
-            await deployment.getContractAddress("Certifier"),
             await deployment.getContractAddress("CurrencyRate"),
             await deployment.getContractAddress("LoyaltyProvider"),
             await deployment.getContractAddress("LoyaltyConsumer"),

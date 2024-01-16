@@ -4,7 +4,6 @@ import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
-    Certifier,
     CurrencyRate,
     Ledger,
     LoyaltyConsumer,
@@ -44,7 +43,6 @@ describe("Test of Server", function () {
     let linkContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopContract: Shop;
-    let certifierContract: Certifier;
     let consumerContract: LoyaltyConsumer;
     let providerContract: LoyaltyProvider;
     let exchangerContract: LoyaltyExchanger;
@@ -153,7 +151,6 @@ describe("Test of Server", function () {
             exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
             currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
             shopContract = deployments.getContract("Shop") as Shop;
-            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {
@@ -232,7 +229,6 @@ describe("Test of Server", function () {
             exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
             currencyRateContract = deployments.getContract("CurrencyRate") as CurrencyRate;
             shopContract = deployments.getContract("Shop") as Shop;
-            certifierContract = deployments.getContract("Certifier") as Certifier;
         });
 
         before("Create Config", async () => {

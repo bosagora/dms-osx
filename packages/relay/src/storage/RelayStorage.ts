@@ -101,6 +101,7 @@ export class RelayStorage extends Storage {
                             currency: m.currency,
                             shopId: m.shopId,
                             account: m.account,
+                            certifier: m.certifier,
                             loyaltyType: m.loyaltyType,
                             paidPoint: BigNumber.from(m.paidPoint),
                             paidToken: BigNumber.from(m.paidToken),
@@ -274,6 +275,22 @@ export class RelayStorage extends Storage {
         });
     }
 
+    public updateCertifier(paymentId: string, certifier: string): Promise<any> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("payment", "updateCertifier", {
+                paymentId,
+                certifier,
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
     public updateOpenNewTx(
         paymentId: string,
         txId: string,
@@ -379,6 +396,7 @@ export class RelayStorage extends Storage {
                                 currency: m.currency,
                                 shopId: m.shopId,
                                 account: m.account,
+                                certifier: m.certifier,
                                 loyaltyType: m.loyaltyType,
                                 paidPoint: BigNumber.from(m.paidPoint),
                                 paidToken: BigNumber.from(m.paidToken),
@@ -426,6 +444,7 @@ export class RelayStorage extends Storage {
                                 currency: m.currency,
                                 shopId: m.shopId,
                                 account: m.account,
+                                certifier: m.certifier,
                                 loyaltyType: m.loyaltyType,
                                 paidPoint: BigNumber.from(m.paidPoint),
                                 paidToken: BigNumber.from(m.paidToken),

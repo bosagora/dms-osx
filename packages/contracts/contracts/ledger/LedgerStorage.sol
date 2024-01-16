@@ -5,10 +5,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "del-osx-artifacts/contracts/interfaces/IPhoneLinkCollection.sol";
 
-import "../interfaces/ICertifier.sol";
 import "../interfaces/ICurrencyRate.sol";
-import "../interfaces/IValidator.sol";
-import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
 
 contract LedgerStorage {

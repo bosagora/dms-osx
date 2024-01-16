@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.2;
 
-import "../interfaces/ICertifier.sol";
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/IShop.sol";
 
@@ -17,6 +16,5 @@ contract ShopStorage {
     address public consumerAddress;
     mapping(address => uint256) internal nonce;
 
-    ICertifier internal certifier;
     ICurrencyRate internal currencyRate;
 }
