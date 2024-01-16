@@ -13,7 +13,7 @@ dotenv.config({ path: "env/.env" });
 
 // tslint:disable-next-line:no-submodule-imports
 import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
-import { HardhatAccount } from "dms-osx-artifacts/src/HardhatAccount";
+import { HardhatAccount } from "./src/HardhatAccount";
 
 function getAccounts() {
     const accounts: string[] = [];
