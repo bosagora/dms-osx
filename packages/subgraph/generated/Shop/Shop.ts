@@ -993,20 +993,16 @@ export class InitializeCall__Inputs {
     this._call = call;
   }
 
-  get _certifier(): Address {
+  get _currencyRate(): Address {
     return this._call.inputValues[0].value.toAddress();
   }
 
-  get _currencyRate(): Address {
+  get _providerAddress(): Address {
     return this._call.inputValues[1].value.toAddress();
   }
 
-  get _providerAddress(): Address {
-    return this._call.inputValues[2].value.toAddress();
-  }
-
   get _consumerAddress(): Address {
-    return this._call.inputValues[3].value.toAddress();
+    return this._call.inputValues[2].value.toAddress();
   }
 }
 

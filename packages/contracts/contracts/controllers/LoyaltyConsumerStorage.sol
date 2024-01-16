@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.2;
 
-import "../interfaces/ICertifier.sol";
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
@@ -24,6 +23,7 @@ contract LoyaltyConsumerStorage {
         string currency;
         bytes32 shopId;
         address account;
+        address creator;
         uint256 timestamp;
         ILedger.LoyaltyType loyaltyType;
         uint256 paidPoint;
@@ -41,7 +41,6 @@ contract LoyaltyConsumerStorage {
     address internal feeAccount;
     address internal temporaryAddress;
 
-    ICertifier internal certifierContract;
     ICurrencyRate internal currencyRateContract;
     IShop internal shopContract;
     ILedger internal ledgerContract;

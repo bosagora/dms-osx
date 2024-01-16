@@ -23,32 +23,32 @@
             "totalValue"            ,
             "paymentStatus"         ,
             "openNewTimestamp"      ,
-            "closeNewTimestamp"      ,
+            "closeNewTimestamp"     ,
             "openCancelTimestamp"   ,
             "closeCancelTimestamp"
         )
         VALUES
             (
-                #{paymentId}        ,
-                #{purchaseId}       ,
-                #{amount}           ,
-                #{currency}         ,
-                #{shopId}           ,
-                #{account}          ,
-                ${loyaltyType}      ,
-                #{paidPoint}        ,
-                #{paidToken}        ,
-                #{paidValue}        ,
-                #{feePoint}         ,
-                #{feeToken}         ,
-                #{feeValue}         ,
-                #{totalPoint}       ,
-                #{totalToken}       ,
-                #{totalValue}       ,
-                ${paymentStatus}    ,
-                ${openNewTimestamp} ,
-                ${closeNewTimestamp} ,
-                ${openCancelTimestamp},
+                #{paymentId}           ,
+                #{purchaseId}          ,
+                #{amount}              ,
+                #{currency}            ,
+                #{shopId}              ,
+                #{account}             ,
+                ${loyaltyType}         ,
+                #{paidPoint}           ,
+                #{paidToken}           ,
+                #{paidValue}           ,
+                #{feePoint}            ,
+                #{feeToken}            ,
+                #{feeValue}            ,
+                #{totalPoint}          ,
+                #{totalToken}          ,
+                #{totalValue}          ,
+                ${paymentStatus}       ,
+                ${openNewTimestamp}    ,
+                ${closeNewTimestamp}   ,
+                ${openCancelTimestamp} ,
                 ${closeCancelTimestamp}
             )
             ON CONFLICT ("paymentId")  DO NOTHING;
@@ -58,6 +58,12 @@
         SELECT * FROM payments WHERE "paymentId" = #{paymentId};
     </select>
 
+    <update id="updateCertifier">
+        UPDATE payments
+        SET
+            "certifier" = #{certifier}
+        WHERE "paymentId" = #{paymentId}
+    </update>
 
     <update id="updatePayment">
         UPDATE payments

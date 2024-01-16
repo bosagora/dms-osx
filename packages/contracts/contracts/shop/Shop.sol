@@ -8,7 +8,6 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import "../interfaces/ICertifier.sol";
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/IShop.sol";
 import "./ShopStorage.sol";
@@ -58,7 +57,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     /// @notice 생성자
     function initialize(
-        address _certifier,
         address _currencyRate,
         address _providerAddress,
         address _consumerAddress
@@ -69,7 +67,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         providerAddress = _providerAddress;
         consumerAddress = _consumerAddress;
 
-        certifier = ICertifier(_certifier);
         currencyRate = ICurrencyRate(_currencyRate);
     }
 
@@ -150,8 +147,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         require(currencyRate.support(_currency), "1211");
         require(shops[id].account == _account, "1050");
 
-        require(certifier.isCertifier(_msgSender()), "1505");
-
         bytes32 dataHash = keccak256(abi.encode(id, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
@@ -195,8 +190,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         require(_status != ShopStatus.INVALID, "1201");
         require(shops[id].status != ShopStatus.INVALID, "1201");
         require(shops[id].account == _account, "1050");
-
-        require(certifier.isCertifier(_msgSender()), "1505");
 
         bytes32 dataHash = keccak256(abi.encode(id, _account, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");

@@ -7,7 +7,6 @@ import { HardhatAccount } from "../../src/HardhatAccount";
 import { Amount } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
-    Certifier,
     CurrencyRate,
     Ledger,
     LoyaltyBurner,
@@ -370,26 +369,30 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     }
 }
 
-async function deployCertifier(accounts: IAccount, deployment: Deployments) {
-    const contractName = "Certifier";
+async function deployLoyaltyBurner(accounts: IAccount, deployment: Deployments) {
+    const contractName = "LoyaltyBurner";
     console.log(`Deploy ${contractName}...`);
-    const factory = await ethers.getContractFactory("Certifier");
-    const contract = (await upgrades.deployProxy(factory.connect(accounts.deployer), [accounts.certifier.address], {
-        initializer: "initialize",
-        kind: "uups",
-    })) as Certifier;
+    if (
+        deployment.getContract("Validator") === undefined ||
+        deployment.getContract("PhoneLinkCollection") === undefined
+    ) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+
+    const factory = await ethers.getContractFactory("LoyaltyBurner");
+    const contract = (await upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [await deployment.getContractAddress("Validator"), await deployment.getContractAddress("PhoneLinkCollection")],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as LoyaltyBurner;
     await contract.deployed();
     await contract.deployTransaction.wait();
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
-
-    {
-        for (const elem of accounts.certifiers) {
-            const tx = await contract.connect(accounts.certifier).grantCertifier(elem.address);
-            console.log(`Grant Certifier (tx: ${tx.hash})...`);
-            await tx.wait();
-        }
-    }
 }
 
 async function deployLoyaltyProvider(accounts: IAccount, deployment: Deployments) {
@@ -426,7 +429,7 @@ async function deployLoyaltyProvider(accounts: IAccount, deployment: Deployments
 async function deployLoyaltyConsumer(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyConsumer";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("Certifier") === undefined || deployment.getContract("CurrencyRate") === undefined) {
+    if (deployment.getContract("CurrencyRate") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -434,7 +437,7 @@ async function deployLoyaltyConsumer(accounts: IAccount, deployment: Deployments
     const factory = await ethers.getContractFactory("LoyaltyConsumer");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("Certifier"), await deployment.getContractAddress("CurrencyRate")],
+        [await deployment.getContractAddress("CurrencyRate")],
         {
             initializer: "initialize",
             kind: "uups",
@@ -475,37 +478,10 @@ async function deployLoyaltyExchanger(accounts: IAccount, deployment: Deployment
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployLoyaltyBurner(accounts: IAccount, deployment: Deployments) {
-    const contractName = "LoyaltyBurner";
-    console.log(`Deploy ${contractName}...`);
-    if (
-        deployment.getContract("Validator") === undefined ||
-        deployment.getContract("PhoneLinkCollection") === undefined
-    ) {
-        console.error("Contract is not deployed!");
-        return;
-    }
-
-    const factory = await ethers.getContractFactory("LoyaltyBurner");
-    const contract = (await upgrades.deployProxy(
-        factory.connect(accounts.owner),
-        [await deployment.getContractAddress("Validator"), await deployment.getContractAddress("PhoneLinkCollection")],
-        {
-            initializer: "initialize",
-            kind: "uups",
-        }
-    )) as LoyaltyBurner;
-    await contract.deployed();
-    await contract.deployTransaction.wait();
-    deployment.addContract(contractName, contract.address, contract);
-    console.log(`Deployed ${contractName} to ${contract.address}`);
-}
-
 async function deployShop(accounts: IAccount, deployment: Deployments) {
     const contractName = "Shop";
     console.log(`Deploy ${contractName}...`);
     if (
-        deployment.getContract("Certifier") === undefined ||
         deployment.getContract("CurrencyRate") === undefined ||
         deployment.getContract("LoyaltyProvider") === undefined ||
         deployment.getContract("LoyaltyConsumer") === undefined
@@ -518,7 +494,6 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [
-            await deployment.getContractAddress("Certifier"),
             await deployment.getContractAddress("CurrencyRate"),
             await deployment.getContractAddress("LoyaltyProvider"),
             await deployment.getContractAddress("LoyaltyConsumer"),
@@ -631,7 +606,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     await tx3.wait();
 
     const tx4 = await (deployment.getContract("LoyaltyBurner") as LoyaltyBurner)
-        .connect(accounts.owner)
+        .connect(accounts.deployer)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyBurner (tx: ${tx4.hash})...`);
     await tx4.wait();
@@ -767,11 +742,10 @@ async function main() {
     deployments.addDeployer(deployToken);
     deployments.addDeployer(deployValidator);
     deployments.addDeployer(deployCurrencyRate);
-    deployments.addDeployer(deployCertifier);
+    deployments.addDeployer(deployLoyaltyBurner);
     deployments.addDeployer(deployLoyaltyProvider);
     deployments.addDeployer(deployLoyaltyConsumer);
     deployments.addDeployer(deployLoyaltyExchanger);
-    deployments.addDeployer(deployLoyaltyBurner);
     deployments.addDeployer(deployShop);
     deployments.addDeployer(deployLedger);
 

@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import "del-osx-artifacts/contracts/interfaces/IPhoneLinkCollection.sol";
 
-import "../interfaces/ICertifier.sol";
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
@@ -46,10 +45,10 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
         string purchaseId
     );
 
-    function initialize(address _certifierAddress, address _currencyRateAddress) external initializer {
+    function initialize(address _currencyRateAddress) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
-        certifierContract = ICertifier(_certifierAddress);
+
         currencyRateContract = ICurrencyRate(_currencyRateAddress);
         isSetLedger = false;
         isSetShop = false;
@@ -127,6 +126,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
             currency: data.currency,
             shopId: data.shopId,
             account: data.account,
+            creator: _msgSender(),
             timestamp: block.timestamp,
             loyaltyType: ILedger.LoyaltyType.POINT,
             paidPoint: paidPoint,
@@ -161,6 +161,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
             currency: data.currency,
             shopId: data.shopId,
             account: data.account,
+            creator: _msgSender(),
             timestamp: block.timestamp,
             loyaltyType: ILedger.LoyaltyType.TOKEN,
             paidPoint: paidPoint,
@@ -180,8 +181,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
     /// @dev 중계서버를 통해서 호출됩니다.
     function closeNewLoyaltyPayment(bytes32 _paymentId, bool _confirm) external {
         require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_PAYMENT, "1531");
-
-        require(certifierContract.isCertifier(_msgSender()), "1505");
+        require(loyaltyPayments[_paymentId].creator == _msgSender(), "1505");
 
         if (ledgerContract.loyaltyTypeOf(loyaltyPayments[_paymentId].account) == ILedger.LoyaltyType.POINT) {
             _closeNewLoyaltyPaymentPoint(_paymentId, _confirm);
@@ -289,6 +289,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
             "1532"
         );
         require(block.timestamp <= loyaltyPayments[_paymentId].timestamp + 86400 * 7, "1534");
+        require(loyaltyPayments[_paymentId].creator == _msgSender(), "1505");
 
         IShop.ShopData memory shopInfo = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
         bytes32 dataHash = keccak256(
@@ -345,8 +346,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
     /// @dev 사용자가 중계서버를 통해서 호출됩니다.
     function closeCancelLoyaltyPayment(bytes32 _paymentId, bool _confirm) external {
         require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_CANCEL, "1533");
-
-        require(certifierContract.isCertifier(_msgSender()), "1505");
+        require(loyaltyPayments[_paymentId].creator == _msgSender(), "1505");
 
         uint256 balance;
         if (_confirm) {

@@ -113,44 +113,48 @@ export class LoyaltyPaymentEventPaymentStruct extends ethereum.Tuple {
     return this[4].toAddress();
   }
 
+  get creator(): Address {
+    return this[5].toAddress();
+  }
+
   get timestamp(): BigInt {
-    return this[5].toBigInt();
+    return this[6].toBigInt();
   }
 
   get loyaltyType(): i32 {
-    return this[6].toI32();
+    return this[7].toI32();
   }
 
   get paidPoint(): BigInt {
-    return this[7].toBigInt();
-  }
-
-  get paidToken(): BigInt {
     return this[8].toBigInt();
   }
 
-  get paidValue(): BigInt {
+  get paidToken(): BigInt {
     return this[9].toBigInt();
   }
 
-  get feePoint(): BigInt {
+  get paidValue(): BigInt {
     return this[10].toBigInt();
   }
 
-  get feeToken(): BigInt {
+  get feePoint(): BigInt {
     return this[11].toBigInt();
   }
 
-  get feeValue(): BigInt {
+  get feeToken(): BigInt {
     return this[12].toBigInt();
   }
 
-  get usedValueShop(): BigInt {
+  get feeValue(): BigInt {
     return this[13].toBigInt();
   }
 
+  get usedValueShop(): BigInt {
+    return this[14].toBigInt();
+  }
+
   get status(): i32 {
-    return this[14].toI32();
+    return this[15].toI32();
   }
 }
 
@@ -261,44 +265,48 @@ export class LoyaltyConsumer__loyaltyPaymentOfResultValue0Struct extends ethereu
     return this[4].toAddress();
   }
 
+  get creator(): Address {
+    return this[5].toAddress();
+  }
+
   get timestamp(): BigInt {
-    return this[5].toBigInt();
+    return this[6].toBigInt();
   }
 
   get loyaltyType(): i32 {
-    return this[6].toI32();
+    return this[7].toI32();
   }
 
   get paidPoint(): BigInt {
-    return this[7].toBigInt();
-  }
-
-  get paidToken(): BigInt {
     return this[8].toBigInt();
   }
 
-  get paidValue(): BigInt {
+  get paidToken(): BigInt {
     return this[9].toBigInt();
   }
 
-  get feePoint(): BigInt {
+  get paidValue(): BigInt {
     return this[10].toBigInt();
   }
 
-  get feeToken(): BigInt {
+  get feePoint(): BigInt {
     return this[11].toBigInt();
   }
 
-  get feeValue(): BigInt {
+  get feeToken(): BigInt {
     return this[12].toBigInt();
   }
 
-  get usedValueShop(): BigInt {
+  get feeValue(): BigInt {
     return this[13].toBigInt();
   }
 
+  get usedValueShop(): BigInt {
+    return this[14].toBigInt();
+  }
+
   get status(): i32 {
-    return this[14].toI32();
+    return this[15].toI32();
   }
 }
 
@@ -335,7 +343,7 @@ export class LoyaltyConsumer extends ethereum.SmartContract {
   ): LoyaltyConsumer__loyaltyPaymentOfResultValue0Struct {
     let result = super.call(
       "loyaltyPaymentOf",
-      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromFixedBytes(_paymentId)]
     );
 
@@ -349,7 +357,7 @@ export class LoyaltyConsumer extends ethereum.SmartContract {
   ): ethereum.CallResult<LoyaltyConsumer__loyaltyPaymentOfResultValue0Struct> {
     let result = super.tryCall(
       "loyaltyPaymentOf",
-      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromFixedBytes(_paymentId)]
     );
     if (result.reverted) {
@@ -483,12 +491,8 @@ export class InitializeCall__Inputs {
     this._call = call;
   }
 
-  get _certifierAddress(): Address {
-    return this._call.inputValues[0].value.toAddress();
-  }
-
   get _currencyRateAddress(): Address {
-    return this._call.inputValues[1].value.toAddress();
+    return this._call.inputValues[0].value.toAddress();
   }
 }
 

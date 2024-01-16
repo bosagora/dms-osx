@@ -8,10 +8,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import "../interfaces/ICertifier.sol";
 import "../interfaces/ICurrencyRate.sol";
-import "../interfaces/IValidator.sol";
-import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
 import "./LedgerStorage.sol";
 

@@ -13,7 +13,6 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "del-osx-artifacts/contracts/interfaces/IPhoneLinkCollection.sol";
 
 import "../interfaces/ICurrencyRate.sol";
-import "../interfaces/IShop.sol";
 import "../interfaces/ILedger.sol";
 import "./LoyaltyExchangerStorage.sol";
 

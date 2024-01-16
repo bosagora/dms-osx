@@ -76,7 +76,7 @@ dataSources:
         - name: LoyaltyConsumer
           file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyConsumer.sol/LoyaltyConsumer.json
       eventHandlers:
-        - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
+        - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
           handler: handleLoyaltyPaymentEvent
         - event: ProvidedTokenForSettlement(address,bytes32,uint256,uint256,uint256,string,uint256,string)
           handler: handleProvidedTokenForSettlement

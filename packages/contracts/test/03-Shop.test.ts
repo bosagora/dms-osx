@@ -6,7 +6,7 @@ import { ethers, upgrades, waffle } from "hardhat";
 import { ContractShopStatus } from "../src/types";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { Certifier, CurrencyRate, Shop, Token, Validator } from "../typechain-types";
+import { CurrencyRate, Shop, Token, Validator } from "../typechain-types";
 
 import assert from "assert";
 import chai, { expect } from "chai";
@@ -45,7 +45,6 @@ describe("Test for Shop", () => {
     let tokenContract: Token;
     let currencyContract: CurrencyRate;
     let shopContract: Shop;
-    let certifierContract: Certifier;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -127,24 +126,11 @@ describe("Test for Shop", () => {
         await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
     };
 
-    const deployCertifier = async () => {
-        const factory = await ethers.getContractFactory("Certifier");
-        certifierContract = (await upgrades.deployProxy(factory.connect(deployer), [certifier.address], {
-            initializer: "initialize",
-            kind: "uups",
-        })) as Certifier;
-        await certifierContract.deployed();
-        await certifierContract.deployTransaction.wait();
-
-        await certifierContract.connect(certifier).grantCertifier(relay.address);
-    };
-
     const deployAllContract = async () => {
         await deployToken();
         await deployValidatorCollection();
         await depositValidators();
         await deployCurrencyRate();
-        await deployCertifier();
     };
 
     interface IShopData {
@@ -207,7 +193,7 @@ describe("Test for Shop", () => {
         const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
             factory.connect(deployer),
-            [certifierContract.address, currencyContract.address, AddressZero, AddressZero],
+            [currencyContract.address, AddressZero, AddressZero],
             {
                 initializer: "initialize",
                 kind: "uups",
