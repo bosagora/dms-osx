@@ -21,6 +21,7 @@ export class BranchSignature implements IBranchSignature {
     public static reviver(key: string, value: any): any {
         if (key !== "") return value;
         JSONValidator.isValidOtherwiseThrow("BranchSignature", value);
+        JSONValidator.verifySignature(value.signature);
         return new BranchSignature(value.branchIndex, value.signature);
     }
 

@@ -342,4 +342,25 @@ export class JSONValidator {
     private static isValid(validator: Ajv.ValidateFunction, candidate: any) {
         return validator(candidate) === true;
     }
+
+    public static RegExHash = /^(0x)[0-9a-f]{64}$/i;
+    public static RegExSignature = /^(0x)[0-9a-f]{130}$/i;
+    public static RegExAddress = /^(0x)[0-9a-f]{40}$/i;
+    public static RegExNumber = /^(\+)?([0-9]+)$/;
+
+    static verifyHash(value: string) {
+        if (!JSONValidator.RegExHash.test(value)) throw new Error("The hash value is not normal.");
+    }
+
+    static verifySignature(value: string) {
+        if (!JSONValidator.RegExSignature.test(value)) throw new Error("The signature value is not normal.");
+    }
+
+    static verifyAddress(value: string) {
+        if (!JSONValidator.RegExAddress.test(value)) throw new Error("The address value is not normal.");
+    }
+
+    static verifyNumber(value: string) {
+        if (!JSONValidator.RegExNumber.test(value)) throw new Error("The number value is not normal.");
+    }
 }

@@ -37,6 +37,13 @@ export class BlockHeader {
         if (key !== "") return value;
 
         JSONValidator.isValidOtherwiseThrow("BlockHeader", value);
+        JSONValidator.verifyHash(value.prevBlockHash);
+        JSONValidator.verifyHash(value.purchaseHash);
+        JSONValidator.verifyHash(value.exchangeRateHash);
+        JSONValidator.verifyHash(value.burnPointHash);
+        JSONValidator.verifySignature(value.signature);
+        JSONValidator.verifyNumber(value.slot);
+        JSONValidator.verifyNumber(value.timestamp);
 
         return new BlockHeader(
             value.prevBlockHash,
