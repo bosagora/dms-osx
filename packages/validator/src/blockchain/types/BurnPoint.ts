@@ -26,6 +26,9 @@ export class BurnPoint {
     public static reviver(key: string, value: any): any {
         if (key !== "") return value;
         JSONValidator.isValidOtherwiseThrow("BurnPoint", value);
+        if (value.type === BurnPointType.PhoneNumber) JSONValidator.verifyHash(value.account);
+        else JSONValidator.verifyAddress(value.account);
+        JSONValidator.verifyNumber(value.amount);
         return new BurnPoint(value.type, value.account, BigNumber.from(value.amount));
     }
 

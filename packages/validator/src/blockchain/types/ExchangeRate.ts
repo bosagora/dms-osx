@@ -20,6 +20,7 @@ export class ExchangeRate {
     public static reviver(key: string, value: any): any {
         if (key !== "") return value;
         JSONValidator.isValidOtherwiseThrow("ExchangeRate", value);
+        JSONValidator.verifyNumber(value.rate);
         return new ExchangeRate(value.symbol, BigNumber.from(value.rate));
     }
 

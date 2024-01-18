@@ -39,6 +39,11 @@ export class Purchase {
         if (key !== "") return value;
 
         JSONValidator.isValidOtherwiseThrow("Purchase", value);
+        JSONValidator.verifyNumber(value.amount);
+        JSONValidator.verifyNumber(value.loyalty);
+        JSONValidator.verifyHash(value.shopId);
+        JSONValidator.verifyAddress(value.account);
+        JSONValidator.verifyHash(value.phone);
 
         return new Purchase(
             value.purchaseId,
