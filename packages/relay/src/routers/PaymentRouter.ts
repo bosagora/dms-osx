@@ -1084,6 +1084,21 @@ export class PaymentRouter {
                     );
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else {
+                    logger.warn(
+                        `POST /v1/payment/new/close : contractStatus : ${loyaltyPaymentData.status} : ${item.contractStatus}`
+                    );
+                    if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
+                        item.contractStatus = ContractLoyaltyPaymentStatus.FAILED_PAYMENT;
+                        await this._storage.updatePaymentContractStatus(item.paymentId, item.contractStatus);
+
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
+                        item.closeNewTimestamp = ContractUtils.getTimeStamp();
+                        await this._storage.updateCloseNewTimestamp(
+                            item.paymentId,
+                            item.paymentStatus,
+                            item.closeNewTimestamp
+                        );
+                    }
                     return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
             } catch (error: any) {
@@ -1568,6 +1583,21 @@ export class PaymentRouter {
                     );
                     return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                 } else {
+                    logger.warn(
+                        `POST /v1/payment/cancel/close : contractStatus : ${loyaltyPaymentData.status} : ${item.contractStatus}`
+                    );
+                    if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
+                        item.contractStatus = ContractLoyaltyPaymentStatus.FAILED_CANCEL;
+                        await this._storage.updatePaymentContractStatus(item.paymentId, item.contractStatus);
+
+                        item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
+                        item.closeCancelTimestamp = ContractUtils.getTimeStamp();
+                        await this._storage.updateCloseCancelTimestamp(
+                            item.paymentId,
+                            item.paymentStatus,
+                            item.closeCancelTimestamp
+                        );
+                    }
                     return res.status(200).json(ResponseMessage.getErrorMessage("2024"));
                 }
             } catch (error: any) {
