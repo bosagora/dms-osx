@@ -230,7 +230,8 @@ describe("Test for Shop", () => {
     });
 
     it("Check", async () => {
-        const ids = await shopContract.shopsOf(shopWallets[0].address);
+        const count = await shopContract.getShopsCountOfAccount(shopWallets[0].address);
+        const ids = await shopContract.getShopsOfAccount(shopWallets[0].address, 0, count);
         expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
     });
 
