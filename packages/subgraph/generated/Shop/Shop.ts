@@ -531,6 +531,68 @@ export class Shop extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toBigInt());
   }
 
+  getShopsCountOfAccount(_account: Address): BigInt {
+    let result = super.call(
+      "getShopsCountOfAccount",
+      "getShopsCountOfAccount(address):(uint256)",
+      [ethereum.Value.fromAddress(_account)]
+    );
+
+    return result[0].toBigInt();
+  }
+
+  try_getShopsCountOfAccount(_account: Address): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "getShopsCountOfAccount",
+      "getShopsCountOfAccount(address):(uint256)",
+      [ethereum.Value.fromAddress(_account)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  getShopsOfAccount(
+    _account: Address,
+    _from: BigInt,
+    _to: BigInt
+  ): Array<Bytes> {
+    let result = super.call(
+      "getShopsOfAccount",
+      "getShopsOfAccount(address,uint256,uint256):(bytes32[])",
+      [
+        ethereum.Value.fromAddress(_account),
+        ethereum.Value.fromUnsignedBigInt(_from),
+        ethereum.Value.fromUnsignedBigInt(_to)
+      ]
+    );
+
+    return result[0].toBytesArray();
+  }
+
+  try_getShopsOfAccount(
+    _account: Address,
+    _from: BigInt,
+    _to: BigInt
+  ): ethereum.CallResult<Array<Bytes>> {
+    let result = super.tryCall(
+      "getShopsOfAccount",
+      "getShopsOfAccount(address,uint256,uint256):(bytes32[])",
+      [
+        ethereum.Value.fromAddress(_account),
+        ethereum.Value.fromUnsignedBigInt(_from),
+        ethereum.Value.fromUnsignedBigInt(_to)
+      ]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBytesArray());
+  }
+
   isAvailableId(_shopId: Bytes): boolean {
     let result = super.call("isAvailableId", "isAvailableId(bytes32):(bool)", [
       ethereum.Value.fromFixedBytes(_shopId)
@@ -687,25 +749,6 @@ export class Shop extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
-  }
-
-  shopsOf(_account: Address): Array<Bytes> {
-    let result = super.call("shopsOf", "shopsOf(address):(bytes32[])", [
-      ethereum.Value.fromAddress(_account)
-    ]);
-
-    return result[0].toBytesArray();
-  }
-
-  try_shopsOf(_account: Address): ethereum.CallResult<Array<Bytes>> {
-    let result = super.tryCall("shopsOf", "shopsOf(address):(bytes32[])", [
-      ethereum.Value.fromAddress(_account)
-    ]);
-    if (result.reverted) {
-      return new ethereum.CallResult();
-    }
-    let value = result.value;
-    return ethereum.CallResult.fromValue(value[0].toBytesArray());
   }
 
   withdrawableOf(_shopId: Bytes): BigInt {
