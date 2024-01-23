@@ -46,6 +46,10 @@ interface IShop {
 
     function shopOf(bytes32 _shopId) external view returns (ShopData memory);
 
+    function getShopsOfAccount(address _account, uint256 _from, uint256 _to) external view returns (bytes32[] memory);
+
+    function getShopsCountOfAccount(address _account) external view returns (uint256);
+
     function withdrawableOf(bytes32 _shopId) external view returns (uint256);
 
     function nonceOf(address _account) external view returns (uint256);

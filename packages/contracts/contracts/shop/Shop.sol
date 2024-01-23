@@ -203,8 +203,22 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
 
     /// @notice 지갑주소로 등록한 상점의 아이디들을 리턴한다.
     /// @param _account 지갑주소
-    function shopsOf(address _account) external view virtual returns (bytes32[] memory) {
-        return shopIdByAddress[_account];
+    function getShopsOfAccount(
+        address _account,
+        uint256 _from,
+        uint256 _to
+    ) external view override returns (bytes32[] memory) {
+        bytes32[] memory values = new bytes32[](_to - _from);
+        for (uint256 i = _from; i < _to; i++) {
+            values[i - _from] = shopIdByAddress[_account][i];
+        }
+        return values;
+    }
+
+    /// @notice 지갑주소로 등록한 상점의 갯수를 리턴한다.
+    /// @param _account 지갑주소
+    function getShopsCountOfAccount(address _account) external view override returns (uint256) {
+        return shopIdByAddress[_account].length;
     }
 
     /// @notice 지급된 총 마일지리를 누적한다
