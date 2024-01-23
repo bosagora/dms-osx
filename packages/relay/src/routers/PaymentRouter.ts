@@ -1,12 +1,4 @@
-import {
-    CurrencyRate,
-    Ledger,
-    LoyaltyConsumer,
-    LoyaltyExchanger,
-    PhoneLinkCollection,
-    Shop,
-    Token,
-} from "../../typechain-types";
+import { CurrencyRate, Ledger, LoyaltyConsumer, PhoneLinkCollection, Shop, Token } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
@@ -219,6 +211,17 @@ export class PaymentRouter {
             "/v1/payment/cancel/open",
             [body("accessKey").exists(), body("paymentId").exists()],
             this.payment_cancel_open.bind(this)
+        );
+
+        this.app.post(
+            "/v1/payment/cancel/shop/open",
+            [
+                body("paymentId").exists(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.payment_cancel_shop_open.bind(this)
         );
 
         this.app.post(
@@ -1243,6 +1246,92 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/cancel/open : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * 결제 / 결제정보를 제공한다
+     * POST /v1/payment/cancel/shop/open
+     * @private
+     */
+    private async payment_cancel_shop_open(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/cancel/shop/open ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const paymentId: string = String(req.body.paymentId).trim();
+            const item = await this._storage.getPayment(paymentId);
+            if (item === undefined) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            } else {
+                if (item.paymentStatus !== LoyaltyPaymentTaskStatus.CLOSED_NEW) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2022"));
+                }
+                const signature = String(req.body.signature).trim();
+                const shopContract = await this.getShopContract();
+                const shopInfo = await shopContract.shopOf(item.shopId);
+
+                if (!ContractUtils.verifyShop(item.shopId, BigNumber.from(paymentId), shopInfo.account, signature)) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                }
+
+                item.paymentStatus = LoyaltyPaymentTaskStatus.OPENED_CANCEL;
+                item.openCancelTimestamp = ContractUtils.getTimeStamp();
+                await this._storage.updateOpenCancelTimestamp(
+                    item.paymentId,
+                    item.paymentStatus,
+                    item.openCancelTimestamp
+                );
+                const mobileData = await this._storage.getMobile(shopInfo.account, MobileType.SHOP_APP);
+                if (mobileData !== undefined) {
+                    /// 상점주에게 메세지 발송
+                    const to = mobileData.token;
+                    const title = "마일리지 사용 취소 알림";
+                    const contents: string[] = [];
+                    const data = { type: "cancel", paymentId: item.paymentId };
+                    contents.push(`구매처 : ${shopInfo.name}`);
+                    contents.push(`구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)}`);
+                    if (item.loyaltyType === ContractLoyaltyType.POINT)
+                        contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)}`);
+                    else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)}`);
+
+                    await this._sender.send(to, title, contents.join(", "), data);
+                }
+
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        paymentId: item.paymentId,
+                        purchaseId: item.purchaseId,
+                        amount: item.amount.toString(),
+                        currency: item.currency,
+                        shopId: item.shopId,
+                        account: item.account,
+                        loyaltyType: item.loyaltyType,
+                        paidPoint: item.paidPoint.toString(),
+                        paidToken: item.paidToken.toString(),
+                        paidValue: item.paidValue.toString(),
+                        feePoint: item.feePoint.toString(),
+                        feeToken: item.feeToken.toString(),
+                        feeValue: item.feeValue.toString(),
+                        totalPoint: item.totalPoint.toString(),
+                        totalToken: item.totalToken.toString(),
+                        totalValue: item.totalValue.toString(),
+                        paymentStatus: item.paymentStatus,
+                        openNewTimestamp: item.openNewTimestamp,
+                        closeNewTimestamp: item.closeNewTimestamp,
+                        openCancelTimestamp: item.openCancelTimestamp,
+                        closeCancelTimestamp: item.closeCancelTimestamp,
+                    })
+                );
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/payment/cancel/shop/open : ${msg.error.message}`);
             return res.status(200).json(msg);
         }
     }
