@@ -278,6 +278,14 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
+    public static getTransferMessage(from: string, to: string, amount: BigNumberish, nonce: BigNumberish): Uint8Array {
+        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+            ["address", "address", "uint256", "uint256"],
+            [from, to, amount, nonce]
+        );
+        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
     public static zeroGWEI(value: BigNumber): BigNumber {
         return value.div(1000000000).mul(1000000000);
     }
