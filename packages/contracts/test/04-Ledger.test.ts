@@ -12,6 +12,7 @@ import {
     LoyaltyConsumer,
     LoyaltyExchanger,
     LoyaltyProvider,
+    LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
     Token,
@@ -99,6 +100,7 @@ describe("Test for Ledger", () => {
     let consumerContract: LoyaltyConsumer;
     let exchangerContract: LoyaltyExchanger;
     let burnerContract: LoyaltyBurner;
+    let transferContract: LoyaltyTransfer;
 
     const multiple = BigNumber.from(1000000000);
     const price = BigNumber.from(150).mul(multiple);
@@ -230,6 +232,16 @@ describe("Test for Ledger", () => {
         await burnerContract.deployTransaction.wait();
     };
 
+    const deployTransfer = async () => {
+        const factory = await ethers.getContractFactory("LoyaltyTransfer");
+        transferContract = (await upgrades.deployProxy(factory.connect(deployer), [], {
+            initializer: "initialize",
+            kind: "uups",
+        })) as unknown as LoyaltyTransfer;
+        await transferContract.deployed();
+        await transferContract.deployTransaction.wait();
+    };
+
     const deployShop = async () => {
         const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
@@ -261,6 +273,7 @@ describe("Test for Ledger", () => {
                 consumerContract.address,
                 exchangerContract.address,
                 burnerContract.address,
+                transferContract.address,
             ],
             {
                 initializer: "initialize",
@@ -272,6 +285,7 @@ describe("Test for Ledger", () => {
         await providerContract.connect(deployer).setLedger(ledgerContract.address);
         await consumerContract.connect(deployer).setLedger(ledgerContract.address);
         await exchangerContract.connect(deployer).setLedger(ledgerContract.address);
+        await transferContract.connect(deployer).setLedger(ledgerContract.address);
     };
 
     const addShopData = async (shopData: IShopData[]) => {
@@ -303,6 +317,7 @@ describe("Test for Ledger", () => {
         await deployConsumer();
         await deployExchanger();
         await deployBurner();
+        await deployTransfer();
         await deployShop();
         await deployLedger();
         await addShopData(shopData);
@@ -2847,6 +2862,7 @@ describe("Test for Ledger", () => {
             await deployConsumer();
             await deployExchanger();
             await deployBurner();
+            await deployTransfer();
             await deployShop();
             await deployLedger();
             await addShopData(shopData);
@@ -3131,6 +3147,136 @@ describe("Test for Ledger", () => {
                 const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(0);
             });
+        });
+    });
+
+    context("Transfer", () => {
+        const shopData: IShopData[] = [
+            {
+                shopId: "",
+                name: "Shop1",
+                currency: "krw",
+                wallet: shopWallets[0],
+            },
+            {
+                shopId: "",
+                name: "Shop2",
+                currency: "krw",
+                wallet: shopWallets[1],
+            },
+            {
+                shopId: "",
+                name: "Shop3",
+                currency: "krw",
+                wallet: shopWallets[2],
+            },
+            {
+                shopId: "",
+                name: "Shop4",
+                currency: "krw",
+                wallet: shopWallets[3],
+            },
+            {
+                shopId: "",
+                name: "Shop5",
+                currency: "krw",
+                wallet: shopWallets[4],
+            },
+            {
+                shopId: "",
+                name: "Shop6",
+                currency: "krw",
+                wallet: shopWallets[5],
+            },
+        ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+            }
+        });
+
+        before("Deploy", async () => {
+            await deployAllContract(shopData);
+        });
+
+        it("Change Loyalty type of user 0", async () => {
+            const nonce = await ledgerContract.nonceOf(userWallets[0].address);
+            const signature = await ContractUtils.signLoyaltyType(userWallets[0], nonce);
+            await exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[0].address, signature);
+        });
+
+        it("Change Loyalty type of user 1", async () => {
+            const nonce = await ledgerContract.nonceOf(userWallets[1].address);
+            const signature = await ContractUtils.signLoyaltyType(userWallets[1], nonce);
+            await exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[1].address, signature);
+        });
+
+        it("Deposit token - Success", async () => {
+            const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
+            await tokenContract.connect(userWallets[0]).approve(ledgerContract.address, amount.value);
+            await expect(ledgerContract.connect(userWallets[0]).deposit(amount.value))
+                .to.emit(ledgerContract, "Deposited")
+                .withNamedArgs({
+                    account: userWallets[0].address,
+                    depositedToken: amount.value,
+                    balanceToken: oldTokenBalance.add(amount.value),
+                });
+            expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
+                oldTokenBalance.add(amount.value)
+            );
+        });
+
+        it("Transfer token - Insufficient balance", async () => {
+            const transferAmount = amount.value.mul(2);
+            const nonce = await ledgerContract.nonceOf(userWallets[0].address);
+            const message = await ContractUtils.getTransferMessage(
+                userWallets[0].address,
+                userWallets[1].address,
+                transferAmount,
+                nonce
+            );
+            const signature = ContractUtils.signMessage(userWallets[0], message);
+            await expect(
+                transferContract.transferToken(
+                    userWallets[0].address,
+                    userWallets[1].address,
+                    transferAmount,
+                    signature
+                )
+            ).to.revertedWith("1511");
+        });
+
+        it("Transfer token", async () => {
+            const oldTokenBalance0 = await ledgerContract.tokenBalanceOf(userWallets[0].address);
+            const oldTokenBalance1 = await ledgerContract.tokenBalanceOf(userWallets[1].address);
+            const transferAmount = oldTokenBalance0;
+            const nonce = await ledgerContract.nonceOf(userWallets[0].address);
+            const message = await ContractUtils.getTransferMessage(
+                userWallets[0].address,
+                userWallets[1].address,
+                transferAmount,
+                nonce
+            );
+            const signature = ContractUtils.signMessage(userWallets[0], message);
+            await expect(
+                transferContract.transferToken(
+                    userWallets[0].address,
+                    userWallets[1].address,
+                    transferAmount,
+                    signature
+                )
+            )
+                .emit(transferContract, "TransferredLoyaltyToken")
+                .withNamedArgs({
+                    from: userWallets[0].address,
+                    to: userWallets[1].address,
+                    amount: transferAmount,
+                });
+            const newTokenBalance0 = await ledgerContract.tokenBalanceOf(userWallets[0].address);
+            const newTokenBalance1 = await ledgerContract.tokenBalanceOf(userWallets[1].address);
+            expect(newTokenBalance0).to.deep.equal(oldTokenBalance0.sub(transferAmount));
+            expect(newTokenBalance1).to.deep.equal(oldTokenBalance1.add(transferAmount));
         });
     });
 });

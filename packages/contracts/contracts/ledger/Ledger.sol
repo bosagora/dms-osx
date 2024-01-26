@@ -71,7 +71,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address _providerAddress,
         address _consumerAddress,
         address _exchangerAddress,
-        address _burnerAddress
+        address _burnerAddress,
+        address _transferAddress
     ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
@@ -83,6 +84,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         consumerAddress = _consumerAddress;
         exchangerAddress = _exchangerAddress;
         burnerAddress = _burnerAddress;
+        transferAddress = _transferAddress;
 
         tokenContract = IERC20(_tokenAddress);
         linkContract = IPhoneLinkCollection(_linkAddress);
@@ -116,12 +118,18 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     modifier onlyAccessNonce() {
-        require(_msgSender() == consumerAddress || _msgSender() == exchangerAddress, "1007");
+        require(
+            _msgSender() == consumerAddress || _msgSender() == exchangerAddress || _msgSender() == transferAddress,
+            "1007"
+        );
         _;
     }
 
     modifier onlyAccessLedger() {
-        require(_msgSender() == consumerAddress || _msgSender() == exchangerAddress, "1007");
+        require(
+            _msgSender() == consumerAddress || _msgSender() == exchangerAddress || _msgSender() == transferAddress,
+            "1007"
+        );
         _;
     }
 
