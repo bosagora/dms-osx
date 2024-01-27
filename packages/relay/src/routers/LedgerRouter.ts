@@ -1,4 +1,11 @@
-import { CurrencyRate, Ledger, LoyaltyExchanger, PhoneLinkCollection, Shop, Token } from "../../typechain-types";
+import {
+    CurrencyRate,
+    ERC20DelegatedTransfer,
+    Ledger,
+    LoyaltyExchanger,
+    PhoneLinkCollection,
+    Shop,
+} from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
@@ -9,9 +16,9 @@ import * as hre from "hardhat";
 
 import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
+import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ResponseMessage } from "../utils/Errors";
-import { GraphStorage } from "../storage/GraphStorage";
 
 export class LedgerRouter {
     /**
@@ -32,7 +39,7 @@ export class LedgerRouter {
      * ERC20 토큰 컨트랙트
      * @private
      */
-    private _tokenContract: Token | undefined;
+    private _tokenContract: ERC20DelegatedTransfer | undefined;
 
     /**
      * 사용자의 원장 컨트랙트
@@ -109,9 +116,9 @@ export class LedgerRouter {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getTokenContract(): Promise<Token> {
+    private async getTokenContract(): Promise<ERC20DelegatedTransfer> {
         if (this._tokenContract === undefined) {
-            const tokenFactory = await hre.ethers.getContractFactory("Token");
+            const tokenFactory = await hre.ethers.getContractFactory("ERC20DelegatedTransfer");
             this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress);
         }
         return this._tokenContract;

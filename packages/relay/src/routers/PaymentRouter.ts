@@ -1,11 +1,10 @@
 import {
     CurrencyRate,
+    ERC20DelegatedTransfer,
     Ledger,
     LoyaltyConsumer,
-    LoyaltyExchanger,
     PhoneLinkCollection,
     Shop,
-    Token,
 } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
@@ -57,7 +56,7 @@ export class PaymentRouter {
      * ERC20 토큰 컨트랙트
      * @private
      */
-    private _tokenContract: Token | undefined;
+    private _tokenContract: ERC20DelegatedTransfer | undefined;
 
     /**
      * 사용자의 원장 컨트랙트
@@ -265,9 +264,9 @@ export class PaymentRouter {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getTokenContract(): Promise<Token> {
+    private async getTokenContract(): Promise<ERC20DelegatedTransfer> {
         if (this._tokenContract === undefined) {
-            const tokenFactory = await hre.ethers.getContractFactory("Token");
+            const tokenFactory = await hre.ethers.getContractFactory("ERC20DelegatedTransfer");
             this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress);
         }
         return this._tokenContract;

@@ -7,7 +7,7 @@ import { IPurchaseData, IShopData, IUserData } from "../types/index";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Scheduler } from "./Scheduler";
 
-import { Ledger, LoyaltyProvider, Token } from "../../typechain-types";
+import { Ledger, LoyaltyProvider } from "../../typechain-types";
 
 import { NonceManager } from "@ethersproject/experimental";
 import { Signer, Wallet } from "ethers";
@@ -26,12 +26,6 @@ export class DefaultScheduler extends Scheduler {
      * The object containing the settings required to run
      */
     private _config: Config | undefined;
-
-    /**
-     * ERC20 토큰 컨트랙트
-     * @private
-     */
-    private _tokenContract: Token | undefined;
 
     /**
      * 사용자의 원장 컨트랙트
@@ -85,19 +79,6 @@ export class DefaultScheduler extends Scheduler {
      */
     public async onStart() {
         //
-    }
-
-    /**
-     * ERC20 토큰 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getTokenContract(): Promise<Token> {
-        if (this._tokenContract === undefined) {
-            const tokenFactory = await hre.ethers.getContractFactory("Token");
-            this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress) as Token;
-        }
-        return this._tokenContract;
     }
 
     /**

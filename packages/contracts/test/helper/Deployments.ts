@@ -5,8 +5,8 @@ import { ethers, upgrades } from "hardhat";
 
 import { BaseContract, Wallet } from "ethers";
 
-import { Amount, BOACoin } from "../../src/common/Amount";
 import { HardhatAccount } from "../../src/HardhatAccount";
+import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 
 import {
@@ -19,7 +19,6 @@ import {
     LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
-    StorePurchase,
     TestKIOS,
     Validator,
 } from "../../typechain-types";
@@ -132,25 +131,8 @@ export class Deployments {
             foundation,
             settlements,
             fee,
-            validators: [
-                validator01,
-                validator02,
-                validator03,
-                validator04,
-                validator05,
-                validator06,
-                validator07,
-                validator08,
-                validator09,
-                validator10,
-                validator11,
-                validator12,
-                validator13,
-                validator14,
-                validator15,
-                validator16,
-            ],
-            linkValidators: [linkValidator1, linkValidator2, linkValidator3],
+            validators: [validator01, validator02, validator03],
+            linkValidators: [linkValidator1],
             certifiers: [
                 certifier01,
                 certifier02,
@@ -203,7 +185,7 @@ export class Deployments {
         }
     }
 
-    public async doDeploy() {
+    public async doDeployAll() {
         const deployers: FnDeployer[] = [
             deployToken,
             deployPhoneLink,
@@ -216,7 +198,81 @@ export class Deployments {
             deployLoyaltyTransfer,
             deployShop,
             deployLedger,
-            deployStorePurchase,
+        ];
+        for (const elem of deployers) {
+            try {
+                await elem(this.accounts, this);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
+    public async doDeployToken() {
+        const deployers: FnDeployer[] = [deployToken];
+        for (const elem of deployers) {
+            try {
+                await elem(this.accounts, this);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
+    public async doDeployValidator() {
+        const deployers: FnDeployer[] = [deployToken, deployPhoneLink, deployValidator];
+        for (const elem of deployers) {
+            try {
+                await elem(this.accounts, this);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
+    public async doDeployCurrencyRate() {
+        const deployers: FnDeployer[] = [deployToken, deployPhoneLink, deployValidator, deployCurrencyRate];
+        for (const elem of deployers) {
+            try {
+                await elem(this.accounts, this);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
+    public async doDeployShop() {
+        const deployers: FnDeployer[] = [
+            deployToken,
+            deployPhoneLink,
+            deployValidator,
+            deployCurrencyRate,
+            deployLoyaltyProvider,
+            deployLoyaltyConsumer,
+            deployShop,
+        ];
+        for (const elem of deployers) {
+            try {
+                await elem(this.accounts, this);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
+    public async doDeployLedger() {
+        const deployers: FnDeployer[] = [
+            deployToken,
+            deployPhoneLink,
+            deployValidator,
+            deployCurrencyRate,
+            deployLoyaltyProvider,
+            deployLoyaltyConsumer,
+            deployLoyaltyExchanger,
+            deployLoyaltyBurner,
+            deployLoyaltyTransfer,
+            deployShop,
+            deployLedger,
         ];
         for (const elem of deployers) {
             try {
@@ -646,18 +702,4 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         console.log(`Deposit foundation's amount (tx: ${tx12.hash})...`);
         await tx12.wait();
     }
-}
-
-async function deployStorePurchase(accounts: IAccount, deployment: Deployments) {
-    const contractName = "StorePurchase";
-    console.log(`Deploy ${contractName}...`);
-    const factory = await ethers.getContractFactory("StorePurchase");
-    const contract = (await upgrades.deployProxy(factory.connect(accounts.purchaseManager), [], {
-        initializer: "initialize",
-        kind: "uups",
-    })) as StorePurchase;
-    await contract.deployed();
-    await contract.deployTransaction.wait();
-    deployment.addContract(contractName, contract.address, contract);
-    console.log(`Deployed ${contractName} to ${contract.address}`);
 }

@@ -1,16 +1,26 @@
-/**
- *  Includes various useful functions for the solidity
- *
- *  Copyright:
- *      Copyright (c) 2022 BOSAGORA Foundation All rights reserved.
- *
- *  License:
- *       MIT License. See LICENSE for details.
- */
+// tslint:disable-next-line:no-implicit-dependencies
+import { defaultAbiCoder, Interface } from "@ethersproject/abi";
+// tslint:disable-next-line:no-implicit-dependencies
+import { Signer } from "@ethersproject/abstract-signer";
+// tslint:disable-next-line:no-implicit-dependencies
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+// tslint:disable-next-line:no-implicit-dependencies
+import { arrayify, BytesLike } from "@ethersproject/bytes";
+// tslint:disable-next-line:no-implicit-dependencies
+import { AddressZero } from "@ethersproject/constants";
+// tslint:disable-next-line:no-implicit-dependencies
+import { ContractReceipt, ContractTransaction } from "@ethersproject/contracts";
+// tslint:disable-next-line:no-implicit-dependencies
+import { id } from "@ethersproject/hash";
+// tslint:disable-next-line:no-implicit-dependencies
+import { keccak256 } from "@ethersproject/keccak256";
+// tslint:disable-next-line:no-implicit-dependencies
+import { Log } from "@ethersproject/providers";
+// tslint:disable-next-line:no-implicit-dependencies
+import { randomBytes } from "@ethersproject/random";
+// tslint:disable-next-line:no-implicit-dependencies
+import { verifyMessage } from "@ethersproject/wallet";
 
-import { BigNumber, BigNumberish, BytesLike, Signer, utils } from "ethers";
-// tslint:disable-next-line:no-submodule-imports
-import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
 
 export class ContractUtils {
@@ -36,32 +46,26 @@ export class ContractUtils {
     }
 
     public static getPhoneHash(phone: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["string", "string"],
-            ["BOSagora Phone Number", phone]
-        );
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["string", "string"], ["BOSagora Phone Number", phone]);
+        return keccak256(encodedResult);
     }
 
     public static getEmailHash(phone: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["string", "string"], ["BOSagora Email", phone]);
+        return keccak256(encodedResult);
     }
 
     public static getRequestId(hash: string, address: string, nonce: BigNumberish): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "address", "uint256", "bytes32"],
-            [hash, address, nonce, utils.randomBytes(32)]
+            [hash, address, nonce, randomBytes(32)]
         );
-        return hre.ethers.utils.keccak256(encodedResult);
+        return keccak256(encodedResult);
     }
 
     public static getRequestHash(hash: string, address: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "address", "uint256"],
-            [hash, address, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["bytes32", "address", "uint256"], [hash, address, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signRequestHash(signer: Signer, hash: string, nonce: BigNumberish): Promise<string> {
@@ -73,7 +77,7 @@ export class ContractUtils {
         const message = ContractUtils.getRequestHash(hash, address, nonce);
         let res: string;
         try {
-            res = hre.ethers.utils.verifyMessage(message, signature);
+            res = verifyMessage(message, signature);
         } catch (error) {
             return false;
         }
@@ -89,11 +93,11 @@ export class ContractUtils {
         shopId: string,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "string", "uint256", "string", "bytes32", "address", "uint256"],
             [paymentId, purchaseId, amount, currency, shopId, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyNewPayment(
@@ -124,11 +128,11 @@ export class ContractUtils {
         confirm: boolean,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "string", "bool", "address", "uint256"],
             [paymentId, purchaseId, confirm, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyClosePayment(
@@ -154,11 +158,11 @@ export class ContractUtils {
         purchaseId: string,
         nonce: BigNumberish
     ): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["bytes32", "string", "address", "uint256"],
             [paymentId, purchaseId, address, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyCancelPayment(
@@ -177,11 +181,8 @@ export class ContractUtils {
     }
 
     public static getChangePayablePointMessage(phone: string, address: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "address", "uint256"],
-            [phone, address, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["bytes32", "address", "uint256"], [phone, address, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signChangePayablePoint(signer: Signer, phone: string, nonce: BigNumberish): Promise<string> {
@@ -190,8 +191,8 @@ export class ContractUtils {
     }
 
     public static getLoyaltyTypeMessage(address: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(["address", "uint256"], [address, nonce]);
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["address", "uint256"], [address, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signLoyaltyType(signer: Signer, nonce: BigNumberish): Promise<string> {
@@ -200,19 +201,13 @@ export class ContractUtils {
     }
 
     public static getShopId(account: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["address", "bytes32"],
-            [account, utils.randomBytes(32)]
-        );
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["address", "bytes32"], [account, randomBytes(32)]);
+        return keccak256(encodedResult);
     }
 
     public static getShopMessage(shopId: BytesLike, account: string, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["bytes32", "address", "uint256"],
-            [shopId, account, nonce]
-        );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        const encodedResult = defaultAbiCoder.encode(["bytes32", "address", "uint256"], [shopId, account, nonce]);
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signShop(signer: Signer, shopId: BytesLike, nonce: BigNumberish): Promise<string> {
@@ -221,11 +216,8 @@ export class ContractUtils {
     }
 
     public static getPaymentId(account: string): string {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
-            ["address", "bytes32"],
-            [account, utils.randomBytes(32)]
-        );
-        return hre.ethers.utils.keccak256(encodedResult);
+        const encodedResult = defaultAbiCoder.encode(["address", "bytes32"], [account, randomBytes(32)]);
+        return keccak256(encodedResult);
     }
 
     public static getPurchasesMessage(
@@ -242,17 +234,17 @@ export class ContractUtils {
     ): Uint8Array {
         const messages: BytesLike[] = [];
         for (const elem of purchases) {
-            const encodedData = hre.ethers.utils.defaultAbiCoder.encode(
+            const encodedData = defaultAbiCoder.encode(
                 ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
                 [elem.purchaseId, elem.amount, elem.loyalty, elem.currency, elem.shopId, elem.account, elem.phone]
             );
-            messages.push(hre.ethers.utils.keccak256(encodedData));
+            messages.push(keccak256(encodedData));
         }
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["uint256", "uint256", "bytes32[]"],
             [height, purchases.length, messages]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
@@ -265,25 +257,71 @@ export class ContractUtils {
     ): Uint8Array {
         const messages: BytesLike[] = [];
         for (const elem of rates) {
-            const encodedData = hre.ethers.utils.defaultAbiCoder.encode(
-                ["string", "uint256"],
-                [elem.symbol, elem.rate]
-            );
-            messages.push(hre.ethers.utils.keccak256(encodedData));
+            const encodedData = defaultAbiCoder.encode(["string", "uint256"], [elem.symbol, elem.rate]);
+            messages.push(keccak256(encodedData));
         }
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["uint256", "uint256", "bytes32[]"],
             [height, rates.length, messages]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
     }
 
     public static getTransferMessage(from: string, to: string, amount: BigNumberish, nonce: BigNumberish): Uint8Array {
-        const encodedResult = hre.ethers.utils.defaultAbiCoder.encode(
+        const encodedResult = defaultAbiCoder.encode(
             ["address", "address", "uint256", "uint256"],
             [from, to, amount, nonce]
         );
-        return arrayify(hre.ethers.utils.keccak256(encodedResult));
+        return arrayify(keccak256(encodedResult));
+    }
+
+    public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {
+        return receipt.logs.find((log) => log.topics[0] === id(iface.getEvent(eventName).format("sighash")));
+    }
+
+    public static async getEventValue(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<string | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field].toString();
+        }
+        return undefined;
+    }
+
+    public static async getEventValueBigNumber(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<BigNumber | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field];
+        }
+        return undefined;
+    }
+
+    public static async getEventValueString(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<string | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field];
+        }
+        return undefined;
     }
 
     public static zeroGWEI(value: BigNumber): BigNumber {

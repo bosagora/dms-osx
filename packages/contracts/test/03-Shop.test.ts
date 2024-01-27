@@ -1,136 +1,36 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
-import { ethers, upgrades, waffle } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 
 import { ContractShopStatus } from "../src/types";
-import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { CurrencyRate, Shop, Token, Validator } from "../typechain-types";
+import { CurrencyRate, ERC20, Shop, Validator } from "../typechain-types";
 
-import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
-import { BigNumber, Wallet } from "ethers";
+import { Wallet } from "ethers";
 
 import { AddressZero } from "@ethersproject/constants";
+import { Deployments } from "./helper/Deployments";
 
 chai.use(solidity);
 
 describe("Test for Shop", () => {
-    const provider = waffle.provider;
-    const [
-        deployer,
-        ,
-        ,
-        ,
-        certifier,
-        validator1,
-        validator2,
-        validator3,
-        user1,
-        shop1,
-        shop2,
-        shop3,
-        shop4,
-        shop5,
-        relay,
-    ] = provider.getWallets();
-
-    const validatorWallets = [validator1, validator2, validator3];
-    const shopWallets: Wallet[] = [shop1, shop2, shop3, shop4, shop5];
+    const deployments = new Deployments();
 
     let validatorContract: Validator;
-    let tokenContract: Token;
+    let tokenContract: ERC20;
     let currencyContract: CurrencyRate;
     let shopContract: Shop;
 
-    const multiple = BigNumber.from(1000000000);
-    const price = BigNumber.from(150).mul(multiple);
-
-    const amount = Amount.make(100_000, 18);
-    const assetAmount = Amount.make(10_000_000, 18);
-
-    const deployToken = async () => {
-        const tokenFactory = await ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
-        for (const elem of validatorWallets) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-    };
-
-    const deployValidatorCollection = async () => {
-        const validatorFactory = await ethers.getContractFactory("Validator");
-        validatorContract = (await upgrades.deployProxy(
-            validatorFactory.connect(deployer),
-            [tokenContract.address, validatorWallets.map((m) => m.address)],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as Validator;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
-    };
-
-    const depositValidators = async () => {
-        for (const elem of validatorWallets) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
-            await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "DepositedForValidator")
-                .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validatorOf(elem.address);
-            assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
-            assert.deepStrictEqual(item.balance, amount.value);
-        }
-    };
-
-    const deployCurrencyRate = async () => {
-        const currencyRateFactory = await ethers.getContractFactory("CurrencyRate");
-        currencyContract = (await upgrades.deployProxy(
-            currencyRateFactory.connect(deployer),
-            [validatorContract.address, await tokenContract.symbol()],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as CurrencyRate;
-        await currencyContract.deployed();
-        await currencyContract.deployTransaction.wait();
-
-        const height = ContractUtils.getTimeStamp();
-        const rates = [
-            {
-                symbol: await tokenContract.symbol(),
-                rate: price,
-            },
-            {
-                symbol: "usd",
-                rate: multiple.mul(1000),
-            },
-            {
-                symbol: "jpy",
-                rate: multiple.mul(1000),
-            },
-            {
-                symbol: "eur",
-                rate: multiple.mul(900),
-            },
-        ];
-        const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-        await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
-    };
-
     const deployAllContract = async () => {
-        await deployToken();
-        await deployValidatorCollection();
-        await depositValidators();
-        await deployCurrencyRate();
+        await deployments.doDeployCurrencyRate();
+
+        tokenContract = deployments.getContract("TestKIOS") as ERC20;
+        validatorContract = deployments.getContract("Validator") as Validator;
+        currencyContract = deployments.getContract("CurrencyRate") as CurrencyRate;
     };
 
     interface IShopData {
@@ -145,43 +45,43 @@ describe("Test for Shop", () => {
             shopId: "",
             name: "Shop 1-1",
             currency: "krw",
-            wallet: shopWallets[0],
+            wallet: deployments.accounts.shops[0],
         },
         {
             shopId: "",
             name: "Shop 1-2",
             currency: "krw",
-            wallet: shopWallets[0],
+            wallet: deployments.accounts.shops[0],
         },
         {
             shopId: "",
             name: "Shop 2-1",
             currency: "usd",
-            wallet: shopWallets[1],
+            wallet: deployments.accounts.shops[1],
         },
         {
             shopId: "",
             name: "Shop 2-2",
             currency: "jpy",
-            wallet: shopWallets[1],
+            wallet: deployments.accounts.shops[1],
         },
         {
             shopId: "",
             name: "Shop 3",
             currency: "jpy",
-            wallet: shopWallets[2],
+            wallet: deployments.accounts.shops[2],
         },
         {
             shopId: "",
             name: "Shop 4",
             currency: "jpy",
-            wallet: shopWallets[3],
+            wallet: deployments.accounts.shops[3],
         },
         {
             shopId: "",
             name: "Shop 5",
             currency: "jpy",
-            wallet: shopWallets[4],
+            wallet: deployments.accounts.shops[4],
         },
     ];
 
@@ -192,7 +92,7 @@ describe("Test for Shop", () => {
     before(async () => {
         const factory = await ethers.getContractFactory("Shop");
         shopContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
+            factory.connect(deployments.accounts.deployer),
             [currencyContract.address, AddressZero, AddressZero],
             {
                 initializer: "initialize",
@@ -215,7 +115,7 @@ describe("Test for Shop", () => {
             const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
             await expect(
                 shopContract
-                    .connect(relay)
+                    .connect(deployments.accounts.certifier)
                     .add(elem.shopId, elem.name, elem.currency.toLowerCase(), elem.wallet.address, signature)
             )
                 .to.emit(shopContract, "AddedShop")
@@ -230,8 +130,8 @@ describe("Test for Shop", () => {
     });
 
     it("Check", async () => {
-        const count = await shopContract.getShopsCountOfAccount(shopWallets[0].address);
-        const ids = await shopContract.getShopsOfAccount(shopWallets[0].address, 0, count);
+        const count = await shopContract.getShopsCountOfAccount(deployments.accounts.shops[0].address);
+        const ids = await shopContract.getShopsOfAccount(deployments.accounts.shops[0].address, 0, count);
         expect(ids).to.deep.equal([shopData[0].shopId, shopData[1].shopId]);
     });
 
@@ -244,7 +144,9 @@ describe("Test for Shop", () => {
             await shopContract.nonceOf(elem.wallet.address)
         );
         await expect(
-            shopContract.connect(certifier).update(elem.shopId, elem.name, "usd", elem.wallet.address, signature)
+            shopContract
+                .connect(deployments.accounts.certifier)
+                .update(elem.shopId, elem.name, "usd", elem.wallet.address, signature)
         )
             .to.emit(shopContract, "UpdatedShop")
             .withNamedArgs({
@@ -271,7 +173,7 @@ describe("Test for Shop", () => {
             );
             await expect(
                 shopContract
-                    .connect(certifier)
+                    .connect(deployments.accounts.certifier)
                     .changeStatus(elem.shopId, ContractShopStatus.INACTIVE, elem.wallet.address, signature)
             )
                 .to.emit(shopContract, "ChangedShopStatus")

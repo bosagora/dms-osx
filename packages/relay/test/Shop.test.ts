@@ -4,13 +4,13 @@ import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
+    ERC20DelegatedTransfer,
     Ledger,
     LoyaltyConsumer,
     LoyaltyExchanger,
     LoyaltyProvider,
     PhoneLinkCollection,
     Shop,
-    Token,
     Validator,
 } from "../typechain-types";
 
@@ -43,7 +43,7 @@ describe("Test for Shop", function () {
     const deployments = new Deployments();
 
     let validatorContract: Validator;
-    let tokenContract: Token;
+    let tokenContract: ERC20DelegatedTransfer;
     let linkContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopContract: Shop;
@@ -123,7 +123,7 @@ describe("Test for Shop", function () {
             await deployments.doDeploy();
 
             validatorContract = deployments.getContract("Validator") as Validator;
-            tokenContract = deployments.getContract("Token") as Token;
+            tokenContract = deployments.getContract("TestKIOS") as ERC20DelegatedTransfer;
             ledgerContract = deployments.getContract("Ledger") as Ledger;
             linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
             consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;

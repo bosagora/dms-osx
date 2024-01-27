@@ -6,7 +6,7 @@ import * as hre from "hardhat";
 // tslint:disable-next-line:no-implicit-dependencies
 import { Interface } from "@ethersproject/abi";
 // tslint:disable-next-line:no-implicit-dependencies
-import { ContractReceipt } from "@ethersproject/contracts";
+import { ContractReceipt, ContractTransaction } from "@ethersproject/contracts";
 // tslint:disable-next-line:no-implicit-dependencies
 import { id } from "@ethersproject/hash";
 // tslint:disable-next-line:no-implicit-dependencies
@@ -500,6 +500,51 @@ export class ContractUtils {
             [height, rates.length, messages]
         );
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
+    }
+
+    public static async getEventValue(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<string | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field].toString();
+        }
+        return undefined;
+    }
+
+    public static async getEventValueBigNumber(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<BigNumber | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field];
+        }
+        return undefined;
+    }
+
+    public static async getEventValueString(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<string | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field];
+        }
+        return undefined;
     }
 
     public static zeroGWEI(value: BigNumber): BigNumber {

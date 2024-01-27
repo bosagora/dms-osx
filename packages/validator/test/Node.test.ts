@@ -1,3 +1,5 @@
+import { BlockElementType } from "../src/blockchain/node/tasks";
+import { BranchStatus } from "../src/blockchain/storage/BranchStatusStorage";
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
 import { CollectExchangeRateScheduler } from "../src/scheduler/CollectExchangeRateScheduler";
@@ -7,6 +9,7 @@ import { NodeStorage } from "../src/storage/NodeStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
+    ERC20DelegatedTransfer,
     Ledger,
     LoyaltyConsumer,
     LoyaltyExchanger,
@@ -14,7 +17,6 @@ import {
     PhoneLinkCollection,
     Shop,
     StorePurchase,
-    Token,
     Validator,
 } from "../typechain-types";
 
@@ -26,17 +28,12 @@ import { ethers } from "hardhat";
 
 import { Deployments } from "./helper/Deployments";
 import { FakerStoreServer } from "./helper/FakerStoreServer";
-import { IShopData, IUserData, TestClient, TestServer } from "./helper/Utility";
+import { IShopData, IUserData, TestServer } from "./helper/Utility";
 
 import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { URL } from "url";
-import { BlockElementType } from "../src/blockchain/node/tasks";
-import { BranchStatus } from "../src/blockchain/storage/BranchStatusStorage";
-
-// tslint:disable-next-line:no-var-requires
-const URI = require("urijs");
 
 chai.use(solidity);
 
@@ -45,7 +42,7 @@ describe("Test of Server", function () {
     const deployments = new Deployments();
 
     let validatorContract: Validator;
-    let tokenContract: Token;
+    let tokenContract: ERC20DelegatedTransfer;
     let linkContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopContract: Shop;
@@ -104,7 +101,7 @@ describe("Test of Server", function () {
         await deployments.doDeploy();
 
         validatorContract = deployments.getContract("Validator") as Validator;
-        tokenContract = deployments.getContract("Token") as Token;
+        tokenContract = deployments.getContract("TestKIOS") as ERC20DelegatedTransfer;
         ledgerContract = deployments.getContract("Ledger") as Ledger;
         linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
         consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
