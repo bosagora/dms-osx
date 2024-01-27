@@ -107,6 +107,27 @@ dataSources:
       file: ./src/ledger.ts
 
   - kind: ethereum
+    name: {{dataSources.LoyaltyTransfer.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.LoyaltyTransfer.address}}'
+      abi: LoyaltyTransfer
+      startBlock: {{dataSources.LoyaltyTransfer.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - TransferredLoyaltyToken
+      abis:
+        - name: LoyaltyTransfer
+          file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyTransfer.sol/LoyaltyTransfer.json
+      eventHandlers:
+        - event: TransferredLoyaltyToken(address,address,uint256,uint256,uint256)
+          handler: handleTransferredLoyaltyToken
+      file: ./src/ledger.ts
+
+  - kind: ethereum
     name: {{dataSources.Shop.name}}
     network: {{network}}
     source:
