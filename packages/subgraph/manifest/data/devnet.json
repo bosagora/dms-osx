@@ -22,6 +22,11 @@
             "address": "0xdBD4c398031868829C5f08DCf168B157d3e03c62",
             "startBlock": 1
         },
+        "LoyaltyTransfer": {
+            "name": "LoyaltyTransfer",
+            "address": "0xDBA8d7aD3A83ec87eA4de8122500E86EA2C46bed",
+            "startBlock": 1
+        },
         "Shop": {
             "name": "Shop",
             "address": "0xDb62De0aD297cfDa76EE80Cc909177aAF5C7f322",
