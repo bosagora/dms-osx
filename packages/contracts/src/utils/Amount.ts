@@ -98,6 +98,24 @@ export class Amount {
         if (decimal_string.length < this._decimal) decimal_string = decimal_string.padStart(this._decimal, "0");
         return `${integral_string}.${decimal_string}`;
     }
+
+    public toDisplayString(comma: boolean = false, precision: number = 0): string {
+        const factor = BigNumber.from(10).pow(this._decimal);
+        const share = this._value.div(factor);
+        const remain = this._value.sub(share.mul(factor));
+        const tx_share = comma
+            ? share.toNumber().toLocaleString("en-US", { maximumFractionDigits: 7 })
+            : share.toString();
+        if (remain.eq(BigNumber.from(0))) {
+            return tx_share;
+        } else {
+            let tx_remain = remain.toString();
+            if (tx_remain.length < this._decimal) tx_remain = tx_remain.padStart(this._decimal, "0");
+            if (precision !== undefined) tx_remain = tx_remain.substring(0, precision);
+            if (tx_remain.length > 0) return tx_share + "." + tx_remain.replace(/0+$/g, "");
+            else return tx_share;
+        }
+    }
 }
 
 /**

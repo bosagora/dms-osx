@@ -37,7 +37,7 @@ jobs:
       - name: Check formatting of Contract
         run: cd packages/contracts && yarn run formatting:check
       - name: Compile of Contract
-        run: cd packages/contracts && yarn run build && yarn run build:npm
+        run: cd packages/contracts && yarn run build
       - name: Run Hardhat Tests of Contract
         env:
           REPORT_GAS: true

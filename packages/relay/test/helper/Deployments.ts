@@ -5,20 +5,21 @@ import { ethers, upgrades } from "hardhat";
 
 import { BaseContract, Wallet } from "ethers";
 
-import { Amount } from "../../src/common/Amount";
+import { Amount, BOACoin } from "../../src/common/Amount";
 import { HardhatAccount } from "../../src/HardhatAccount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
+
 import {
     CurrencyRate,
     Ledger,
     LoyaltyBurner,
     LoyaltyConsumer,
     LoyaltyExchanger,
-    LoyaltyTransfer,
     LoyaltyProvider,
+    LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
-    Token,
+    TestKIOS,
     Validator,
 } from "../../typechain-types";
 
@@ -47,19 +48,19 @@ export interface IAccount {
     certifiers: Wallet[];
     users: Wallet[];
     shops: Wallet[];
+    tokenOwners: Wallet[];
+    tokenRequire: number;
 }
 
 type FnDeployer = (accounts: IAccount, deployment: Deployments) => void;
 
 export class Deployments {
     public deployments: Map<string, IDeployedContract>;
-    public deployers: FnDeployer[];
     public accounts: IAccount;
     public shops: IShopData[];
 
     constructor() {
         this.deployments = new Map<string, IDeployedContract>();
-        this.deployers = [];
         this.shops = [];
 
         const raws = HardhatAccount.keys.map((m) => new Wallet(m, ethers.provider));
@@ -161,19 +162,10 @@ export class Deployments {
             ],
             users: [user01, user02, user03, user04, user05, user06, user07, user08, user09, user10],
             shops: [shop01, shop02, shop03, shop04, shop05, shop06, shop07, shop08, shop09, shop10],
-        };
 
-        this.addDeployer(deployPhoneLink);
-        this.addDeployer(deployToken);
-        this.addDeployer(deployValidator);
-        this.addDeployer(deployCurrencyRate);
-        this.addDeployer(deployLoyaltyProvider);
-        this.addDeployer(deployLoyaltyConsumer);
-        this.addDeployer(deployLoyaltyExchanger);
-        this.addDeployer(deployLoyaltyBurner);
-        this.addDeployer(deployLoyaltyTransfer);
-        this.addDeployer(deployShop);
-        this.addDeployer(deployLedger);
+            tokenOwners: [certifier01, certifier02, certifier03],
+            tokenRequire: 2,
+        };
     }
 
     public setShopData(shopData: IShopData[]) {
@@ -207,12 +199,21 @@ export class Deployments {
         }
     }
 
-    public addDeployer(deployer: FnDeployer) {
-        this.deployers.push(deployer);
-    }
-
     public async doDeploy() {
-        for (const elem of this.deployers) {
+        const deployers: FnDeployer[] = [
+            deployToken,
+            deployPhoneLink,
+            deployValidator,
+            deployCurrencyRate,
+            deployLoyaltyProvider,
+            deployLoyaltyConsumer,
+            deployLoyaltyExchanger,
+            deployLoyaltyBurner,
+            deployLoyaltyTransfer,
+            deployShop,
+            deployLedger,
+        ];
+        for (const elem of deployers) {
             try {
                 await elem(this.accounts, this);
             } catch (error) {
@@ -241,14 +242,17 @@ async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
 }
 
 async function deployToken(accounts: IAccount, deployment: Deployments) {
-    const contractName = "Token";
+    const contractName = "TestKIOS";
     console.log(`Deploy ${contractName}...`);
-    const factory = await ethers.getContractFactory("Token");
-    const contract = (await factory
-        .connect(accounts.deployer)
-        .deploy(accounts.owner.address, "Sample", "the9")) as Token;
+
+    const factory = await ethers.getContractFactory("TestKIOS");
+    const contract = (await factory.connect(accounts.deployer).deploy(accounts.owner.address)) as TestKIOS;
     await contract.deployed();
     await contract.deployTransaction.wait();
+
+    const balance = await contract.balanceOf(accounts.owner.address);
+    console.log(`TestKIOS token's owner: ${accounts.owner.address}`);
+    console.log(`TestKIOS token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
 
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
@@ -259,15 +263,19 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
         console.log(`Transfer token to foundation (tx: ${tx1.hash})...`);
         await tx1.wait();
 
-        const addresses = accounts.users.map((m: { address: string }) => m.address);
         const userAmount = Amount.make(200_000, 18);
-        const tx2 = await contract.connect(accounts.owner).multiTransfer(addresses, userAmount.value);
+        const tx2 = await contract.connect(accounts.owner).multiTransfer(
+            accounts.users.map((m) => m.address),
+            userAmount.value
+        );
         console.log(`Transfer token to users (tx: ${tx2.hash})...`);
         await tx2.wait();
 
-        const addresses2 = accounts.shops.map((m: { address: string }) => m.address);
-        const tx3 = await contract.connect(accounts.owner).multiTransfer(addresses2, userAmount.value);
-        console.log(`Transfer token to users (tx: ${tx3.hash})...`);
+        const tx3 = await contract.connect(accounts.owner).multiTransfer(
+            accounts.shops.map((m) => m.address),
+            userAmount.value
+        );
+        console.log(`Transfer token to shops (tx: ${tx3.hash})...`);
         await tx3.wait();
     }
 }
@@ -275,7 +283,7 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
 async function deployValidator(accounts: IAccount, deployment: Deployments) {
     const contractName = "Validator";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("Token") === undefined) {
+    if (deployment.getContract("TestKIOS") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -283,7 +291,7 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     const factory = await ethers.getContractFactory("Validator");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("Token"), accounts.validators.map((m) => m.address)],
+        [await deployment.getContractAddress("TestKIOS"), accounts.validators.map((m) => m.address)],
         {
             initializer: "initialize",
             kind: "uups",
@@ -299,13 +307,13 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
         const depositedToken = Amount.make(100_000, 18);
 
         for (const elem of accounts.validators) {
-            const tx1 = await (deployment.getContract("Token") as Token)
+            const tx1 = await (deployment.getContract("TestKIOS") as TestKIOS)
                 .connect(accounts.owner)
                 .transfer(elem.address, amount.value);
             console.log(`Transfer token to validator (tx: ${tx1.hash})...`);
             await tx1.wait();
 
-            const tx2 = await (deployment.getContract("Token") as Token)
+            const tx2 = await (deployment.getContract("TestKIOS") as TestKIOS)
                 .connect(elem)
                 .approve(contract.address, depositedToken.value);
             console.log(`Approve validator's amount (tx: ${tx2.hash})...`);
@@ -321,7 +329,7 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
 async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     const contractName = "CurrencyRate";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("Validator") === undefined || deployment.getContract("Token") === undefined) {
+    if (deployment.getContract("Validator") === undefined || deployment.getContract("TestKIOS") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -329,7 +337,10 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     const factory = await ethers.getContractFactory("CurrencyRate");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("Validator"), await (deployment.getContract("Token") as Token).symbol()],
+        [
+            await deployment.getContractAddress("Validator"),
+            await (deployment.getContract("TestKIOS") as TestKIOS).symbol(),
+        ],
         {
             initializer: "initialize",
             kind: "uups",
@@ -342,10 +353,10 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
 
     {
         const multiple = await contract.multiple();
-        const height = Math.floor(ContractUtils.getTimeStamp() / 10) * 10;
+        const height = 0;
         const rates = [
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
             {
@@ -548,7 +559,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     const contractName = "Ledger";
     console.log(`Deploy ${contractName}...`);
     if (
-        deployment.getContract("Token") === undefined ||
+        deployment.getContract("TestKIOS") === undefined ||
         deployment.getContract("PhoneLinkCollection") === undefined ||
         deployment.getContract("CurrencyRate") === undefined ||
         deployment.getContract("LoyaltyProvider") === undefined ||
@@ -568,7 +579,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
             accounts.foundation.address,
             accounts.settlements.address,
             accounts.fee.address,
-            await deployment.getContractAddress("Token"),
+            await deployment.getContractAddress("TestKIOS"),
             await deployment.getContractAddress("PhoneLinkCollection"),
             await deployment.getContractAddress("CurrencyRate"),
             await deployment.getContractAddress("LoyaltyProvider"),
@@ -620,7 +631,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
 
     {
         const assetAmount = Amount.make(100_000_000, 18);
-        const tx11 = await (deployment.getContract("Token") as Token)
+        const tx11 = await (deployment.getContract("TestKIOS") as TestKIOS)
             .connect(accounts.foundation)
             .approve(contract.address, assetAmount.value);
         console.log(`Approve foundation's amount (tx: ${tx11.hash})...`);

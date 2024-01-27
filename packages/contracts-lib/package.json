@@ -10,7 +10,7 @@
     },
     "scripts": {
         "build:contracts": "cd ../contracts && yarn build",
-        "build": "find ../contracts/artifacts/contracts/ -name '*.json' -type f | grep -v '.dbg.json' | xargs typechain --target=ethers-v5 --out-dir ./types",
+        "build": "find ../contracts/artifacts/contracts/ ../contracts/artifacts/kios-token-contracts/contracts/ -name '*.json' -type f | grep -v '.dbg.json' | xargs typechain --target=ethers-v5 --out-dir ./types",
         "build:npm": "rollup --config rollup.config.ts"
     },
     "repository": {
@@ -24,6 +24,7 @@
     },
     "homepage": "https://github.com/bosagora/dms-osx#readme",
     "devDependencies": {
+        "@rollup/plugin-json": "^4.1.0",
         "@rollup/plugin-typescript": "^8.3.1",
         "@typechain/ethers-v5": "^10.1.0",
         "rollup": "^2.70.1",

@@ -1,12 +1,13 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
-import { ethers, upgrades, waffle } from "hardhat";
+import { waffle } from "hardhat";
 
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
+    ERC20,
     Ledger,
     LoyaltyBurner,
     LoyaltyConsumer,
@@ -15,17 +16,16 @@ import {
     LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
-    Token,
     Validator,
 } from "../typechain-types";
 
-import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
 import { BigNumber, Wallet } from "ethers";
 
 import { AddressZero } from "@ethersproject/constants";
+import { Deployments } from "./helper/Deployments";
 
 chai.use(solidity);
 
@@ -52,36 +52,7 @@ interface IUserData {
 }
 
 describe("Test for Ledger", () => {
-    const provider = waffle.provider;
-    const [
-        deployer,
-        foundation,
-        settlements,
-        fee,
-        certifier,
-        validator1,
-        validator2,
-        validator3,
-        relay,
-        user1,
-        user2,
-        user3,
-        user4,
-        user5,
-        user6,
-        shop1,
-        shop2,
-        shop3,
-        shop4,
-        shop5,
-        shop6,
-    ] = provider.getWallets();
-
-    const validatorWallets = [validator1, validator2, validator3];
-    const validatorWallets2 = [validator1, validator3];
-    const linkValidators = [validator1];
-    const userWallets = [user1, user2, user3, user4, user5, user6];
-    const shopWallets = [shop1, shop2, shop3, shop4, shop5, shop6];
+    const deployments = new Deployments();
     const phoneHashes: string[] = [
         ContractUtils.getPhoneHash("08201012341001"),
         ContractUtils.getPhoneHash("08201012341002"),
@@ -91,7 +62,7 @@ describe("Test for Ledger", () => {
         ContractUtils.getPhoneHash("08201012341006"),
     ];
     let validatorContract: Validator;
-    let tokenContract: Token;
+    let tokenContract: ERC20;
     let ledgerContract: Ledger;
     let linkContract: PhoneLinkCollection;
     let currencyContract: CurrencyRate;
@@ -108,220 +79,32 @@ describe("Test for Ledger", () => {
     const amount = Amount.make(100_000, 18);
     const assetAmount = Amount.make(10_000_000, 18);
 
-    const deployToken = async () => {
-        const factory = await ethers.getContractFactory("Token");
-        tokenContract = (await factory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
-        for (const elem of validatorWallets) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-    };
-
-    const deployValidator = async () => {
-        const factory = await ethers.getContractFactory("Validator");
-        validatorContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [tokenContract.address, validatorWallets.map((m) => m.address)],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as Validator;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
-    };
-
-    const depositValidators = async () => {
-        for (const elem of validatorWallets) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
-            await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "DepositedForValidator")
-                .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validatorOf(elem.address);
-            assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
-            assert.deepStrictEqual(item.balance, amount.value);
-        }
-    };
-
-    const deployLinkCollection = async () => {
-        const factory = await ethers.getContractFactory("PhoneLinkCollection");
-        linkContract = (await upgrades.deployProxy(factory.connect(deployer), [linkValidators.map((m) => m.address)], {
-            initializer: "initialize",
-            kind: "uups",
-        })) as PhoneLinkCollection;
-        await linkContract.deployed();
-        await linkContract.deployTransaction.wait();
-    };
-
-    const deployCurrencyRate = async () => {
-        const factory = await ethers.getContractFactory("CurrencyRate");
-        currencyContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [validatorContract.address, await tokenContract.symbol()],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as unknown as CurrencyRate;
-        await currencyContract.deployed();
-        await currencyContract.deployTransaction.wait();
-
-        const height = ContractUtils.getTimeStamp();
-        const rates = [
-            {
-                symbol: await tokenContract.symbol(),
-                rate: price,
-            },
-        ];
-        const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-        await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
-    };
-
-    const deployProvider = async () => {
-        const factory = await ethers.getContractFactory("LoyaltyProvider");
-        providerContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [validatorContract.address, linkContract.address, currencyContract.address],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as unknown as LoyaltyProvider;
-        await providerContract.deployed();
-        await providerContract.deployTransaction.wait();
-    };
-
-    const deployConsumer = async () => {
-        const factory = await ethers.getContractFactory("LoyaltyConsumer");
-        consumerContract = (await upgrades.deployProxy(factory.connect(deployer), [currencyContract.address], {
-            initializer: "initialize",
-            kind: "uups",
-        })) as unknown as LoyaltyConsumer;
-        await consumerContract.deployed();
-        await consumerContract.deployTransaction.wait();
-    };
-
-    const deployExchanger = async () => {
-        const factory = await ethers.getContractFactory("LoyaltyExchanger");
-        exchangerContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [linkContract.address, currencyContract.address],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as unknown as LoyaltyExchanger;
-        await exchangerContract.deployed();
-        await exchangerContract.deployTransaction.wait();
-    };
-
-    const deployBurner = async () => {
-        const factory = await ethers.getContractFactory("LoyaltyBurner");
-        burnerContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [validatorContract.address, linkContract.address],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as unknown as LoyaltyBurner;
-        await burnerContract.deployed();
-        await burnerContract.deployTransaction.wait();
-    };
-
-    const deployTransfer = async () => {
-        const factory = await ethers.getContractFactory("LoyaltyTransfer");
-        transferContract = (await upgrades.deployProxy(factory.connect(deployer), [], {
-            initializer: "initialize",
-            kind: "uups",
-        })) as unknown as LoyaltyTransfer;
-        await transferContract.deployed();
-        await transferContract.deployTransaction.wait();
-    };
-
-    const deployShop = async () => {
-        const factory = await ethers.getContractFactory("Shop");
-        shopContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [currencyContract.address, providerContract.address, consumerContract.address],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as unknown as Shop;
-        await shopContract.deployed();
-        await shopContract.deployTransaction.wait();
-        await providerContract.connect(deployer).setShop(shopContract.address);
-        await consumerContract.connect(deployer).setShop(shopContract.address);
-    };
-
-    const deployLedger = async () => {
-        const factory = await ethers.getContractFactory("Ledger");
-        ledgerContract = (await upgrades.deployProxy(
-            factory.connect(deployer),
-            [
-                foundation.address,
-                settlements.address,
-                fee.address,
-                tokenContract.address,
-                linkContract.address,
-                currencyContract.address,
-                providerContract.address,
-                consumerContract.address,
-                exchangerContract.address,
-                burnerContract.address,
-                transferContract.address,
-            ],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as unknown as Ledger;
-        await shopContract.deployed();
-        await shopContract.deployTransaction.wait();
-        await providerContract.connect(deployer).setLedger(ledgerContract.address);
-        await consumerContract.connect(deployer).setLedger(ledgerContract.address);
-        await exchangerContract.connect(deployer).setLedger(ledgerContract.address);
-        await transferContract.connect(deployer).setLedger(ledgerContract.address);
-    };
-
     const addShopData = async (shopData: IShopData[]) => {
         for (const elem of shopData) {
             const nonce = await shopContract.nonceOf(elem.wallet.address);
             const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
             await shopContract
-                .connect(relay)
+                .connect(deployments.accounts.certifier)
                 .add(elem.shopId, elem.name, elem.currency, elem.wallet.address, signature);
         }
     };
 
-    const prepareToken = async () => {
-        for (const elem of userWallets) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
-        await tokenContract.connect(deployer).transfer(foundation.address, assetAmount.value);
-        await tokenContract.connect(foundation).approve(ledgerContract.address, assetAmount.value);
-        await ledgerContract.connect(foundation).deposit(assetAmount.value);
-    };
-
     const deployAllContract = async (shopData: IShopData[]) => {
-        await deployToken();
-        await deployValidator();
-        await depositValidators();
-        await deployLinkCollection();
-        await deployCurrencyRate();
-        await deployProvider();
-        await deployConsumer();
-        await deployExchanger();
-        await deployBurner();
-        await deployTransfer();
-        await deployShop();
-        await deployLedger();
+        await deployments.doDeployAll();
+
+        tokenContract = deployments.getContract("TestKIOS") as ERC20;
+        validatorContract = deployments.getContract("Validator") as Validator;
+        currencyContract = deployments.getContract("CurrencyRate") as CurrencyRate;
+
+        ledgerContract = deployments.getContract("Ledger") as Ledger;
+        linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
+        shopContract = deployments.getContract("Shop") as Shop;
+        providerContract = deployments.getContract("LoyaltyProvider") as LoyaltyProvider;
+        consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
+        exchangerContract = deployments.getContract("LoyaltyExchanger") as LoyaltyExchanger;
+        burnerContract = deployments.getContract("LoyaltyBurner") as LoyaltyBurner;
+        transferContract = deployments.getContract("LoyaltyTransfer") as LoyaltyTransfer;
         await addShopData(shopData);
-        await prepareToken();
     };
 
     let purchaseId = 0;
@@ -337,18 +120,18 @@ describe("Test for Ledger", () => {
         const userData: IUserData[] = [
             {
                 phone: "08201012341001",
-                address: userWallets[0].address,
-                privateKey: userWallets[0].privateKey,
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
             },
             {
                 phone: "08201012341002",
-                address: userWallets[1].address,
-                privateKey: userWallets[1].privateKey,
+                address: deployments.accounts.users[1].address,
+                privateKey: deployments.accounts.users[1].privateKey,
             },
             {
                 phone: "08201012341003",
-                address: userWallets[2].address,
-                privateKey: userWallets[2].privateKey,
+                address: deployments.accounts.users[2].address,
+                privateKey: deployments.accounts.users[2].privateKey,
             },
             {
                 phone: "08201012341004",
@@ -415,37 +198,37 @@ describe("Test for Ledger", () => {
                 shopId: "",
                 name: "Shop1",
                 currency: "krw",
-                wallet: shopWallets[0],
+                wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "",
                 name: "Shop2",
                 currency: "krw",
-                wallet: shopWallets[1],
+                wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "",
                 name: "Shop3",
                 currency: "krw",
-                wallet: shopWallets[2],
+                wallet: deployments.accounts.shops[2],
             },
             {
                 shopId: "",
                 name: "Shop4",
                 currency: "krw",
-                wallet: shopWallets[3],
+                wallet: deployments.accounts.shops[3],
             },
             {
                 shopId: "",
                 name: "Shop5",
                 currency: "krw",
-                wallet: shopWallets[4],
+                wallet: deployments.accounts.shops[4],
             },
             {
                 shopId: "",
                 name: "Shop6",
                 currency: "krw",
-                wallet: shopWallets[5],
+                wallet: deployments.accounts.shops[5],
             },
         ];
 
@@ -479,9 +262,13 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                    const signatures = deployments.accounts.validators.map((m) =>
+                        ContractUtils.signMessage(m, purchaseMessage)
+                    );
                     await expect(
-                        providerContract.connect(deployer).savePurchase(0, [purchaseParam], signatures)
+                        providerContract
+                            .connect(deployments.accounts.deployer)
+                            .savePurchase(0, [purchaseParam], signatures)
                     ).to.be.revertedWith("1000");
                 }
             });
@@ -508,9 +295,13 @@ describe("Test for Ledger", () => {
                             phone: phoneHash,
                         };
                         const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                        const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                        const signatures = deployments.accounts.validators.map((m) =>
+                            ContractUtils.signMessage(m, purchaseMessage)
+                        );
                         await expect(
-                            providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
+                            providerContract
+                                .connect(deployments.accounts.validators[0])
+                                .savePurchase(0, [purchaseParam], signatures)
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
@@ -540,9 +331,13 @@ describe("Test for Ledger", () => {
                             phone: phoneHash,
                         };
                         const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                        const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                        const signatures = deployments.accounts.validators.map((m) =>
+                            ContractUtils.signMessage(m, purchaseMessage)
+                        );
                         await expect(
-                            providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
+                            providerContract
+                                .connect(deployments.accounts.validators[0])
+                                .savePurchase(0, [purchaseParam], signatures)
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
@@ -620,8 +415,14 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -645,15 +446,19 @@ describe("Test for Ledger", () => {
             });
 
             it("Link phone-address (user: 3, point type : 0)", async () => {
-                const nonce = await linkContract.nonceOf(userWallets[3].address);
+                const nonce = await linkContract.nonceOf(deployments.accounts.users[3].address);
                 const hash = phoneHashes[3];
-                const signature = await ContractUtils.signRequestHash(userWallets[3], hash, nonce);
-                requestId = ContractUtils.getRequestId(hash, userWallets[3].address, nonce);
-                await expect(linkContract.connect(relay).addRequest(requestId, hash, userWallets[3].address, signature))
+                const signature = await ContractUtils.signRequestHash(deployments.accounts.users[3], hash, nonce);
+                requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[3].address, nonce);
+                await expect(
+                    linkContract
+                        .connect(deployments.accounts.certifier)
+                        .addRequest(requestId, hash, deployments.accounts.users[3].address, signature)
+                )
                     .to.emit(linkContract, "AddedRequestItem")
-                    .withArgs(requestId, hash, userWallets[3].address);
-                await linkContract.connect(validator1).voteRequest(requestId);
-                await linkContract.connect(validator1).countVote(requestId);
+                    .withArgs(requestId, hash, deployments.accounts.users[3].address);
+                await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+                await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
             });
 
             it("Save Purchase Data (user: 3, point type : 0) - phone and address are registered (user: 3, point type : 0)", async () => {
@@ -677,9 +482,15 @@ describe("Test for Ledger", () => {
                 const tokenAmount = pointAmount.mul(multiple).div(price);
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
 
                 const purchaseParam = {
                     purchaseId: getPurchaseId(),
@@ -691,9 +502,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -706,42 +523,46 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
-                        account: userWallets[3].address,
+                        account: deployments.accounts.users[3].address,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
                         purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
-                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldPointBalance.add(pointAmount)
-                );
-                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldTokenBalance
-                );
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(
+                    await ledgerContract.pointBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldPointBalance.add(pointAmount));
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldTokenBalance);
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance
                 );
             });
 
             it("Change to payable point (user: 3, point type : 0)", async () => {
                 const userIndex = 3;
-                const oldBalance = await ledgerContract.pointBalanceOf(userWallets[userIndex].address);
+                const oldBalance = await ledgerContract.pointBalanceOf(deployments.accounts.users[userIndex].address);
                 const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signChangePayablePoint(userWallets[userIndex], phoneHash, nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signChangePayablePoint(
+                    deployments.accounts.users[userIndex],
+                    phoneHash,
+                    nonce
+                );
                 const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
                     exchangerContract
-                        .connect(relay)
-                        .changeToPayablePoint(phoneHash, userWallets[userIndex].address, signature)
+                        .connect(deployments.accounts.certifier)
+                        .changeToPayablePoint(phoneHash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
-                        account: userWallets[userIndex].address,
+                        account: deployments.accounts.users[userIndex].address,
                         changedPoint: unPayableAmount,
                     });
-                expect(await ledgerContract.pointBalanceOf(userWallets[userIndex].address)).to.equal(
+                expect(await ledgerContract.pointBalanceOf(deployments.accounts.users[userIndex].address)).to.equal(
                     oldBalance.add(unPayableAmount)
                 );
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.equal(0);
@@ -750,13 +571,15 @@ describe("Test for Ledger", () => {
             it("Change Loyalty Type (user: 3, point type : 0)", async () => {
                 const userIndex = 3;
 
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
-                    exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[userIndex].address, signature)
+                    exchangerContract
+                        .connect(deployments.accounts.certifier)
+                        .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
-                    .withNamedArgs({ account: userWallets[userIndex].address });
+                    .withNamedArgs({ account: deployments.accounts.users[userIndex].address });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 3, point type : 1)", async () => {
@@ -780,9 +603,15 @@ describe("Test for Ledger", () => {
                 const tokenAmount = pointAmount.mul(multiple).div(price);
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
 
                 const purchaseParam = {
                     purchaseId: getPurchaseId(),
@@ -794,9 +623,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -809,19 +644,19 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
-                        account: userWallets[3].address,
+                        account: deployments.accounts.users[3].address,
                         providedToken: tokenAmount,
                         providedValue: pointAmount,
                         purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
-                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldPointBalance
-                );
-                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldTokenBalance.add(tokenAmount)
-                );
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(
+                    await ledgerContract.pointBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldPointBalance);
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldTokenBalance.add(tokenAmount));
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.sub(tokenAmount)
                 );
             });
@@ -847,9 +682,15 @@ describe("Test for Ledger", () => {
                 const tokenAmount = pointAmount.mul(multiple).div(price);
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
 
                 const purchaseParam = {
                     purchaseId: getPurchaseId(),
@@ -861,9 +702,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -882,26 +729,28 @@ describe("Test for Ledger", () => {
                         purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
-                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldPointBalance.add(pointAmount)
-                );
-                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldTokenBalance
-                );
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(
+                    await ledgerContract.pointBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldPointBalance.add(pointAmount));
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldTokenBalance);
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance
                 );
             });
 
             it("Change Loyalty Type (user: 1)", async () => {
                 const userIndex = 1;
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
-                    exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[userIndex].address, signature)
+                    exchangerContract
+                        .connect(deployments.accounts.certifier)
+                        .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
-                    .withNamedArgs({ account: userWallets[userIndex].address });
+                    .withNamedArgs({ account: deployments.accounts.users[userIndex].address });
             });
 
             it("Save Purchase Data - (user: 1, point type : 1)", async () => {
@@ -925,9 +774,15 @@ describe("Test for Ledger", () => {
                 const tokenAmount = pointAmount.mul(multiple).div(price);
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
 
                 const purchaseParam = {
                     purchaseId: getPurchaseId(),
@@ -939,9 +794,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -960,13 +821,13 @@ describe("Test for Ledger", () => {
                         purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
-                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldPointBalance
-                );
-                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldTokenBalance.add(tokenAmount)
-                );
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(
+                    await ledgerContract.pointBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldPointBalance);
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldTokenBalance.add(tokenAmount));
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.sub(tokenAmount)
                 );
             });
@@ -1002,9 +863,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1028,15 +895,19 @@ describe("Test for Ledger", () => {
             });
 
             it("Link phone-address (user: 4, point type : 0)", async () => {
-                const nonce = await linkContract.nonceOf(userWallets[4].address);
+                const nonce = await linkContract.nonceOf(deployments.accounts.users[4].address);
                 const hash = phoneHashes[4];
-                const signature = await ContractUtils.signRequestHash(userWallets[4], hash, nonce);
-                requestId = ContractUtils.getRequestId(hash, userWallets[3].address, nonce);
-                await expect(linkContract.connect(relay).addRequest(requestId, hash, userWallets[4].address, signature))
+                const signature = await ContractUtils.signRequestHash(deployments.accounts.users[4], hash, nonce);
+                requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[3].address, nonce);
+                await expect(
+                    linkContract
+                        .connect(deployments.accounts.certifier)
+                        .addRequest(requestId, hash, deployments.accounts.users[4].address, signature)
+                )
                     .to.emit(linkContract, "AddedRequestItem")
-                    .withArgs(requestId, hash, userWallets[4].address);
-                await linkContract.connect(validator1).voteRequest(requestId);
-                await linkContract.connect(validator1).countVote(requestId);
+                    .withArgs(requestId, hash, deployments.accounts.users[4].address);
+                await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+                await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
             });
 
             it("Save Purchase Data (user: 4, point type : 0) - phone and address are registered (user: 4, point type : 0)", async () => {
@@ -1060,9 +931,15 @@ describe("Test for Ledger", () => {
                 const tokenAmount = pointAmount.mul(multiple).div(price);
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
 
                 const purchaseParam = {
                     purchaseId: getPurchaseId(),
@@ -1074,9 +951,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1089,42 +972,46 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
-                        account: userWallets[4].address,
+                        account: deployments.accounts.users[4].address,
                         providedPoint: pointAmount,
                         providedValue: pointAmount,
                         purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
-                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldPointBalance.add(pointAmount)
-                );
-                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldTokenBalance
-                );
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(
+                    await ledgerContract.pointBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldPointBalance.add(pointAmount));
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldTokenBalance);
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance
                 );
             });
 
             it("Change to payable point (user: 4, point type : 0)", async () => {
                 const userIndex = 4;
-                const oldBalance = await ledgerContract.pointBalanceOf(userWallets[userIndex].address);
+                const oldBalance = await ledgerContract.pointBalanceOf(deployments.accounts.users[userIndex].address);
                 const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signChangePayablePoint(userWallets[userIndex], phoneHash, nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signChangePayablePoint(
+                    deployments.accounts.users[userIndex],
+                    phoneHash,
+                    nonce
+                );
                 const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
                     exchangerContract
-                        .connect(userWallets[userIndex].connect(waffle.provider))
-                        .changeToPayablePoint(phoneHash, userWallets[userIndex].address, signature)
+                        .connect(deployments.accounts.users[userIndex].connect(waffle.provider))
+                        .changeToPayablePoint(phoneHash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
-                        account: userWallets[userIndex].address,
+                        account: deployments.accounts.users[userIndex].address,
                         changedPoint: unPayableAmount,
                     });
-                expect(await ledgerContract.pointBalanceOf(userWallets[userIndex].address)).to.equal(
+                expect(await ledgerContract.pointBalanceOf(deployments.accounts.users[userIndex].address)).to.equal(
                     oldBalance.add(unPayableAmount)
                 );
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.equal(0);
@@ -1133,13 +1020,15 @@ describe("Test for Ledger", () => {
             it("Change Loyalty Type (user: 4, point type : 0)", async () => {
                 const userIndex = 4;
 
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
-                    exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[userIndex].address, signature)
+                    exchangerContract
+                        .connect(deployments.accounts.certifier)
+                        .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
-                    .withNamedArgs({ account: userWallets[userIndex].address });
+                    .withNamedArgs({ account: deployments.accounts.users[userIndex].address });
             });
 
             it("Save Purchase Data - phone and address are registered (user: 4, point type : 1)", async () => {
@@ -1163,9 +1052,15 @@ describe("Test for Ledger", () => {
                 const tokenAmount = pointAmount.mul(multiple).div(price);
 
                 const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
-                const oldPointBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldPointBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
 
                 const purchaseParam = {
                     purchaseId: getPurchaseId(),
@@ -1177,9 +1072,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1192,19 +1093,19 @@ describe("Test for Ledger", () => {
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
-                        account: userWallets[4].address,
+                        account: deployments.accounts.users[4].address,
                         providedToken: tokenAmount,
                         providedValue: pointAmount,
                         purchaseId: purchaseParam.purchaseId,
                     });
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(oldUnPayablePointBalance);
-                expect(await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldPointBalance
-                );
-                expect(await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address)).to.deep.equal(
-                    oldTokenBalance.add(tokenAmount)
-                );
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(
+                    await ledgerContract.pointBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldPointBalance);
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[purchase.userIndex].address)
+                ).to.deep.equal(oldTokenBalance.add(tokenAmount));
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.sub(tokenAmount)
                 );
             });
@@ -1240,9 +1141,15 @@ describe("Test for Ledger", () => {
                     phone: phoneHash,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                const signatures = deployments.accounts.validators.map((m) =>
+                    ContractUtils.signMessage(m, purchaseMessage)
+                );
 
-                await expect(providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures))
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.validators[0])
+                        .savePurchase(0, [purchaseParam], signatures)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
                         purchaseParam.purchaseId,
@@ -1268,57 +1175,69 @@ describe("Test for Ledger", () => {
             it("Change Loyalty Type (user: 5, point type : 0)", async () => {
                 const userIndex = 5;
 
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
-                    exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[userIndex].address, signature)
+                    exchangerContract
+                        .connect(deployments.accounts.certifier)
+                        .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
-                    .withNamedArgs({ account: userWallets[userIndex].address });
+                    .withNamedArgs({ account: deployments.accounts.users[userIndex].address });
             });
 
             it("Link phone-address (user: 5, point type : 0)", async () => {
                 const userIndex = 5;
-                const nonce = await linkContract.nonceOf(userWallets[userIndex].address);
+                const nonce = await linkContract.nonceOf(deployments.accounts.users[userIndex].address);
                 const hash = phoneHashes[userIndex];
-                const signature = await ContractUtils.signRequestHash(userWallets[userIndex], hash, nonce);
-                requestId = ContractUtils.getRequestId(hash, userWallets[userIndex].address, nonce);
+                const signature = await ContractUtils.signRequestHash(
+                    deployments.accounts.users[userIndex],
+                    hash,
+                    nonce
+                );
+                requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[userIndex].address, nonce);
                 await expect(
-                    linkContract.connect(relay).addRequest(requestId, hash, userWallets[userIndex].address, signature)
+                    linkContract
+                        .connect(deployments.accounts.certifier)
+                        .addRequest(requestId, hash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(linkContract, "AddedRequestItem")
-                    .withArgs(requestId, hash, userWallets[userIndex].address);
-                await linkContract.connect(validator1).voteRequest(requestId);
-                await linkContract.connect(validator1).countVote(requestId);
+                    .withArgs(requestId, hash, deployments.accounts.users[userIndex].address);
+                await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+                await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
             });
 
             it("Change to payable point (user: 5, point type : 0)", async () => {
                 const userIndex = 5;
-                const oldBalance = await ledgerContract.tokenBalanceOf(userWallets[userIndex].address);
+                const oldBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[userIndex].address);
                 const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signChangePayablePoint(userWallets[userIndex], phoneHash, nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signChangePayablePoint(
+                    deployments.accounts.users[userIndex],
+                    phoneHash,
+                    nonce
+                );
                 const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 const tokenAmount = unPayableAmount.mul(multiple).div(price);
                 await expect(
                     exchangerContract
-                        .connect(relay)
-                        .changeToPayablePoint(phoneHash, userWallets[userIndex].address, signature)
+                        .connect(deployments.accounts.certifier)
+                        .changeToPayablePoint(phoneHash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToPayablePoint")
                     .withNamedArgs({
                         phone: phoneHash,
-                        account: userWallets[userIndex].address,
+                        account: deployments.accounts.users[userIndex].address,
                         changedPoint: unPayableAmount,
                     })
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
                     .withNamedArgs({
-                        account: userWallets[userIndex].address,
+                        account: deployments.accounts.users[userIndex].address,
                         amountToken: tokenAmount,
                         amountPoint: unPayableAmount,
                     });
 
-                expect(await ledgerContract.tokenBalanceOf(userWallets[userIndex].address)).to.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[userIndex].address)).to.equal(
                     oldBalance.add(tokenAmount)
                 );
                 expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.equal(0);
@@ -1336,12 +1255,12 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1350,13 +1269,13 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex + 1].address,
+                        account: deployments.accounts.users[purchase.userIndex + 1].address,
                         signature,
                     })
                 ).to.be.revertedWith("1501");
@@ -1372,12 +1291,12 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1386,13 +1305,13 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.be.revertedWith("1511");
@@ -1408,12 +1327,12 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1423,15 +1342,15 @@ describe("Test for Ledger", () => {
                 );
                 const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
-                const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
@@ -1441,19 +1360,18 @@ describe("Test for Ledger", () => {
                 expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
                 expect(paymentData.shopId).to.deep.equal(shop.shopId);
-                expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
+                expect(paymentData.account).to.deep.equal(deployments.accounts.users[purchase.userIndex].address);
                 expect(paymentData.loyaltyType).to.deep.equal(0);
                 expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
                 expect(paymentData.feePoint).to.deep.equal(feeAmount);
                 expect(paymentData.feeValue).to.deep.equal(feeAmount);
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                const newFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 expect(newFeeBalance).to.deep.equal(oldFeeBalance.add(feeToken));
             });
         });
@@ -1468,7 +1386,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             };
 
-            const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+            const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
 
@@ -1479,9 +1397,9 @@ describe("Test for Ledger", () => {
                 feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
 
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1489,16 +1407,18 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
-                const oldBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                const oldBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
@@ -1508,54 +1428,63 @@ describe("Test for Ledger", () => {
                 expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
                 expect(paymentData.shopId).to.deep.equal(shop.shopId);
-                expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
+                expect(paymentData.account).to.deep.equal(deployments.accounts.users[purchase.userIndex].address);
                 expect(paymentData.loyaltyType).to.deep.equal(0);
                 expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
                 expect(paymentData.feePoint).to.deep.equal(feeAmount);
                 expect(paymentData.feeValue).to.deep.equal(feeAmount);
 
-                const newFeeBalance1 = await ledgerContract.tokenBalanceOf(fee.address);
+                const newFeeBalance1 = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 expect(newFeeBalance1.toString()).to.deep.equal(oldFeeBalance.toString());
 
-                const newBalance1 = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
+                const newBalance1 = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.sub(purchaseAmount.add(feeAmount)).toString());
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const newFeeBalance2 = await ledgerContract.tokenBalanceOf(fee.address);
+                const newFeeBalance2 = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 expect(newFeeBalance2.toString()).to.deep.equal(oldFeeBalance.add(feeToken).toString());
 
-                const newBalance2 = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
+                const newBalance2 = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance2.toString()).to.deep.equal(oldBalance.sub(purchaseAmount.add(feeAmount)).toString());
             });
 
             it("Cancel", async () => {
-                const oldBalance = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
-                const nonce = await ledgerContract.nonceOf(shopWallets[purchase.shopIndex].address);
+                const oldBalance = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.shops[purchase.shopIndex].address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
-                    shopWallets[purchase.shopIndex],
+                    deployments.accounts.shops[purchase.shopIndex],
                     paymentId,
                     purchase.purchaseId,
                     nonce
                 );
-                await expect(consumerContract.connect(relay).openCancelLoyaltyPayment(paymentId, signature)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .openCancelLoyaltyPayment(paymentId, signature)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const newBalance1 = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
+                const newBalance1 = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.toString());
 
-                await expect(consumerContract.connect(relay).closeCancelLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeCancelLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const newBalance2 = await ledgerContract.pointBalanceOf(userWallets[purchase.userIndex].address);
+                const newBalance2 = await ledgerContract.pointBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance2.toString()).to.deep.equal(oldBalance.add(purchaseAmount.add(feeAmount)).toString());
             });
         });
@@ -1571,12 +1500,12 @@ describe("Test for Ledger", () => {
                     userIndex: 1,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1585,13 +1514,13 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex + 1].address,
+                        account: deployments.accounts.users[purchase.userIndex + 1].address,
                         signature,
                     })
                 ).to.be.revertedWith("1501");
@@ -1607,12 +1536,12 @@ describe("Test for Ledger", () => {
                     userIndex: 1,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1621,13 +1550,13 @@ describe("Test for Ledger", () => {
                     nonce
                 );
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.be.revertedWith("1511");
@@ -1643,14 +1572,16 @@ describe("Test for Ledger", () => {
                     userIndex: 1,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1660,19 +1591,19 @@ describe("Test for Ledger", () => {
                 );
                 const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
-                const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance
                 );
 
@@ -1681,22 +1612,21 @@ describe("Test for Ledger", () => {
                 expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
                 expect(paymentData.shopId).to.deep.equal(shop.shopId);
-                expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
+                expect(paymentData.account).to.deep.equal(deployments.accounts.users[purchase.userIndex].address);
                 expect(paymentData.loyaltyType).to.deep.equal(1);
                 expect(paymentData.paidToken).to.deep.equal(tokenAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
                 expect(paymentData.feeToken).to.deep.equal(feeToken);
                 expect(paymentData.feeValue).to.deep.equal(feeAmount);
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
-                const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                const newFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 expect(newFeeBalance).to.deep.equal(oldFeeBalance.add(feeToken));
             });
         });
@@ -1711,7 +1641,7 @@ describe("Test for Ledger", () => {
                 userIndex: 1,
             };
 
-            const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+            const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
             const shop = shopData[purchase.shopIndex];
@@ -1720,13 +1650,15 @@ describe("Test for Ledger", () => {
             let feeToken: BigNumber;
 
             it("Pay", async () => {
-                oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
                 feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
 
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -1734,23 +1666,25 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
-                const oldBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                const oldBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance
                 );
-                const newFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                const newFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 expect(newFeeBalance).to.deep.equal(oldFeeBalance);
 
                 const paymentData = await consumerContract.loyaltyPaymentOf(paymentId);
@@ -1758,63 +1692,78 @@ describe("Test for Ledger", () => {
                 expect(paymentData.purchaseId).to.deep.equal(purchase.purchaseId);
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
                 expect(paymentData.shopId).to.deep.equal(shop.shopId);
-                expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
+                expect(paymentData.account).to.deep.equal(deployments.accounts.users[purchase.userIndex].address);
                 expect(paymentData.loyaltyType).to.deep.equal(1);
                 expect(paymentData.paidToken).to.deep.equal(tokenAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
                 expect(paymentData.feeToken).to.deep.equal(feeToken);
                 expect(paymentData.feeValue).to.deep.equal(feeAmount);
 
-                const newFeeBalance1 = await ledgerContract.tokenBalanceOf(fee.address);
+                const newFeeBalance1 = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 expect(newFeeBalance1.toString()).to.deep.equal(oldFeeBalance.toString());
 
-                const newBalance1 = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
+                const newBalance1 = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.sub(tokenAmount.add(feeToken)).toString());
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.add(tokenAmount)
                 );
-                expect(await ledgerContract.tokenBalanceOf(fee.address)).to.deep.equal(oldFeeBalance.add(feeToken));
-                const newBalance2 = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address)).to.deep.equal(
+                    oldFeeBalance.add(feeToken)
+                );
+                const newBalance2 = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance2.toString()).to.deep.equal(oldBalance.sub(tokenAmount.add(feeToken)).toString());
             });
 
             it("Cancel", async () => {
-                oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
-                const oldFeeBalance = await ledgerContract.tokenBalanceOf(fee.address);
+                oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
+                const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
 
-                const oldBalance = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
-                const nonce = await ledgerContract.nonceOf(shopWallets[purchase.shopIndex].address);
+                const oldBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.shops[purchase.shopIndex].address);
                 const signature = await ContractUtils.signLoyaltyCancelPayment(
-                    shopWallets[purchase.shopIndex],
+                    deployments.accounts.shops[purchase.shopIndex],
                     paymentId,
                     purchase.purchaseId,
                     nonce
                 );
 
-                await expect(consumerContract.connect(relay).openCancelLoyaltyPayment(paymentId, signature)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .openCancelLoyaltyPayment(paymentId, signature)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                const newBalance1 = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
+                const newBalance1 = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.toString());
 
-                await expect(consumerContract.connect(relay).closeCancelLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeCancelLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                expect(await ledgerContract.tokenBalanceOf(foundation.address)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
                     oldFoundationTokenBalance.sub(tokenAmount)
                 );
-                expect(await ledgerContract.tokenBalanceOf(fee.address)).to.deep.equal(oldFeeBalance.sub(feeToken));
-                const newBalance2 = await ledgerContract.tokenBalanceOf(userWallets[purchase.userIndex].address);
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address)).to.deep.equal(
+                    oldFeeBalance.sub(feeToken)
+                );
+                const newBalance2 = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[purchase.userIndex].address
+                );
                 expect(newBalance2.toString()).to.deep.equal(oldBalance.add(tokenAmount.add(feeToken)).toString());
             });
         });
@@ -1824,8 +1773,8 @@ describe("Test for Ledger", () => {
         const userData: IUserData[] = [
             {
                 phone: "08201012341001",
-                address: userWallets[0].address,
-                privateKey: userWallets[0].privateKey,
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
             },
         ];
         const shopData: IShopData[] = [
@@ -1833,7 +1782,7 @@ describe("Test for Ledger", () => {
                 shopId: "",
                 name: "Shop1",
                 currency: "krw",
-                wallet: shopWallets[0],
+                wallet: deployments.accounts.shops[0],
             },
         ];
 
@@ -1868,8 +1817,12 @@ describe("Test for Ledger", () => {
             }
 
             const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchases);
-            const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
-            const tx = await providerContract.connect(validatorWallets[0]).savePurchase(0, purchases, signatures);
+            const signatures = deployments.accounts.validators.map((m) =>
+                ContractUtils.signMessage(m, purchaseMessage)
+            );
+            const tx = await providerContract
+                .connect(deployments.accounts.validators[0])
+                .savePurchase(0, purchases, signatures);
             await tx.wait();
         });
 
@@ -1886,18 +1839,18 @@ describe("Test for Ledger", () => {
         const userData: IUserData[] = [
             {
                 phone: "08201012341001",
-                address: userWallets[0].address,
-                privateKey: userWallets[0].privateKey,
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
             },
             {
                 phone: "08201012341002",
-                address: userWallets[1].address,
-                privateKey: userWallets[1].privateKey,
+                address: deployments.accounts.users[1].address,
+                privateKey: deployments.accounts.users[1].privateKey,
             },
             {
                 phone: "08201012341003",
-                address: userWallets[2].address,
-                privateKey: userWallets[2].privateKey,
+                address: deployments.accounts.users[2].address,
+                privateKey: deployments.accounts.users[2].privateKey,
             },
             {
                 phone: "08201012341004",
@@ -1959,37 +1912,37 @@ describe("Test for Ledger", () => {
                 shopId: "",
                 name: "Shop1",
                 currency: "krw",
-                wallet: shopWallets[0],
+                wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "",
                 name: "Shop2",
                 currency: "krw",
-                wallet: shopWallets[1],
+                wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "",
                 name: "Shop3",
                 currency: "krw",
-                wallet: shopWallets[2],
+                wallet: deployments.accounts.shops[2],
             },
             {
                 shopId: "",
                 name: "Shop4",
                 currency: "krw",
-                wallet: shopWallets[3],
+                wallet: deployments.accounts.shops[3],
             },
             {
                 shopId: "",
                 name: "Shop5",
                 currency: "krw",
-                wallet: shopWallets[4],
+                wallet: deployments.accounts.shops[4],
             },
             {
                 shopId: "",
                 name: "Shop6",
                 currency: "krw",
-                wallet: shopWallets[5],
+                wallet: deployments.accounts.shops[5],
             },
         ];
 
@@ -2005,23 +1958,27 @@ describe("Test for Ledger", () => {
 
         context("Deposit token", () => {
             it("Change Loyalty type of user", async () => {
-                const nonce = await ledgerContract.nonceOf(userWallets[0].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[0], nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+                const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
 
-                await exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[0].address, signature);
+                await exchangerContract
+                    .connect(deployments.accounts.certifier)
+                    .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
             });
 
             it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
-                await tokenContract.connect(userWallets[0]).approve(ledgerContract.address, amount.value);
-                await expect(ledgerContract.connect(userWallets[0]).deposit(amount.value))
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+                await tokenContract
+                    .connect(deployments.accounts.users[0])
+                    .approve(ledgerContract.address, amount.value);
+                await expect(ledgerContract.connect(deployments.accounts.users[0]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        account: userWallets[0].address,
+                        account: deployments.accounts.users[0].address,
                         depositedToken: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
                     });
-                expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
                     oldTokenBalance.add(amount.value)
                 );
             });
@@ -2029,22 +1986,22 @@ describe("Test for Ledger", () => {
 
         context("Withdraw token", () => {
             it("Withdraw token - Insufficient balance", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
                 await expect(
-                    ledgerContract.connect(userWallets[0]).withdraw(oldTokenBalance.add(1000000000))
+                    ledgerContract.connect(deployments.accounts.users[0]).withdraw(oldTokenBalance.add(1000000000))
                 ).to.revertedWith("1511");
             });
 
             it("Withdraw token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
-                await expect(ledgerContract.connect(userWallets[0]).withdraw(amount.value))
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+                await expect(ledgerContract.connect(deployments.accounts.users[0]).withdraw(amount.value))
                     .to.emit(ledgerContract, "Withdrawn")
                     .withNamedArgs({
-                        account: userWallets[0].address,
+                        account: deployments.accounts.users[0].address,
                         withdrawnToken: amount.value,
                         balanceToken: oldTokenBalance.sub(amount.value),
                     });
-                expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
+                expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
                     oldTokenBalance.sub(amount.value)
                 );
             });
@@ -2055,28 +2012,28 @@ describe("Test for Ledger", () => {
         const userData: IUserData[] = [
             {
                 phone: "08201012341001",
-                address: userWallets[0].address,
-                privateKey: userWallets[0].privateKey,
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
             },
             {
                 phone: "08201012341002",
-                address: userWallets[1].address,
-                privateKey: userWallets[1].privateKey,
+                address: deployments.accounts.users[1].address,
+                privateKey: deployments.accounts.users[1].privateKey,
             },
             {
                 phone: "08201012341003",
-                address: userWallets[2].address,
-                privateKey: userWallets[2].privateKey,
+                address: deployments.accounts.users[2].address,
+                privateKey: deployments.accounts.users[2].privateKey,
             },
             {
                 phone: "08201012341004",
-                address: userWallets[3].address,
-                privateKey: userWallets[3].privateKey,
+                address: deployments.accounts.users[3].address,
+                privateKey: deployments.accounts.users[3].privateKey,
             },
             {
                 phone: "08201012341005",
-                address: userWallets[4].address,
-                privateKey: userWallets[4].privateKey,
+                address: deployments.accounts.users[4].address,
+                privateKey: deployments.accounts.users[4].privateKey,
             },
         ];
 
@@ -2136,37 +2093,37 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 name: "Shop1",
                 currency: "krw",
-                wallet: shopWallets[0],
+                wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "F000200",
                 name: "Shop2",
                 currency: "krw",
-                wallet: shopWallets[1],
+                wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "F000300",
                 name: "Shop3",
                 currency: "krw",
-                wallet: shopWallets[2],
+                wallet: deployments.accounts.shops[2],
             },
             {
                 shopId: "F000400",
                 name: "Shop4",
                 currency: "krw",
-                wallet: shopWallets[3],
+                wallet: deployments.accounts.shops[3],
             },
             {
                 shopId: "F000500",
                 name: "Shop5",
                 currency: "krw",
-                wallet: shopWallets[4],
+                wallet: deployments.accounts.shops[4],
             },
             {
                 shopId: "F000600",
                 name: "Shop6",
                 currency: "krw",
-                wallet: shopWallets[5],
+                wallet: deployments.accounts.shops[5],
             },
         ];
 
@@ -2202,10 +2159,14 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                    const signatures = deployments.accounts.validators.map((m) =>
+                        ContractUtils.signMessage(m, purchaseMessage)
+                    );
 
                     await expect(
-                        providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
+                        providerContract
+                            .connect(deployments.accounts.validators[0])
+                            .savePurchase(0, [purchaseParam], signatures)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -2292,12 +2253,12 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -2307,22 +2268,24 @@ describe("Test for Ledger", () => {
                 );
 
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true))
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                )
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
-                        account: settlements.address,
+                        account: deployments.accounts.settlements.address,
                         shopId: shop.shopId,
                         providedPoint: Amount.make(200, 18).value,
                     });
@@ -2338,33 +2301,37 @@ describe("Test for Ledger", () => {
             it("Change Loyalty Type (user: 0)", async () => {
                 const userIndex = 0;
 
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
                     exchangerContract
-                        .connect(userWallets[userIndex].connect(waffle.provider))
-                        .changeToLoyaltyToken(userWallets[userIndex].address, signature)
+                        .connect(deployments.accounts.users[userIndex].connect(waffle.provider))
+                        .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
-                    .withNamedArgs({ account: userWallets[userIndex].address });
+                    .withNamedArgs({ account: deployments.accounts.users[userIndex].address });
             });
         });
 
         context("Deposit token", () => {
             it("Deposit token - Success", async () => {
                 const userIndex = 0;
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[userIndex].address);
-                await tokenContract.connect(userWallets[userIndex]).approve(ledgerContract.address, amount.value);
-                await expect(ledgerContract.connect(userWallets[userIndex]).deposit(amount.value))
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[userIndex].address
+                );
+                await tokenContract
+                    .connect(deployments.accounts.users[userIndex])
+                    .approve(ledgerContract.address, amount.value);
+                await expect(ledgerContract.connect(deployments.accounts.users[userIndex]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        account: userWallets[userIndex].address,
+                        account: deployments.accounts.users[userIndex].address,
                         depositedToken: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
                     });
-                expect(await ledgerContract.tokenBalanceOf(userWallets[userIndex].address)).to.deep.equal(
-                    oldTokenBalance.add(amount.value)
-                );
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[userIndex].address)
+                ).to.deep.equal(oldTokenBalance.add(amount.value));
             });
         });
 
@@ -2379,14 +2346,16 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = ContractUtils.zeroGWEI(Amount.make(purchase.amount, 18).value);
                 const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(foundation.address);
+                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.foundation.address
+                );
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -2396,21 +2365,20 @@ describe("Test for Ledger", () => {
                 );
 
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo2 = await shopContract.shopOf(shop.shopId);
                 expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value);
@@ -2418,9 +2386,9 @@ describe("Test for Ledger", () => {
                 expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
 
                 const settledToken = ContractUtils.zeroGWEI(shopInfo2.settledAmount.mul(multiple).div(price));
-                expect((await ledgerContract.tokenBalanceOf(foundation.address)).toString()).to.deep.equal(
-                    oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString()
-                );
+                expect(
+                    (await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).toString()
+                ).to.deep.equal(oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString());
             });
         });
 
@@ -2449,7 +2417,7 @@ describe("Test for Ledger", () => {
                     .withNamedArgs({
                         shopId: shop.shopId,
                         amount: amount2,
-                        account: shopWallets[shopIndex].address,
+                        account: deployments.accounts.shops[shopIndex].address,
                     });
                 const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(amount2);
@@ -2471,7 +2439,7 @@ describe("Test for Ledger", () => {
                     .withNamedArgs({
                         shopId: shop.shopId,
                         amount: amount2,
-                        account: shopWallets[shopIndex].address,
+                        account: deployments.accounts.shops[shopIndex].address,
                     });
                 const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
                 expect(withdrawalAmount).to.equal(0);
@@ -2483,18 +2451,18 @@ describe("Test for Ledger", () => {
         const userData: IUserData[] = [
             {
                 phone: "08201012341001",
-                address: userWallets[0].address,
-                privateKey: userWallets[0].privateKey,
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
             },
             {
                 phone: "08201012341002",
-                address: userWallets[1].address,
-                privateKey: userWallets[1].privateKey,
+                address: deployments.accounts.users[1].address,
+                privateKey: deployments.accounts.users[1].privateKey,
             },
             {
                 phone: "08201012341003",
-                address: userWallets[2].address,
-                privateKey: userWallets[2].privateKey,
+                address: deployments.accounts.users[2].address,
+                privateKey: deployments.accounts.users[2].privateKey,
             },
             {
                 phone: "08201012341004",
@@ -2564,37 +2532,37 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 name: "Shop1",
                 currency: "krw",
-                wallet: shopWallets[0],
+                wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "F000200",
                 name: "Shop2",
                 currency: "krw",
-                wallet: shopWallets[1],
+                wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "F000300",
                 name: "Shop3",
                 currency: "krw",
-                wallet: shopWallets[2],
+                wallet: deployments.accounts.shops[2],
             },
             {
                 shopId: "F000400",
                 name: "Shop4",
                 currency: "krw",
-                wallet: shopWallets[3],
+                wallet: deployments.accounts.shops[3],
             },
             {
                 shopId: "F000500",
                 name: "Shop5",
                 currency: "krw",
-                wallet: shopWallets[4],
+                wallet: deployments.accounts.shops[4],
             },
             {
                 shopId: "F000600",
                 name: "Shop6",
                 currency: "krw",
-                wallet: shopWallets[5],
+                wallet: deployments.accounts.shops[5],
             },
         ];
 
@@ -2609,7 +2577,7 @@ describe("Test for Ledger", () => {
         });
 
         before("Set Other Currency", async () => {
-            const height = ContractUtils.getTimeStamp();
+            const height = 0;
             const rates = [
                 {
                     symbol: "usd",
@@ -2629,8 +2597,8 @@ describe("Test for Ledger", () => {
                 },
             ];
             const message = ContractUtils.getCurrencyMessage(height, rates);
-            const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
+            const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+            await currencyContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures);
         });
 
         context("Save Purchase Data", () => {
@@ -2659,10 +2627,14 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                    const signatures = deployments.accounts.validators.map((m) =>
+                        ContractUtils.signMessage(m, purchaseMessage)
+                    );
 
                     await expect(
-                        providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
+                        providerContract
+                            .connect(deployments.accounts.validators[0])
+                            .savePurchase(0, [purchaseParam], signatures)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -2746,28 +2718,28 @@ describe("Test for Ledger", () => {
         const userData: IUserData[] = [
             {
                 phone: "08201012341001",
-                address: userWallets[0].address,
-                privateKey: userWallets[0].privateKey,
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
             },
             {
                 phone: "08201012341002",
-                address: userWallets[1].address,
-                privateKey: userWallets[1].privateKey,
+                address: deployments.accounts.users[1].address,
+                privateKey: deployments.accounts.users[1].privateKey,
             },
             {
                 phone: "08201012341003",
-                address: userWallets[2].address,
-                privateKey: userWallets[2].privateKey,
+                address: deployments.accounts.users[2].address,
+                privateKey: deployments.accounts.users[2].privateKey,
             },
             {
                 phone: "08201012341004",
-                address: userWallets[3].address,
-                privateKey: userWallets[3].privateKey,
+                address: deployments.accounts.users[3].address,
+                privateKey: deployments.accounts.users[3].privateKey,
             },
             {
                 phone: "08201012341005",
-                address: userWallets[4].address,
-                privateKey: userWallets[4].privateKey,
+                address: deployments.accounts.users[4].address,
+                privateKey: deployments.accounts.users[4].privateKey,
             },
         ];
 
@@ -2803,25 +2775,25 @@ describe("Test for Ledger", () => {
                 shopId: "F000100",
                 name: "Shop1",
                 currency: "krw",
-                wallet: shopWallets[0],
+                wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "F000200",
                 name: "Shop2",
                 currency: "usd",
-                wallet: shopWallets[1],
+                wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "F000300",
                 name: "Shop3",
                 currency: "jpy",
-                wallet: shopWallets[2],
+                wallet: deployments.accounts.shops[2],
             },
             {
                 shopId: "F000400",
                 name: "Shop4",
                 currency: "usd",
-                wallet: shopWallets[3],
+                wallet: deployments.accounts.shops[3],
             },
         ];
 
@@ -2832,13 +2804,9 @@ describe("Test for Ledger", () => {
         });
 
         before("Deploy", async () => {
-            await deployToken();
-            await deployValidator();
-            await depositValidators();
-            await deployLinkCollection();
-            await deployCurrencyRate();
+            await deployAllContract(shopData);
 
-            const height = ContractUtils.getTimeStamp() + 1;
+            const height = 0;
 
             const rates = [
                 {
@@ -2855,18 +2823,8 @@ describe("Test for Ledger", () => {
                 },
             ];
             const message = ContractUtils.getCurrencyMessage(height, rates);
-            const signatures = validatorWallets.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(validatorWallets[0]).set(height, rates, signatures);
-
-            await deployProvider();
-            await deployConsumer();
-            await deployExchanger();
-            await deployBurner();
-            await deployTransfer();
-            await deployShop();
-            await deployLedger();
-            await addShopData(shopData);
-            await prepareToken();
+            const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+            await currencyContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures);
         });
 
         context("Save Purchase Data", () => {
@@ -2887,10 +2845,14 @@ describe("Test for Ledger", () => {
                         phone: phoneHash,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = validatorWallets2.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+                    const signatures = deployments.accounts.validators.map((m) =>
+                        ContractUtils.signMessage(m, purchaseMessage)
+                    );
 
                     await expect(
-                        providerContract.connect(validatorWallets[0]).savePurchase(0, [purchaseParam], signatures)
+                        providerContract
+                            .connect(deployments.accounts.validators[0])
+                            .savePurchase(0, [purchaseParam], signatures)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -2955,12 +2917,12 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -2970,22 +2932,24 @@ describe("Test for Ledger", () => {
                 );
 
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true))
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                )
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
-                        account: settlements.address,
+                        account: deployments.accounts.settlements.address,
                         shopId: shop.shopId,
                         providedPoint: Amount.make(100, 18).value,
                     });
@@ -3006,31 +2970,37 @@ describe("Test for Ledger", () => {
             it("Change Loyalty Type (user: 0)", async () => {
                 const userIndex = 0;
 
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+                const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
-                    exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[userIndex].address, signature)
+                    exchangerContract
+                        .connect(deployments.accounts.certifier)
+                        .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
-                    .withNamedArgs({ account: userWallets[userIndex].address });
+                    .withNamedArgs({ account: deployments.accounts.users[userIndex].address });
             });
         });
 
         context("Deposit token", () => {
             it("Deposit token - Success", async () => {
                 const userIndex = 0;
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[userIndex].address);
-                await tokenContract.connect(userWallets[userIndex]).approve(ledgerContract.address, amount.value);
-                await expect(ledgerContract.connect(userWallets[userIndex]).deposit(amount.value))
+                const oldTokenBalance = await ledgerContract.tokenBalanceOf(
+                    deployments.accounts.users[userIndex].address
+                );
+                await tokenContract
+                    .connect(deployments.accounts.users[userIndex])
+                    .approve(ledgerContract.address, amount.value);
+                await expect(ledgerContract.connect(deployments.accounts.users[userIndex]).deposit(amount.value))
                     .to.emit(ledgerContract, "Deposited")
                     .withNamedArgs({
-                        account: userWallets[userIndex].address,
+                        account: deployments.accounts.users[userIndex].address,
                         depositedToken: amount.value,
                         balanceToken: oldTokenBalance.add(amount.value),
                     });
-                expect(await ledgerContract.tokenBalanceOf(userWallets[userIndex].address)).to.deep.equal(
-                    oldTokenBalance.add(amount.value)
-                );
+                expect(
+                    await ledgerContract.tokenBalanceOf(deployments.accounts.users[userIndex].address)
+                ).to.deep.equal(oldTokenBalance.add(amount.value));
             });
         });
 
@@ -3045,12 +3015,12 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
-                    userWallets[purchase.userIndex],
+                    deployments.accounts.users[purchase.userIndex],
                     paymentId,
                     purchase.purchaseId,
                     purchaseAmount,
@@ -3060,21 +3030,20 @@ describe("Test for Ledger", () => {
                 );
 
                 await expect(
-                    consumerContract.connect(relay).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
                         currency: purchase.currency.toLowerCase(),
                         shopId: shop.shopId,
-                        account: userWallets[purchase.userIndex].address,
+                        account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
-                await expect(consumerContract.connect(relay).closeNewLoyaltyPayment(paymentId, true)).to.emit(
-                    consumerContract,
-                    "LoyaltyPaymentEvent"
-                );
+                await expect(
+                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const rate = await currencyContract.get(shop.currency);
                 const shopInfo2 = await shopContract.shopOf(shop.shopId);
@@ -3118,7 +3087,7 @@ describe("Test for Ledger", () => {
                     .withNamedArgs({
                         shopId: shop.shopId,
                         amount: amount2,
-                        account: shopWallets[shopIndex].address,
+                        account: deployments.accounts.shops[shopIndex].address,
                         withdrawId: 1,
                     });
                 const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
@@ -3141,7 +3110,7 @@ describe("Test for Ledger", () => {
                     .withNamedArgs({
                         shopId: shop.shopId,
                         amount: amount2,
-                        account: shopWallets[shopIndex].address,
+                        account: deployments.accounts.shops[shopIndex].address,
                         withdrawId: 1,
                     });
                 const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
@@ -3156,37 +3125,37 @@ describe("Test for Ledger", () => {
                 shopId: "",
                 name: "Shop1",
                 currency: "krw",
-                wallet: shopWallets[0],
+                wallet: deployments.accounts.shops[0],
             },
             {
                 shopId: "",
                 name: "Shop2",
                 currency: "krw",
-                wallet: shopWallets[1],
+                wallet: deployments.accounts.shops[1],
             },
             {
                 shopId: "",
                 name: "Shop3",
                 currency: "krw",
-                wallet: shopWallets[2],
+                wallet: deployments.accounts.shops[2],
             },
             {
                 shopId: "",
                 name: "Shop4",
                 currency: "krw",
-                wallet: shopWallets[3],
+                wallet: deployments.accounts.shops[3],
             },
             {
                 shopId: "",
                 name: "Shop5",
                 currency: "krw",
-                wallet: shopWallets[4],
+                wallet: deployments.accounts.shops[4],
             },
             {
                 shopId: "",
                 name: "Shop6",
                 currency: "krw",
-                wallet: shopWallets[5],
+                wallet: deployments.accounts.shops[5],
             },
         ];
 
@@ -3201,46 +3170,50 @@ describe("Test for Ledger", () => {
         });
 
         it("Change Loyalty type of user 0", async () => {
-            const nonce = await ledgerContract.nonceOf(userWallets[0].address);
-            const signature = await ContractUtils.signLoyaltyType(userWallets[0], nonce);
-            await exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[0].address, signature);
+            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+            const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
+            await exchangerContract
+                .connect(deployments.accounts.certifier)
+                .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
         });
 
         it("Change Loyalty type of user 1", async () => {
-            const nonce = await ledgerContract.nonceOf(userWallets[1].address);
-            const signature = await ContractUtils.signLoyaltyType(userWallets[1], nonce);
-            await exchangerContract.connect(relay).changeToLoyaltyToken(userWallets[1].address, signature);
+            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[1].address);
+            const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[1], nonce);
+            await exchangerContract
+                .connect(deployments.accounts.certifier)
+                .changeToLoyaltyToken(deployments.accounts.users[1].address, signature);
         });
 
         it("Deposit token - Success", async () => {
-            const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
-            await tokenContract.connect(userWallets[0]).approve(ledgerContract.address, amount.value);
-            await expect(ledgerContract.connect(userWallets[0]).deposit(amount.value))
+            const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+            await tokenContract.connect(deployments.accounts.users[0]).approve(ledgerContract.address, amount.value);
+            await expect(ledgerContract.connect(deployments.accounts.users[0]).deposit(amount.value))
                 .to.emit(ledgerContract, "Deposited")
                 .withNamedArgs({
-                    account: userWallets[0].address,
+                    account: deployments.accounts.users[0].address,
                     depositedToken: amount.value,
                     balanceToken: oldTokenBalance.add(amount.value),
                 });
-            expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
+            expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
                 oldTokenBalance.add(amount.value)
             );
         });
 
         it("Transfer token - Insufficient balance", async () => {
             const transferAmount = amount.value.mul(2);
-            const nonce = await ledgerContract.nonceOf(userWallets[0].address);
+            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
             const message = await ContractUtils.getTransferMessage(
-                userWallets[0].address,
-                userWallets[1].address,
+                deployments.accounts.users[0].address,
+                deployments.accounts.users[1].address,
                 transferAmount,
                 nonce
             );
-            const signature = ContractUtils.signMessage(userWallets[0], message);
+            const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
                 transferContract.transferToken(
-                    userWallets[0].address,
-                    userWallets[1].address,
+                    deployments.accounts.users[0].address,
+                    deployments.accounts.users[1].address,
                     transferAmount,
                     signature
                 )
@@ -3248,33 +3221,33 @@ describe("Test for Ledger", () => {
         });
 
         it("Transfer token", async () => {
-            const oldTokenBalance0 = await ledgerContract.tokenBalanceOf(userWallets[0].address);
-            const oldTokenBalance1 = await ledgerContract.tokenBalanceOf(userWallets[1].address);
+            const oldTokenBalance0 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+            const oldTokenBalance1 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[1].address);
             const transferAmount = oldTokenBalance0;
-            const nonce = await ledgerContract.nonceOf(userWallets[0].address);
+            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
             const message = await ContractUtils.getTransferMessage(
-                userWallets[0].address,
-                userWallets[1].address,
+                deployments.accounts.users[0].address,
+                deployments.accounts.users[1].address,
                 transferAmount,
                 nonce
             );
-            const signature = ContractUtils.signMessage(userWallets[0], message);
+            const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
                 transferContract.transferToken(
-                    userWallets[0].address,
-                    userWallets[1].address,
+                    deployments.accounts.users[0].address,
+                    deployments.accounts.users[1].address,
                     transferAmount,
                     signature
                 )
             )
                 .emit(transferContract, "TransferredLoyaltyToken")
                 .withNamedArgs({
-                    from: userWallets[0].address,
-                    to: userWallets[1].address,
+                    from: deployments.accounts.users[0].address,
+                    to: deployments.accounts.users[1].address,
                     amount: transferAmount,
                 });
-            const newTokenBalance0 = await ledgerContract.tokenBalanceOf(userWallets[0].address);
-            const newTokenBalance1 = await ledgerContract.tokenBalanceOf(userWallets[1].address);
+            const newTokenBalance0 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+            const newTokenBalance1 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[1].address);
             expect(newTokenBalance0).to.deep.equal(oldTokenBalance0.sub(transferAmount));
             expect(newTokenBalance1).to.deep.equal(oldTokenBalance1.add(transferAmount));
         });

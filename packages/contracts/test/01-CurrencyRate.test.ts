@@ -5,60 +5,32 @@ import { ethers, upgrades, waffle } from "hardhat";
 
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
-import { CurrencyRate, Token, Validator } from "../typechain-types";
+import { CurrencyRate, ERC20, Validator } from "../typechain-types";
 
 import assert from "assert";
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
+import { Deployments } from "./helper/Deployments";
 
 chai.use(solidity);
 
 describe("Test for CurrencyRate", () => {
-    const provider = waffle.provider;
-    const [deployer, validator1, validator2, validator3, user1] = provider.getWallets();
-
-    const validators = [validator1, validator2, validator3];
+    const deployments = new Deployments();
     let validatorContract: Validator;
-    let tokenContract: Token;
+    let tokenContract: ERC20;
     let currencyRateContract: CurrencyRate;
 
     const amount = Amount.make(100_000, 18);
 
     before(async () => {
-        const tokenFactory = await ethers.getContractFactory("Token");
-        tokenContract = (await tokenFactory.connect(deployer).deploy(deployer.address, "Sample", "SAM")) as Token;
-        await tokenContract.deployed();
-        await tokenContract.deployTransaction.wait();
-        for (const elem of validators) {
-            await tokenContract.connect(deployer).transfer(elem.address, amount.value);
-        }
+        await deployments.doDeployValidator();
 
-        const validatorFactory = await ethers.getContractFactory("Validator");
-        validatorContract = (await upgrades.deployProxy(
-            validatorFactory.connect(deployer),
-            [tokenContract.address, validators.map((m) => m.address)],
-            {
-                initializer: "initialize",
-                kind: "uups",
-            }
-        )) as Validator;
-        await validatorContract.deployed();
-        await validatorContract.deployTransaction.wait();
-
-        for (const elem of validators) {
-            await tokenContract.connect(elem).approve(validatorContract.address, amount.value);
-            await expect(validatorContract.connect(elem).deposit(amount.value))
-                .to.emit(validatorContract, "DepositedForValidator")
-                .withArgs(elem.address, amount.value, amount.value);
-            const item = await validatorContract.validatorOf(elem.address);
-            assert.deepStrictEqual(item.validator, elem.address);
-            assert.deepStrictEqual(item.status, 1);
-            assert.deepStrictEqual(item.balance, amount.value);
-        }
+        tokenContract = deployments.getContract("TestKIOS") as ERC20;
+        validatorContract = deployments.getContract("Validator") as Validator;
 
         const currencyRateFactory = await ethers.getContractFactory("CurrencyRate");
         currencyRateContract = (await upgrades.deployProxy(
-            currencyRateFactory.connect(deployer),
+            currencyRateFactory.connect(deployments.accounts.deployer),
             [validatorContract.address, await tokenContract.symbol()],
             {
                 initializer: "initialize",
@@ -86,15 +58,15 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [validator1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
-            "1174"
-        );
+        const signatures = [deployments.accounts.validators[0]].map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+        ).to.be.revertedWith("1174");
     });
 
     it("Set Array - revert", async () => {
@@ -114,15 +86,17 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [validator1, validator1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
-            "1174"
+        const signatures = [deployments.accounts.validators[0], deployments.accounts.validators[0]].map((m) =>
+            ContractUtils.signMessage(m, message)
         );
+        await expect(
+            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+        ).to.be.revertedWith("1174");
     });
 
     it("Set Array - revert", async () => {
@@ -142,15 +116,17 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [validator1, user1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
-            "1174"
+        const signatures = [deployments.accounts.validators[0], deployments.accounts.users[0]].map((m) =>
+            ContractUtils.signMessage(m, message)
         );
+        await expect(
+            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+        ).to.be.revertedWith("1174");
     });
 
     it("Set Array - revert", async () => {
@@ -170,15 +146,17 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [deployer, user1].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
-            "1174"
+        const signatures = [deployments.accounts.deployer, deployments.accounts.users[0]].map((m) =>
+            ContractUtils.signMessage(m, message)
         );
+        await expect(
+            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+        ).to.be.revertedWith("1174");
     });
 
     it("Set Array", async () => {
@@ -198,13 +176,15 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [validator1, validator2].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures))
+        const signatures = [deployments.accounts.validators[0], deployments.accounts.validators[1]].map((m) =>
+            ContractUtils.signMessage(m, message)
+        );
+        await expect(currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures))
             .to.emit(currencyRateContract, "SetRate")
             .withNamedArgs({ currency: rates[0].symbol, rate: rates[0].rate })
             .to.emit(currencyRateContract, "SetRate")
@@ -232,15 +212,20 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [validator1, validator2, user1, deployer].map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
-            "1173"
-        );
+        const signatures = [
+            deployments.accounts.validators[0],
+            deployments.accounts.validators[1],
+            deployments.accounts.users[0],
+            deployments.accounts.deployer,
+        ].map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+        ).to.be.revertedWith("1173");
     });
 
     it("Set Array - revert", async () => {
@@ -260,20 +245,22 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: multiple.mul(150),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures)).to.be.revertedWith(
-            "1171"
-        );
+        const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+        await expect(
+            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+        ).to.be.revertedWith("1171");
     });
 
     it("Get Fail - abc", async () => {
         const currency = "abc";
-        await expect(currencyRateContract.connect(validators[0]).get(currency)).to.be.revertedWith("1211");
+        await expect(currencyRateContract.connect(deployments.accounts.validators[0]).get(currency)).to.be.revertedWith(
+            "1211"
+        );
     });
 
     it("Function", async () => {
@@ -298,8 +285,8 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = validators.map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(validators[0]).set(height, rates, signatures))
+        const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+        await expect(currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures))
             .to.emit(currencyRateContract, "SetRate")
             .withNamedArgs({ currency: rates[0].symbol, rate: rates[0].rate })
             .to.emit(currencyRateContract, "SetRate")

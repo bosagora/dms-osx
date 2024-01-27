@@ -17,13 +17,13 @@ import {
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
+    ERC20DelegatedTransfer,
     Ledger,
     LoyaltyConsumer,
     LoyaltyExchanger,
     LoyaltyProvider,
     PhoneLinkCollection,
     Shop,
-    Token,
     Validator,
 } from "../typechain-types";
 
@@ -52,7 +52,7 @@ describe("Test of Server", function () {
     const deployments = new Deployments();
 
     let validatorContract: Validator;
-    let tokenContract: Token;
+    let tokenContract: ERC20DelegatedTransfer;
     let linkContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopContract: Shop;
@@ -123,7 +123,7 @@ describe("Test of Server", function () {
             await deployments.doDeploy();
 
             validatorContract = deployments.getContract("Validator") as Validator;
-            tokenContract = deployments.getContract("Token") as Token;
+            tokenContract = deployments.getContract("TestKIOS") as ERC20DelegatedTransfer;
             ledgerContract = deployments.getContract("Ledger") as Ledger;
             linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
             consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
@@ -181,10 +181,13 @@ describe("Test of Server", function () {
         });
 
         it("Transfer token", async () => {
-            const addresses = userData.map((m: { address: string }) => m.address);
-            await tokenContract.connect(deployments.accounts.owner).multiTransfer(addresses, amount.value);
-            const addresses2 = shopData.map((m: { address: string }) => m.address);
-            await tokenContract.connect(deployments.accounts.owner).multiTransfer(addresses2, amount.value);
+            for (const account of userData) {
+                await tokenContract.connect(deployments.accounts.owner).transfer(account.address, amount.value);
+            }
+
+            for (const account of shopData) {
+                await tokenContract.connect(deployments.accounts.owner).transfer(account.address, amount.value);
+            }
         });
 
         it("Change loyalty type", async () => {

@@ -2,7 +2,7 @@ import { defaultAbiCoder, Interface } from "@ethersproject/abi";
 import { Signer } from "@ethersproject/abstract-signer";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { arrayify, BytesLike } from "@ethersproject/bytes";
-import { ContractReceipt } from "@ethersproject/contracts";
+import { ContractReceipt, ContractTransaction } from "@ethersproject/contracts";
 import { id } from "@ethersproject/hash";
 import { keccak256 } from "@ethersproject/keccak256";
 import { Log } from "@ethersproject/providers";
@@ -492,6 +492,51 @@ export class ContractUtils {
             [height, rates.length, messages]
         );
         return arrayify(keccak256(encodedResult));
+    }
+
+    public static async getEventValue(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<string | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field].toString();
+        }
+        return undefined;
+    }
+
+    public static async getEventValueBigNumber(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<BigNumber | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field];
+        }
+        return undefined;
+    }
+
+    public static async getEventValueString(
+        tx: ContractTransaction,
+        iface: Interface,
+        event: string,
+        field: string
+    ): Promise<string | undefined> {
+        const contractReceipt = await tx.wait();
+        const log = ContractUtils.findLog(contractReceipt, iface, event);
+        if (log !== undefined) {
+            const parsedLog = iface.parseLog(log);
+            return parsedLog.args[field];
+        }
+        return undefined;
     }
 
     public static zeroGWEI(value: BigNumber): BigNumber {

@@ -393,7 +393,40 @@ function getAccounts() {
         accounts.push(process.env.LINK_VALIDATOR3);
     }
 
-    while (accounts.length < 50) {
+    if (
+        process.env.TOKEN_OWNER1 !== undefined &&
+        process.env.TOKEN_OWNER1.trim() !== "" &&
+        reg_bytes64.test(process.env.TOKEN_OWNER1)
+    ) {
+        accounts.push(process.env.TOKEN_OWNER1);
+    } else {
+        process.env.TOKEN_OWNER1 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.TOKEN_OWNER1);
+    }
+
+    if (
+        process.env.TOKEN_OWNER2 !== undefined &&
+        process.env.TOKEN_OWNER2.trim() !== "" &&
+        reg_bytes64.test(process.env.TOKEN_OWNER2)
+    ) {
+        accounts.push(process.env.TOKEN_OWNER2);
+    } else {
+        process.env.TOKEN_OWNER2 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.TOKEN_OWNER2);
+    }
+
+    if (
+        process.env.TOKEN_OWNER3 !== undefined &&
+        process.env.TOKEN_OWNER3.trim() !== "" &&
+        reg_bytes64.test(process.env.TOKEN_OWNER3)
+    ) {
+        accounts.push(process.env.TOKEN_OWNER3);
+    } else {
+        process.env.TOKEN_OWNER3 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.TOKEN_OWNER3);
+    }
+
+    while (accounts.length < 70) {
         accounts.push(Wallet.createRandom().privateKey);
     }
 
