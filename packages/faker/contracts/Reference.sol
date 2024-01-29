@@ -13,7 +13,3 @@ import "dms-osx-artifacts/contracts/ledger/Ledger.sol";
 import "dms-osx-artifacts/contracts/shop/Shop.sol";
 import "dms-osx-artifacts/contracts/validator/Validator.sol";
 import "dms-osx-artifacts/contracts/token/TestKIOS.sol";
-
-import "multisig-wallet-contracts/contracts/MultiSigWalletFactory.sol";
-import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
-import "kios-token-contracts/contracts/KIOS.sol";

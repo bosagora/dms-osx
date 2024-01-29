@@ -4,7 +4,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
 
 import { HardhatAccount } from "../../src/HardhatAccount";
-import { Amount } from "../../src/utils/Amount";
+import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
     CurrencyRate,
@@ -282,18 +282,24 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
     const contract = deployment.getContract("KIOS") as KIOS;
 
     {
-        const amount = Amount.make(1_000_000_000, 18).value;
+        const amount = BOACoin.make(1_000_000_000);
 
-        const encodedData = contract.interface.encodeFunctionData("transfer", [accounts.owner.address, amount]);
+        const encodedData = contract.interface.encodeFunctionData("transfer", [accounts.owner.address, amount.value]);
         const wallet = deployment.getContract("MultiSigWallet") as MultiSigWallet;
         const transactionId = await ContractUtils.getEventValueBigNumber(
-            await wallet.connect(accounts.tokenOwners[0]).submitTransaction(contract.address, 0, encodedData),
+            await wallet
+                .connect(accounts.tokenOwners[0])
+                .submitTransaction(
+                    "Transfer",
+                    `Transfer ${amount.toDisplayString()} to ${accounts.owner.address}`,
+                    contract.address,
+                    0,
+                    encodedData
+                ),
             wallet.interface,
             "Submission",
             "transactionId"
         );
-
-        console.log(`transactionId: ${transactionId}`);
 
         if (transactionId === undefined) {
             console.error(`Failed to submit transaction for token transfer`);
@@ -305,7 +311,6 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
                 "transactionId"
             );
 
-            console.log(`executedTransactionId: ${executedTransactionId}`);
             if (executedTransactionId === undefined || !transactionId.eq(executedTransactionId)) {
                 console.error(`Failed to confirm transaction for token transfer`);
             }
@@ -718,7 +723,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 const tx10 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
                     .connect(signer)
                     .changeToLoyaltyToken(user.address, signature);
-                console.log(`Deposit user's amount (tx: ${tx10.hash})...`);
+                console.log(`Change user's loyalty type (tx: ${tx10.hash})...`);
                 await tx10.wait();
 
                 if (
@@ -793,7 +798,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 const tx10 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
                     .connect(signer)
                     .changeToLoyaltyToken(user.address, signature);
-                console.log(`Deposit user's amount (tx: ${tx10.hash})...`);
+                console.log(`Change user's loyalty type (tx: ${tx10.hash})...`);
                 await tx10.wait();
 
                 if (
@@ -838,7 +843,7 @@ async function main() {
     deployments.addDeployer(deployShop);
     deployments.addDeployer(deployLedger);
 
-    await deployments.loadContractInfo();
+    // await deployments.loadContractInfo();
 
     await deployments.doDeploy();
 

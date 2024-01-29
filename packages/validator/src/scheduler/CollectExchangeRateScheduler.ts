@@ -106,7 +106,7 @@ export class CollectExchangeRateScheduler extends Scheduler {
             if (data.data[0].ticker === undefined) throw new Error("Error, Can not found token symbol");
 
             return {
-                symbol: "the9",
+                symbol: "KIOS",
                 rate: (BigInt(Math.floor(data.data[0].ticker.latest * 10000)) * usd) / 10000n,
             };
         } else throw new Error("Error, Load Exchange Rate");

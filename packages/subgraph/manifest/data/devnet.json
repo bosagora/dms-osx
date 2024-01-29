@@ -4,32 +4,32 @@
     "dataSources": {
         "Ledger": {
             "name": "Ledger",
-            "address": "0x0B92368a93549FD57e42bb29849438F72DAEf1F6",
+            "address": "0x0c6B5326058F28Daf7D9ED40Ff2e3755a0bb664d",
             "startBlock": 1
         },
         "LoyaltyProvider": {
             "name": "LoyaltyProvider",
-            "address": "0xf9F610108d001Bd1A672f63E9B9b78d723ac6Ced",
+            "address": "0xDD91A65534847537c290FEbc721cf8457f860744",
             "startBlock": 1
         },
         "LoyaltyConsumer": {
             "name": "LoyaltyConsumer",
-            "address": "0xD9d2A3fA6A93EC688831969C286B91524735aa35",
+            "address": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
             "startBlock": 1
         },
         "LoyaltyExchanger": {
             "name": "LoyaltyExchanger",
-            "address": "0xdBD4c398031868829C5f08DCf168B157d3e03c62",
+            "address": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
             "startBlock": 1
         },
         "LoyaltyTransfer": {
             "name": "LoyaltyTransfer",
-            "address": "0xDBA8d7aD3A83ec87eA4de8122500E86EA2C46bed",
+            "address": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
             "startBlock": 1
         },
         "Shop": {
             "name": "Shop",
-            "address": "0xDb62De0aD297cfDa76EE80Cc909177aAF5C7f322",
+            "address": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
             "startBlock": 1
         }
     }
