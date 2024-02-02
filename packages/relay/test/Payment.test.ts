@@ -252,6 +252,7 @@ describe("Test of Server", function () {
                     shopId: shop.shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -700,6 +701,7 @@ describe("Test of Server", function () {
                     shopId: shop.shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -1083,6 +1085,7 @@ describe("Test of Server", function () {
                     shopId: shop.shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -1444,6 +1447,7 @@ describe("Test of Server", function () {
                     shopId: shop.shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -1699,6 +1703,7 @@ describe("Test of Server", function () {
                     shopId: shop.shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -2072,6 +2077,7 @@ describe("Test of Server", function () {
                     shopId: shop.shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -2513,6 +2519,7 @@ describe("Test of Server", function () {
                 shopId: shop.shopId,
                 account: userAccount,
                 phone: phoneHash,
+                sender: deployments.accounts.foundation.address,
             };
             const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
             const signatures = deployments.accounts.validators.map((m) =>

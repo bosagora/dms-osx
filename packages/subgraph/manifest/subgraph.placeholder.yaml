@@ -54,7 +54,7 @@ dataSources:
         - name: LoyaltyProvider
           file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyProvider.sol/LoyaltyProvider.json
       eventHandlers:
-        - event: SavedPurchase(string,uint256,uint256,string,bytes32,address,bytes32)
+        - event: SavedPurchase(string,uint256,uint256,string,bytes32,address,bytes32,address)
           handler: handleSavedPurchase
       file: ./src/ledger.ts
 

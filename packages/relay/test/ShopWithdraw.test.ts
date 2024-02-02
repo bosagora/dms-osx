@@ -273,6 +273,7 @@ describe("Test for Shop", () => {
                         shopId: shopData[purchase.shopIndex].shopId,
                         account: userAccount,
                         phone: phoneHash,
+                        sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = deployments.accounts.validators.map((m) =>
@@ -291,7 +292,8 @@ describe("Test for Shop", () => {
                             purchase.currency.toLowerCase(),
                             shopData[purchase.shopIndex].shopId,
                             userAccount,
-                            phoneHash
+                            phoneHash,
+                            deployments.accounts.foundation.address
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({

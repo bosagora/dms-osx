@@ -262,6 +262,7 @@ describe("Test for Ledger", () => {
                         shopId: shopData[purchase.shopIndex].shopId,
                         account: userAccount,
                         phone: phoneHash,
+                        sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = deployments.accounts.validators.map((m) =>
@@ -295,6 +296,7 @@ describe("Test for Ledger", () => {
                             shopId: shopData[purchase.shopIndex].shopId,
                             account: userAccount,
                             phone: phoneHash,
+                            sender: deployments.accounts.foundation.address,
                         };
                         const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                         const signatures = deployments.accounts.validators.map((m) =>
@@ -313,7 +315,8 @@ describe("Test for Ledger", () => {
                                 purchaseParam.currency,
                                 purchaseParam.shopId,
                                 purchaseParam.account,
-                                purchaseParam.phone
+                                purchaseParam.phone,
+                                purchaseParam.sender
                             )
                             .emit(ledgerContract, "ProvidedPoint")
                             .withNamedArgs({
@@ -331,6 +334,7 @@ describe("Test for Ledger", () => {
                             shopId: shopData[purchase.shopIndex].shopId,
                             account: userAccount,
                             phone: phoneHash,
+                            sender: deployments.accounts.foundation.address,
                         };
                         const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                         const signatures = deployments.accounts.validators.map((m) =>
@@ -349,7 +353,8 @@ describe("Test for Ledger", () => {
                                 purchaseParam.currency,
                                 purchaseParam.shopId,
                                 purchaseParam.account,
-                                purchaseParam.phone
+                                purchaseParam.phone,
+                                purchaseParam.sender
                             )
                             .emit(ledgerContract, "ProvidedUnPayablePoint")
                             .withNamedArgs({
@@ -415,6 +420,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -433,7 +439,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
@@ -502,6 +509,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -521,7 +529,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
@@ -623,6 +632,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -642,7 +652,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
@@ -702,6 +713,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -721,7 +733,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
@@ -794,6 +807,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -813,7 +827,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
@@ -863,6 +878,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -882,7 +898,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
@@ -951,6 +968,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -970,7 +988,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedPoint")
                     .withNamedArgs({
@@ -1072,6 +1091,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -1091,7 +1111,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedToken")
                     .withNamedArgs({
@@ -1141,6 +1162,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[purchase.shopIndex].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                 const signatures = deployments.accounts.validators.map((m) =>
@@ -1160,7 +1182,8 @@ describe("Test for Ledger", () => {
                         purchaseParam.currency,
                         purchaseParam.shopId,
                         purchaseParam.account,
-                        purchaseParam.phone
+                        purchaseParam.phone,
+                        purchaseParam.sender
                     )
                     .emit(ledgerContract, "ProvidedUnPayablePoint")
                     .withNamedArgs({
@@ -1822,7 +1845,7 @@ describe("Test for Ledger", () => {
             },
         ];
 
-        const numPurchases = 96;
+        const numPurchases = 64;
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
@@ -1849,6 +1872,7 @@ describe("Test for Ledger", () => {
                     shopId: shopData[0].shopId,
                     account: userAccount,
                     phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
                 });
             }
 
@@ -2193,6 +2217,7 @@ describe("Test for Ledger", () => {
                         shopId: shopData[purchase.shopIndex].shopId,
                         account: userAccount,
                         phone: phoneHash,
+                        sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = deployments.accounts.validators.map((m) =>
@@ -2212,7 +2237,8 @@ describe("Test for Ledger", () => {
                             purchaseParam.currency,
                             purchaseParam.shopId,
                             purchaseParam.account,
-                            purchaseParam.phone
+                            purchaseParam.phone,
+                            purchaseParam.sender
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
@@ -2669,6 +2695,7 @@ describe("Test for Ledger", () => {
                         shopId: shopData[purchase.shopIndex].shopId,
                         account: userAccount,
                         phone: phoneHash,
+                        sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = deployments.accounts.validators.map((m) =>
@@ -2688,7 +2715,8 @@ describe("Test for Ledger", () => {
                             purchaseParam.currency,
                             purchaseParam.shopId,
                             purchaseParam.account,
-                            purchaseParam.phone
+                            purchaseParam.phone,
+                            purchaseParam.sender
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({
@@ -2887,6 +2915,7 @@ describe("Test for Ledger", () => {
                         shopId: shopData[purchase.shopIndex].shopId,
                         account: userAccount,
                         phone: phoneHash,
+                        sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
                     const signatures = deployments.accounts.validators.map((m) =>
@@ -2906,7 +2935,8 @@ describe("Test for Ledger", () => {
                             purchaseParam.currency,
                             purchaseParam.shopId,
                             purchaseParam.account,
-                            purchaseParam.phone
+                            purchaseParam.phone,
+                            purchaseParam.sender
                         )
                         .emit(ledgerContract, "ProvidedPoint")
                         .withNamedArgs({

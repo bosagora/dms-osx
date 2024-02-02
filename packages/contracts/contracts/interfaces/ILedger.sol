@@ -14,7 +14,8 @@ interface ILedger {
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) external;
 
     function provideUnPayablePoint(
@@ -23,7 +24,8 @@ interface ILedger {
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) external;
 
     function provideToken(
@@ -32,7 +34,8 @@ interface ILedger {
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) external;
 
     function changeToPayablePoint(bytes32 _phone, address _account) external;
