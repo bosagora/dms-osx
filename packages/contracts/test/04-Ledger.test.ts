@@ -115,6 +115,8 @@ describe("Test for Ledger", () => {
     };
 
     let requestId: string;
+    let secret: string;
+    let secretLock: string;
 
     context("Save Purchase Data & Pay (point, token)", () => {
         const userData: IUserData[] = [
@@ -1268,6 +1270,9 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
+
+                [secret, secretLock] = ContractUtils.getSecret();
+
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1277,6 +1282,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex + 1].address,
                         signature,
+                        secretLock,
                     })
                 ).to.be.revertedWith("1501");
             });
@@ -1304,6 +1310,8 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
+
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1313,6 +1321,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.be.revertedWith("1511");
             });
@@ -1343,6 +1352,8 @@ describe("Test for Ledger", () => {
                 const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
+
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1352,6 +1363,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1368,7 +1380,9 @@ describe("Test for Ledger", () => {
                 expect(paymentData.feeValue).to.deep.equal(feeAmount);
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const newFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
@@ -1411,6 +1425,7 @@ describe("Test for Ledger", () => {
                     deployments.accounts.users[purchase.userIndex].address
                 );
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1420,6 +1435,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1444,7 +1460,9 @@ describe("Test for Ledger", () => {
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.sub(purchaseAmount.add(feeAmount)).toString());
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const newFeeBalance2 = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
@@ -1467,10 +1485,11 @@ describe("Test for Ledger", () => {
                     purchase.purchaseId,
                     nonce
                 );
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract
                         .connect(deployments.accounts.certifier)
-                        .openCancelLoyaltyPayment(paymentId, signature)
+                        .openCancelLoyaltyPayment(paymentId, secretLock, signature)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const newBalance1 = await ledgerContract.pointBalanceOf(
@@ -1479,7 +1498,9 @@ describe("Test for Ledger", () => {
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.toString());
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeCancelLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeCancelLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const newBalance2 = await ledgerContract.pointBalanceOf(
@@ -1513,6 +1534,7 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1522,6 +1544,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex + 1].address,
                         signature,
+                        secretLock,
                     })
                 ).to.be.revertedWith("1501");
             });
@@ -1549,6 +1572,7 @@ describe("Test for Ledger", () => {
                     shop.shopId,
                     nonce
                 );
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1558,6 +1582,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.be.revertedWith("1511");
             });
@@ -1592,6 +1617,7 @@ describe("Test for Ledger", () => {
                 const feeAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(await ledgerContract.getFee()).div(10000));
                 const feeToken = ContractUtils.zeroGWEI(feeAmount.mul(multiple).div(price));
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1601,6 +1627,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
                 expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
@@ -1620,7 +1647,9 @@ describe("Test for Ledger", () => {
                 expect(paymentData.feeValue).to.deep.equal(feeAmount);
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
@@ -1670,6 +1699,7 @@ describe("Test for Ledger", () => {
                     deployments.accounts.users[purchase.userIndex].address
                 );
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -1679,6 +1709,7 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
                 expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
@@ -1708,7 +1739,9 @@ describe("Test for Ledger", () => {
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.sub(tokenAmount.add(feeToken)).toString());
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
@@ -1740,10 +1773,11 @@ describe("Test for Ledger", () => {
                     nonce
                 );
 
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract
                         .connect(deployments.accounts.certifier)
-                        .openCancelLoyaltyPayment(paymentId, signature)
+                        .openCancelLoyaltyPayment(paymentId, secretLock, signature)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const newBalance1 = await ledgerContract.tokenBalanceOf(
@@ -1752,7 +1786,9 @@ describe("Test for Ledger", () => {
                 expect(newBalance1.toString()).to.deep.equal(oldBalance.toString());
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeCancelLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeCancelLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 expect(await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).to.deep.equal(
@@ -2267,6 +2303,7 @@ describe("Test for Ledger", () => {
                     nonce
                 );
 
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -2276,11 +2313,14 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 )
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
@@ -2364,6 +2404,7 @@ describe("Test for Ledger", () => {
                     nonce
                 );
 
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -2373,11 +2414,14 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo2 = await shopContract.shopOf(shop.shopId);
@@ -2931,6 +2975,7 @@ describe("Test for Ledger", () => {
                     nonce
                 );
 
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -2940,11 +2985,14 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 )
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
@@ -3029,6 +3077,7 @@ describe("Test for Ledger", () => {
                     nonce
                 );
 
+                [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -3038,11 +3087,14 @@ describe("Test for Ledger", () => {
                         shopId: shop.shopId,
                         account: deployments.accounts.users[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const rate = await currencyContract.get(shop.currency);

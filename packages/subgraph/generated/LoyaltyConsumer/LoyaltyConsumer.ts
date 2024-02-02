@@ -113,8 +113,8 @@ export class LoyaltyPaymentEventPaymentStruct extends ethereum.Tuple {
     return this[4].toAddress();
   }
 
-  get creator(): Address {
-    return this[5].toAddress();
+  get secretLock(): Bytes {
+    return this[5].toBytes();
   }
 
   get timestamp(): BigInt {
@@ -265,8 +265,8 @@ export class LoyaltyConsumer__loyaltyPaymentOfResultValue0Struct extends ethereu
     return this[4].toAddress();
   }
 
-  get creator(): Address {
-    return this[5].toAddress();
+  get secretLock(): Bytes {
+    return this[5].toBytes();
   }
 
   get timestamp(): BigInt {
@@ -343,7 +343,7 @@ export class LoyaltyConsumer extends ethereum.SmartContract {
   ): LoyaltyConsumer__loyaltyPaymentOfResultValue0Struct {
     let result = super.call(
       "loyaltyPaymentOf",
-      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,bytes32,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromFixedBytes(_paymentId)]
     );
 
@@ -357,7 +357,7 @@ export class LoyaltyConsumer extends ethereum.SmartContract {
   ): ethereum.CallResult<LoyaltyConsumer__loyaltyPaymentOfResultValue0Struct> {
     let result = super.tryCall(
       "loyaltyPaymentOf",
-      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,address,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
+      "loyaltyPaymentOf(bytes32):((bytes32,string,string,bytes32,address,bytes32,uint256,uint8,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8))",
       [ethereum.Value.fromFixedBytes(_paymentId)]
     );
     if (result.reverted) {
@@ -427,8 +427,12 @@ export class CloseCancelLoyaltyPaymentCall__Inputs {
     return this._call.inputValues[0].value.toBytes();
   }
 
+  get _secret(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+
   get _confirm(): boolean {
-    return this._call.inputValues[1].value.toBoolean();
+    return this._call.inputValues[2].value.toBoolean();
   }
 }
 
@@ -461,8 +465,12 @@ export class CloseNewLoyaltyPaymentCall__Inputs {
     return this._call.inputValues[0].value.toBytes();
   }
 
+  get _secret(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+
   get _confirm(): boolean {
-    return this._call.inputValues[1].value.toBoolean();
+    return this._call.inputValues[2].value.toBoolean();
   }
 }
 
@@ -525,8 +533,12 @@ export class OpenCancelLoyaltyPaymentCall__Inputs {
     return this._call.inputValues[0].value.toBytes();
   }
 
-  get _signature(): Bytes {
+  get _secretLock(): Bytes {
     return this._call.inputValues[1].value.toBytes();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[2].value.toBytes();
   }
 }
 
@@ -597,6 +609,10 @@ export class OpenNewLoyaltyPaymentCallDataStruct extends ethereum.Tuple {
 
   get signature(): Bytes {
     return this[6].toBytes();
+  }
+
+  get secretLock(): Bytes {
+    return this[7].toBytes();
   }
 }
 

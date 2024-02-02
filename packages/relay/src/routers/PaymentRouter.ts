@@ -247,8 +247,8 @@ export class PaymentRouter {
      * 트팬잭션을 중계할 때 사용될 서명자
      * @private
      */
-    private async getRelaySigner(account?: string): Promise<ISignerItem> {
-        return this._relaySigners.getSigner(account);
+    private async getRelaySigner(): Promise<ISignerItem> {
+        return this._relaySigners.getSigner();
     }
 
     /***
@@ -655,6 +655,7 @@ export class PaymentRouter {
             totalValue = paidValue.add(feeValue);
 
             const paymentId = await this.getPaymentId(account);
+            const [secret, secretLock] = ContractUtils.getSecret();
             const item: LoyaltyPaymentTaskData = {
                 paymentId,
                 purchaseId,
@@ -662,7 +663,8 @@ export class PaymentRouter {
                 currency,
                 shopId,
                 account,
-                certifier: "",
+                secret,
+                secretLock,
                 loyaltyType,
                 paidPoint,
                 paidToken,
@@ -809,10 +811,8 @@ export class PaymentRouter {
                                 shopId: item.shopId,
                                 account: item.account,
                                 signature,
+                                secretLock: item.secretLock,
                             });
-
-                            item.certifier = signerItem.wallet.address;
-                            await this._storage.updateCertifier(item.paymentId, item.certifier);
 
                             item.openNewTxId = tx.hash;
                             item.openNewTimestamp = ContractUtils.getTimeStamp();
@@ -918,7 +918,7 @@ export class PaymentRouter {
         if (item === undefined) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
         } else {
-            const signerItem = await this.getRelaySigner(item.certifier);
+            const signerItem = await this.getRelaySigner();
             try {
                 const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
@@ -1020,7 +1020,7 @@ export class PaymentRouter {
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .closeNewLoyaltyPayment(item.paymentId, confirm);
+                            .closeNewLoyaltyPayment(item.paymentId, item.secret, confirm);
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {
@@ -1187,6 +1187,7 @@ export class PaymentRouter {
                 if (item.paymentStatus !== LoyaltyPaymentTaskStatus.CLOSED_NEW) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2022"));
                 }
+
                 item.paymentStatus = LoyaltyPaymentTaskStatus.OPENED_CANCEL;
                 item.openCancelTimestamp = ContractUtils.getTimeStamp();
                 await this._storage.updateOpenCancelTimestamp(
@@ -1194,6 +1195,9 @@ export class PaymentRouter {
                     item.paymentStatus,
                     item.openCancelTimestamp
                 );
+                [item.secret, item.secretLock] = ContractUtils.getSecret();
+                await this._storage.updateSecret(item.paymentId, item.secret, item.secretLock);
+
                 const shopContract = await this.getShopContract();
                 const shopInfo = await shopContract.shopOf(item.shopId);
 
@@ -1265,7 +1269,7 @@ export class PaymentRouter {
         if (item === undefined) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
         } else {
-            const signerItem = await this.getRelaySigner(item.certifier);
+            const signerItem = await this.getRelaySigner();
             try {
                 if (
                     item.paymentStatus !== LoyaltyPaymentTaskStatus.OPENED_CANCEL &&
@@ -1310,7 +1314,7 @@ export class PaymentRouter {
                         try {
                             const tx = await contract
                                 .connect(signerItem.signer)
-                                .openCancelLoyaltyPayment(item.paymentId, signature);
+                                .openCancelLoyaltyPayment(item.paymentId, item.secretLock, signature);
 
                             item.openCancelTxId = tx.hash;
                             item.openCancelTimestamp = ContractUtils.getTimeStamp();
@@ -1417,7 +1421,7 @@ export class PaymentRouter {
         if (item === undefined) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
         } else {
-            const signerItem = await this.getRelaySigner(item.certifier);
+            const signerItem = await this.getRelaySigner();
             try {
                 const contract = await this.getConsumerContract();
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
@@ -1519,7 +1523,7 @@ export class PaymentRouter {
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .closeCancelLoyaltyPayment(item.paymentId, confirm);
+                            .closeCancelLoyaltyPayment(item.paymentId, item.secret, confirm);
 
                         const event = await this.waitPaymentLoyalty(contract, tx);
                         if (event !== undefined) {

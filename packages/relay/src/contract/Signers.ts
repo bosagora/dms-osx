@@ -35,36 +35,20 @@ export class RelaySigners {
      * 트팬잭션을 중계할 때 사용될 서명자
      * @private
      */
-    public async getSigner(account?: string): Promise<ISignerItem> {
+    public async getSigner(): Promise<ISignerItem> {
         let signerItem: ISignerItem | undefined;
-        let done = false;
 
-        if (account === undefined) {
-            const startTime = ContractUtils.getTimeStamp();
-            while (!done) {
-                const findIndex = this._signers.findIndex((m) => !m.using);
-                if (findIndex >= 0) {
-                    this._signers.push(...this._signers.splice(findIndex, 1));
-                    signerItem = this._signers[this._signers.length - 1];
-                    signerItem.using = true;
-                    break;
-                }
-                if (ContractUtils.getTimeStamp() - startTime > 10) break;
-                await ContractUtils.delay(1000);
+        const startTime = ContractUtils.getTimeStamp();
+        while (true) {
+            const findIndex = this._signers.findIndex((m) => !m.using);
+            if (findIndex >= 0) {
+                this._signers.push(...this._signers.splice(findIndex, 1));
+                signerItem = this._signers[this._signers.length - 1];
+                signerItem.using = true;
+                break;
             }
-        } else {
-            signerItem = this._signers.find((m) => m.wallet.address.toLowerCase() === account.toLowerCase());
-            if (signerItem !== undefined) {
-                const startTime = ContractUtils.getTimeStamp();
-                while (!done) {
-                    if (!signerItem.using) {
-                        signerItem.using = true;
-                        break;
-                    }
-                    if (ContractUtils.getTimeStamp() - startTime > 10) break;
-                    await ContractUtils.delay(1000);
-                }
-            }
+            if (ContractUtils.getTimeStamp() - startTime > 10) break;
+            await ContractUtils.delay(1000);
         }
 
         if (signerItem !== undefined) {
