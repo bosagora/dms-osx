@@ -57,7 +57,8 @@ export class Proposal extends NodeTask {
                         tx.currency.toLowerCase(),
                         tx.shopId,
                         tx.userAccount,
-                        tx.userPhoneHash
+                        tx.userPhoneHash,
+                        tx.sender
                     );
                     purchases.addItem(purchase);
                     ids.push(tx.purchaseId);

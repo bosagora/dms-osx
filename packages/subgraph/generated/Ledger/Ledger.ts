@@ -1080,6 +1080,10 @@ export class ProvidePointCall__Inputs {
   get _shopId(): Bytes {
     return this._call.inputValues[5].value.toBytes();
   }
+
+  get _sender(): Address {
+    return this._call.inputValues[6].value.toAddress();
+  }
 }
 
 export class ProvidePointCall__Outputs {
@@ -1130,6 +1134,10 @@ export class ProvideTokenCall__Inputs {
   get _shopId(): Bytes {
     return this._call.inputValues[5].value.toBytes();
   }
+
+  get _sender(): Address {
+    return this._call.inputValues[6].value.toAddress();
+  }
 }
 
 export class ProvideTokenCall__Outputs {
@@ -1179,6 +1187,10 @@ export class ProvideUnPayablePointCall__Inputs {
 
   get _shopId(): Bytes {
     return this._call.inputValues[5].value.toBytes();
+  }
+
+  get _sender(): Address {
+    return this._call.inputValues[6].value.toAddress();
   }
 }
 

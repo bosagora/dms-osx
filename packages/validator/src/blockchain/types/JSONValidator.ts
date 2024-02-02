@@ -134,9 +134,12 @@ export class JSONValidator {
                     phone: {
                         type: "string",
                     },
+                    sender: {
+                        type: "string",
+                    },
                 },
                 additionalProperties: false,
-                required: ["purchaseId", "amount", "loyalty", "currency", "shopId", "account", "phone"],
+                required: ["purchaseId", "amount", "loyalty", "currency", "shopId", "account", "phone", "sender"],
             },
         ],
         [

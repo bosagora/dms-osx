@@ -29,6 +29,7 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
         bytes32 shopId;
         address account;
         bytes32 phone;
+        address sender;
     }
 
     /// @notice 검증자가 추가될 때 발생되는 이벤트
@@ -39,7 +40,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
         string currency,
         bytes32 shopId,
         address account,
-        bytes32 phone
+        bytes32 phone,
+        address sender
     );
 
     function initialize(
@@ -108,15 +110,17 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
         // Get a hash of all the data
         bytes32[] memory messages = new bytes32[](_data.length);
         for (uint256 i = 0; i < _data.length; i++) {
+            PurchaseData memory data = _data[i];
             messages[i] = keccak256(
                 abi.encode(
-                    _data[i].purchaseId,
-                    _data[i].amount,
-                    _data[i].loyalty,
-                    _data[i].currency,
-                    _data[i].shopId,
-                    _data[i].account,
-                    _data[i].phone
+                    data.purchaseId,
+                    data.amount,
+                    data.loyalty,
+                    data.currency,
+                    data.shopId,
+                    data.account,
+                    data.phone,
+                    data.sender
                 )
             );
         }
@@ -158,7 +162,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                                 loyaltyValue,
                                 data.currency,
                                 data.purchaseId,
-                                data.shopId
+                                data.shopId,
+                                data.sender
                             );
                         } else {
                             ledgerContract.provideToken(
@@ -167,7 +172,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                                 loyaltyValue,
                                 data.currency,
                                 data.purchaseId,
-                                data.shopId
+                                data.shopId,
+                                data.sender
                             );
                         }
                         shopContract.addProvidedAmount(
@@ -184,7 +190,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                                 loyaltyValue,
                                 data.currency,
                                 data.purchaseId,
-                                data.shopId
+                                data.shopId,
+                                data.sender
                             );
                         } else {
                             if (ledgerContract.loyaltyTypeOf(account) == ILedger.LoyaltyType.POINT) {
@@ -194,7 +201,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                                     loyaltyValue,
                                     data.currency,
                                     data.purchaseId,
-                                    data.shopId
+                                    data.shopId,
+                                    data.sender
                                 );
                             } else {
                                 ledgerContract.provideToken(
@@ -203,7 +211,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                                     loyaltyValue,
                                     data.currency,
                                     data.purchaseId,
-                                    data.shopId
+                                    data.shopId,
+                                    data.sender
                                 );
                             }
                         }
@@ -223,7 +232,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                 data.currency,
                 data.shopId,
                 data.account,
-                data.phone
+                data.phone,
+                data.sender
             );
         }
     }

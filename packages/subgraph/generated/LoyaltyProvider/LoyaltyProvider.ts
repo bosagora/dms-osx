@@ -130,6 +130,10 @@ export class SavedPurchase__Params {
   get phone(): Bytes {
     return this._event.parameters[6].value.toBytes();
   }
+
+  get sender(): Address {
+    return this._event.parameters[7].value.toAddress();
+  }
 }
 
 export class Upgraded extends ethereum.Event {
@@ -340,6 +344,10 @@ export class SavePurchaseCall_dataStruct extends ethereum.Tuple {
 
   get phone(): Bytes {
     return this[6].toBytes();
+  }
+
+  get sender(): Address {
+    return this[7].toAddress();
   }
 }
 

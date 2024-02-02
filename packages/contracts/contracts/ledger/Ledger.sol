@@ -186,9 +186,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) external override onlyProvider {
-        _provideUnPayablePoint(_phone, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+        _provideUnPayablePoint(_phone, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId, _sender);
     }
 
     function _provideUnPayablePoint(
@@ -197,18 +198,20 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) internal {
-        unPayablePointBalances[_phone] += _loyaltyPoint;
-        emit ProvidedUnPayablePoint(
-            _phone,
-            _loyaltyPoint,
-            _loyaltyValue,
-            _currency,
-            unPayablePointBalances[_phone],
-            _purchaseId,
-            _shopId
-        );
+        if (_sender == foundationAccount) {
+            unPayablePointBalances[_phone] += _loyaltyPoint;
+        } else {
+            uint256 amountToken = currencyRateContract.convertPointToToken(_loyaltyPoint);
+            require(tokenBalances[_sender] >= amountToken, "1511");
+
+            unPayablePointBalances[_phone] += _loyaltyPoint;
+            tokenBalances[_sender] -= amountToken;
+        }
+        uint256 balance = unPayablePointBalances[_phone];
+        emit ProvidedUnPayablePoint(_phone, _loyaltyPoint, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
     }
 
     /// @notice 포인트를 지급합니다.
@@ -224,9 +227,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) external override onlyProvider {
-        _providePoint(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+        _providePoint(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId, _sender);
     }
 
     function _providePoint(
@@ -235,18 +239,20 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) internal {
-        pointBalances[_account] += _loyaltyPoint;
-        emit ProvidedPoint(
-            _account,
-            _loyaltyPoint,
-            _loyaltyValue,
-            _currency,
-            pointBalances[_account],
-            _purchaseId,
-            _shopId
-        );
+        if (_sender == foundationAccount) {
+            pointBalances[_account] += _loyaltyPoint;
+        } else {
+            uint256 amountToken = currencyRateContract.convertPointToToken(_loyaltyPoint);
+            require(tokenBalances[_sender] >= amountToken, "1511");
+
+            pointBalances[_account] += _loyaltyPoint;
+            tokenBalances[_sender] -= amountToken;
+        }
+        uint256 balance = pointBalances[_account];
+        emit ProvidedPoint(_account, _loyaltyPoint, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
     }
 
     /// @notice 토큰을 지급합니다.
@@ -262,9 +268,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) external override onlyProvider {
-        _provideToken(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId);
+        _provideToken(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId, _sender);
     }
 
     function _provideToken(
@@ -273,13 +280,20 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 _loyaltyValue,
         string calldata _currency,
         string calldata _purchaseId,
-        bytes32 _shopId
+        bytes32 _shopId,
+        address _sender
     ) internal {
         uint256 amountToken = currencyRateContract.convertPointToToken(_loyaltyPoint);
 
-        require(tokenBalances[foundationAccount] >= amountToken, "1510");
-        tokenBalances[_account] += amountToken;
-        tokenBalances[foundationAccount] -= amountToken;
+        if (_sender == foundationAccount) {
+            require(tokenBalances[foundationAccount] >= amountToken, "1510");
+            tokenBalances[_account] += amountToken;
+            tokenBalances[foundationAccount] -= amountToken;
+        } else {
+            require(tokenBalances[_sender] >= amountToken, "1511");
+            tokenBalances[_account] += amountToken;
+            tokenBalances[_sender] -= amountToken;
+        }
         uint256 balance = tokenBalances[_account];
         emit ProvidedToken(_account, amountToken, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
     }

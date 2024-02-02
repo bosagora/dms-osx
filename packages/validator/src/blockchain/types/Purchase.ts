@@ -16,6 +16,7 @@ export class Purchase {
     public shopId: string;
     public account: string;
     public phone: string;
+    public sender: string;
 
     constructor(
         purchaseId: string,
@@ -24,7 +25,8 @@ export class Purchase {
         currency: string,
         shopId: string,
         account: string,
-        phone: string
+        phone: string,
+        sender: string
     ) {
         this.purchaseId = purchaseId;
         this.amount = BigNumber.from(amount);
@@ -33,6 +35,7 @@ export class Purchase {
         this.shopId = shopId;
         this.account = account;
         this.phone = phone;
+        this.sender = sender;
     }
 
     public static reviver(key: string, value: any): any {
@@ -44,6 +47,7 @@ export class Purchase {
         JSONValidator.verifyHash(value.shopId);
         JSONValidator.verifyAddress(value.account);
         JSONValidator.verifyHash(value.phone);
+        JSONValidator.verifyAddress(value.sender);
 
         return new Purchase(
             value.purchaseId,
@@ -52,7 +56,8 @@ export class Purchase {
             value.currency,
             value.shopId,
             value.account,
-            value.phone
+            value.phone,
+            value.sender
         );
     }
 
@@ -65,6 +70,7 @@ export class Purchase {
             shopId: this.shopId,
             account: this.account,
             phone: this.phone,
+            sender: this.sender,
         };
     }
 
@@ -76,14 +82,24 @@ export class Purchase {
             this.currency,
             this.shopId,
             this.account,
-            this.phone
+            this.phone,
+            this.sender
         );
     }
 
     public computeHash(): string {
         const encodedData = defaultAbiCoder.encode(
-            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
-            [this.purchaseId, this.amount, this.loyalty, this.currency, this.shopId, this.account, this.phone]
+            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32", "address"],
+            [
+                this.purchaseId,
+                this.amount,
+                this.loyalty,
+                this.currency,
+                this.shopId,
+                this.account,
+                this.phone,
+                this.sender,
+            ]
         );
         return keccak256(encodedData);
     }

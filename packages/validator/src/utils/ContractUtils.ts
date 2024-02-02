@@ -77,10 +77,30 @@ export class ContractUtils {
                 }
                 idx = reason.indexOf(ContractUtils.find2_message);
                 if (idx >= 0) {
-                    message = reason.substring(idx + ContractUtils.find2_length).trim();
+                    message = reason
+                        .substring(idx + ContractUtils.find2_length)
+                        .trim()
+                        .replace(/[/']/gi, "");
+                    reasons.push(message);
+                }
+            } else if (error.message) {
+                const reason = String(error.message);
+                let idx = reason.indexOf(ContractUtils.find1_message);
+                let message: string;
+                if (idx >= 0) {
+                    message = reason.substring(idx + ContractUtils.find1_length).trim();
+                    reasons.push(message);
+                }
+                idx = reason.indexOf(ContractUtils.find2_message);
+                if (idx >= 0) {
+                    message = reason
+                        .substring(idx + ContractUtils.find2_length)
+                        .trim()
+                        .replace(/[/']/gi, "");
                     reasons.push(message);
                 }
             }
+
             error = error.error;
         }
 
@@ -447,13 +467,23 @@ export class ContractUtils {
             shopId: BytesLike;
             account: string;
             phone: BytesLike;
+            sender: string;
         }[]
     ): Uint8Array {
         const messages: BytesLike[] = [];
         for (const elem of purchases) {
             const encodedData = defaultAbiCoder.encode(
-                ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32"],
-                [elem.purchaseId, elem.amount, elem.loyalty, elem.currency, elem.shopId, elem.account, elem.phone]
+                ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32", "address"],
+                [
+                    elem.purchaseId,
+                    elem.amount,
+                    elem.loyalty,
+                    elem.currency,
+                    elem.shopId,
+                    elem.account,
+                    elem.phone,
+                    elem.sender,
+                ]
             );
             messages.push(keccak256(encodedData));
         }
