@@ -82,7 +82,9 @@ export class CloseScheduler extends Scheduler {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.forcedCloseSecond) continue;
             logger.info(`CloseScheduler.onNewPayment ${payment.paymentId}`);
 
-            const serverURL = `http://localhost:${this.config.server.port}`;
+            const serverURL = this.config.relay.relayEndpoint;
+
+            console.log(`serverURL: ${serverURL}`);
             const client = axios.create();
             try {
                 const response = await client.post(
@@ -117,7 +119,8 @@ export class CloseScheduler extends Scheduler {
                 continue;
             logger.info(`CloseScheduler.onCancelPayment ${payment.paymentId}`);
 
-            const serverURL = `http://localhost:${this.config.server.port}`;
+            const serverURL = this.config.relay.relayEndpoint;
+            console.log(`serverURL: ${serverURL}`);
             const client = axios.create();
             try {
                 const response = await client.post(
@@ -168,7 +171,8 @@ export class CloseScheduler extends Scheduler {
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
-                const serverURL = `http://localhost:${this.config.server.port}`;
+                const serverURL = this.config.relay.relayEndpoint;
+                console.log(`serverURL: ${serverURL}`);
                 const client = axios.create();
                 try {
                     const response = await client.post(
@@ -205,7 +209,8 @@ export class CloseScheduler extends Scheduler {
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {
-                const serverURL = `http://localhost:${this.config.server.port}`;
+                const serverURL = this.config.relay.relayEndpoint;
+                console.log(`serverURL: ${serverURL}`);
                 const client = axios.create();
                 try {
                     const response = await client.post(

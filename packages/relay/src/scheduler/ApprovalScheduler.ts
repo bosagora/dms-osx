@@ -167,7 +167,8 @@ export class ApprovalScheduler extends Scheduler {
                     nonce
                 );
 
-                const serverURL = `http://localhost:${this.config.server.port}`;
+                const serverURL = this.config.relay.relayEndpoint;
+                console.log(`serverURL: ${serverURL}`);
                 const client = axios.create();
                 try {
                     const response1 = await client.get(
@@ -226,7 +227,7 @@ export class ApprovalScheduler extends Scheduler {
                     nonce
                 );
 
-                const serverURL = `http://localhost:${this.config.server.port}`;
+                const serverURL = this.config.relay.relayEndpoint;
                 const client = axios.create();
                 try {
                     const response1 = await client.get(
@@ -269,7 +270,7 @@ export class ApprovalScheduler extends Scheduler {
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);
 
-                const serverURL = `http://localhost:${this.config.server.port}`;
+                const serverURL = this.config.relay.relayEndpoint;
                 const client = axios.create();
                 try {
                     const response = await client.post(
@@ -302,7 +303,7 @@ export class ApprovalScheduler extends Scheduler {
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
                 const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);
 
-                const serverURL = `http://localhost:${this.config.server.port}`;
+                const serverURL = this.config.relay.relayEndpoint;
                 const client = axios.create();
                 try {
                     const response = await client.post(

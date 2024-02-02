@@ -309,6 +309,7 @@ export class RelayConfig implements IRelayConfig {
     public approvalSecond: number;
     public forcedCloseSecond: number;
     public expoAccessToken: string;
+    public relayEndpoint: string;
 
     /**
      * Constructor
@@ -324,6 +325,7 @@ export class RelayConfig implements IRelayConfig {
         this.approvalSecond = defaults.approvalSecond;
         this.forcedCloseSecond = defaults.forcedCloseSecond;
         this.expoAccessToken = defaults.expoAccessToken;
+        this.relayEndpoint = defaults.relayEndpoint;
     }
 
     /**
@@ -345,6 +347,7 @@ export class RelayConfig implements IRelayConfig {
             approvalSecond: 3,
             forcedCloseSecond: 300,
             expoAccessToken: "",
+            relayEndpoint: "",
         };
     }
 
@@ -361,6 +364,7 @@ export class RelayConfig implements IRelayConfig {
         if (config.approvalSecond !== undefined) this.approvalSecond = config.approvalSecond;
         if (config.forcedCloseSecond !== undefined) this.forcedCloseSecond = config.forcedCloseSecond;
         if (config.expoAccessToken !== undefined) this.expoAccessToken = config.expoAccessToken;
+        if (config.relayEndpoint !== undefined) this.relayEndpoint = config.relayEndpoint;
     }
 }
 
@@ -594,6 +598,7 @@ export interface IRelayConfig {
     approvalSecond: number;
     forcedCloseSecond: number;
     expoAccessToken: string;
+    relayEndpoint: string;
 }
 
 export interface IContractsConfig {
