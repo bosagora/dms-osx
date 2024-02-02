@@ -145,6 +145,7 @@ describe("Test of Server", function () {
             config.relay.forcedCloseSecond = 5;
             config.relay.paymentTimeoutSecond = 2;
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -335,6 +336,7 @@ describe("Test of Server", function () {
             config.relay.approvalSecond = 2;
             config.relay.forcedCloseSecond = 5;
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {

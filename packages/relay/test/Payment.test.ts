@@ -184,6 +184,7 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -632,6 +633,7 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -1016,6 +1018,7 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -1364,6 +1367,7 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -1619,6 +1623,7 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -1993,6 +1998,7 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -2430,6 +2436,7 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {

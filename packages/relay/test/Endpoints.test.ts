@@ -166,6 +166,7 @@ describe("Test of Server", function () {
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
@@ -244,6 +245,7 @@ describe("Test of Server", function () {
             config.contracts.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
         });
 
         before("Create TestServer", async () => {
