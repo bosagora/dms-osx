@@ -329,6 +329,7 @@ describe("Test for Shop", () => {
                     nonce
                 );
 
+                const [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         paymentId,
@@ -338,6 +339,7 @@ describe("Test for Shop", () => {
                         shopId: shop.shopId,
                         account: userWallets[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -352,7 +354,9 @@ describe("Test for Shop", () => {
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 )
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
@@ -445,6 +449,7 @@ describe("Test for Shop", () => {
                     nonce
                 );
 
+                const [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
                         purchaseId: purchase.purchaseId,
@@ -454,6 +459,7 @@ describe("Test for Shop", () => {
                         shopId: shop.shopId,
                         account: userWallets[purchase.userIndex].address,
                         signature,
+                        secretLock,
                     })
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -468,7 +474,9 @@ describe("Test for Shop", () => {
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).closeNewLoyaltyPayment(paymentId, true)
+                    consumerContract
+                        .connect(deployments.accounts.certifier)
+                        .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo2 = await shopContract.shopOf(shop.shopId);

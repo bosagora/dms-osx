@@ -23,7 +23,7 @@ contract LoyaltyConsumerStorage {
         string currency;
         bytes32 shopId;
         address account;
-        address creator;
+        bytes32 secretLock;
         uint256 timestamp;
         ILedger.LoyaltyType loyaltyType;
         uint256 paidPoint;

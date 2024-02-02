@@ -4,7 +4,7 @@ import { arrayify } from "ethers/lib/utils";
 import * as hre from "hardhat";
 
 // tslint:disable-next-line:no-implicit-dependencies
-import { Interface } from "@ethersproject/abi";
+import { defaultAbiCoder, Interface } from "@ethersproject/abi";
 // tslint:disable-next-line:no-implicit-dependencies
 import { ContractReceipt, ContractTransaction } from "@ethersproject/contracts";
 // tslint:disable-next-line:no-implicit-dependencies
@@ -13,6 +13,7 @@ import { id } from "@ethersproject/hash";
 import { Log } from "@ethersproject/providers";
 // tslint:disable-next-line:no-implicit-dependencies
 import { randomBytes } from "@ethersproject/random";
+import { keccak256 } from "@ethersproject/keccak256";
 
 export class ContractUtils {
     public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {
@@ -549,5 +550,11 @@ export class ContractUtils {
 
     public static zeroGWEI(value: BigNumber): BigNumber {
         return value.div(1000000000).mul(1000000000);
+    }
+
+    public static getSecret(): [string, string] {
+        const secret = "0x" + Buffer.from(randomBytes(32)).toString("hex");
+        const secretLock = keccak256(defaultAbiCoder.encode(["bytes32"], [secret]));
+        return [secret, secretLock];
     }
 }

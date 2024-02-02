@@ -58,6 +58,8 @@ export class RelayStorage extends Storage {
                 currency: item.currency,
                 shopId: item.shopId,
                 account: item.account,
+                secret: item.secret,
+                secretLock: item.secretLock,
                 loyaltyType: item.loyaltyType,
                 paidPoint: item.paidPoint.toString(),
                 paidToken: item.paidToken.toString(),
@@ -101,7 +103,8 @@ export class RelayStorage extends Storage {
                             currency: m.currency,
                             shopId: m.shopId,
                             account: m.account,
-                            certifier: m.certifier,
+                            secret: m.secret,
+                            secretLock: m.secretLock,
                             loyaltyType: m.loyaltyType,
                             paidPoint: BigNumber.from(m.paidPoint),
                             paidToken: BigNumber.from(m.paidToken),
@@ -275,11 +278,12 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public updateCertifier(paymentId: string, certifier: string): Promise<any> {
+    public updateSecret(paymentId: string, secret: string, secretLock: string): Promise<any> {
         return new Promise<void>(async (resolve, reject) => {
-            this.queryForMapper("payment", "updateCertifier", {
+            this.queryForMapper("payment", "updateSecret", {
                 paymentId,
-                certifier,
+                secret,
+                secretLock,
             })
                 .then(() => {
                     return resolve();
@@ -396,7 +400,8 @@ export class RelayStorage extends Storage {
                                 currency: m.currency,
                                 shopId: m.shopId,
                                 account: m.account,
-                                certifier: m.certifier,
+                                secret: m.secret,
+                                secretLock: m.secretLock,
                                 loyaltyType: m.loyaltyType,
                                 paidPoint: BigNumber.from(m.paidPoint),
                                 paidToken: BigNumber.from(m.paidToken),
@@ -444,7 +449,8 @@ export class RelayStorage extends Storage {
                                 currency: m.currency,
                                 shopId: m.shopId,
                                 account: m.account,
-                                certifier: m.certifier,
+                                secret: m.secret,
+                                secretLock: m.secretLock,
                                 loyaltyType: m.loyaltyType,
                                 paidPoint: BigNumber.from(m.paidPoint),
                                 paidToken: BigNumber.from(m.paidToken),

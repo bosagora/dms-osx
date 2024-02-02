@@ -28,6 +28,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
         bytes32 shopId;
         address account;
         bytes signature;
+        bytes32 secretLock;
     }
 
     /// @notice 토큰/포인트로 지불을 완료했을 때 발생하는 이벤트
@@ -126,7 +127,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
             currency: data.currency,
             shopId: data.shopId,
             account: data.account,
-            creator: _msgSender(),
+            secretLock: data.secretLock,
             timestamp: block.timestamp,
             loyaltyType: ILedger.LoyaltyType.POINT,
             paidPoint: paidPoint,
@@ -161,7 +162,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
             currency: data.currency,
             shopId: data.shopId,
             account: data.account,
-            creator: _msgSender(),
+            secretLock: data.secretLock,
             timestamp: block.timestamp,
             loyaltyType: ILedger.LoyaltyType.TOKEN,
             paidPoint: paidPoint,
@@ -179,9 +180,9 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
 
     /// @notice 로얄티(포인트/토큰)을 사용하여 구매요청을 종료 함수
     /// @dev 중계서버를 통해서 호출됩니다.
-    function closeNewLoyaltyPayment(bytes32 _paymentId, bool _confirm) external {
+    function closeNewLoyaltyPayment(bytes32 _paymentId, bytes32 _secret, bool _confirm) external {
         require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_PAYMENT, "1531");
-        require(loyaltyPayments[_paymentId].creator == _msgSender(), "1505");
+        require(loyaltyPayments[_paymentId].secretLock == keccak256(abi.encode(_secret)), "1505");
 
         if (ledgerContract.loyaltyTypeOf(loyaltyPayments[_paymentId].account) == ILedger.LoyaltyType.POINT) {
             _closeNewLoyaltyPaymentPoint(_paymentId, _confirm);
@@ -282,14 +283,13 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
 
     /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 시작하는 함수
     /// @dev 상점주가 중계서버를 통해서 호출됩니다.
-    function openCancelLoyaltyPayment(bytes32 _paymentId, bytes calldata _signature) external {
+    function openCancelLoyaltyPayment(bytes32 _paymentId, bytes32 _secretLock, bytes calldata _signature) external {
         require(
             (loyaltyPayments[_paymentId].status != LoyaltyPaymentStatus.CLOSED_PAYMENT) ||
                 (loyaltyPayments[_paymentId].status != LoyaltyPaymentStatus.FAILED_CANCEL),
             "1532"
         );
         require(block.timestamp <= loyaltyPayments[_paymentId].timestamp + 86400 * 7, "1534");
-        require(loyaltyPayments[_paymentId].creator == _msgSender(), "1505");
 
         IShop.ShopData memory shopInfo = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
         bytes32 dataHash = keccak256(
@@ -312,6 +312,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
                     loyaltyPayments[_paymentId].paidPoint + loyaltyPayments[_paymentId].feePoint
                 );
 
+                loyaltyPayments[_paymentId].secretLock = _secretLock;
                 loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.OPENED_CANCEL;
                 emit LoyaltyPaymentEvent(
                     loyaltyPayments[_paymentId],
@@ -331,6 +332,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
                     loyaltyPayments[_paymentId].paidToken
                 );
                 ledgerContract.transferToken(feeAccount, temporaryAddress, loyaltyPayments[_paymentId].feeToken);
+                loyaltyPayments[_paymentId].secretLock = _secretLock;
                 loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.OPENED_CANCEL;
                 emit LoyaltyPaymentEvent(
                     loyaltyPayments[_paymentId],
@@ -344,9 +346,9 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
 
     /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 종료하는 함수
     /// @dev 사용자가 중계서버를 통해서 호출됩니다.
-    function closeCancelLoyaltyPayment(bytes32 _paymentId, bool _confirm) external {
+    function closeCancelLoyaltyPayment(bytes32 _paymentId, bytes32 _secret, bool _confirm) external {
         require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_CANCEL, "1533");
-        require(loyaltyPayments[_paymentId].creator == _msgSender(), "1505");
+        require(loyaltyPayments[_paymentId].secretLock == keccak256(abi.encode(_secret)), "1505");
 
         uint256 balance;
         if (_confirm) {

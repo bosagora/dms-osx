@@ -11,6 +11,8 @@
             "currency"              ,
             "shopId"                ,
             "account"               ,
+            "secret"                ,
+            "secretLock"            ,
             "loyaltyType"           ,
             "paidPoint"             ,
             "paidToken"             ,
@@ -35,6 +37,8 @@
                 #{currency}            ,
                 #{shopId}              ,
                 #{account}             ,
+                #{secret}              ,
+                #{secretLock}          ,
                 ${loyaltyType}         ,
                 #{paidPoint}           ,
                 #{paidToken}           ,
@@ -58,10 +62,11 @@
         SELECT * FROM payments WHERE "paymentId" = #{paymentId};
     </select>
 
-    <update id="updateCertifier">
+    <update id="updateSecret">
         UPDATE payments
         SET
-            "certifier" = #{certifier}
+            "secret" = #{secret},
+            "secretLock" = #{secretLock}
         WHERE "paymentId" = #{paymentId}
     </update>
 
