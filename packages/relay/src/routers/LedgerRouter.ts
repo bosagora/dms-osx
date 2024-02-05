@@ -232,7 +232,7 @@ export class LedgerRouter {
      * @private
      */
     private async changeToLoyaltyToken(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/ledger/changeToLoyaltyToken`);
+        logger.http(`POST /v1/ledger/changeToLoyaltyToken ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -270,7 +270,7 @@ export class LedgerRouter {
      * @private
      */
     private async changeToPayablePoint(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/ledger/changeToPayablePoint`);
+        logger.http(`POST /v1/ledger/changeToPayablePoint ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
