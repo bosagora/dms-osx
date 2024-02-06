@@ -48,7 +48,7 @@
         "assert": "^2.0.0",
         "chai": "^4.3.7",
         "chai-http": "^4.3.7",
-        "del-osx-artifacts": "^2.0.0",
+        "del-osx-artifacts": "^2.1.0",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
         "ethers": "npm:boa-ethers2@^5.7.9",
