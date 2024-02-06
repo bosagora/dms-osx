@@ -2045,6 +2045,12 @@ describe("Test for Ledger", () => {
         });
 
         context("Withdraw token", () => {
+            it("Withdraw token - foundation account", async () => {
+                await expect(
+                    ledgerContract.connect(deployments.accounts.foundation).withdraw(BigNumber.from(100))
+                ).to.revertedWith("1053");
+            });
+
             it("Withdraw token - Insufficient balance", async () => {
                 const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
                 await expect(
@@ -3280,6 +3286,46 @@ describe("Test for Ledger", () => {
             expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
                 oldTokenBalance.add(amount.value)
             );
+        });
+
+        it("Transfer token - foundation account ", async () => {
+            const transferAmount = amount.value;
+            const nonce = await ledgerContract.nonceOf(deployments.accounts.foundation.address);
+            const message = await ContractUtils.getTransferMessage(
+                deployments.accounts.foundation.address,
+                deployments.accounts.users[1].address,
+                transferAmount,
+                nonce
+            );
+            const signature = ContractUtils.signMessage(deployments.accounts.foundation, message);
+            await expect(
+                transferContract.transferToken(
+                    deployments.accounts.foundation.address,
+                    deployments.accounts.users[1].address,
+                    transferAmount,
+                    signature
+                )
+            ).to.revertedWith("1051");
+        });
+
+        it("Transfer token - foundation account ", async () => {
+            const transferAmount = amount.value;
+            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+            const message = await ContractUtils.getTransferMessage(
+                deployments.accounts.users[0].address,
+                deployments.accounts.foundation.address,
+                transferAmount,
+                nonce
+            );
+            const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
+            await expect(
+                transferContract.transferToken(
+                    deployments.accounts.users[0].address,
+                    deployments.accounts.foundation.address,
+                    transferAmount,
+                    signature
+                )
+            ).to.revertedWith("1052");
         });
 
         it("Transfer token - Insufficient balance", async () => {

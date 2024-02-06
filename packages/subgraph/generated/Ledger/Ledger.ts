@@ -246,6 +246,28 @@ export class ProvidedUnPayablePoint__Params {
   }
 }
 
+export class RemovedPhoneInfo extends ethereum.Event {
+  get params(): RemovedPhoneInfo__Params {
+    return new RemovedPhoneInfo__Params(this);
+  }
+}
+
+export class RemovedPhoneInfo__Params {
+  _event: RemovedPhoneInfo;
+
+  constructor(event: RemovedPhoneInfo) {
+    this._event = event;
+  }
+
+  get phone(): Bytes {
+    return this._event.parameters[0].value.toBytes();
+  }
+
+  get account(): Address {
+    return this._event.parameters[1].value.toAddress();
+  }
+}
+
 export class Upgraded extends ethereum.Event {
   get params(): Upgraded__Params {
     return new Upgraded__Params(this);
@@ -1198,6 +1220,40 @@ export class ProvideUnPayablePointCall__Outputs {
   _call: ProvideUnPayablePointCall;
 
   constructor(call: ProvideUnPayablePointCall) {
+    this._call = call;
+  }
+}
+
+export class RemovePhoneInfoCall extends ethereum.Call {
+  get inputs(): RemovePhoneInfoCall__Inputs {
+    return new RemovePhoneInfoCall__Inputs(this);
+  }
+
+  get outputs(): RemovePhoneInfoCall__Outputs {
+    return new RemovePhoneInfoCall__Outputs(this);
+  }
+}
+
+export class RemovePhoneInfoCall__Inputs {
+  _call: RemovePhoneInfoCall;
+
+  constructor(call: RemovePhoneInfoCall) {
+    this._call = call;
+  }
+
+  get _account(): Address {
+    return this._call.inputValues[0].value.toAddress();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class RemovePhoneInfoCall__Outputs {
+  _call: RemovePhoneInfoCall;
+
+  constructor(call: RemovePhoneInfoCall) {
     this._call = call;
   }
 }

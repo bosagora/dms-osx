@@ -26,6 +26,7 @@ contract LoyaltyTransfer is LoyaltyTransferStorage, Initializable, OwnableUpgrad
         require(_msgSender() == owner(), "1050");
         if (!isSetLedger) {
             ledgerContract = ILedger(_contractAddress);
+            foundationAccount = ledgerContract.getFoundationAccount();
             isSetLedger = true;
         }
     }
@@ -35,11 +36,14 @@ contract LoyaltyTransfer is LoyaltyTransferStorage, Initializable, OwnableUpgrad
     }
 
     function transferToken(address _from, address _to, uint256 _amount, bytes calldata _signature) external {
+        require(_from != foundationAccount, "1051");
+        require(_to != foundationAccount, "1052");
         bytes32 dataHash = keccak256(abi.encode(_from, _to, _amount, ledgerContract.nonceOf(_from)));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _from, "1501");
         require(ledgerContract.loyaltyTypeOf(_from) == ILedger.LoyaltyType.TOKEN, "1520");
         require(ledgerContract.loyaltyTypeOf(_to) == ILedger.LoyaltyType.TOKEN, "1520");
         require(ledgerContract.tokenBalanceOf(_from) >= _amount, "1511");
+        require(_amount % 1 gwei == 0, "1030");
 
         ledgerContract.transferToken(_from, _to, _amount);
         ledgerContract.increaseNonce(_from);

@@ -161,6 +161,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     /// @notice 토큰을 인출합니다.
     /// @param _amount 금액
     function withdraw(uint256 _amount) external virtual {
+        require(_msgSender() != foundationAccount, "1053");
         require(_amount % 1 gwei == 0, "1030");
         require(_amount <= tokenBalances[_msgSender()], "1511");
         tokenContract.transfer(_msgSender(), _amount);
