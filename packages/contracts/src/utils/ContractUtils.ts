@@ -257,6 +257,11 @@ export class ContractUtils {
         return arrayify(keccak256(encodedResult));
     }
 
+    public static getRemoveMessage(address: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = defaultAbiCoder.encode(["address", "uint256"], [address, nonce]);
+        return arrayify(keccak256(encodedResult));
+    }
+
     public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
         return signer.signMessage(message);
     }

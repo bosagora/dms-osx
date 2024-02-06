@@ -3334,4 +3334,179 @@ describe("Test for Ledger", () => {
             expect(newTokenBalance1).to.deep.equal(oldTokenBalance1.add(transferAmount));
         });
     });
+
+    context("Remove Phone Info", () => {
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: deployments.accounts.users[1].address,
+                privateKey: deployments.accounts.users[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: deployments.accounts.users[2].address,
+                privateKey: deployments.accounts.users[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: "",
+                privateKey: "",
+            },
+            {
+                phone: "08201012341005",
+                address: "",
+                privateKey: "",
+            },
+            {
+                phone: "08201012341006",
+                address: "",
+                privateKey: "",
+            },
+        ];
+
+        const shopData: IShopData[] = [
+            {
+                shopId: "",
+                name: "Shop1",
+                currency: "krw",
+                wallet: deployments.accounts.shops[0],
+            },
+            {
+                shopId: "",
+                name: "Shop2",
+                currency: "krw",
+                wallet: deployments.accounts.shops[1],
+            },
+            {
+                shopId: "",
+                name: "Shop3",
+                currency: "krw",
+                wallet: deployments.accounts.shops[2],
+            },
+            {
+                shopId: "",
+                name: "Shop4",
+                currency: "krw",
+                wallet: deployments.accounts.shops[3],
+            },
+            {
+                shopId: "",
+                name: "Shop5",
+                currency: "krw",
+                wallet: deployments.accounts.shops[4],
+            },
+            {
+                shopId: "",
+                name: "Shop6",
+                currency: "krw",
+                wallet: deployments.accounts.shops[5],
+            },
+        ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+            }
+        });
+
+        before("Deploy", async () => {
+            await deployAllContract(shopData);
+        });
+
+        it("Save Purchase Data (user: 3, point type : 0) - phone and address are not registered", async () => {
+            const purchase: IPurchaseData = {
+                purchaseId: getPurchaseId(),
+                amount: 10000,
+                providePercent: 6,
+                currency: "krw",
+                shopIndex: 1,
+                userIndex: 3,
+            };
+            const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+            const userAccount =
+                userData[purchase.userIndex].address.trim() !== ""
+                    ? userData[purchase.userIndex].address.trim()
+                    : AddressZero;
+            const purchaseAmount = Amount.make(purchase.amount, 18).value;
+            const loyaltyAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+            const pointAmount = purchaseAmount.mul(purchase.providePercent).div(100);
+
+            const oldUnPayablePointBalance = await ledgerContract.unPayablePointBalanceOf(phoneHash);
+
+            const purchaseParam = {
+                purchaseId: getPurchaseId(),
+                amount: purchaseAmount,
+                loyalty: loyaltyAmount,
+                currency: purchase.currency.toLowerCase(),
+                shopId: shopData[purchase.shopIndex].shopId,
+                account: userAccount,
+                phone: phoneHash,
+                sender: deployments.accounts.foundation.address,
+            };
+            const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+            const signatures = deployments.accounts.validators.map((m) =>
+                ContractUtils.signMessage(m, purchaseMessage)
+            );
+            await expect(
+                providerContract
+                    .connect(deployments.accounts.validators[0])
+                    .savePurchase(0, [purchaseParam], signatures)
+            )
+                .to.emit(providerContract, "SavedPurchase")
+                .withArgs(
+                    purchaseParam.purchaseId,
+                    purchaseParam.amount,
+                    purchaseParam.loyalty,
+                    purchaseParam.currency,
+                    purchaseParam.shopId,
+                    purchaseParam.account,
+                    purchaseParam.phone,
+                    purchaseParam.sender
+                )
+                .emit(ledgerContract, "ProvidedUnPayablePoint")
+                .withNamedArgs({
+                    phone: phoneHash,
+                    providedPoint: pointAmount,
+                    providedValue: pointAmount,
+                    purchaseId: purchaseParam.purchaseId,
+                });
+            expect(await ledgerContract.unPayablePointBalanceOf(phoneHash)).to.deep.equal(
+                oldUnPayablePointBalance.add(pointAmount)
+            );
+        });
+
+        it("Link phone-address (user: 3, point type : 0)", async () => {
+            const userIndex = 3;
+            const nonce = await linkContract.nonceOf(deployments.accounts.users[userIndex].address);
+            const hash = phoneHashes[3];
+            const signature = await ContractUtils.signRequestHash(deployments.accounts.users[userIndex], hash, nonce);
+            requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[userIndex].address, nonce);
+            await expect(
+                linkContract
+                    .connect(deployments.accounts.certifier)
+                    .addRequest(requestId, hash, deployments.accounts.users[userIndex].address, signature)
+            )
+                .to.emit(linkContract, "AddedRequestItem")
+                .withArgs(requestId, hash, deployments.accounts.users[userIndex].address);
+            await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+            await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
+        });
+
+        it("Remove", async () => {
+            const userIndex = 3;
+            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
+            const hash = phoneHashes[3];
+            const message = ContractUtils.getRemoveMessage(deployments.accounts.users[userIndex].address, nonce);
+            const signature = await ContractUtils.signMessage(deployments.accounts.users[userIndex], message);
+
+            await expect(ledgerContract.removePhoneInfo(deployments.accounts.users[userIndex].address, signature))
+                .to.emit(ledgerContract, "RemovedPhoneInfo")
+                .withArgs(hash, deployments.accounts.users[userIndex].address);
+        });
+    });
 });

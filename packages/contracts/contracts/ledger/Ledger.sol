@@ -54,6 +54,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
     event Withdrawn(address account, uint256 withdrawnToken, uint256 withdrawnValue, uint256 balanceToken);
 
+    event RemovedPhoneInfo(bytes32 phone, address account);
+
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
     /// @param _settlementAccount 정산금 계정
@@ -405,5 +407,18 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     function burnPoint(address _account, uint256 _amount) external override onlyAccessBurner {
         if (pointBalances[_account] >= _amount) pointBalances[_account] -= _amount;
+    }
+
+    function removePhoneInfo(address _account, bytes calldata _signature) external {
+        bytes32 dataHash = keccak256(abi.encode(_account, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
+
+        nonce[_account]++;
+
+        bytes32 phone = linkContract.toPhone(_account);
+        if (phone != 0) {
+            delete unPayablePointBalances[phone];
+            emit RemovedPhoneInfo(phone, _account);
+        }
     }
 }
