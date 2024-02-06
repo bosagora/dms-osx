@@ -5,6 +5,8 @@ pragma solidity ^0.8.2;
 import "../interfaces/ILedger.sol";
 
 contract LoyaltyTransferStorage {
+    address internal foundationAccount;
+
     ILedger internal ledgerContract;
 
     bool internal isSetLedger;
