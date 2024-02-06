@@ -82,7 +82,10 @@ export class Proposal extends NodeTask {
         const records = await this.storage.getExchangeRate();
         if (records.length > 0) {
             logger.info(`Proposal Exchange Rate - Length : ${records.length}`);
-            for (const elem of records) exchangeRates.addItem(new ExchangeRate(elem.symbol, BigNumber.from(elem.rate)));
+            for (const elem of records)
+                exchangeRates.addItem(new ExchangeRate(elem.symbol.toUpperCase(), BigNumber.from(elem.rate)));
+            for (const elem of records)
+                exchangeRates.addItem(new ExchangeRate(elem.symbol.toLowerCase(), BigNumber.from(elem.rate)));
         }
     }
 

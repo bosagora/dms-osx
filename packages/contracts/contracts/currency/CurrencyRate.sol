@@ -90,7 +90,9 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
             emit SetRate(_data[idx].symbol, _data[idx].rate);
         }
         rates["krw"] = MULTIPLE;
+        rates["KRW"] = MULTIPLE;
         rates["point"] = MULTIPLE;
+        rates["POINT"] = MULTIPLE;
     }
 
     /// @notice 통화에 대한 가격을 제공한다.
