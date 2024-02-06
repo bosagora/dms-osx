@@ -224,6 +224,32 @@ export class LedgerRouter {
             ],
             this.changeToPayablePoint.bind(this)
         );
+
+        // 포인트의 종류를 선택하는 기능
+        this.app.post(
+            "/v1/ledger/removePhoneInfo",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.removePhoneInfoOfLedger.bind(this)
+        );
+
+        // 포인트의 종류를 선택하는 기능
+        this.app.post(
+            "/v1/link/removePhoneInfo",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.removePhoneInfoOfLink.bind(this)
+        );
     }
 
     /**
@@ -297,6 +323,84 @@ export class LedgerRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/ledger/changeToPayablePoint : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 포인트의 종류를 선택한다.
+     * POST /v1/ledger/removePhoneInfo
+     * @private
+     */
+    private async removePhoneInfoOfLedger(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/ledger/removePhoneInfo ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
+
+            // 서명검증
+            const userNonce = await (await this.getLedgerContract()).nonceOf(account);
+            const message = ContractUtils.getRemoveMessage(account, userNonce);
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+            const tx = await (await this.getLedgerContract())
+                .connect(signerItem.signer)
+                .removePhoneInfo(account, signature);
+
+            logger.http(`TxHash(removePhoneInfoOfLedger): ${tx.hash}`);
+            return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/ledger/removePhoneInfo : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 포인트의 종류를 선택한다.
+     * POST /v1/link/removePhoneInfo
+     * @private
+     */
+    private async removePhoneInfoOfLink(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/link/removePhoneInfo ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
+
+            // 서명검증
+            const userNonce = await (await this.getPhoneLinkerContract()).nonceOf(account);
+            const message = ContractUtils.getRemoveMessage(account, userNonce);
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+            const tx = await (await this.getPhoneLinkerContract())
+                .connect(signerItem.signer)
+                .remove(account, signature);
+
+            logger.http(`TxHash(removePhoneInfoOfLink): ${tx.hash}`);
+            return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/link/removePhoneInfo : ${msg.error.message}`);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);

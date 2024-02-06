@@ -510,8 +510,23 @@ export class ContractUtils {
         return arrayify(hre.ethers.utils.keccak256(encodedResult));
     }
 
+    public static getRemoveMessage(address: string, nonce: BigNumberish): Uint8Array {
+        const encodedResult = defaultAbiCoder.encode(["address", "uint256"], [address, nonce]);
+        return arrayify(keccak256(encodedResult));
+    }
+
     public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
         return signer.signMessage(message);
+    }
+
+    public static verifyMessage(account: string, message: Uint8Array, signature: string): boolean {
+        let res: string;
+        try {
+            res = ethers.utils.verifyMessage(message, signature);
+        } catch (error) {
+            return false;
+        }
+        return res.toLowerCase() === account.toLowerCase();
     }
 
     public static getCurrencyMessage(
