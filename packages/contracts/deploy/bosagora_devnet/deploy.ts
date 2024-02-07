@@ -321,21 +321,21 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
         const assetAmount = Amount.make(100_000_000, 18);
         const tx1 = await contract.connect(accounts.owner).transfer(accounts.foundation.address, assetAmount.value);
         console.log(`Transfer token to foundation (tx: ${tx1.hash})...`);
-        await tx1.wait();
+        // await tx1.wait();
 
         const userAmount = Amount.make(200_000, 18);
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
         for (const account of users) {
             const tx = await contract.connect(accounts.owner).transfer(account.address, userAmount.value);
             console.log(`Transfer token to users (tx: ${tx.hash})...`);
-            await tx.wait();
+            // await tx.wait();
         }
 
         const users_mobile = JSON.parse(fs.readFileSync("./deploy/data/users_mobile.json", "utf8"));
         for (const account of users_mobile) {
             const tx = await contract.connect(accounts.owner).transfer(account.address, userAmount.value);
             console.log(`Transfer token to users_mobile (tx: ${tx.hash})...`);
-            await tx.wait();
+            // await tx.wait();
         }
     }
     console.log(`Deployed ${contractName} to ${contract.address}`);
@@ -372,17 +372,17 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
                 .connect(accounts.owner)
                 .transfer(elem.address, amount.value);
             console.log(`Transfer token to validator (tx: ${tx1.hash})...`);
-            await tx1.wait();
+            // await tx1.wait();
 
             const tx2 = await (deployment.getContract("KIOS") as KIOS)
                 .connect(elem)
                 .approve(contract.address, depositedToken.value);
             console.log(`Approve validator's amount (tx: ${tx2.hash})...`);
-            await tx2.wait();
+            // await tx2.wait();
 
             const tx3 = await contract.connect(elem).deposit(depositedToken.value);
             console.log(`Deposit validator's amount (tx: ${tx3.hash})...`);
-            await tx3.wait();
+            // await tx3.wait();
         }
     }
 }
@@ -430,7 +430,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
         const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
         const tx = await contract.connect(accounts.validators[0]).set(height, rates, signatures);
         console.log(`Set currency rate (tx: ${tx.hash})...`);
-        await tx.wait();
+        // await tx.wait();
     }
 }
 
@@ -591,13 +591,13 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
         .connect(accounts.deployer)
         .setShop(contract.address);
     console.log(`Set address of LoyaltyProvider (tx: ${tx1.hash})...`);
-    await tx1.wait();
+    // await tx1.wait();
 
     const tx2 = await (deployment.getContract("LoyaltyConsumer") as LoyaltyConsumer)
         .connect(accounts.deployer)
         .setShop(contract.address);
     console.log(`Set address of LoyaltyConsumer (tx: ${tx2.hash})...`);
-    await tx2.wait();
+    // await tx2.wait();
 
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
@@ -622,7 +622,7 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
                 .connect(new Wallet(shop.privateKey, ethers.provider))
                 .add(shop.shopId, shop.name, shop.currency, shop.address, signature);
             console.log(`Add shop data (tx: ${tx.hash})...`);
-            await tx.wait();
+            // await tx.wait();
         }
     }
 }
@@ -673,31 +673,31 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         .connect(accounts.deployer)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyProvider (tx: ${tx21.hash})...`);
-    await tx21.wait();
+    // await tx21.wait();
 
     const tx22 = await (deployment.getContract("LoyaltyConsumer") as LoyaltyConsumer)
         .connect(accounts.deployer)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyConsumer (tx: ${tx22.hash})...`);
-    await tx22.wait();
+    // await tx22.wait();
 
     const tx23 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
         .connect(accounts.deployer)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyExchanger (tx: ${tx23.hash})...`);
-    await tx23.wait();
+    // await tx23.wait();
 
     const tx24 = await (deployment.getContract("LoyaltyBurner") as LoyaltyBurner)
         .connect(accounts.deployer)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyBurner (tx: ${tx24.hash})...`);
-    await tx24.wait();
+    // await tx24.wait();
 
     const tx25 = await (deployment.getContract("LoyaltyTransfer") as LoyaltyTransfer)
         .connect(accounts.owner)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyTransfer (tx: ${tx25.hash})...`);
-    await tx25.wait();
+    // await tx25.wait();
 
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
@@ -707,11 +707,11 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
             .connect(accounts.foundation)
             .approve(contract.address, assetAmount.value);
         console.log(`Approve foundation's amount (tx: ${tx5.hash})...`);
-        await tx5.wait();
+        // await tx5.wait();
 
         const tx6 = await contract.connect(accounts.foundation).deposit(assetAmount.value);
         console.log(`Deposit foundation's amount (tx: ${tx6.hash})...`);
-        await tx6.wait();
+        // await tx6.wait();
 
         console.log(`Deposit users.json`);
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
@@ -724,7 +724,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                     .connect(signer)
                     .changeToLoyaltyToken(user.address, signature);
                 console.log(`Change user's loyalty type (tx: ${tx10.hash})...`);
-                await tx10.wait();
+                // await tx10.wait();
 
                 if (
                     (await (deployment.getContract("Ledger") as Ledger).connect(signer).loyaltyTypeOf(user.address)) ===
@@ -741,11 +741,11 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                     .connect(signer)
                     .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
                 console.log(`Approve user's amount (tx: ${tx8.hash})...`);
-                await tx8.wait();
+                // await tx8.wait();
 
                 const tx9 = await (deployment.getContract("Ledger") as Ledger).connect(signer).deposit(depositedToken);
                 console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
-                await tx9.wait();
+                // await tx9.wait();
             }
         }
 
@@ -767,19 +767,19 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                     .connect(accounts.linkValidators[0])
                     .addRequest(reqId2, userAccount, user.address, userSignature);
                 console.log(`Add phone-address of user (tx: ${tx14.hash})...`);
-                await tx14.wait();
+                // await tx14.wait();
 
                 const tx15 = await linkContract.connect(accounts.linkValidators[1]).voteRequest(reqId2);
                 console.log(`Vote of validator1 (tx: ${tx15.hash})...`);
-                await tx15.wait();
+                // await tx15.wait();
 
                 const tx16 = await linkContract.connect(accounts.linkValidators[2]).voteRequest(reqId2);
                 console.log(`Vote of validator2 (tx: ${tx16.hash})...`);
-                await tx16.wait();
+                // await tx16.wait();
 
                 const tx17 = await linkContract.connect(accounts.linkValidators[0]).countVote(reqId2);
                 console.log(`Count of vote (tx: ${tx17.hash})...`);
-                await tx17.wait();
+                // await tx17.wait();
 
                 if ((await linkContract.toAddress(userAccount)) === user.address) {
                     console.log(`Success ${user.address}`);
@@ -799,7 +799,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                     .connect(signer)
                     .changeToLoyaltyToken(user.address, signature);
                 console.log(`Change user's loyalty type (tx: ${tx10.hash})...`);
-                await tx10.wait();
+                // await tx10.wait();
 
                 if (
                     (await (deployment.getContract("Ledger") as Ledger).connect(signer).loyaltyTypeOf(user.address)) ===
@@ -816,11 +816,11 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                     .connect(signer)
                     .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
                 console.log(`Approve user's amount (tx: ${tx8.hash})...`);
-                await tx8.wait();
+                // await tx8.wait();
 
                 const tx9 = await (deployment.getContract("Ledger") as Ledger).connect(signer).deposit(depositedToken);
                 console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
-                await tx9.wait();
+                // await tx9.wait();
             }
         }
     }
