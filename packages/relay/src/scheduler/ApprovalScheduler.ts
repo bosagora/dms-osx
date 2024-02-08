@@ -11,7 +11,7 @@ import {
 } from "../types/index";
 import { Scheduler } from "./Scheduler";
 
-import { ERC20DelegatedTransfer, Ledger, LoyaltyConsumer, Shop } from "../../typechain-types";
+import { BIP20DelegatedTransfer, Ledger, LoyaltyConsumer, Shop } from "../../typechain-types";
 
 import * as fs from "fs";
 import * as hre from "hardhat";
@@ -35,7 +35,7 @@ export class ApprovalScheduler extends Scheduler {
 
     private _storage: RelayStorage | undefined;
 
-    private _tokenContract: ERC20DelegatedTransfer | undefined;
+    private _tokenContract: BIP20DelegatedTransfer | undefined;
 
     private _ledgerContract: Ledger | undefined;
 
@@ -95,10 +95,10 @@ export class ApprovalScheduler extends Scheduler {
         //
     }
 
-    private async getTokenContract(): Promise<ERC20DelegatedTransfer> {
+    private async getTokenContract(): Promise<BIP20DelegatedTransfer> {
         if (this._tokenContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("ERC20DelegatedTransfer");
-            this._tokenContract = factory.attach(this.config.contracts.tokenAddress) as ERC20DelegatedTransfer;
+            const factory = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
+            this._tokenContract = factory.attach(this.config.contracts.tokenAddress) as BIP20DelegatedTransfer;
         }
         return this._tokenContract;
     }

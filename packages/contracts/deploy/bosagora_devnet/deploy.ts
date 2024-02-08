@@ -8,7 +8,7 @@ import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
     CurrencyRate,
-    KIOS,
+    LoyaltyToken,
     Ledger,
     LoyaltyBurner,
     LoyaltyConsumer,
@@ -39,7 +39,7 @@ export const MULTI_SIG_WALLET_ADDRESSES: { [key: string]: string } = {
     bosagora_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
 };
 
-export const KIOS_ADDRESSES: { [key: string]: string } = {
+export const LOYALTY_TOKEN_ADDRESSES: { [key: string]: string } = {
     bosagora_mainnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
     bosagora_testnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
     bosagora_devnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
@@ -73,7 +73,7 @@ class Deployments {
 
     private PHONE_LINK_COLLECTION_CONTRACT: Contract | undefined;
     private MULTI_SIG_WALLET_CONTRACT: Contract | undefined;
-    private KIOS_CONTRACT: Contract | undefined;
+    private LOYALTY_TOKEN_CONTRACT: Contract | undefined;
 
     constructor() {
         this.deployments = new Map<string, IDeployedContract>();
@@ -171,7 +171,9 @@ class Deployments {
         this.MULTI_SIG_WALLET_CONTRACT = (await ethers.getContractFactory("MultiSigWallet")).attach(
             MULTI_SIG_WALLET_ADDRESSES[network]
         ) as MultiSigWallet;
-        this.KIOS_CONTRACT = (await ethers.getContractFactory("KIOS")).attach(KIOS_ADDRESSES[network]) as KIOS;
+        this.LOYALTY_TOKEN_CONTRACT = (await ethers.getContractFactory("LoyaltyToken")).attach(
+            LOYALTY_TOKEN_ADDRESSES[network]
+        ) as LoyaltyToken;
     }
 
     public addContract(name: string, address: string, contract: BaseContract) {
@@ -187,8 +189,8 @@ class Deployments {
             return this.PHONE_LINK_COLLECTION_CONTRACT;
         } else if (name === "MultiSigWallet") {
             return this.MULTI_SIG_WALLET_CONTRACT;
-        } else if (name === "KIOS") {
-            return this.KIOS_CONTRACT;
+        } else if (name === "LoyaltyToken") {
+            return this.LOYALTY_TOKEN_CONTRACT;
         }
         const info = this.deployments.get(name);
         if (info !== undefined) {
@@ -203,8 +205,8 @@ class Deployments {
             return PHONE_LINK_COLLECTION_ADDRESSES[network];
         } else if (name === "MultiSigWallet") {
             return MULTI_SIG_WALLET_ADDRESSES[network];
-        } else if (name === "KIOS") {
-            return KIOS_ADDRESSES[network];
+        } else if (name === "LoyaltyToken") {
+            return LOYALTY_TOKEN_ADDRESSES[network];
         }
         const info = this.deployments.get(name);
         if (info !== undefined) {
@@ -277,9 +279,9 @@ async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
 }
 
 async function deployToken(accounts: IAccount, deployment: Deployments) {
-    const contractName = "KIOS";
+    const contractName = "LoyaltyToken";
 
-    const contract = deployment.getContract("KIOS") as KIOS;
+    const contract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
 
     {
         const amount = BOACoin.make(1_000_000_000);
@@ -344,7 +346,7 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
 async function deployValidator(accounts: IAccount, deployment: Deployments) {
     const contractName = "Validator";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("KIOS") === undefined) {
+    if (deployment.getContract("LoyaltyToken") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -352,7 +354,7 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     const factory = await ethers.getContractFactory("Validator");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("KIOS"), accounts.validators.map((m) => m.address)],
+        [await deployment.getContractAddress("LoyaltyToken"), accounts.validators.map((m) => m.address)],
         {
             initializer: "initialize",
             kind: "uups",
@@ -368,13 +370,13 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
         const depositedToken = Amount.make(100_000, 18);
 
         for (const elem of accounts.validators) {
-            const tx1 = await (deployment.getContract("KIOS") as KIOS)
+            const tx1 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
                 .connect(accounts.owner)
                 .transfer(elem.address, amount.value);
             console.log(`Transfer token to validator (tx: ${tx1.hash})...`);
             // await tx1.wait();
 
-            const tx2 = await (deployment.getContract("KIOS") as KIOS)
+            const tx2 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
                 .connect(elem)
                 .approve(contract.address, depositedToken.value);
             console.log(`Approve validator's amount (tx: ${tx2.hash})...`);
@@ -390,7 +392,7 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
 async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     const contractName = "CurrencyRate";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("Validator") === undefined || deployment.getContract("KIOS") === undefined) {
+    if (deployment.getContract("Validator") === undefined || deployment.getContract("LoyaltyToken") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -398,7 +400,10 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     const factory = await ethers.getContractFactory("CurrencyRate");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("Validator"), await (deployment.getContract("KIOS") as KIOS).symbol()],
+        [
+            await deployment.getContractAddress("Validator"),
+            await (deployment.getContract("LoyaltyToken") as LoyaltyToken).symbol(),
+        ],
         {
             initializer: "initialize",
             kind: "uups",
@@ -414,7 +419,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
         const height = 0;
         const rates = [
             {
-                symbol: "KIOS",
+                symbol: "LoyaltyToken",
                 rate: multiple.mul(150),
             },
             {
@@ -631,7 +636,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     const contractName = "Ledger";
     console.log(`Deploy ${contractName}...`);
     if (
-        deployment.getContract("KIOS") === undefined ||
+        deployment.getContract("LoyaltyToken") === undefined ||
         deployment.getContract("PhoneLinkCollection") === undefined ||
         deployment.getContract("CurrencyRate") === undefined ||
         deployment.getContract("LoyaltyProvider") === undefined ||
@@ -651,7 +656,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
             accounts.foundation.address,
             accounts.settlements.address,
             accounts.fee.address,
-            await deployment.getContractAddress("KIOS"),
+            await deployment.getContractAddress("LoyaltyToken"),
             await deployment.getContractAddress("PhoneLinkCollection"),
             await deployment.getContractAddress("CurrencyRate"),
             await deployment.getContractAddress("LoyaltyProvider"),
@@ -703,7 +708,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
 
     {
         const assetAmount = Amount.make(100_000_000, 18);
-        const tx5 = await (deployment.getContract("KIOS") as KIOS)
+        const tx5 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
             .connect(accounts.foundation)
             .approve(contract.address, assetAmount.value);
         console.log(`Approve foundation's amount (tx: ${tx5.hash})...`);
@@ -735,9 +740,9 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                     console.error(`Fail changeToLoyaltyToken...`);
                 }
 
-                const balance = await (deployment.getContract("KIOS") as KIOS).balanceOf(user.address);
+                const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
                 const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
-                const tx8 = await (deployment.getContract("KIOS") as KIOS)
+                const tx8 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
                     .connect(signer)
                     .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
                 console.log(`Approve user's amount (tx: ${tx8.hash})...`);
@@ -810,9 +815,9 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                     console.error(`Fail changeToLoyaltyToken...`);
                 }
 
-                const balance = await (deployment.getContract("KIOS") as KIOS).balanceOf(user.address);
+                const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
                 const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
-                const tx8 = await (deployment.getContract("KIOS") as KIOS)
+                const tx8 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
                     .connect(signer)
                     .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
                 console.log(`Approve user's amount (tx: ${tx8.hash})...`);

@@ -1,6 +1,6 @@
 import {
     CurrencyRate,
-    ERC20DelegatedTransfer,
+    BIP20DelegatedTransfer,
     Ledger,
     LoyaltyExchanger,
     PhoneLinkCollection,
@@ -39,7 +39,7 @@ export class LedgerRouter {
      * ERC20 토큰 컨트랙트
      * @private
      */
-    private _tokenContract: ERC20DelegatedTransfer | undefined;
+    private _tokenContract: BIP20DelegatedTransfer | undefined;
 
     /**
      * 사용자의 원장 컨트랙트
@@ -116,9 +116,9 @@ export class LedgerRouter {
      * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
      * @private
      */
-    private async getTokenContract(): Promise<ERC20DelegatedTransfer> {
+    private async getTokenContract(): Promise<BIP20DelegatedTransfer> {
         if (this._tokenContract === undefined) {
-            const tokenFactory = await hre.ethers.getContractFactory("ERC20DelegatedTransfer");
+            const tokenFactory = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
             this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress);
         }
         return this._tokenContract;
