@@ -398,12 +398,10 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     }
 
     const factory = await ethers.getContractFactory("CurrencyRate");
+    const tokenSymbol = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).symbol();
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [
-            await deployment.getContractAddress("Validator"),
-            await (deployment.getContract("LoyaltyToken") as LoyaltyToken).symbol(),
-        ],
+        [await deployment.getContractAddress("Validator"), tokenSymbol],
         {
             initializer: "initialize",
             kind: "uups",
@@ -419,16 +417,8 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
         const height = 0;
         const rates = [
             {
-                symbol: "LoyaltyToken",
-                rate: multiple.mul(150),
-            },
-            {
-                symbol: "usd",
-                rate: multiple.mul(1000),
-            },
-            {
-                symbol: "jpy",
-                rate: multiple.mul(10),
+                symbol: tokenSymbol,
+                rate: multiple.mul(100),
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
