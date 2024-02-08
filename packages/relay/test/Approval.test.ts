@@ -17,7 +17,7 @@ import {
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
-    ERC20DelegatedTransfer,
+    BIP20DelegatedTransfer,
     Ledger,
     LoyaltyConsumer,
     LoyaltyExchanger,
@@ -52,7 +52,7 @@ describe("Test of Server", function () {
     const deployments = new Deployments();
 
     let validatorContract: Validator;
-    let tokenContract: ERC20DelegatedTransfer;
+    let tokenContract: BIP20DelegatedTransfer;
     let linkContract: PhoneLinkCollection;
     let currencyRateContract: CurrencyRate;
     let shopContract: Shop;
@@ -123,7 +123,7 @@ describe("Test of Server", function () {
             await deployments.doDeploy();
 
             validatorContract = deployments.getContract("Validator") as Validator;
-            tokenContract = deployments.getContract("TestKIOS") as ERC20DelegatedTransfer;
+            tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
             ledgerContract = deployments.getContract("Ledger") as Ledger;
             linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
             consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;

@@ -16,4 +16,4 @@ import "dms-osx-artifacts/contracts/token/TestKIOS.sol";
 
 import "multisig-wallet-contracts/contracts/MultiSigWalletFactory.sol";
 import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
-import "kios-token-contracts/contracts/KIOS.sol";
+import "loyalty-tokens/contracts/KIOS.sol";
