@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-artifacts",
-    "version": "2.7.0",
+    "version": "2.7.1",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"
@@ -54,9 +54,9 @@
         "ethers": "npm:boa-ethers2@^5.7.9",
         "hardhat": "^2.12.7",
         "hardhat-gas-reporter": "^1.0.7",
-        "loyalty-tokens": "^1.0.3",
+        "loyalty-tokens": "^1.0.4",
         "mocha": "10.1.0",
-        "multisig-wallet-contracts": "^1.0.8",
+        "multisig-wallet-contracts": "^1.1.0",
         "prettier": "^2.5.1",
         "prettier-plugin-solidity": "^1.1.1",
         "solhint": "^3.3.6",
