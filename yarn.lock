@@ -6363,10 +6363,10 @@ lowercase-keys@^3.0.0:
   resolved "https://registry.yarnpkg.com/lowercase-keys/-/lowercase-keys-3.0.0.tgz#c5e7d442e37ead247ae9db117a9d0a467c89d4f2"
   integrity sha512-ozCC6gdQ+glXOQsveKD0YsDy8DSQFjDTz4zyzEHNV5+JP5D62LmfDZ6o1cycFx9ouG940M5dE8C8CTewdj2YWQ==
 
-loyalty-tokens@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/loyalty-tokens/-/loyalty-tokens-1.0.3.tgz#f47f932a6568cc95bd50ad27e895d43c6ea3b162"
-  integrity sha512-0cmW0SSenkDuc0cuO+VlduqSEXhDW+BtqVgrMT2Kg+W4rhhMAfNkw8S5Pbq+ICb53u/cukWK1LngXO0oQgAcJA==
+loyalty-tokens@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/loyalty-tokens/-/loyalty-tokens-1.0.4.tgz#a2125d61fb87b5e4d86dcd1ccb62622f1467aef8"
+  integrity sha512-eA3JvTsUvkkm326RAVHHsC9wS+CGueUgD2nUfZiH/iSC1hN3bVp3NgC/gTPlbpyJl0uI/N8cJ9/ZJNdcyzL2yQ==
 
 lru-cache@^10.1.0:
   version "10.1.0"
@@ -6921,10 +6921,10 @@ multihashes@^0.4.15, multihashes@~0.4.15:
     multibase "^0.7.0"
     varint "^5.0.0"
 
-multisig-wallet-contracts@^1.0.8:
-  version "1.0.8"
-  resolved "https://registry.yarnpkg.com/multisig-wallet-contracts/-/multisig-wallet-contracts-1.0.8.tgz#bdce220b4b5da5bbb5b78a891494a7d71bab951d"
-  integrity sha512-gdMvxrJDV8b2imDie8hILPJi9WYkM+tNdXqtquZvtg3Pfs7+L4YUt+DZ5c9iSd64n1n3xbmK+6jI9uOyvuIwQg==
+multisig-wallet-contracts@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/multisig-wallet-contracts/-/multisig-wallet-contracts-1.1.0.tgz#680b28bdbf9b2860bb853abdbe2b5910b1b0dfee"
+  integrity sha512-dJCxmOBqZZicKjshiC9SS17XPZJWSU/FpZ8eCw1WWTH08jjMudRaKMtJ/l0pjadFRUQ/wDhCUInIixoGhHyCyg==
 
 mustache@^4.2.0:
   version "4.2.0"
