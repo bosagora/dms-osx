@@ -315,7 +315,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
                 assert.deepStrictEqual(response.data.data.totalPoint, Amount.make(1050).toString());
                 assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
-                assert.deepStrictEqual(response.data.data.currency, "USD");
+                assert.deepStrictEqual(response.data.data.currency, "usd");
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
             });
 
@@ -765,7 +765,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
                 assert.deepStrictEqual(response.data.data.totalPoint, Amount.make(1050).toString());
                 assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
-                assert.deepStrictEqual(response.data.data.currency, "USD");
+                assert.deepStrictEqual(response.data.data.currency, "usd");
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
             });
 
@@ -1149,7 +1149,7 @@ describe("Test of Server", function () {
                 assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
                 assert.deepStrictEqual(response.data.data.totalPoint, Amount.make(1050).toString());
                 assert.deepStrictEqual(response.data.data.amount, Amount.make(1).toString());
-                assert.deepStrictEqual(response.data.data.currency, "USD");
+                assert.deepStrictEqual(response.data.data.currency, "usd");
                 assert.deepStrictEqual(response.data.data.feeRate, 0.05);
             });
 

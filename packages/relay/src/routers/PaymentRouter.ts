@@ -530,7 +530,7 @@ export class PaymentRouter {
         try {
             const account: string = String(req.query.account).trim();
             const amount: BigNumber = BigNumber.from(req.query.amount);
-            const currency: string = String(req.query.currency).trim();
+            const currency: string = String(req.query.currency).trim().toLowerCase();
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
 
             const feeRate = await (await this.getLedgerContract()).getFee();
@@ -538,6 +538,7 @@ export class PaymentRouter {
             const multiple = await (await this.getCurrencyRateContract()).multiple();
 
             let balance: BigNumber;
+            let balanceValue: BigNumber;
             let paidPoint: BigNumber;
             let paidToken: BigNumber;
             let paidValue: BigNumber;
@@ -550,6 +551,7 @@ export class PaymentRouter {
 
             if (loyaltyType === ContractLoyaltyType.POINT) {
                 balance = await (await this.getLedgerContract()).pointBalanceOf(account);
+                balanceValue = ContractUtils.zeroGWEI(balance.mul(multiple).div(rate));
                 paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
                 feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
                 totalPoint = paidPoint.add(feePoint);
@@ -560,6 +562,7 @@ export class PaymentRouter {
                 balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
                 const symbol = await (await this.getTokenContract()).symbol();
                 const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
+                balanceValue = ContractUtils.zeroGWEI(balance.mul(tokenRate).div(rate));
                 paidToken = ContractUtils.zeroGWEI(amount.mul(rate).div(tokenRate));
                 feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(10000));
                 totalToken = paidToken.add(feeToken);
@@ -578,6 +581,7 @@ export class PaymentRouter {
                     amount: amount.toString(),
                     currency,
                     balance: balance.toString(),
+                    balanceValue: balanceValue.toString(),
                     paidPoint: paidPoint.toString(),
                     paidToken: paidToken.toString(),
                     paidValue: paidValue.toString(),
