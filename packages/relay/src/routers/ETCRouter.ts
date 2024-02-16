@@ -95,6 +95,7 @@ export class ETCRouter {
                 body("type").exists(),
                 body("title").exists(),
                 body("contents").exists(),
+                body("contentType").exists(),
             ],
             this.mobile_send.bind(this)
         );
@@ -163,10 +164,11 @@ export class ETCRouter {
             const type: number = Number(req.body.type);
             const title: string = String(req.body.title).trim();
             const contents: string = String(req.body.contents).trim();
+            const contentType: string = String(req.body.contentType).trim();
 
             const mobileData = await this._storage.getMobile(account, type);
             if (mobileData !== undefined) {
-                await this._sender.send(mobileData.token, title, contents, {});
+                await this._sender.send(mobileData.token, title, contents, { type: contentType });
             }
             return res.status(200).json(this.makeResponseData(0, {}));
         } catch (error: any) {
