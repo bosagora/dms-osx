@@ -9,5 +9,5 @@ ADD . /app/
 COPY ./env/.env.sample /app/env/.env
 
 RUN yarn install
-RUN yarn build
+RUN yarn run build
 ENTRYPOINT [ "/app/docker/entrypoint.sh" ]
