@@ -255,22 +255,23 @@
 
 #### - 결과
 
-| 필드명      | 유형   | 필수 | 설명                                                             |
-| ----------- | ------ | ---- | ---------------------------------------------------------------- |
-| account     | string | Yes  | 월렛주소                                                         |
-| loyaltyType | int    | Yes  | 적립되는 로열티의 종류(0: Point, 1: Token)                       |
-| amount      | string | Yes  | 상품가격 (소수점이하 18자리로 표시된 문자, 소수점 포함하지 않음) |
-| currency    | string | Yes  | 환률코드(usd, krw, the9, point...)                               |
-| balance     | string | Yes  | 잔고 (소수점이하 18자리로 표시된 문자, 소수점 포함하지 않음)     |
-| paidPoint   | string | Yes  | (예상)지불될 포인트, loyaltyType가 0일때 유효한 값이다           |
-| paidToken   | string | Yes  | (예상)지불될 토큰, loyaltyType가 1일때 유효한 값이다             |
-| paidValue   | string | Yes  | 지불될 포인트 또는 토큰의 currency 단위의 가치                   |
-| feePoint    | string | Yes  | (예상)수수료 포인트, loyaltyType가 0일때 유효한 값이다           |
-| feeToken    | string | Yes  | (예상)수수료 토큰, loyaltyType가 1일때 유효한 값이다             |
-| feeValue    | string | Yes  | 수수료 포인트 또는 토큰의 currency 단위의 가치                   |
-| totalPoint  | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다             |
-| totalToken  | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다               |
-| totalValue  | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치                     |
+| 필드명          | 유형   | 필수 | 설명                                     |
+|--------------| ------ | ---- |----------------------------------------|
+| account      | string | Yes  | 월렛주소                                   |
+| loyaltyType  | int    | Yes  | 적립되는 로열티의 종류(0: Point, 1: Token)       |
+| amount       | string | Yes  | 상품가격 (소수점이하 18자리로 표시된 문자, 소수점 포함하지 않음) |
+| currency     | string | Yes  | 환률코드(usd, krw, the9, point...)         |
+| balance      | string | Yes  | 잔고 (소수점이하 18자리로 표시된 문자, 소수점 포함하지 않음)   |
+| balanceValue | string | Yes  | 잔고의 currency 단위의 가치                    |
+| paidPoint    | string | Yes  | (예상)지불될 포인트, loyaltyType가 0일때 유효한 값이다  |
+| paidToken    | string | Yes  | (예상)지불될 토큰, loyaltyType가 1일때 유효한 값이다   |
+| paidValue    | string | Yes  | 지불될 포인트 또는 토큰의 currency 단위의 가치         |
+| feePoint     | string | Yes  | (예상)수수료 포인트, loyaltyType가 0일때 유효한 값이다  |
+| feeToken     | string | Yes  | (예상)수수료 토큰, loyaltyType가 1일때 유효한 값이다   |
+| feeValue     | string | Yes  | 수수료 포인트 또는 토큰의 currency 단위의 가치         |
+| totalPoint   | string | Yes  | (예상)전체 포인트, loyaltyType가 0일때 유효한 값이다   |
+| totalToken   | string | Yes  | (예상)전체 토큰, loyaltyType가 1일때 유효한 값이다    |
+| totalValue   | string | Yes  | 전체 포인트 또는 토큰의 currency 단위의 가치          |
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
 
