@@ -63,7 +63,7 @@ type UserUnPayableTradeHistory @entity(immutable: true) {
   amount: BigInt!
   balance: BigInt!
   purchaseId: String
-  shopId: Bytes! # bytes32
+  shopId: Bytes # bytes32
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!

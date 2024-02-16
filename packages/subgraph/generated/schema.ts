@@ -859,17 +859,21 @@ export class UserUnPayableTradeHistory extends Entity {
     }
   }
 
-  get shopId(): Bytes {
+  get shopId(): Bytes | null {
     let value = this.get("shopId");
     if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
+      return null;
     } else {
       return value.toBytes();
     }
   }
 
-  set shopId(value: Bytes) {
-    this.set("shopId", Value.fromBytes(value));
+  set shopId(value: Bytes | null) {
+    if (!value) {
+      this.unset("shopId");
+    } else {
+      this.set("shopId", Value.fromBytes(<Bytes>value));
+    }
   }
 
   get blockNumber(): BigInt {
