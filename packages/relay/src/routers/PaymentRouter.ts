@@ -718,10 +718,12 @@ export class PaymentRouter {
                 const contents: string[] = [];
                 const data = { type: "new", paymentId: item.paymentId };
                 contents.push(`구매처 : ${shopInfo.name}`);
-                contents.push(`구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)}`);
+                contents.push(
+                    `구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)} ${item.currency.toUpperCase()}`
+                );
                 if (item.loyaltyType === ContractLoyaltyType.POINT)
-                    contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)}`);
-                else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)}`);
+                    contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
+                else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`);
 
                 await this._sender.send(to, title, contents.join(", "), data);
             } else {
@@ -1236,10 +1238,15 @@ export class PaymentRouter {
                     const contents: string[] = [];
                     const data = { type: "cancel", paymentId: item.paymentId };
                     contents.push(`구매처 : ${shopInfo.name}`);
-                    contents.push(`구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)}`);
+                    contents.push(
+                        `구매 금액 : ${new Amount(item.amount, 18).toDisplayString(
+                            true,
+                            0
+                        )} ${item.currency.toUpperCase()}`
+                    );
                     if (item.loyaltyType === ContractLoyaltyType.POINT)
-                        contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)}`);
-                    else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)}`);
+                        contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
+                    else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`);
 
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
