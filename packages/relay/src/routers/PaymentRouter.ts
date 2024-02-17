@@ -38,6 +38,8 @@ import * as hre from "hardhat";
 import express from "express";
 import extend from "extend";
 
+import { AddressZero } from "@ethersproject/constants";
+
 export class PaymentRouter {
     /**
      *
@@ -136,6 +138,8 @@ export class PaymentRouter {
             ],
             this.phone_balance.bind(this)
         );
+
+        this.app.get("/v1/payment/phone/hash", [query("phone")], this.phone_hash.bind(this));
 
         this.app.get(
             "/v1/payment/convert/currency",
@@ -402,11 +406,52 @@ export class PaymentRouter {
 
         try {
             const phone: string = String(req.query.phone).trim();
-            const balance = await (await this.getLedgerContract()).unPayablePointBalanceOf(phone);
-            return res.status(200).json(this.makeResponseData(0, { phone, balance: balance.toString() }));
+            const account: string = await (await this.getPhoneLinkerContract()).toAddress(phone);
+            if (account !== AddressZero) {
+                const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+                const balance =
+                    loyaltyType === ContractLoyaltyType.POINT
+                        ? await (await this.getLedgerContract()).pointBalanceOf(account)
+                        : await (await this.getLedgerContract()).tokenBalanceOf(account);
+                return res
+                    .status(200)
+                    .json(this.makeResponseData(0, { phone, account, loyaltyType, balance: balance.toString() }));
+            } else {
+                const loyaltyType = ContractLoyaltyType.POINT;
+                const balance = await (await this.getLedgerContract()).unPayablePointBalanceOf(phone);
+                return res
+                    .status(200)
+                    .json(this.makeResponseData(0, { phone, loyaltyType, balance: balance.toString() }));
+            }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/phone/balance : ${msg.error.message}`);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    /**
+     * 사용자 정보 / 전화번호 해시
+     * GET /v1/payment/phone/hash
+     * @private
+     */
+    private async phone_hash(req: express.Request, res: express.Response) {
+        const params = extend(true, {}, req.query);
+        params.accessKey = undefined;
+        logger.http(`GET /v1/payment/phone/hash ${req.ip}:${JSON.stringify(params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const phone: string = String(req.query.phone).trim();
+            const hash: string = ContractUtils.getPhoneHash(phone);
+            return res.status(200).json(this.makeResponseData(0, { phone, hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/phone/hash : ${msg.error.message}`);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
