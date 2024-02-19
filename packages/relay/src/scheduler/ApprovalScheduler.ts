@@ -168,7 +168,6 @@ export class ApprovalScheduler extends Scheduler {
                 );
 
                 const serverURL = this.config.relay.relayEndpoint;
-                console.log(`serverURL: ${serverURL}`);
                 const client = axios.create();
                 try {
                     const response1 = await client.get(
