@@ -74,6 +74,8 @@ interface ILedger {
 
     function getFeeAccount() external view returns (address);
 
+    function getTokenAddress() external view returns (address);
+
     function burnUnPayablePoint(bytes32 _phone, uint256 _amount) external;
 
     function burnPoint(address _account, uint256 _amount) external;
