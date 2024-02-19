@@ -56,6 +56,9 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     event RemovedPhoneInfo(bytes32 phone, address account);
 
+    event DepositedLiquidity(address account, uint256 amount, uint256 liquidity);
+    event WithdrawnLiquidity(address account, uint256 amount, uint256 liquidity);
+
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
     /// @param _settlementAccount 정산금 계정
@@ -74,7 +77,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address _consumerAddress,
         address _exchangerAddress,
         address _burnerAddress,
-        address _transferAddress
+        address _transferAddress,
+        address _bridgeAddress
     ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
@@ -87,8 +91,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         exchangerAddress = _exchangerAddress;
         burnerAddress = _burnerAddress;
         transferAddress = _transferAddress;
+        tokenAddress = _tokenAddress;
+        bridgeAddress = _bridgeAddress;
 
-        tokenContract = IERC20(_tokenAddress);
+        tokenContract = IBIP20DelegatedTransfer(_tokenAddress);
         linkContract = IPhoneLinkCollection(_linkAddress);
         currencyRateContract = ICurrencyRate(_currencyRateAddress);
         fee = MAX_FEE;
@@ -121,7 +127,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     modifier onlyAccessNonce() {
         require(
-            _msgSender() == consumerAddress || _msgSender() == exchangerAddress || _msgSender() == transferAddress,
+            _msgSender() == consumerAddress ||
+                _msgSender() == exchangerAddress ||
+                _msgSender() == transferAddress ||
+                _msgSender() == bridgeAddress,
             "1007"
         );
         _;
@@ -129,7 +138,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     modifier onlyAccessLedger() {
         require(
-            _msgSender() == consumerAddress || _msgSender() == exchangerAddress || _msgSender() == transferAddress,
+            _msgSender() == consumerAddress ||
+                _msgSender() == exchangerAddress ||
+                _msgSender() == transferAddress ||
+                _msgSender() == bridgeAddress,
             "1007"
         );
         _;
@@ -402,6 +414,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         return feeAccount;
     }
 
+    function getTokenAddress() external view override returns (address) {
+        return tokenAddress;
+    }
+
     function burnUnPayablePoint(bytes32 _phone, uint256 _amount) external override onlyAccessBurner {
         if (unPayablePointBalances[_phone] >= _amount) unPayablePointBalances[_phone] -= _amount;
     }
@@ -421,5 +437,35 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
             delete unPayablePointBalances[phone];
             emit RemovedPhoneInfo(phone, _account);
         }
+    }
+
+    /// @notice 브리지를 위한 유동성 자금을 예치합니다.
+    function depositLiquidity(uint256 _amount, bytes calldata _signature) external {
+        require(tokenContract.balanceOf(_msgSender()) >= _amount, "1511");
+        require(_amount % 1 gwei == 0, "1030");
+
+        if (tokenContract.delegatedTransfer(_msgSender(), address(this), _amount, _signature)) {
+            tokenBalances[bridgeAddress] += _amount;
+            liquidity[_msgSender()] += _amount;
+            emit DepositedLiquidity(_msgSender(), _amount, liquidity[_msgSender()]);
+        }
+    }
+
+    /// @notice 브리지를 위한 유동성 자금을 인출합니다.
+    function withdrawLiquidity(uint256 _amount) external {
+        require(liquidity[_msgSender()] >= _amount, "1514");
+        require(tokenBalances[bridgeAddress] >= _amount, "1511");
+        require(tokenContract.balanceOf(address(this)) >= _amount, "1511");
+        require(_amount % 1 gwei == 0, "1030");
+
+        tokenContract.transferFrom(address(this), _msgSender(), _amount);
+        liquidity[_msgSender()] -= _amount;
+        tokenBalances[bridgeAddress] -= _amount;
+        emit WithdrawnLiquidity(_msgSender(), _amount, liquidity[_msgSender()]);
+    }
+
+    /// @notice 브리지를 위한 유동성 자금을 조회합니다.
+    function getLiquidity(address _account) external view returns (uint256) {
+        return liquidity[_account];
     }
 }

@@ -494,6 +494,14 @@ export class ContractUtils {
         return arrayify(keccak256(encodedResult));
     }
 
+    public static getTransferMessage(from: string, to: string, amount: BigNumberish, nonce: BigNumberish): Uint8Array {
+        const encodedResult = defaultAbiCoder.encode(
+            ["address", "address", "uint256", "uint256"],
+            [from, to, amount, nonce]
+        );
+        return arrayify(keccak256(encodedResult));
+    }
+
     public static async signMessage(signer: Signer, message: Uint8Array): Promise<string> {
         return signer.signMessage(message);
     }

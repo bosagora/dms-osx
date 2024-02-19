@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "loyalty-tokens/contracts/BIP20/IBIP20DelegatedTransfer.sol";
 import "del-osx-artifacts/contracts/interfaces/IPhoneLinkCollection.sol";
 
 import "../interfaces/ICurrencyRate.sol";
@@ -17,6 +17,7 @@ contract LedgerStorage {
     mapping(address => uint256) internal tokenBalances;
     mapping(address => uint256) internal nonce;
     mapping(address => ILedger.LoyaltyType) internal loyaltyTypes;
+    mapping(address => uint256) internal liquidity;
 
     address public foundationAccount;
     address public settlementAccount;
@@ -26,11 +27,13 @@ contract LedgerStorage {
     address public exchangerAddress;
     address public burnerAddress;
     address public transferAddress;
+    address public bridgeAddress;
+    address public tokenAddress;
 
     uint32 internal fee;
     address internal temporaryAddress;
 
     IPhoneLinkCollection internal linkContract;
-    IERC20 internal tokenContract;
+    IBIP20DelegatedTransfer internal tokenContract;
     ICurrencyRate internal currencyRateContract;
 }

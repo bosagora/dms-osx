@@ -220,6 +220,11 @@ export class ContractUtils {
         return keccak256(encodedResult);
     }
 
+    public static getRandomId(account: string): string {
+        const encodedResult = defaultAbiCoder.encode(["address", "bytes32"], [account, randomBytes(32)]);
+        return keccak256(encodedResult);
+    }
+
     public static getPurchasesMessage(
         height: BigNumberish,
         purchases: {

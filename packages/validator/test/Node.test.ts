@@ -134,7 +134,6 @@ describe("Test of Server", function () {
 
     before("Create TestServer", async () => {
         serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
-        console.log(`serverURL: ${serverURL}`);
         storage = await NodeStorage.make(config.database);
         await storage.clearTestDB();
 
