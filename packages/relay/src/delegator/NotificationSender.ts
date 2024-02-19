@@ -1,8 +1,7 @@
 import { logger } from "../common/Logger";
 
-import { Expo, ExpoPushErrorReceipt, ExpoPushMessage, ExpoPushTicket } from "expo-server-sdk";
+import { Expo, ExpoPushMessage } from "expo-server-sdk";
 import { Config } from "../common/Config";
-import { boolean } from "hardhat/internal/core/params/argumentTypes";
 
 /**
  * 모바일 푸쉬 알림을 발송하는 델리게이트의 인터패이스입니다.

@@ -8,10 +8,9 @@ import "solidity-docgen";
 
 import * as dotenv from "dotenv";
 import { Wallet } from "ethers";
+import { HardhatAccount } from "./src/HardhatAccount";
 
 dotenv.config({ path: "env/.env" });
-
-import { HardhatAccount } from "./src/HardhatAccount";
 
 function getAccounts() {
     const accounts: string[] = [];

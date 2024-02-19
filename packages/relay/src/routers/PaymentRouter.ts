@@ -1,6 +1,6 @@
 import {
-    CurrencyRate,
     BIP20DelegatedTransfer,
+    CurrencyRate,
     Ledger,
     LoyaltyConsumer,
     PhoneLinkCollection,
@@ -38,6 +38,7 @@ import * as hre from "hardhat";
 import express from "express";
 import extend from "extend";
 
+// tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 
 export class PaymentRouter {

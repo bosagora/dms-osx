@@ -1,6 +1,6 @@
 import {
-    CurrencyRate,
     BIP20DelegatedTransfer,
+    CurrencyRate,
     Ledger,
     LoyaltyExchanger,
     PhoneLinkCollection,
