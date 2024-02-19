@@ -4,8 +4,8 @@ import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
-    CurrencyRate,
     BIP20DelegatedTransfer,
+    CurrencyRate,
     Ledger,
     LoyaltyConsumer,
     LoyaltyExchanger,

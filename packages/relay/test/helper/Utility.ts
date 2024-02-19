@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { DefaultServer } from "../../src/DefaultServer";
 import { handleNetworkError } from "../../src/network/ErrorTypes";
+
 export class TestServer extends DefaultServer {}
 
 /**

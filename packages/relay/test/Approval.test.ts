@@ -16,8 +16,8 @@ import {
 } from "../src/types";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
-    CurrencyRate,
     BIP20DelegatedTransfer,
+    CurrencyRate,
     Ledger,
     LoyaltyConsumer,
     LoyaltyExchanger,

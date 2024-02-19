@@ -1,5 +1,5 @@
 import { Config } from "./common/Config";
-import { logger, Logger } from "./common/Logger";
+import { logger } from "./common/Logger";
 import { DefaultServer } from "./DefaultServer";
 import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
