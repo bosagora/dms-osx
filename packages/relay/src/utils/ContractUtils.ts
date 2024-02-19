@@ -34,6 +34,10 @@ export class ContractUtils {
         return Math.floor(new Date().getTime() / 1000);
     }
 
+    public static getTimeStampBigInt(): bigint {
+        return BigInt(new Date().getTime()) / BigInt(1000);
+    }
+
     public static getTimeStamp10(): number {
         return Math.floor(new Date().getTime() / 10000) * 10;
     }

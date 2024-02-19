@@ -52,6 +52,9 @@ scheduler:
     - name: watch
       enable: true
       expression: "*/1 * * * * *"
+    - name: purchase
+      enable: true
+      expression: "*/1 * * * * *"
 
 relay:
   managerKeys:
@@ -73,6 +76,7 @@ relay:
   forcedCloseSecond: 300
   expoAccessToken: "${EXPO_ACCESS_TOKEN}"
   relayEndpoint: "${RELAY_ENDPOINT}"
+  storePurchaseWaitingSecond: 694800
 
 contracts:
   tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"
