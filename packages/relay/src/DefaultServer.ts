@@ -11,6 +11,7 @@ import { WebService } from "./service/WebService";
 
 import { RelaySigners } from "./contract/Signers";
 import { INotificationEventHandler, INotificationSender, NotificationSender } from "./delegator/NotificationSender";
+import { StorePurchaseRouter } from "./routers/StorePurchaseRouter";
 import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
 
@@ -31,6 +32,7 @@ export class DefaultServer extends WebService {
     public readonly graph: GraphStorage;
     private readonly sender: INotificationSender;
     public readonly etcRouter: ETCRouter;
+    public readonly purchaseRouter: StorePurchaseRouter;
 
     /**
      * Constructor
@@ -66,6 +68,7 @@ export class DefaultServer extends WebService {
             this.sender
         );
         this.etcRouter = new ETCRouter(this, this.config, this.storage, this.graph, this.sender);
+        this.purchaseRouter = new StorePurchaseRouter(this, this.config, this.storage, this.graph);
 
         if (schedules) {
             schedules.forEach((m) => this.schedules.push(m));
@@ -103,6 +106,7 @@ export class DefaultServer extends WebService {
         this.shopRouter.registerRoutes();
         this.paymentRouter.registerRoutes();
         this.etcRouter.registerRoutes();
+        this.purchaseRouter.registerRoutes();
 
         for (const m of this.schedules) await m.start();
 

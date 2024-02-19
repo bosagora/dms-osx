@@ -8,6 +8,7 @@ import { ContractUtils } from "./utils/ContractUtils";
 import { ApprovalScheduler } from "./scheduler/ApprovalScheduler";
 import { CloseScheduler } from "./scheduler/CloseScheduler";
 import { Scheduler } from "./scheduler/Scheduler";
+import { StorePurchaseScheduler } from "./scheduler/StorePurchaseScheduler";
 import { WatchScheduler } from "./scheduler/WatchScheduler";
 
 let server: DefaultServer;
@@ -40,6 +41,10 @@ async function main() {
         scheduler = config.scheduler.getScheduler("watch");
         if (scheduler && scheduler.enable) {
             schedulers.push(new WatchScheduler(scheduler.expression));
+        }
+        scheduler = config.scheduler.getScheduler("purchase");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new StorePurchaseScheduler(scheduler.expression));
         }
     }
 

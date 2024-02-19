@@ -66,16 +66,45 @@
             );
     </sql>
 
+    <sql id="purchase">
+        CREATE TABLE IF NOT EXISTS purchases
+        (
+            "purchaseId"            VARCHAR(66) NOT NULL,
+            "timestamp"             BIGINT NOT NULL,
+            "account"               VARCHAR(42)  NOT NULL,
+            "loyaltyType"           INTEGER NOT NULL,
+            "currency"              VARCHAR(12) NOT NULL,
+            "providePoint"          BIGINT NOT NULL,
+            "provideToken"          BIGINT NOT NULL,
+            "provideValue"          BIGINT NOT NULL,
+            "shopId"                VARCHAR(66) NOT NULL,
+            "shopCurrency"          VARCHAR(12) NOT NULL,
+            "shopProvidedAmount"    BIGINT NOT NULL,
+            "canceled"              VARCHAR(1) DEFAULT 'N',
+            "done"                  VARCHAR(1) DEFAULT 'N',
+            PRIMARY KEY ("purchaseId")
+        );
+
+        CREATE INDEX IF NOT EXISTS "purchases_account_index"
+            on purchases ("account");
+
+        CREATE INDEX IF NOT EXISTS "purchases_shopId_index"
+            on purchases ("shopId");
+
+    </sql>
+
     <select id="create_table">
         <include refid="payments"/>
         <include refid="tasks"/>
         <include refid="mobiles"/>
+        <include refid="purchase"/>
     </select>
 
     <select id="drop_table">
         DROP TABLE payments;
         DROP TABLE tasks;
         DROP TABLE mobiles;
+        DROP TABLE purchases;
     </select>
 
 </mapper>

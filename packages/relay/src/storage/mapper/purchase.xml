@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="purchase">
+
+    <insert id="postStorePurchase">
+        INSERT INTO purchases
+            (
+                "purchaseId"                ,
+                "timestamp"                 ,
+                "account"                   ,
+                "loyaltyType"               ,
+                "currency"                  ,
+                "providePoint"              ,
+                "provideToken"              ,
+                "provideValue"              ,
+                "shopId"                    ,
+                "shopCurrency"              ,
+                "shopProvidedAmount"
+            )
+        VALUES
+            (
+                #{purchaseId}               ,
+                #{timestamp}                ,
+                #{account}                  ,
+                #{loyaltyType}              ,
+                #{currency}                 ,
+                #{providePoint}             ,
+                #{provideToken}             ,
+                #{provideValue}             ,
+                #{shopId}                   ,
+                #{shopCurrency}             ,
+                #{shopProvidedAmount}
+            )
+        ON CONFLICT ("purchaseId") DO NOTHING;
+    </insert>
+
+    <select id="getStorePurchase">
+        SELECT * FROM purchases WHERE "canceled" = 'N' AND "done" = 'N';
+    </select>
+
+    <update id="updateCancel">
+        UPDATE purchases
+        SET
+            "canceled" = 'Y'
+        WHERE "purchaseId" = #{purchaseId}
+    </update>
+
+    <update id="updateDone">
+        UPDATE purchases
+        SET
+            "done" = 'Y'
+        WHERE "purchaseId" = #{purchaseId}
+    </update>
+
+    <select id="getToBeProvideOfUser">
+        SELECT
+            "purchaseId",
+            "timestamp",
+            "account",
+            "currency",
+            "loyaltyType",
+            "providePoint",
+            "provideToken",
+            "provideValue",
+            "shopId"
+        FROM purchases
+        WHERE
+            "canceled" = 'N' AND "done" = 'N' AND "account" = #{account}
+        ORDER BY "timestamp" desc;
+    </select>
+
+    <select id="getTotalToBeProvideOfUser">
+        SELECT
+            COALESCE(SUM("providePoint"), 0) as "providePoint",
+            COALESCE(SUM("provideToken"), 0) as "provideToken",
+            COALESCE(SUM("provideValue"), 0) as "provideValue"
+        FROM purchases
+        WHERE
+            "canceled" = 'N' AND "done" = 'N' AND "account" = #{account}
+    </select>
+
+    <select id="getToBeProvideOfShop">
+        SELECT
+            "purchaseId",
+            "timestamp",
+            "shopId",
+            "shopCurrency" as "currency",
+            "shopProvidedAmount" as "providedAmount"
+        FROM purchases
+        WHERE
+            "canceled" = 'N' AND "done" = 'N' AND "shopId" = #{shopId}
+        ORDER BY "timestamp" desc;
+    </select>
+
+    <select id="getTotalToBeProvideOfShop">
+        SELECT
+            COALESCE(SUM("shopProvidedAmount"), 0) as "providedAmount"
+        FROM purchases
+        WHERE
+            "canceled" = 'N' AND "done" = 'N' AND "shopId" = #{shopId}
+    </select>
+</mapper>

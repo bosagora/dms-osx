@@ -8,6 +8,10 @@ import MybatisMapper from "mybatis-mapper";
 import path from "path";
 import {
     ContractLoyaltyPaymentStatus,
+    GWI_UNIT,
+    IStorePurchaseData,
+    IToBeProvideOfShop,
+    IToBeProvideOfUser,
     LoyaltyPaymentTaskData,
     LoyaltyPaymentTaskStatus,
     MobileData,
@@ -30,6 +34,7 @@ export class RelayStorage extends Storage {
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/payment.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/task.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/mobile.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/purchase.xml")]);
         await this.createTables();
     }
 
@@ -685,5 +690,171 @@ export class RelayStorage extends Storage {
         });
     }
 
+    /// endregion
+
+    // region StorePurchase
+    public postStorePurchase(data: IStorePurchaseData): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "postStorePurchase", {
+                purchaseId: data.purchaseId,
+                timestamp: data.timestamp.toString(),
+                account: data.account.toLowerCase(),
+                loyaltyType: data.loyaltyType,
+                currency: data.currency,
+                providePoint: data.providePoint.div(GWI_UNIT).toString(),
+                provideToken: data.provideToken.div(GWI_UNIT).toString(),
+                provideValue: data.provideValue.div(GWI_UNIT).toString(),
+                shopId: data.shopId.toLowerCase(),
+                shopCurrency: data.shopCurrency,
+                shopProvidedAmount: data.shopProvidedAmount.div(GWI_UNIT).toString(),
+            })
+                .then(() => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getStorePurchase(): Promise<IStorePurchaseData[]> {
+        return new Promise<IStorePurchaseData[]>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "getStorePurchase", {})
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                purchaseId: m.purchaseId,
+                                timestamp: BigInt(m.timestamp.toString()),
+                                account: m.account,
+                                loyaltyType: m.loyaltyType,
+                                currency: m.currency,
+                                providePoint: BigNumber.from(m.providePoint.toString()).mul(GWI_UNIT),
+                                provideToken: BigNumber.from(m.provideToken.toString()).mul(GWI_UNIT),
+                                provideValue: BigNumber.from(m.provideValue.toString()).mul(GWI_UNIT),
+                                shopId: m.shopId,
+                                shopCurrency: m.shopCurrency,
+                                shopProvidedAmount: BigNumber.from(m.shopProvidedAmount.toString()).mul(GWI_UNIT),
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public cancelStorePurchase(purchaseId: string): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "updateCancel", { purchaseId })
+                .then((result) => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public doneStorePurchase(purchaseId: string): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "updateDone", { purchaseId })
+                .then((result) => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getToBeProvideOfUser(account: string): Promise<IToBeProvideOfUser[]> {
+        return new Promise<IToBeProvideOfUser[]>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "getToBeProvideOfUser", { account: account.toLowerCase() })
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                account: m.account,
+                                timestamp: BigInt(m.timestamp.toString()),
+                                loyaltyType: m.loyaltyType,
+                                currency: m.currency,
+                                providePoint: BigNumber.from(m.providePoint.toString()).mul(GWI_UNIT),
+                                provideToken: BigNumber.from(m.provideToken.toString()).mul(GWI_UNIT),
+                                provideValue: BigNumber.from(m.provideValue.toString()).mul(GWI_UNIT),
+                                purchaseId: m.purchaseId,
+                                shopId: m.shopId,
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getTotalToBeProvideOfUser(account: string): Promise<any> {
+        return new Promise<any>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "getTotalToBeProvideOfUser", { account: account.toLowerCase() })
+                .then((result) => {
+                    const m = result.rows[0];
+                    resolve({
+                        providePoint: BigNumber.from(m.providePoint.toString()).mul(GWI_UNIT),
+                        provideToken: BigNumber.from(m.provideToken.toString()).mul(GWI_UNIT),
+                        provideValue: BigNumber.from(m.provideValue.toString()).mul(GWI_UNIT),
+                    });
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getToBeProvideOfShop(shopId: string): Promise<IToBeProvideOfShop[]> {
+        return new Promise<IToBeProvideOfShop[]>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "getToBeProvideOfShop", { shopId: shopId.toLowerCase() })
+                .then((result) => {
+                    resolve(
+                        result.rows.map((m) => {
+                            return {
+                                shopId: m.shopId,
+                                timestamp: BigInt(m.timestamp.toString()),
+                                currency: m.currency,
+                                providedAmount: BigNumber.from(m.providedAmount.toString()).mul(GWI_UNIT),
+                                purchaseId: m.purchaseId,
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getTotalToBeProvideOfShop(shopId: string): Promise<any> {
+        return new Promise<any>(async (resolve, reject) => {
+            this.queryForMapper("purchase", "getTotalToBeProvideOfShop", { shopId: shopId.toLowerCase() })
+                .then((result) => {
+                    const m = result.rows[0];
+                    resolve({
+                        providedAmount: BigNumber.from(m.providedAmount.toString()).mul(GWI_UNIT),
+                    });
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
     /// endregion
 }

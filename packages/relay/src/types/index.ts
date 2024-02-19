@@ -1,5 +1,8 @@
 import { BigNumber } from "ethers";
 
+export const GWI_UNIT = 1000000000;
+export const PHONE_NULL = "0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c";
+
 export enum ContractLoyaltyType {
     POINT,
     TOKEN,
@@ -228,4 +231,38 @@ export interface IGraphShopData {
 export interface IGraphPageInfo {
     totalCount: number;
     totalPages: number;
+}
+
+export interface IStorePurchaseData {
+    purchaseId: string;
+    timestamp: bigint;
+    account: string;
+    loyaltyType: number;
+    currency: string;
+    providePoint: BigNumber;
+    provideToken: BigNumber;
+    provideValue: BigNumber;
+    shopId: string;
+    shopCurrency: string;
+    shopProvidedAmount: BigNumber;
+}
+
+export interface IToBeProvideOfUser {
+    account: string;
+    timestamp: bigint;
+    loyaltyType: number;
+    currency: string;
+    providePoint: BigNumber;
+    provideToken: BigNumber;
+    provideValue: BigNumber;
+    purchaseId: string;
+    shopId: string;
+}
+
+export interface IToBeProvideOfShop {
+    shopId: string;
+    timestamp: bigint;
+    currency: string;
+    providedAmount: BigNumber;
+    purchaseId: string;
 }
