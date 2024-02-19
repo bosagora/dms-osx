@@ -84,7 +84,6 @@ export class CloseScheduler extends Scheduler {
 
             const serverURL = this.config.relay.relayEndpoint;
 
-            console.log(`serverURL: ${serverURL}`);
             const client = axios.create();
             try {
                 const response = await client.post(
@@ -120,7 +119,6 @@ export class CloseScheduler extends Scheduler {
             logger.info(`CloseScheduler.onCancelPayment ${payment.paymentId}`);
 
             const serverURL = this.config.relay.relayEndpoint;
-            console.log(`serverURL: ${serverURL}`);
             const client = axios.create();
             try {
                 const response = await client.post(
@@ -172,7 +170,6 @@ export class CloseScheduler extends Scheduler {
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
                 const serverURL = this.config.relay.relayEndpoint;
-                console.log(`serverURL: ${serverURL}`);
                 const client = axios.create();
                 try {
                     const response = await client.post(
@@ -210,7 +207,6 @@ export class CloseScheduler extends Scheduler {
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {
                 const serverURL = this.config.relay.relayEndpoint;
-                console.log(`serverURL: ${serverURL}`);
                 const client = axios.create();
                 try {
                     const response = await client.post(
