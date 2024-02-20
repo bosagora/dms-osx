@@ -24,21 +24,11 @@ import {
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
-import { BigNumber, Wallet } from "ethers";
+import { Wallet } from "ethers";
 
-import { AddressZero } from "@ethersproject/constants";
 import { Deployments } from "./helper/Deployments";
 
 chai.use(solidity);
-
-interface IPurchaseData {
-    purchaseId: string;
-    amount: number;
-    providePercent: number;
-    currency: string;
-    userIndex: number;
-    shopIndex: number;
-}
 
 interface IShopData {
     shopId: string;
@@ -47,22 +37,8 @@ interface IShopData {
     wallet: Wallet;
 }
 
-interface IUserData {
-    phone: string;
-    address: string;
-    privateKey: string;
-}
-
 describe("Test for Ledger", () => {
     const deployments = new Deployments();
-    const phoneHashes: string[] = [
-        ContractUtils.getPhoneHash("08201012341001"),
-        ContractUtils.getPhoneHash("08201012341002"),
-        ContractUtils.getPhoneHash("08201012341003"),
-        ContractUtils.getPhoneHash("08201012341004"),
-        ContractUtils.getPhoneHash("08201012341005"),
-        ContractUtils.getPhoneHash("08201012341006"),
-    ];
     let validatorContract: Validator;
     let tokenContract: IBIP20DelegatedTransfer;
     let ledgerContract: Ledger;
@@ -77,11 +53,8 @@ describe("Test for Ledger", () => {
     let bridgeContract: Bridge;
     let loyaltyBridgeContract: LoyaltyBridge;
 
-    const multiple = BigNumber.from(1000000000);
-    const price = BigNumber.from(150).mul(multiple);
-
-    const amount = Amount.make(100_000, 18);
-    const assetAmount = Amount.make(10_000_000, 18);
+    let amount = Amount.make(100_000, 18).value;
+    const fee = Amount.make(5, 18).value;
 
     const addShopData = async (shopData: IShopData[]) => {
         for (const elem of shopData) {
@@ -113,187 +86,137 @@ describe("Test for Ledger", () => {
         await addShopData(shopData);
     };
 
-    let purchaseId = 0;
-    const getPurchaseId = (): string => {
-        const res = "P" + purchaseId.toString().padStart(10, "0");
-        purchaseId++;
-        return res;
-    };
-
-    let requestId: string;
-    let secret: string;
-    let secretLock: string;
     let depositId: string;
-    context("Bridge", () => {
-        const shopData: IShopData[] = [
-            {
-                shopId: "",
-                name: "Shop1",
-                currency: "krw",
-                wallet: deployments.accounts.shops[0],
-            },
-            {
-                shopId: "",
-                name: "Shop2",
-                currency: "krw",
-                wallet: deployments.accounts.shops[1],
-            },
-            {
-                shopId: "",
-                name: "Shop3",
-                currency: "krw",
-                wallet: deployments.accounts.shops[2],
-            },
-            {
-                shopId: "",
-                name: "Shop4",
-                currency: "krw",
-                wallet: deployments.accounts.shops[3],
-            },
-            {
-                shopId: "",
-                name: "Shop5",
-                currency: "krw",
-                wallet: deployments.accounts.shops[4],
-            },
-            {
-                shopId: "",
-                name: "Shop6",
-                currency: "krw",
-                wallet: deployments.accounts.shops[5],
-            },
-        ];
+    it("Deploy", async () => {
+        await deployAllContract([]);
+    });
 
-        before("Set Shop ID", async () => {
-            for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
-            }
-        });
+    it("Change Loyalty type of user", async () => {
+        const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+        const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
 
-        it("Deploy", async () => {
-            await deployAllContract(shopData);
-        });
+        await exchangerContract
+            .connect(deployments.accounts.certifier)
+            .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
+    });
 
-        it("Change Loyalty type of user", async () => {
-            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
-            const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
+    it("Deposit to Main Bridge", async () => {
+        const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
+        const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
+        const nonce = await tokenContract.nonceOf(deployments.accounts.users[0].address);
+        const message = ContractUtils.getTransferMessage(
+            deployments.accounts.users[0].address,
+            bridgeContract.address,
+            amount,
+            nonce
+        );
+        depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
+        const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
+        await expect(
+            bridgeContract
+                .connect(deployments.accounts.certifiers[0])
+                .depositToBridge(depositId, deployments.accounts.users[0].address, amount, signature)
+        )
+            .to.emit(bridgeContract, "BridgeDeposited")
+            .withNamedArgs({
+                depositId: depositId,
+                account: deployments.accounts.users[0].address,
+                amount: amount,
+            });
+        expect(await tokenContract.balanceOf(deployments.accounts.users[0].address)).to.deep.equal(
+            oldTokenBalance.sub(amount)
+        );
+        expect(await tokenContract.balanceOf(bridgeContract.address)).to.deep.equal(oldLiquidity.add(amount));
+    });
 
-            await exchangerContract
-                .connect(deployments.accounts.certifier)
-                .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
-        });
+    it("Withdraw from LoyaltyBridge", async () => {
+        const oldLiquidity = await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address);
+        const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+        const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
 
-        it("Deposit to Main Bridge", async () => {
-            const oldLiguidity = await tokenContract.balanceOf(bridgeContract.address);
-            const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
-            const nonce = await tokenContract.nonceOf(deployments.accounts.users[0].address);
-            const message = ContractUtils.getTransferMessage(
-                deployments.accounts.users[0].address,
-                bridgeContract.address,
-                amount.value,
-                nonce
-            );
-            depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
-            const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
-            await expect(
-                bridgeContract
-                    .connect(deployments.accounts.certifiers[0])
-                    .depositToBridge(depositId, deployments.accounts.users[0].address, amount.value, signature)
-            )
-                .to.emit(bridgeContract, "BridgeDeposited")
-                .withNamedArgs({
-                    depositId: depositId,
-                    account: deployments.accounts.users[0].address,
-                    amount: amount.value,
-                });
-            expect(await tokenContract.balanceOf(deployments.accounts.users[0].address)).to.deep.equal(
-                oldTokenBalance.sub(amount.value)
-            );
-            expect(await tokenContract.balanceOf(bridgeContract.address)).to.deep.equal(oldLiguidity.add(amount.value));
-        });
+        await loyaltyBridgeContract
+            .connect(deployments.accounts.bridgeValidators[0])
+            .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount);
+        await expect(
+            loyaltyBridgeContract
+                .connect(deployments.accounts.bridgeValidators[1])
+                .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount)
+        )
+            .to.emit(loyaltyBridgeContract, "BridgeWithdrawn")
+            .withNamedArgs({
+                withdrawId: depositId,
+                account: deployments.accounts.users[0].address,
+                amount: amount.sub(fee),
+            });
 
-        it("Withdraw from LoyaltyBridge", async () => {
-            const oldLiguidity = await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address);
-            const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+        expect(await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address)).to.deep.equal(
+            oldLiquidity.sub(amount)
+        );
+        expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
+            oldTokenBalance.add(amount.sub(fee))
+        );
+        expect(await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address)).to.deep.equal(
+            oldFeeBalance.add(fee)
+        );
+    });
 
-            await loyaltyBridgeContract
-                .connect(deployments.accounts.bridgeValidators[0])
-                .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount.value);
-            await expect(
-                loyaltyBridgeContract
-                    .connect(deployments.accounts.bridgeValidators[1])
-                    .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount.value)
-            )
-                .to.emit(loyaltyBridgeContract, "BridgeWithdrawn")
-                .withNamedArgs({
-                    withdrawId: depositId,
-                    account: deployments.accounts.users[0].address,
-                    amount: amount.value,
-                });
+    it("Deposit to Loyalty Bridge", async () => {
+        amount = Amount.make(50_000, 18).value;
+        const oldLiquidity = await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address);
+        const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
 
-            expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
-                oldTokenBalance.add(amount.value)
-            );
-            expect(await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address)).to.deep.equal(
-                oldLiguidity.sub(amount.value)
-            );
-        });
+        const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+        const message = ContractUtils.getTransferMessage(
+            deployments.accounts.users[0].address,
+            loyaltyBridgeContract.address,
+            amount,
+            nonce
+        );
+        depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
+        const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
+        await expect(
+            loyaltyBridgeContract
+                .connect(deployments.accounts.certifiers[0])
+                .depositToBridge(depositId, deployments.accounts.users[0].address, amount, signature)
+        )
+            .to.emit(loyaltyBridgeContract, "BridgeDeposited")
+            .withNamedArgs({
+                depositId: depositId,
+                account: deployments.accounts.users[0].address,
+                amount: amount,
+            });
+        expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
+            oldTokenBalance.sub(amount)
+        );
+        expect(await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address)).to.deep.equal(
+            oldLiquidity.add(amount)
+        );
+    });
 
-        it("Deposit to Loyalty Bridge", async () => {
-            const oldLiguidity = await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address);
-            const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+    it("Withdraw from Main Bridge", async () => {
+        const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
+        const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
+        const oldFeeBalance = await tokenContract.balanceOf(deployments.accounts.fee.address);
 
-            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
-            const message = ContractUtils.getTransferMessage(
-                deployments.accounts.users[0].address,
-                loyaltyBridgeContract.address,
-                amount.value,
-                nonce
-            );
-            depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
-            const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
-            await expect(
-                loyaltyBridgeContract
-                    .connect(deployments.accounts.certifiers[0])
-                    .depositToBridge(depositId, deployments.accounts.users[0].address, amount.value, signature)
-            )
-                .to.emit(loyaltyBridgeContract, "BridgeDeposited")
-                .withNamedArgs({
-                    depositId: depositId,
-                    account: deployments.accounts.users[0].address,
-                    amount: amount.value,
-                });
-            expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
-                oldTokenBalance.sub(amount.value)
-            );
-            expect(await ledgerContract.tokenBalanceOf(loyaltyBridgeContract.address)).to.deep.equal(
-                oldLiguidity.add(amount.value)
-            );
-        });
+        await bridgeContract
+            .connect(deployments.accounts.bridgeValidators[0])
+            .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount);
+        await expect(
+            bridgeContract
+                .connect(deployments.accounts.bridgeValidators[1])
+                .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount)
+        )
+            .to.emit(bridgeContract, "BridgeWithdrawn")
+            .withNamedArgs({
+                withdrawId: depositId,
+                account: deployments.accounts.users[0].address,
+                amount: amount.sub(fee),
+            });
 
-        it("Withdraw from Main Bridge", async () => {
-            const oldLiguidity = await tokenContract.balanceOf(bridgeContract.address);
-            const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
-
-            await bridgeContract
-                .connect(deployments.accounts.bridgeValidators[0])
-                .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount.value);
-            await expect(
-                bridgeContract
-                    .connect(deployments.accounts.bridgeValidators[1])
-                    .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount.value)
-            )
-                .to.emit(bridgeContract, "BridgeWithdrawn")
-                .withNamedArgs({
-                    withdrawId: depositId,
-                    account: deployments.accounts.users[0].address,
-                    amount: amount.value,
-                });
-
-            expect(await tokenContract.balanceOf(deployments.accounts.users[0].address)).to.deep.equal(
-                oldTokenBalance.add(amount.value)
-            );
-            expect(await tokenContract.balanceOf(bridgeContract.address)).to.deep.equal(oldLiguidity.sub(amount.value));
-        });
+        expect(await tokenContract.balanceOf(bridgeContract.address)).to.deep.equal(oldLiquidity.sub(amount));
+        expect(await tokenContract.balanceOf(deployments.accounts.users[0].address)).to.deep.equal(
+            oldTokenBalance.add(amount.sub(fee))
+        );
+        expect(await tokenContract.balanceOf(deployments.accounts.fee.address)).to.deep.equal(oldFeeBalance.add(fee));
     });
 });

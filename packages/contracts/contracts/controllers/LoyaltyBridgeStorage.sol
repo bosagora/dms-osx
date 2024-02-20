@@ -3,27 +3,23 @@
 pragma solidity ^0.8.2;
 
 import "loyalty-tokens/contracts/BIP20/IBIP20DelegatedTransfer.sol";
-import "../interfaces/ILedger.sol";
+
+import "../interfaces/IBridge.sol";
 import "../interfaces/IBridgeValidator.sol";
+import "../interfaces/ILedger.sol";
 
 contract LoyaltyBridgeStorage {
-    struct DepositData {
-        address account;
-        uint256 amount;
-    }
-    mapping(bytes32 => DepositData) internal deposits;
-
-    struct WithdrawData {
-        address account;
-        uint256 amount;
-        bool executed;
-    }
-    mapping(bytes32 => WithdrawData) internal withdraws;
+    mapping(bytes32 => IBridge.DepositData) internal deposits;
+    mapping(bytes32 => IBridge.WithdrawData) internal withdraws;
     mapping(bytes32 => mapping(address => bool)) internal confirmations;
 
     address internal foundationAccount;
-    ILedger internal ledgerContract;
+    address internal feeAccount;
+
+    uint256 internal fee;
+
     bool internal isSetLedger;
+    ILedger internal ledgerContract;
     IBridgeValidator internal validatorContract;
     IBIP20DelegatedTransfer internal tokenContract;
 }

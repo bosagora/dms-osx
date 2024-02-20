@@ -40,6 +40,7 @@ export class ResponseMessage {
         ["1520", "Loyalty type is not TOKEN"],
         ["1521", "Invalid value entered"],
         ["1530", "The payment ID already exists"],
+        ["1031", "The amount entered is less than the minimum amount"],
         ["1531", "The status of the payment corresponding to the payment ID is not in progress"],
         ["1532", "The status of the payment corresponding to the payment ID is not a cancellable condition"],
         ["1533", "The status of the payment corresponding to the payment ID is not being cancelled"],

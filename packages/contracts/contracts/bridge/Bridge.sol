@@ -6,10 +6,14 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "./BridgeValidator.sol";
+import "loyalty-tokens/contracts/BIP20/IBIP20DelegatedTransfer.sol";
+
+import "../interfaces/IBridge.sol";
+import "../interfaces/IBridgeLiquidity.sol";
+import "../interfaces/IBridgeValidator.sol";
 import "./BridgeStorage.sol";
 
-contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IBridge, IBridgeLiquidity {
     event BridgeDeposited(bytes32 depositId, address account, uint256 amount);
     event BridgeWithdrawn(bytes32 withdrawId, address account, uint256 amount);
 
@@ -36,10 +40,12 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         _;
     }
 
-    function initialize(address _validatorAddress, address _tokenAddress) external initializer {
+    function initialize(address _validatorAddress, address _tokenAddress, address _feeAccount) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
 
+        feeAccount = _feeAccount;
+        fee = 5e18;
         validatorContract = IBridgeValidator(_validatorAddress);
         tokenContract = IBIP20DelegatedTransfer(_tokenAddress);
     }
@@ -48,13 +54,13 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         require(_msgSender() == owner(), "Unauthorized access");
     }
 
-    function isAvailableDeposit(bytes32 _depositId) public view returns (bool) {
+    function isAvailableDepositId(bytes32 _depositId) external view override returns (bool) {
         if (deposits[_depositId].account == address(0x0)) return true;
         else return false;
     }
 
-    function isAvailableWithdraw(bytes32 _withdrawId) public view returns (bool) {
-        if (deposits[_withdrawId].account == address(0x0)) return true;
+    function isAvailableWithdrawId(bytes32 _withdrawId) external view override returns (bool) {
+        if (withdraws[_withdrawId].account == address(0x0)) return true;
         else return false;
     }
 
@@ -64,8 +70,9 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address _account,
         uint256 _amount,
         bytes calldata _signature
-    ) external notExistDeposit(_depositId) {
+    ) external override notExistDeposit(_depositId) {
         require(_amount % 1 gwei == 0, "1030");
+        require(_amount > fee * 2, "1031");
 
         if (tokenContract.delegatedTransfer(_account, address(this), _amount, _signature)) {
             DepositData memory data = DepositData({ account: _account, amount: _amount });
@@ -79,8 +86,9 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         bytes32 _withdrawId,
         address _account,
         uint256 _amount
-    ) external onlyValidator(_msgSender()) notConfirmed(_withdrawId, _msgSender()) {
+    ) external override onlyValidator(_msgSender()) notConfirmed(_withdrawId, _msgSender()) {
         require(_amount % 1 gwei == 0, "1030");
+        require(_amount > fee * 2, "1031");
 
         if (withdraws[_withdrawId].account == address(0x0)) {
             WithdrawData memory data = WithdrawData({ account: _account, amount: _amount, executed: false });
@@ -91,32 +99,39 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         }
         confirmations[_withdrawId][_msgSender()] = true;
 
-        if (!withdraws[_withdrawId].executed && isConfirmed(_withdrawId)) {
-            if (tokenContract.balanceOf(address(this)) >= _amount) {
-                tokenContract.transfer(_account, _amount);
+        if (!withdraws[_withdrawId].executed && _isConfirmed(_withdrawId)) {
+            uint256 withdrawalAmount = _amount - fee;
+            if (tokenContract.balanceOf(address(this)) >= withdraws[_withdrawId].amount) {
+                tokenContract.transfer(_account, withdrawalAmount);
+                tokenContract.transfer(feeAccount, fee);
                 withdraws[_withdrawId].executed = true;
-                emit BridgeWithdrawn(_withdrawId, _account, _amount);
+                emit BridgeWithdrawn(_withdrawId, _account, withdrawalAmount);
             }
         }
     }
 
     /// @notice 브리지에 자금을 인출합니다.
-    function executeWithdraw(bytes32 _withdrawId) external onlyValidator(_msgSender()) existWithdraw(_withdrawId) {
-        if (!withdraws[_withdrawId].executed && isConfirmed(_withdrawId)) {
+    function executeWithdraw(
+        bytes32 _withdrawId
+    ) external override onlyValidator(_msgSender()) existWithdraw(_withdrawId) {
+        if (!withdraws[_withdrawId].executed && _isConfirmed(_withdrawId)) {
+            uint256 withdrawalAmount = withdraws[_withdrawId].amount - fee;
             if (tokenContract.balanceOf(address(this)) >= withdraws[_withdrawId].amount) {
-                tokenContract.transferFrom(
-                    address(this),
-                    withdraws[_withdrawId].account,
-                    withdraws[_withdrawId].amount
-                );
+                tokenContract.transfer(withdraws[_withdrawId].account, withdrawalAmount);
+                tokenContract.transfer(feeAccount, fee);
                 withdraws[_withdrawId].executed = true;
-                emit BridgeWithdrawn(_withdrawId, withdraws[_withdrawId].account, withdraws[_withdrawId].amount);
+                emit BridgeWithdrawn(_withdrawId, withdraws[_withdrawId].account, withdrawalAmount);
             }
         }
     }
 
     /// @notice 검증자들의 합의가 완료되었는지 체크합니다.
-    function isConfirmed(bytes32 _withdrawId) public view returns (bool) {
+    function isConfirmed(bytes32 _withdrawId) external view override returns (bool) {
+        return _isConfirmed(_withdrawId);
+    }
+
+    /// @notice 검증자들의 합의가 완료되었는지 체크합니다.
+    function _isConfirmed(bytes32 _withdrawId) internal view returns (bool) {
         uint256 count = 0;
         for (uint256 i = 0; i < validatorContract.getLength(); i++) {
             address validator = validatorContract.itemOf(i);
@@ -127,17 +142,26 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 예치정보를 조회합니다
-    function getDepositInfo(bytes32 _depositId) public view returns (DepositData memory) {
+    function getDepositInfo(bytes32 _depositId) external view override returns (DepositData memory) {
         return deposits[_depositId];
     }
 
     /// @notice 인출정보를 조회합니다
-    function getWithdrawInfo(bytes32 _withdrawId) public view returns (WithdrawData memory) {
+    function getWithdrawInfo(bytes32 _withdrawId) external view override returns (WithdrawData memory) {
         return withdraws[_withdrawId];
     }
 
+    function getFee() external view override returns (uint256) {
+        return fee;
+    }
+
+    function changeFee(uint256 _fee) external override {
+        require(_msgSender() == owner(), "1050");
+        fee = _fee;
+    }
+
     /// @notice 브리지를 위한 유동성 자금을 예치합니다.
-    function depositLiquidity(uint256 _amount, bytes calldata _signature) external {
+    function depositLiquidity(uint256 _amount, bytes calldata _signature) external override {
         require(tokenContract.balanceOf(_msgSender()) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
 
@@ -148,7 +172,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 인출합니다.
-    function withdrawLiquidity(uint256 _amount) external {
+    function withdrawLiquidity(uint256 _amount) external override {
         require(liquidity[_msgSender()] > _amount, "1514");
         require(tokenContract.balanceOf(address(this)) > _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
@@ -159,7 +183,7 @@ contract Bridge is BridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 조회합니다.
-    function getLiquidity(address _account) external view returns (uint256) {
+    function getLiquidity(address _account) external view override returns (uint256) {
         return liquidity[_account];
     }
 }
