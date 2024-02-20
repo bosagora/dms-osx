@@ -542,7 +542,11 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
     const factory = await ethers.getContractFactory("Bridge");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("BridgeValidator"), await deployment.getContractAddress("TestKIOS")],
+        [
+            await deployment.getContractAddress("BridgeValidator"),
+            await deployment.getContractAddress("TestKIOS"),
+            accounts.fee.address,
+        ],
         {
             initializer: "initialize",
             kind: "uups",
@@ -552,6 +556,16 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
     await contract.deployTransaction.wait();
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
+
+    {
+        const assetAmount = Amount.make(1_000_000_000, 18).value;
+        const nonce = await (deployment.getContract("TestKIOS") as TestKIOS).nonceOf(accounts.owner.address);
+        const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount, nonce);
+        const signature = await ContractUtils.signMessage(accounts.owner, message);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(assetAmount, signature);
+        console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
+        await tx1.wait();
+    }
 }
 
 async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) {
@@ -728,7 +742,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         await tx12.wait();
     }
     {
-        const assetAmount = Amount.make(2_000_000_000, 18).value;
+        const assetAmount = Amount.make(1_000_000_000, 18).value;
         const nonce = await (deployment.getContract("TestKIOS") as TestKIOS).nonceOf(accounts.owner.address);
         const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount, nonce);
         const signature = await ContractUtils.signMessage(accounts.owner, message);

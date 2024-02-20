@@ -10,6 +10,7 @@ export class ResponseMessage {
         ["1010", "The last validator cannot be removed"],
         ["1020", "Not allowed deposit"],
         ["1030", "Amount not multiple of gwei"],
+        ["1031", "The amount entered is less than the minimum amount"],
         ["1050", "Sender is not authorized to execute"],
         ["1051", "Unable to transfer from foundation account"],
         ["1052", "Unable to transfer to foundation account"],

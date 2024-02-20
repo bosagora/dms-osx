@@ -8,10 +8,14 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+import "loyalty-tokens/contracts/BIP20/IBIP20DelegatedTransfer.sol";
+
+import "../interfaces/IBridge.sol";
+import "../interfaces/IBridgeValidator.sol";
 import "../interfaces/ILedger.sol";
 import "./LoyaltyBridgeStorage.sol";
 
-contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IBridge {
     event BridgeDeposited(bytes32 depositId, address account, uint256 amount);
     event BridgeWithdrawn(bytes32 withdrawId, address account, uint256 amount);
 
@@ -19,6 +23,7 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
 
+        fee = 5e18;
         validatorContract = IBridgeValidator(_validatorAddress);
 
         isSetLedger = false;
@@ -30,6 +35,7 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         if (!isSetLedger) {
             ledgerContract = ILedger(_contractAddress);
             foundationAccount = ledgerContract.getFoundationAccount();
+            feeAccount = ledgerContract.getFeeAccount();
             tokenContract = IBIP20DelegatedTransfer(ledgerContract.getTokenAddress());
             isSetLedger = true;
         }
@@ -59,13 +65,13 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         _;
     }
 
-    function isAvailableDeposit(bytes32 _depositId) public view returns (bool) {
+    function isAvailableDepositId(bytes32 _depositId) external view override returns (bool) {
         if (deposits[_depositId].account == address(0x0)) return true;
         else return false;
     }
 
-    function isAvailableWithdraw(bytes32 _withdrawId) public view returns (bool) {
-        if (deposits[_withdrawId].account == address(0x0)) return true;
+    function isAvailableWithdrawId(bytes32 _withdrawId) external view override returns (bool) {
+        if (withdraws[_withdrawId].account == address(0x0)) return true;
         else return false;
     }
 
@@ -75,13 +81,14 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         address _account,
         uint256 _amount,
         bytes calldata _signature
-    ) external notExistDeposit(_depositId) {
+    ) external override notExistDeposit(_depositId) {
         require(_account != foundationAccount, "1052");
         bytes32 dataHash = keccak256(abi.encode(_account, address(this), _amount, ledgerContract.nonceOf(_account)));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
         require(ledgerContract.loyaltyTypeOf(_account) == ILedger.LoyaltyType.TOKEN, "1520");
         require(ledgerContract.tokenBalanceOf(_account) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
+        require(_amount > fee * 2, "1031");
 
         ledgerContract.transferToken(_account, address(this), _amount);
         ledgerContract.increaseNonce(_account);
@@ -96,8 +103,9 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         bytes32 _withdrawId,
         address _account,
         uint256 _amount
-    ) external onlyValidator(_msgSender()) notConfirmed(_withdrawId, _msgSender()) {
+    ) external override onlyValidator(_msgSender()) notConfirmed(_withdrawId, _msgSender()) {
         require(_amount % 1 gwei == 0, "1030");
+        require(_amount > fee * 2, "1031");
 
         if (withdraws[_withdrawId].account == address(0x0)) {
             WithdrawData memory data = WithdrawData({ account: _account, amount: _amount, executed: false });
@@ -108,32 +116,39 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         }
         confirmations[_withdrawId][_msgSender()] = true;
 
-        if (!withdraws[_withdrawId].executed && isConfirmed(_withdrawId)) {
-            if (ledgerContract.tokenBalanceOf(address(this)) >= _amount) {
-                ledgerContract.transferToken(address(this), _account, _amount);
+        if (!withdraws[_withdrawId].executed && _isConfirmed(_withdrawId)) {
+            uint256 withdrawalAmount = _amount - fee;
+            if (ledgerContract.tokenBalanceOf(address(this)) >= withdraws[_withdrawId].amount) {
+                ledgerContract.transferToken(address(this), _account, withdrawalAmount);
+                ledgerContract.transferToken(address(this), feeAccount, fee);
                 withdraws[_withdrawId].executed = true;
-                emit BridgeWithdrawn(_withdrawId, _account, _amount);
+                emit BridgeWithdrawn(_withdrawId, _account, withdrawalAmount);
             }
         }
     }
 
     /// @notice 브리지에 자금을 인출합니다.
-    function executeWithdraw(bytes32 _withdrawId) external onlyValidator(_msgSender()) existWithdraw(_withdrawId) {
-        if (!withdraws[_withdrawId].executed && isConfirmed(_withdrawId)) {
+    function executeWithdraw(
+        bytes32 _withdrawId
+    ) external override onlyValidator(_msgSender()) existWithdraw(_withdrawId) {
+        if (!withdraws[_withdrawId].executed && _isConfirmed(_withdrawId)) {
+            uint256 withdrawalAmount = withdraws[_withdrawId].amount - fee;
             if (ledgerContract.tokenBalanceOf(address(this)) >= withdraws[_withdrawId].amount) {
-                ledgerContract.transferToken(
-                    address(this),
-                    withdraws[_withdrawId].account,
-                    withdraws[_withdrawId].amount
-                );
+                ledgerContract.transferToken(address(this), withdraws[_withdrawId].account, withdrawalAmount);
+                ledgerContract.transferToken(address(this), feeAccount, fee);
                 withdraws[_withdrawId].executed = true;
-                emit BridgeWithdrawn(_withdrawId, withdraws[_withdrawId].account, withdraws[_withdrawId].amount);
+                emit BridgeWithdrawn(_withdrawId, withdraws[_withdrawId].account, withdrawalAmount);
             }
         }
     }
 
     /// @notice 검증자들의 합의가 완료되었는지 체크합니다.
-    function isConfirmed(bytes32 _withdrawId) public view returns (bool) {
+    function isConfirmed(bytes32 _withdrawId) external view override returns (bool) {
+        return _isConfirmed(_withdrawId);
+    }
+
+    /// @notice 검증자들의 합의가 완료되었는지 체크합니다.
+    function _isConfirmed(bytes32 _withdrawId) internal view returns (bool) {
         uint256 count = 0;
         for (uint256 i = 0; i < validatorContract.getLength(); i++) {
             address validator = validatorContract.itemOf(i);
@@ -144,12 +159,21 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
     }
 
     /// @notice 예치정보를 조회합니다
-    function getDepositInfo(bytes32 _depositId) public view returns (DepositData memory) {
+    function getDepositInfo(bytes32 _depositId) external view override returns (DepositData memory) {
         return deposits[_depositId];
     }
 
     /// @notice 인출정보를 조회합니다
-    function getWithdrawInfo(bytes32 _withdrawId) public view returns (WithdrawData memory) {
+    function getWithdrawInfo(bytes32 _withdrawId) external view override returns (WithdrawData memory) {
         return withdraws[_withdrawId];
+    }
+
+    function getFee() external view override returns (uint256) {
+        return fee;
+    }
+
+    function changeFee(uint256 _fee) external override {
+        require(_msgSender() == owner(), "1050");
+        fee = _fee;
     }
 }

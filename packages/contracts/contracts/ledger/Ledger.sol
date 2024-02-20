@@ -8,6 +8,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+import "../interfaces/IBridgeLiquidity.sol";
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/ILedger.sol";
 import "./LedgerStorage.sol";
@@ -15,7 +16,7 @@ import "./LedgerStorage.sol";
 import "../lib/DMS.sol";
 
 /// @notice 포인트와 토큰의 원장
-contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ILedger {
+contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, ILedger, IBridgeLiquidity {
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedPoint(
         address account,
@@ -440,7 +441,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 예치합니다.
-    function depositLiquidity(uint256 _amount, bytes calldata _signature) external {
+    function depositLiquidity(uint256 _amount, bytes calldata _signature) external override {
         require(tokenContract.balanceOf(_msgSender()) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
 
@@ -452,7 +453,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 인출합니다.
-    function withdrawLiquidity(uint256 _amount) external {
+    function withdrawLiquidity(uint256 _amount) external override {
         require(liquidity[_msgSender()] >= _amount, "1514");
         require(tokenBalances[bridgeAddress] >= _amount, "1511");
         require(tokenContract.balanceOf(address(this)) >= _amount, "1511");
@@ -465,7 +466,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 조회합니다.
-    function getLiquidity(address _account) external view returns (uint256) {
+    function getLiquidity(address _account) external view override returns (uint256) {
         return liquidity[_account];
     }
 }
