@@ -8,10 +8,12 @@
     "LoyaltyConsumer": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
     "LoyaltyExchanger": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
     "LoyaltyTransfer": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
-    "Shop": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
-    "Ledger": "0x0c6B5326058F28Daf7D9ED40Ff2e3755a0bb664d"
+    "BridgeValidator": "0xE7D4f38Fad1C1C5EAA8A1280678B860a7A9519c1",
+    "LoyaltyBridge": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
+    "Shop": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
+    "Ledger": "0xcAde85D03A2ABd41b608004BBB25440D28C64912"
   },
-  "bosagora_testnet":{
+  "bosagora_testnet": {
     "LoyaltyToken": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
     "Validator": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
     "CurrencyRate": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
@@ -20,8 +22,10 @@
     "LoyaltyConsumer": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
     "LoyaltyExchanger": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
     "LoyaltyTransfer": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
-    "Shop": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
-    "Ledger": "0x0c6B5326058F28Daf7D9ED40Ff2e3755a0bb664d"
+    "BridgeValidator": "0xE7D4f38Fad1C1C5EAA8A1280678B860a7A9519c1",
+    "LoyaltyBridge": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
+    "Shop": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
+    "Ledger": "0xcAde85D03A2ABd41b608004BBB25440D28C64912"
   },
   "bosagora_devnet": {
     "LoyaltyToken": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
@@ -32,7 +36,9 @@
     "LoyaltyConsumer": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
     "LoyaltyExchanger": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
     "LoyaltyTransfer": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
-    "Shop": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
-    "Ledger": "0x0c6B5326058F28Daf7D9ED40Ff2e3755a0bb664d"
+    "BridgeValidator": "0xE7D4f38Fad1C1C5EAA8A1280678B860a7A9519c1",
+    "LoyaltyBridge": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
+    "Shop": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
+    "Ledger": "0xcAde85D03A2ABd41b608004BBB25440D28C64912"
   }
 }

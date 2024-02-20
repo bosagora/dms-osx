@@ -394,6 +394,61 @@ function getAccounts() {
     }
 
     if (
+        process.env.BRIDGE_VALIDATOR1 !== undefined &&
+        process.env.BRIDGE_VALIDATOR1.trim() !== "" &&
+        reg_bytes64.test(process.env.BRIDGE_VALIDATOR1)
+    ) {
+        accounts.push(process.env.BRIDGE_VALIDATOR1);
+    } else {
+        process.env.BRIDGE_VALIDATOR1 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.BRIDGE_VALIDATOR1);
+    }
+
+    if (
+        process.env.BRIDGE_VALIDATOR2 !== undefined &&
+        process.env.BRIDGE_VALIDATOR2.trim() !== "" &&
+        reg_bytes64.test(process.env.BRIDGE_VALIDATOR2)
+    ) {
+        accounts.push(process.env.BRIDGE_VALIDATOR2);
+    } else {
+        process.env.BRIDGE_VALIDATOR2 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.BRIDGE_VALIDATOR2);
+    }
+
+    if (
+        process.env.BRIDGE_VALIDATOR3 !== undefined &&
+        process.env.BRIDGE_VALIDATOR3.trim() !== "" &&
+        reg_bytes64.test(process.env.BRIDGE_VALIDATOR3)
+    ) {
+        accounts.push(process.env.BRIDGE_VALIDATOR3);
+    } else {
+        process.env.BRIDGE_VALIDATOR3 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.BRIDGE_VALIDATOR3);
+    }
+
+    if (
+        process.env.BRIDGE_VALIDATOR4 !== undefined &&
+        process.env.BRIDGE_VALIDATOR4.trim() !== "" &&
+        reg_bytes64.test(process.env.BRIDGE_VALIDATOR4)
+    ) {
+        accounts.push(process.env.BRIDGE_VALIDATOR4);
+    } else {
+        process.env.BRIDGE_VALIDATOR4 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.BRIDGE_VALIDATOR4);
+    }
+
+    if (
+        process.env.BRIDGE_VALIDATOR5 !== undefined &&
+        process.env.BRIDGE_VALIDATOR5.trim() !== "" &&
+        reg_bytes64.test(process.env.BRIDGE_VALIDATOR5)
+    ) {
+        accounts.push(process.env.BRIDGE_VALIDATOR5);
+    } else {
+        process.env.BRIDGE_VALIDATOR5 = Wallet.createRandom().privateKey;
+        accounts.push(process.env.BRIDGE_VALIDATOR5);
+    }
+
+    if (
         process.env.TOKEN_OWNER1 !== undefined &&
         process.env.TOKEN_OWNER1.trim() !== "" &&
         reg_bytes64.test(process.env.TOKEN_OWNER1)
