@@ -7,9 +7,11 @@ import { HardhatAccount } from "../../src/HardhatAccount";
 import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
+    BridgeValidator,
     CurrencyRate,
     LoyaltyToken,
     Ledger,
+    LoyaltyBridge,
     LoyaltyBurner,
     LoyaltyConsumer,
     LoyaltyExchanger,
@@ -60,6 +62,7 @@ interface IAccount {
     fee: Wallet;
     validators: Wallet[];
     linkValidators: Wallet[];
+    bridgeValidators: Wallet[];
     certifiers: Wallet[];
     tokenOwners: Wallet[];
 }
@@ -116,6 +119,11 @@ class Deployments {
             linkValidator1,
             linkValidator2,
             linkValidator3,
+            bridgeValidator1,
+            bridgeValidator2,
+            bridgeValidator3,
+            bridgeValidator4,
+            bridgeValidator5,
             tokenOwner1,
             tokenOwner2,
             tokenOwner3,
@@ -145,6 +153,13 @@ class Deployments {
                 validator14,
                 validator15,
                 validator16,
+            ],
+            bridgeValidators: [
+                bridgeValidator1,
+                bridgeValidator2,
+                bridgeValidator3,
+                bridgeValidator4,
+                bridgeValidator5,
             ],
             linkValidators: [linkValidator1, linkValidator2, linkValidator3],
             certifiers: [
@@ -284,7 +299,7 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
     const contract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
 
     {
-        const amount = BOACoin.make(1_000_000_000);
+        const amount = BOACoin.make(10_000_000_000);
 
         const encodedData = contract.interface.encodeFunctionData("transfer", [accounts.owner.address, amount.value]);
         const wallet = deployment.getContract("MultiSigWallet") as MultiSigWallet;
@@ -320,7 +335,7 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
     }
 
     {
-        const assetAmount = Amount.make(100_000_000, 18);
+        const assetAmount = Amount.make(8_000_000_000, 18);
         const tx1 = await contract.connect(accounts.owner).transfer(accounts.foundation.address, assetAmount.value);
         console.log(`Transfer token to foundation (tx: ${tx1.hash})...`);
         // await tx1.wait();
@@ -553,6 +568,48 @@ async function deployLoyaltyTransfer(accounts: IAccount, deployment: Deployments
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
+async function deployBridgeValidator(accounts: IAccount, deployment: Deployments) {
+    const contractName = "BridgeValidator";
+    console.log(`Deploy ${contractName}...`);
+
+    const factory = await ethers.getContractFactory("BridgeValidator");
+    const contract = (await upgrades.deployProxy(
+        factory.connect(accounts.owner),
+        [accounts.bridgeValidators.map((m) => m.address), 3],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as BridgeValidator;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+}
+
+async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "LoyaltyBridge";
+    console.log(`Deploy ${contractName}...`);
+    if (deployment.getContract("BridgeValidator") === undefined) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+
+    const factory = await ethers.getContractFactory("LoyaltyBridge");
+    const contract = (await upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [await deployment.getContractAddress("BridgeValidator")],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as LoyaltyBridge;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+}
+
 async function deployShop(accounts: IAccount, deployment: Deployments) {
     const contractName = "Shop";
     console.log(`Deploy ${contractName}...`);
@@ -633,7 +690,8 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         deployment.getContract("LoyaltyConsumer") === undefined ||
         deployment.getContract("LoyaltyExchanger") === undefined ||
         deployment.getContract("LoyaltyBurner") === undefined ||
-        deployment.getContract("LoyaltyTransfer") === undefined
+        deployment.getContract("LoyaltyTransfer") === undefined ||
+        deployment.getContract("LoyaltyBridge") === undefined
     ) {
         console.error("Contract is not deployed!");
         return;
@@ -654,6 +712,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
             await deployment.getContractAddress("LoyaltyExchanger"),
             await deployment.getContractAddress("LoyaltyBurner"),
             await deployment.getContractAddress("LoyaltyTransfer"),
+            await deployment.getContractAddress("LoyaltyBridge"),
         ],
         {
             initializer: "initialize",
@@ -694,10 +753,16 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     console.log(`Set address of LoyaltyTransfer (tx: ${tx25.hash})...`);
     // await tx25.wait();
 
+    const tx26 = await (deployment.getContract("LoyaltyBridge") as LoyaltyBridge)
+        .connect(accounts.deployer)
+        .setLedger(contract.address);
+    console.log(`Set address of LoyaltyBridge (tx: ${tx26.hash})...`);
+    // await tx26.wait();
+
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
     {
-        const assetAmount = Amount.make(100_000_000, 18);
+        const assetAmount = Amount.make(8_000_000_000, 18);
         const tx5 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
             .connect(accounts.foundation)
             .approve(contract.address, assetAmount.value);
@@ -707,6 +772,14 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         const tx6 = await contract.connect(accounts.foundation).deposit(assetAmount.value);
         console.log(`Deposit foundation's amount (tx: ${tx6.hash})...`);
         // await tx6.wait();
+
+        const assetAmount2 = Amount.make(500_000_000, 18).value;
+        const nonce = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).nonceOf(accounts.owner.address);
+        const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount2, nonce);
+        const signature = await ContractUtils.signMessage(accounts.owner, message);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(assetAmount2, signature);
+        console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
+        // await tx1.wait();
 
         console.log(`Deposit users.json`);
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
@@ -832,6 +905,8 @@ async function main() {
     deployments.addDeployer(deployLoyaltyConsumer);
     deployments.addDeployer(deployLoyaltyExchanger);
     deployments.addDeployer(deployLoyaltyTransfer);
+    deployments.addDeployer(deployBridgeValidator);
+    deployments.addDeployer(deployLoyaltyBridge);
     deployments.addDeployer(deployShop);
     deployments.addDeployer(deployLedger);
 

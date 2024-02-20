@@ -105,6 +105,11 @@ export class Deployments {
             linkValidator1,
             linkValidator2,
             linkValidator3,
+            bridgeValidator1,
+            bridgeValidator2,
+            bridgeValidator3,
+            bridgeValidator4,
+            bridgeValidator5,
             purchaseManager,
             user01,
             user02,
@@ -136,7 +141,7 @@ export class Deployments {
             settlements,
             fee,
             validators: [validator01, validator02, validator03],
-            linkValidators: [linkValidator1],
+            linkValidators: [bridgeValidator1],
             bridgeValidators: [validator04, validator05, validator06],
             certifiers: [
                 certifier01,
@@ -780,7 +785,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     console.log(`Set address of LoyaltyTransfer (tx: ${tx5.hash})...`);
     await tx5.wait();
 
-    const tx6 = await (deployment.getContract("LoyaltyBridge") as LoyaltyBurner)
+    const tx6 = await (deployment.getContract("LoyaltyBridge") as LoyaltyBridge)
         .connect(accounts.deployer)
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyBridge (tx: ${tx6.hash})...`);
