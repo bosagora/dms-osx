@@ -4,7 +4,7 @@
     "dataSources": {
         "Ledger": {
             "name": "Ledger",
-            "address": "0x0c6B5326058F28Daf7D9ED40Ff2e3755a0bb664d",
+            "address": "0xcAde85D03A2ABd41b608004BBB25440D28C64912",
             "startBlock": 1
         },
         "LoyaltyProvider": {
@@ -29,7 +29,7 @@
         },
         "Shop": {
             "name": "Shop",
-            "address": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
+            "address": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
             "startBlock": 1
         }
     }

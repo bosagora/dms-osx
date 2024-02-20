@@ -25,6 +25,7 @@ import {
 } from "../types";
 import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
+import extend from "extend";
 
 export class ShopRouter {
     /**
@@ -353,7 +354,9 @@ export class ShopRouter {
      * @private
      */
     private async shop_update_create(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/update/create ${req.ip}:${JSON.stringify(req.body)}`);
+        const params = extend(true, {}, req.body);
+        params.accessKey = undefined;
+        logger.http(`POST /v1/shop/update/create ${req.ip}:${JSON.stringify(params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -429,7 +432,9 @@ export class ShopRouter {
      * @private
      */
     private async shop_update_approval(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/update/approval ${req.ip}:${JSON.stringify(req.body)}`);
+        const params = extend(true, {}, req.body);
+        params.accessKey = undefined;
+        logger.http(`POST /v1/shop/update/approval ${req.ip}:${JSON.stringify(params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -540,7 +545,9 @@ export class ShopRouter {
      * @private
      */
     private async shop_status_create(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/status/create ${req.ip}:${JSON.stringify(req.body)}`);
+        const params = extend(true, {}, req.body);
+        params.accessKey = undefined;
+        logger.http(`POST /v1/shop/status/create ${req.ip}:${JSON.stringify(params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -619,7 +626,9 @@ export class ShopRouter {
      * @private
      */
     private async shop_status_approval(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/status/approval ${req.ip}:${JSON.stringify(req.body)}`);
+        const params = extend(true, {}, req.body);
+        params.accessKey = undefined;
+        logger.http(`POST /v1/shop/status/approval ${req.ip}:${JSON.stringify(params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

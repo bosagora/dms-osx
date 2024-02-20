@@ -80,6 +80,32 @@ export class Deposited__Params {
   }
 }
 
+export class DepositedLiquidity extends ethereum.Event {
+  get params(): DepositedLiquidity__Params {
+    return new DepositedLiquidity__Params(this);
+  }
+}
+
+export class DepositedLiquidity__Params {
+  _event: DepositedLiquidity;
+
+  constructor(event: DepositedLiquidity) {
+    this._event = event;
+  }
+
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get liquidity(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class Initialized extends ethereum.Event {
   get params(): Initialized__Params {
     return new Initialized__Params(this);
@@ -316,6 +342,32 @@ export class Withdrawn__Params {
   }
 }
 
+export class WithdrawnLiquidity extends ethereum.Event {
+  get params(): WithdrawnLiquidity__Params {
+    return new WithdrawnLiquidity__Params(this);
+  }
+}
+
+export class WithdrawnLiquidity__Params {
+  _event: WithdrawnLiquidity;
+
+  constructor(event: WithdrawnLiquidity) {
+    this._event = event;
+  }
+
+  get account(): Address {
+    return this._event.parameters[0].value.toAddress();
+  }
+
+  get amount(): BigInt {
+    return this._event.parameters[1].value.toBigInt();
+  }
+
+  get liquidity(): BigInt {
+    return this._event.parameters[2].value.toBigInt();
+  }
+}
+
 export class Ledger extends ethereum.SmartContract {
   static bind(address: Address): Ledger {
     return new Ledger("Ledger", address);
@@ -334,6 +386,25 @@ export class Ledger extends ethereum.SmartContract {
     }
     let value = result.value;
     return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
+  bridgeAddress(): Address {
+    let result = super.call("bridgeAddress", "bridgeAddress():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_bridgeAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "bridgeAddress",
+      "bridgeAddress():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
   burnerAddress(): Address {
@@ -496,6 +567,27 @@ export class Ledger extends ethereum.SmartContract {
     return ethereum.CallResult.fromValue(value[0].toAddress());
   }
 
+  getLiquidity(_account: Address): BigInt {
+    let result = super.call("getLiquidity", "getLiquidity(address):(uint256)", [
+      ethereum.Value.fromAddress(_account)
+    ]);
+
+    return result[0].toBigInt();
+  }
+
+  try_getLiquidity(_account: Address): ethereum.CallResult<BigInt> {
+    let result = super.tryCall(
+      "getLiquidity",
+      "getLiquidity(address):(uint256)",
+      [ethereum.Value.fromAddress(_account)]
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toBigInt());
+  }
+
   getSettlementAccount(): Address {
     let result = super.call(
       "getSettlementAccount",
@@ -510,6 +602,29 @@ export class Ledger extends ethereum.SmartContract {
     let result = super.tryCall(
       "getSettlementAccount",
       "getSettlementAccount():(address)",
+      []
+    );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  getTokenAddress(): Address {
+    let result = super.call(
+      "getTokenAddress",
+      "getTokenAddress():(address)",
+      []
+    );
+
+    return result[0].toAddress();
+  }
+
+  try_getTokenAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall(
+      "getTokenAddress",
+      "getTokenAddress():(address)",
       []
     );
     if (result.reverted) {
@@ -655,6 +770,21 @@ export class Ledger extends ethereum.SmartContract {
       "settlementAccount():(address)",
       []
     );
+    if (result.reverted) {
+      return new ethereum.CallResult();
+    }
+    let value = result.value;
+    return ethereum.CallResult.fromValue(value[0].toAddress());
+  }
+
+  tokenAddress(): Address {
+    let result = super.call("tokenAddress", "tokenAddress():(address)", []);
+
+    return result[0].toAddress();
+  }
+
+  try_tokenAddress(): ethereum.CallResult<Address> {
+    let result = super.tryCall("tokenAddress", "tokenAddress():(address)", []);
     if (result.reverted) {
       return new ethereum.CallResult();
     }
@@ -962,6 +1092,40 @@ export class DepositCall__Outputs {
   }
 }
 
+export class DepositLiquidityCall extends ethereum.Call {
+  get inputs(): DepositLiquidityCall__Inputs {
+    return new DepositLiquidityCall__Inputs(this);
+  }
+
+  get outputs(): DepositLiquidityCall__Outputs {
+    return new DepositLiquidityCall__Outputs(this);
+  }
+}
+
+export class DepositLiquidityCall__Inputs {
+  _call: DepositLiquidityCall;
+
+  constructor(call: DepositLiquidityCall) {
+    this._call = call;
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+
+  get _signature(): Bytes {
+    return this._call.inputValues[1].value.toBytes();
+  }
+}
+
+export class DepositLiquidityCall__Outputs {
+  _call: DepositLiquidityCall;
+
+  constructor(call: DepositLiquidityCall) {
+    this._call = call;
+  }
+}
+
 export class IncreaseNonceCall extends ethereum.Call {
   get inputs(): IncreaseNonceCall__Inputs {
     return new IncreaseNonceCall__Inputs(this);
@@ -1051,6 +1215,10 @@ export class InitializeCall__Inputs {
 
   get _transferAddress(): Address {
     return this._call.inputValues[10].value.toAddress();
+  }
+
+  get _bridgeAddress(): Address {
+    return this._call.inputValues[11].value.toAddress();
   }
 }
 
@@ -1540,6 +1708,36 @@ export class WithdrawCall__Outputs {
   _call: WithdrawCall;
 
   constructor(call: WithdrawCall) {
+    this._call = call;
+  }
+}
+
+export class WithdrawLiquidityCall extends ethereum.Call {
+  get inputs(): WithdrawLiquidityCall__Inputs {
+    return new WithdrawLiquidityCall__Inputs(this);
+  }
+
+  get outputs(): WithdrawLiquidityCall__Outputs {
+    return new WithdrawLiquidityCall__Outputs(this);
+  }
+}
+
+export class WithdrawLiquidityCall__Inputs {
+  _call: WithdrawLiquidityCall;
+
+  constructor(call: WithdrawLiquidityCall) {
+    this._call = call;
+  }
+
+  get _amount(): BigInt {
+    return this._call.inputValues[0].value.toBigInt();
+  }
+}
+
+export class WithdrawLiquidityCall__Outputs {
+  _call: WithdrawLiquidityCall;
+
+  constructor(call: WithdrawLiquidityCall) {
     this._call = call;
   }
 }
