@@ -71,7 +71,7 @@ contract LoyaltyBurner is LoyaltyBurnerStorage, Initializable, OwnableUpgradeabl
         // Get a hash of all the data
         bytes32[] memory messages = new bytes32[](_data.length);
         for (uint256 i = 0; i < _data.length; i++) {
-            messages[i] = keccak256(abi.encode(_data[i].account, _data[i].phone, _data[i].amount));
+            messages[i] = keccak256(abi.encode(_data[i].account, _data[i].phone, _data[i].amount, block.chainid));
         }
         bytes32 dataHash = keccak256(abi.encode(_height, messages.length, messages));
 

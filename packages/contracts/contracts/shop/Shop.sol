@@ -104,7 +104,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     ) external virtual {
         require(shops[_shopId].status == ShopStatus.INVALID, "1200");
         require(currencyRate.support(_currency), "1211");
-        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         ShopData memory data = ShopData({
@@ -147,7 +147,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         require(currencyRate.support(_currency), "1211");
         require(shops[id].account == _account, "1050");
 
-        bytes32 dataHash = keccak256(abi.encode(id, _account, nonce[_account]));
+        bytes32 dataHash = keccak256(abi.encode(id, _account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         shops[id].name = _name;
@@ -191,7 +191,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         require(shops[id].status != ShopStatus.INVALID, "1201");
         require(shops[id].account == _account, "1050");
 
-        bytes32 dataHash = keccak256(abi.encode(id, _account, nonce[_account]));
+        bytes32 dataHash = keccak256(abi.encode(id, _account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         shops[id].status = _status;
@@ -348,7 +348,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes calldata _signature
     ) external virtual {
         require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
-        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         require(_amount % 1 gwei == 0, "1030");
@@ -373,7 +373,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     /// @param _shopId 상점아이디
     function closeWithdrawal(bytes32 _shopId, address _account, bytes calldata _signature) external virtual {
         require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
-        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, nonce[_account]));
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         ShopData memory shop = shops[_shopId];

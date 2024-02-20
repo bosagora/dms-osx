@@ -457,7 +457,8 @@ describe("Test for Ledger", () => {
             it("Link phone-address (user: 3, point type : 0)", async () => {
                 const nonce = await linkContract.nonceOf(deployments.accounts.users[3].address);
                 const hash = phoneHashes[3];
-                const signature = await ContractUtils.signRequestHash(deployments.accounts.users[3], hash, nonce);
+                const msg = ContractUtils.getRequestMessage(hash, deployments.accounts.users[3].address, nonce);
+                const signature = await ContractUtils.signMessage(deployments.accounts.users[3], msg);
                 requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[3].address, nonce);
                 await expect(
                     linkContract
@@ -916,8 +917,9 @@ describe("Test for Ledger", () => {
             it("Link phone-address (user: 4, point type : 0)", async () => {
                 const nonce = await linkContract.nonceOf(deployments.accounts.users[4].address);
                 const hash = phoneHashes[4];
-                const signature = await ContractUtils.signRequestHash(deployments.accounts.users[4], hash, nonce);
-                requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[3].address, nonce);
+                const msg = ContractUtils.getRequestMessage(hash, deployments.accounts.users[4].address, nonce);
+                const signature = await ContractUtils.signMessage(deployments.accounts.users[4], msg);
+                requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[4].address, nonce);
                 await expect(
                     linkContract
                         .connect(deployments.accounts.certifier)
@@ -1215,11 +1217,8 @@ describe("Test for Ledger", () => {
                 const userIndex = 5;
                 const nonce = await linkContract.nonceOf(deployments.accounts.users[userIndex].address);
                 const hash = phoneHashes[userIndex];
-                const signature = await ContractUtils.signRequestHash(
-                    deployments.accounts.users[userIndex],
-                    hash,
-                    nonce
-                );
+                const msg = ContractUtils.getRequestMessage(hash, deployments.accounts.users[userIndex].address, nonce);
+                const signature = await ContractUtils.signMessage(deployments.accounts.users[userIndex], msg);
                 requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[userIndex].address, nonce);
                 await expect(
                     linkContract
@@ -1237,11 +1236,12 @@ describe("Test for Ledger", () => {
                 const oldBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[userIndex].address);
                 const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
-                const signature = await ContractUtils.signChangePayablePoint(
-                    deployments.accounts.users[userIndex],
+                const msg = ContractUtils.getRequestMessage(
                     phoneHash,
+                    deployments.accounts.users[userIndex].address,
                     nonce
                 );
+                const signature = await ContractUtils.signMessage(deployments.accounts.users[userIndex], msg);
                 const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 const tokenAmount = unPayableAmount.mul(multiple).div(price);
                 await expect(
@@ -1280,7 +1280,7 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
@@ -1320,10 +1320,13 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(
+                    deployments.accounts.users[purchase.userIndex].address,
+                    nonce
+                );
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
-                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
                 const signature = await ContractUtils.signLoyaltyNewPayment(
                     deployments.accounts.users[purchase.userIndex],
                     paymentId,
@@ -1359,7 +1362,7 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
@@ -1423,7 +1426,7 @@ describe("Test for Ledger", () => {
                 userIndex: 0,
             };
 
-            const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+            const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const shop = shopData[purchase.shopIndex];
 
@@ -1544,7 +1547,7 @@ describe("Test for Ledger", () => {
                     userIndex: 1,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
@@ -1582,7 +1585,7 @@ describe("Test for Ledger", () => {
                     userIndex: 1,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
@@ -1620,7 +1623,7 @@ describe("Test for Ledger", () => {
                     userIndex: 1,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
@@ -1693,7 +1696,7 @@ describe("Test for Ledger", () => {
                 userIndex: 1,
             };
 
-            const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+            const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
             const purchaseAmount = Amount.make(purchase.amount, 18).value;
             const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
             const shop = shopData[purchase.shopIndex];
@@ -2321,7 +2324,7 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
@@ -2418,7 +2421,7 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = ContractUtils.zeroGWEI(Amount.make(purchase.amount, 18).value);
                 const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
                 const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
@@ -2997,7 +3000,7 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
@@ -3099,7 +3102,7 @@ describe("Test for Ledger", () => {
                     userIndex: 0,
                 };
 
-                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address);
+                const paymentId = ContractUtils.getPaymentId(deployments.accounts.users[purchase.userIndex].address, 0);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
                 const shop = shopData[purchase.shopIndex];
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[purchase.userIndex].address);
@@ -3530,7 +3533,8 @@ describe("Test for Ledger", () => {
             const userIndex = 3;
             const nonce = await linkContract.nonceOf(deployments.accounts.users[userIndex].address);
             const hash = phoneHashes[3];
-            const signature = await ContractUtils.signRequestHash(deployments.accounts.users[userIndex], hash, nonce);
+            const msg = ContractUtils.getRequestMessage(hash, deployments.accounts.users[userIndex].address, nonce);
+            const signature = await ContractUtils.signMessage(deployments.accounts.users[userIndex], msg);
             requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[userIndex].address, nonce);
             await expect(
                 linkContract

@@ -428,7 +428,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     function removePhoneInfo(address _account, bytes calldata _signature) external {
-        bytes32 dataHash = keccak256(abi.encode(_account, nonce[_account]));
+        bytes32 dataHash = keccak256(abi.encode(_account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         nonce[_account]++;

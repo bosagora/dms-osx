@@ -6,6 +6,7 @@ import { AddressZero, HashZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/keccak256";
 import { BranchSignature } from "./BranchSignature";
 import { JSONValidator } from "./JSONValidator";
+import * as hre from "hardhat";
 
 export enum BurnPointType {
     PhoneNumber = 0,
@@ -48,12 +49,12 @@ export class BurnPoint {
         const encodedData =
             this.type === 0
                 ? defaultAbiCoder.encode(
-                      ["uint256", "address", "bytes32", "uint256"],
-                      [this.type, AddressZero, this.account, this.amount]
+                      ["uint256", "address", "bytes32", "uint256", "uint256"],
+                      [this.type, AddressZero, this.account, this.amount, hre.ethers.provider.network.chainId]
                   )
                 : defaultAbiCoder.encode(
-                      ["uint256", "address", "bytes32", "uint256"],
-                      [this.type, this.account, HashZero, this.amount]
+                      ["uint256", "address", "bytes32", "uint256", "uint256"],
+                      [this.type, this.account, HashZero, this.amount, hre.ethers.provider.network.chainId]
                   );
         return keccak256(encodedData);
     }

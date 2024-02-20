@@ -752,11 +752,8 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
             const userAccount = ContractUtils.getPhoneHash(user.phone);
             if ((await linkContract.toAddress(userAccount)) !== user.address) {
                 const userNonce = await linkContract.nonceOf(user.address);
-                const userSignature = await ContractUtils.signRequestHash(
-                    new Wallet(user.privateKey),
-                    userAccount,
-                    userNonce
-                );
+                const msg = ContractUtils.getRequestMessage(userAccount, user.address, userNonce);
+                const userSignature = await ContractUtils.signMessage(new Wallet(user.privateKey), msg);
                 const reqId2 = ContractUtils.getRequestId(userAccount, user.address, userNonce);
                 const tx14 = await linkContract
                     .connect(accounts.linkValidators[0])

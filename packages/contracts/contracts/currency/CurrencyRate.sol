@@ -59,7 +59,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         // Get a hash of all the data
         bytes32[] memory messages = new bytes32[](_data.length);
         for (uint256 i = 0; i < _data.length; i++) {
-            messages[i] = keccak256(abi.encode(_data[i].symbol, _data[i].rate));
+            messages[i] = keccak256(abi.encode(_data[i].symbol, _data[i].rate, block.chainid));
         }
         bytes32 dataHash = keccak256(abi.encode(_height, messages.length, messages));
 

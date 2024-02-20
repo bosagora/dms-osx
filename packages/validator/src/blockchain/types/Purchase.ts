@@ -7,6 +7,7 @@ import { arrayify } from "@ethersproject/bytes";
 import { HashZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/keccak256";
 import { BranchSignature } from "./BranchSignature";
+import * as hre from "hardhat";
 
 export class Purchase {
     public purchaseId: string;
@@ -89,7 +90,7 @@ export class Purchase {
 
     public computeHash(): string {
         const encodedData = defaultAbiCoder.encode(
-            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32", "address"],
+            ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32", "address", "uint256"],
             [
                 this.purchaseId,
                 this.amount,
@@ -99,6 +100,7 @@ export class Purchase {
                 this.account,
                 this.phone,
                 this.sender,
+                hre.ethers.provider.network.chainId,
             ]
         );
         return keccak256(encodedData);

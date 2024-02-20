@@ -8,6 +8,7 @@ export interface IPurchaseData {
     account: string;
     phone: string;
     shopId: string;
+    sender: string;
 }
 
 export interface IShopData {

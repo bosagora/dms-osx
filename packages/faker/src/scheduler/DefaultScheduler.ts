@@ -144,6 +144,7 @@ export class DefaultScheduler extends Scheduler {
                     shopId: this._shops[Math.floor(Math.random() * this._shops.length)].shopId,
                     account: Math.random() < 0.1 ? AddressZero : this._users[userIdx].address,
                     phone: phoneHash,
+                    sender: "0x4501F7aF010Cef3DcEaAfbc7Bfb2B39dE57df54d",
                 };
                 const message = ContractUtils.getPurchasesMessage(0, [data]);
 
