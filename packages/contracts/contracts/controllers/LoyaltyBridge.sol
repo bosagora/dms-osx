@@ -83,7 +83,9 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         bytes calldata _signature
     ) external override notExistDeposit(_depositId) {
         require(_account != foundationAccount, "1052");
-        bytes32 dataHash = keccak256(abi.encode(_account, address(this), _amount, ledgerContract.nonceOf(_account)));
+        bytes32 dataHash = keccak256(
+            abi.encode(_account, address(this), _amount, block.chainid, ledgerContract.nonceOf(_account))
+        );
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
         require(ledgerContract.loyaltyTypeOf(_account) == ILedger.LoyaltyType.TOKEN, "1520");
         require(ledgerContract.tokenBalanceOf(_account) >= _amount, "1511");

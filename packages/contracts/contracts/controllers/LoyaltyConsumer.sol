@@ -94,6 +94,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
                 data.currency,
                 data.shopId,
                 data.account,
+                block.chainid,
                 ledgerContract.nonceOf(data.account)
             )
         );
@@ -297,6 +298,7 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
                 _paymentId,
                 loyaltyPayments[_paymentId].purchaseId,
                 shopInfo.account,
+                block.chainid,
                 ledgerContract.nonceOf(shopInfo.account)
             )
         );

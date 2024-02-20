@@ -120,7 +120,8 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                     data.shopId,
                     data.account,
                     data.phone,
-                    data.sender
+                    data.sender,
+                    block.chainid
                 )
             );
         }

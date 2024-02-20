@@ -55,7 +55,7 @@ contract LoyaltyExchanger is LoyaltyExchangerStorage, Initializable, OwnableUpgr
     /// @notice 사용가능한 포인트로 전환합니다.
     /// @dev 중계서버를 통해서 호출됩니다.
     function changeToPayablePoint(bytes32 _phone, address _account, bytes calldata _signature) external virtual {
-        bytes32 dataHash = keccak256(abi.encode(_phone, _account, ledgerContract.nonceOf(_account)));
+        bytes32 dataHash = keccak256(abi.encode(_phone, _account, block.chainid, ledgerContract.nonceOf(_account)));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         address userAddress = linkContract.toAddress(_phone);
@@ -79,7 +79,7 @@ contract LoyaltyExchanger is LoyaltyExchangerStorage, Initializable, OwnableUpgr
     /// @param _signature 서명
     /// @dev 중계서버를 통해서 호출됩니다.
     function changeToLoyaltyToken(address _account, bytes calldata _signature) external virtual {
-        bytes32 dataHash = keccak256(abi.encode(_account, ledgerContract.nonceOf(_account)));
+        bytes32 dataHash = keccak256(abi.encode(_account, block.chainid, ledgerContract.nonceOf(_account)));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
         if (ledgerContract.loyaltyTypeOf(_account) != ILedger.LoyaltyType.TOKEN) {

@@ -7,6 +7,7 @@ import { arrayify } from "@ethersproject/bytes";
 import { HashZero } from "@ethersproject/constants";
 import { keccak256 } from "@ethersproject/keccak256";
 import { BranchSignature } from "./BranchSignature";
+import * as hre from "hardhat";
 
 export class ExchangeRate {
     public symbol: string;
@@ -36,7 +37,10 @@ export class ExchangeRate {
     }
 
     public computeHash(): string {
-        const encodedData = defaultAbiCoder.encode(["string", "uint256"], [this.symbol, this.rate]);
+        const encodedData = defaultAbiCoder.encode(
+            ["string", "uint256", "uint256"],
+            [this.symbol, this.rate, hre.ethers.provider.network.chainId]
+        );
         return keccak256(encodedData);
     }
 }

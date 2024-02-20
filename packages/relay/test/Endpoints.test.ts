@@ -326,7 +326,8 @@ describe("Test of Server", function () {
             it("Link phone and wallet address", async () => {
                 const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
                 const nonce = await linkContract.nonceOf(userData[userIndex].address);
-                const signature = await ContractUtils.signRequestHash(userData[userIndex].wallet, phoneHash, nonce);
+                const msg = ContractUtils.getRequestMessage(phoneHash, userData[userIndex].wallet.address, nonce);
+                const signature = await ContractUtils.signMessage(userData[userIndex].wallet, msg);
                 const requestId = ContractUtils.getRequestId(phoneHash, userData[userIndex].address, nonce);
                 await expect(
                     linkContract
@@ -483,7 +484,8 @@ describe("Test of Server", function () {
             it("Link phone and wallet address", async () => {
                 const phoneHash = ContractUtils.getPhoneHash(userData[userIndex].phone);
                 const nonce = await linkContract.nonceOf(userData[userIndex].address);
-                const signature = await ContractUtils.signRequestHash(userData[userIndex].wallet, phoneHash, nonce);
+                const msg = ContractUtils.getRequestMessage(phoneHash, userData[userIndex].wallet.address, nonce);
+                const signature = await ContractUtils.signMessage(userData[userIndex].wallet, msg);
                 const requestId = ContractUtils.getRequestId(phoneHash, userData[userIndex].address, nonce);
                 await expect(
                     linkContract
