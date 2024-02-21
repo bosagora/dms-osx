@@ -27,6 +27,16 @@
             "address": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
             "startBlock": 1
         },
+        "LoyaltyBurner": {
+            "name": "LoyaltyBurner",
+            "address": "0x5B4f8F9566706D4dB7f5E3020cE0485f96415749",
+            "startBlock": 1
+        },
+        "LoyaltyBridge": {
+            "name": "LoyaltyBridge",
+            "address": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
+            "startBlock": 1
+        },
         "Shop": {
             "name": "Shop",
             "address": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",

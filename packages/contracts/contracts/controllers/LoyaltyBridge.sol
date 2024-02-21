@@ -16,8 +16,8 @@ import "../interfaces/ILedger.sol";
 import "./LoyaltyBridgeStorage.sol";
 
 contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IBridge {
-    event BridgeDeposited(bytes32 depositId, address account, uint256 amount);
-    event BridgeWithdrawn(bytes32 withdrawId, address account, uint256 amount);
+    event BridgeDeposited(bytes32 depositId, address account, uint256 amount, uint256 balance);
+    event BridgeWithdrawn(bytes32 withdrawId, address account, uint256 amount, uint256 balance);
 
     function initialize(address _validatorAddress) external initializer {
         __UUPSUpgradeable_init();
@@ -97,7 +97,7 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
 
         DepositData memory data = DepositData({ account: _account, amount: _amount });
         deposits[_depositId] = data;
-        emit BridgeDeposited(_depositId, _account, _amount);
+        emit BridgeDeposited(_depositId, _account, _amount, ledgerContract.tokenBalanceOf(_account));
     }
 
     /// @notice 브리지에서 자금을 인출합니다. 검증자들의 합의가 완료되면 인출이 됩니다.
@@ -124,7 +124,7 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
                 ledgerContract.transferToken(address(this), _account, withdrawalAmount);
                 ledgerContract.transferToken(address(this), feeAccount, fee);
                 withdraws[_withdrawId].executed = true;
-                emit BridgeWithdrawn(_withdrawId, _account, withdrawalAmount);
+                emit BridgeWithdrawn(_withdrawId, _account, withdrawalAmount, ledgerContract.tokenBalanceOf(_account));
             }
         }
     }
@@ -139,7 +139,12 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
                 ledgerContract.transferToken(address(this), withdraws[_withdrawId].account, withdrawalAmount);
                 ledgerContract.transferToken(address(this), feeAccount, fee);
                 withdraws[_withdrawId].executed = true;
-                emit BridgeWithdrawn(_withdrawId, withdraws[_withdrawId].account, withdrawalAmount);
+                emit BridgeWithdrawn(
+                    _withdrawId,
+                    withdraws[_withdrawId].account,
+                    withdrawalAmount,
+                    ledgerContract.tokenBalanceOf(withdraws[_withdrawId].account)
+                );
             }
         }
     }
