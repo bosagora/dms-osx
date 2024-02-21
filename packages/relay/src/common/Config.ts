@@ -385,6 +385,8 @@ export class ContractsConfig implements IContractsConfig {
     public phoneLinkerAddress: string;
     public shopAddress: string;
     public currencyRateAddress: string;
+    public transferAddress: string;
+    public bridgeAddress: string;
 
     /**
      * Constructor
@@ -400,6 +402,8 @@ export class ContractsConfig implements IContractsConfig {
         this.phoneLinkerAddress = defaults.phoneLinkerAddress;
         this.shopAddress = defaults.shopAddress;
         this.currencyRateAddress = defaults.currencyRateAddress;
+        this.transferAddress = defaults.transferAddress;
+        this.bridgeAddress = defaults.bridgeAddress;
     }
 
     /**
@@ -415,6 +419,8 @@ export class ContractsConfig implements IContractsConfig {
             phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
             shopAddress: process.env.SHOP_CONTRACT_ADDRESS || "",
             currencyRateAddress: process.env.CURRENCY_RATE_CONTRACT_ADDRESS || "",
+            transferAddress: process.env.LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
+            bridgeAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
         };
     }
 
@@ -616,6 +622,8 @@ export interface IContractsConfig {
     phoneLinkerAddress: string;
     shopAddress: string;
     currencyRateAddress: string;
+    transferAddress: string;
+    bridgeAddress: string;
 }
 
 /**

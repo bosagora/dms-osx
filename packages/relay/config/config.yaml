@@ -87,3 +87,5 @@ contracts:
   providerAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
   consumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
   exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
+  transferAddress: "${LOYALTY_TRANSFER_CONTRACT_ADDRESS}"
+  bridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
