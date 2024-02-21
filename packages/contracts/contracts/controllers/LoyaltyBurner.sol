@@ -26,8 +26,8 @@ contract LoyaltyBurner is LoyaltyBurnerStorage, Initializable, OwnableUpgradeabl
         uint256 amount;
     }
 
-    event BurnedUnPayablePoint(bytes32 phone, uint256 amount);
-    event BurnedPoint(address account, uint256 amount);
+    event BurnedUnPayablePoint(bytes32 phone, uint256 amount, uint256 balance);
+    event BurnedPoint(address account, uint256 amount, uint256 balance);
 
     function initialize(address _validatorAddress, address _linkAddress) external initializer {
         __UUPSUpgradeable_init();
@@ -111,7 +111,11 @@ contract LoyaltyBurner is LoyaltyBurnerStorage, Initializable, OwnableUpgradeabl
                 }
                 if (burnAmount > 0) {
                     ledgerContract.burnUnPayablePoint(data.phone, burnAmount);
-                    emit BurnedUnPayablePoint(data.phone, burnAmount);
+                    emit BurnedUnPayablePoint(
+                        data.phone,
+                        burnAmount,
+                        ledgerContract.unPayablePointBalanceOf(data.phone)
+                    );
                 }
             } else if (data.pointType == 1) {
                 uint256 balance = ledgerContract.pointBalanceOf(data.account);
@@ -125,7 +129,7 @@ contract LoyaltyBurner is LoyaltyBurnerStorage, Initializable, OwnableUpgradeabl
                 }
                 if (burnAmount > 0) {
                     ledgerContract.burnPoint(data.account, burnAmount);
-                    emit BurnedPoint(data.account, burnAmount);
+                    emit BurnedPoint(data.account, burnAmount, ledgerContract.pointBalanceOf(data.account));
                 }
             }
         }

@@ -133,3 +133,45 @@ type ShopWithdraw @entity {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+type BurnedPoint @entity(immutable: true) {
+  id: Bytes!
+  account: Bytes! # address
+  amount: BigInt! # uint256
+  balance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BurnedUnPayablePoint @entity(immutable: true) {
+  id: Bytes!
+  phone: Bytes! # bytes32
+  amount: BigInt! # uint256
+  balance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BridgeDeposited @entity(immutable: true) {
+  id: Bytes!
+  depositId: Bytes! # bytes32
+  account: Bytes! # address
+  amount: BigInt! # uint256
+  balance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type BridgeWithdrawn @entity(immutable: true) {
+  id: Bytes!
+  withdrawId: Bytes! # bytes32
+  account: Bytes! # address
+  amount: BigInt! # uint256
+  balance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

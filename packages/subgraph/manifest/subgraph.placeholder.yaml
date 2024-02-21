@@ -128,6 +128,54 @@ dataSources:
       file: ./src/ledger.ts
 
   - kind: ethereum
+    name: {{dataSources.LoyaltyBurner.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.LoyaltyBurner.address}}'
+      abi: LoyaltyBurner
+      startBlock: {{dataSources.LoyaltyBurner.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BurnedPoint
+        - BurnedUnPayablePoint
+      abis:
+        - name: LoyaltyBurner
+          file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyBurner.sol/LoyaltyBurner.json
+      eventHandlers:
+        - event: BurnedPoint(address,uint256,uint256)
+          handler: handleBurnedPoint
+        - event: BurnedUnPayablePoint(bytes32,uint256,uint256)
+          handler: handleBurnedUnPayablePoint
+      file: ./src/ledger.ts
+
+  - kind: ethereum
+    name: {{dataSources.LoyaltyBridge.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.LoyaltyBridge.address}}'
+      abi: LoyaltyBridge
+      startBlock: {{dataSources.LoyaltyBridge.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BridgeDeposited
+        - BridgeWithdrawn
+      abis:
+        - name: LoyaltyBridge
+          file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyBridge.sol/LoyaltyBridge.json
+      eventHandlers:
+        - event: BridgeDeposited(bytes32,address,uint256,uint256)
+          handler: handleBridgeDeposited
+        - event: BridgeWithdrawn(bytes32,address,uint256,uint256)
+          handler: handleBridgeWithdrawn
+      file: ./src/ledger.ts
+
+  - kind: ethereum
     name: {{dataSources.Shop.name}}
     network: {{network}}
     source:
