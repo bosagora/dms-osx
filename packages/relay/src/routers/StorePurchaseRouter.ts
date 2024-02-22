@@ -288,11 +288,11 @@ export class StorePurchaseRouter {
                         await this.getCurrencyRateContract()
                     ).convertCurrency(loyaltyValue, currency, "point");
                 }
-                if (account === AddressZero && phone.toLowerCase() !== PHONE_NULL) {
-                    account = await (await this.getPhoneLinkerContract()).toAddress(phone);
+                if (purchaseData.account === AddressZero && phone.toLowerCase() !== PHONE_NULL) {
+                    purchaseData.account = await (await this.getPhoneLinkerContract()).toAddress(phone);
                 }
 
-                if (account !== AddressZero) {
+                if (purchaseData.account !== AddressZero) {
                     purchaseData.loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
                     if (purchaseData.loyaltyType === ContractLoyaltyType.POINT) {
                         purchaseData.providePoint = BigNumber.from(loyaltyPoint);
@@ -305,7 +305,7 @@ export class StorePurchaseRouter {
                         ).convertPointToToken(loyaltyPoint);
                         purchaseData.provideValue = BigNumber.from(loyaltyValue);
                     }
-                    const shopInfo = await (await this.getShopContract()).shopOf(shopId);
+                    const shopInfo = await (await this.getShopContract()).shopOf(purchaseData.shopId);
                     purchaseData.shopCurrency = shopInfo.currency;
                     purchaseData.shopProvidedAmount = await (
                         await this.getCurrencyRateContract()
