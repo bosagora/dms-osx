@@ -257,43 +257,40 @@ export class StorePurchaseRouter {
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
-            const purchaseId: string = String(req.body.purchaseId).trim();
-            const timestamp: bigint = BigInt(String(req.body.timestamp).trim());
-            let account: string = String(req.body.account).trim();
-            const phone: string = String(req.body.phone).trim();
-            const shopId: string = String(req.body.shopId).trim();
             const loyaltyValue: BigNumber = BigNumber.from(String(req.body.loyaltyValue).trim());
-            const currency: string = String(req.body.currency).trim();
 
             if (loyaltyValue.gt(0)) {
+                const phone: string = String(req.body.phone).trim();
                 const purchaseData: IStorePurchaseData = {
-                    purchaseId,
-                    timestamp,
-                    account,
+                    purchaseId: String(req.body.purchaseId).trim(),
+                    timestamp: BigInt(String(req.body.timestamp).trim()),
+                    account: String(req.body.account).trim(),
                     loyaltyType: ContractLoyaltyType.POINT,
-                    currency,
+                    currency: String(req.body.currency).trim(),
                     providePoint: BigNumber.from(0),
                     provideToken: BigNumber.from(0),
                     provideValue: BigNumber.from(loyaltyValue),
-                    shopId,
+                    shopId: String(req.body.shopId).trim(),
                     shopCurrency: "",
                     shopProvidedAmount: BigNumber.from(0),
                 };
 
                 let loyaltyPoint: BigNumber;
-                if (currency === "krw") {
+                if (purchaseData.currency === "krw") {
                     loyaltyPoint = loyaltyValue;
                 } else {
                     loyaltyPoint = await (
                         await this.getCurrencyRateContract()
-                    ).convertCurrency(loyaltyValue, currency, "point");
+                    ).convertCurrency(loyaltyValue, purchaseData.currency, "point");
                 }
-                if (account === AddressZero && phone.toLowerCase() !== PHONE_NULL) {
-                    account = await (await this.getPhoneLinkerContract()).toAddress(phone);
+                if (purchaseData.account === AddressZero && phone.toLowerCase() !== PHONE_NULL) {
+                    purchaseData.account = await (await this.getPhoneLinkerContract()).toAddress(phone);
                 }
 
-                if (account !== AddressZero) {
-                    purchaseData.loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+                if (purchaseData.account !== AddressZero) {
+                    purchaseData.loyaltyType = await (
+                        await this.getLedgerContract()
+                    ).loyaltyTypeOf(purchaseData.account);
                     if (purchaseData.loyaltyType === ContractLoyaltyType.POINT) {
                         purchaseData.providePoint = BigNumber.from(loyaltyPoint);
                         purchaseData.provideToken = BigNumber.from(0);
@@ -305,11 +302,11 @@ export class StorePurchaseRouter {
                         ).convertPointToToken(loyaltyPoint);
                         purchaseData.provideValue = BigNumber.from(loyaltyValue);
                     }
-                    const shopInfo = await (await this.getShopContract()).shopOf(shopId);
+                    const shopInfo = await (await this.getShopContract()).shopOf(purchaseData.shopId);
                     purchaseData.shopCurrency = shopInfo.currency;
                     purchaseData.shopProvidedAmount = await (
                         await this.getCurrencyRateContract()
-                    ).convertCurrency(loyaltyValue, currency, purchaseData.shopCurrency);
+                    ).convertCurrency(loyaltyValue, purchaseData.currency, purchaseData.shopCurrency);
                 }
                 await this._storage.postStorePurchase(purchaseData);
             }
