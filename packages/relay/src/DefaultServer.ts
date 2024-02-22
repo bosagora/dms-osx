@@ -93,10 +93,10 @@ export class DefaultServer extends WebService {
         this.app.use(bodyParser.json({ limit: "1mb" }));
         this.app.use(
             cors({
-                allowedHeaders: "*",
-                credentials: true,
-                methods: "GET, POST",
                 origin: "*",
+                methods: "GET, POST, OPTIONS",
+                allowedHeaders: "Content-Type, Authorization",
+                credentials: true,
                 preflightContinue: false,
             })
         );

@@ -154,7 +154,8 @@ export class ETCRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const accessKey: string = String(req.body.accessKey).trim();
+        let accessKey = req.get("Authorization");
+        if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
         if (accessKey !== this._config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }

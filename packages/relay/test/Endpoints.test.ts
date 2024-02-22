@@ -48,7 +48,7 @@ describe("Test of Server", function () {
     let exchangerContract: LoyaltyExchanger;
     let ledgerContract: Ledger;
 
-    const client = new TestClient();
+    let client: TestClient;
     let server: TestServer;
     let storage: RelayStorage;
     let serverURL: URL;
@@ -167,6 +167,12 @@ describe("Test of Server", function () {
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+
+            client = new TestClient({
+                headers: {
+                    Authorization: config.relay.accessKey,
+                },
+            });
         });
 
         before("Create TestServer", async () => {

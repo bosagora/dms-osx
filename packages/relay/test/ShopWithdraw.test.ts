@@ -76,7 +76,7 @@ describe("Test for Shop", () => {
 
     const amount = Amount.make(20_000, 18);
 
-    const client = new TestClient();
+    let client: TestClient;
     let server: TestServer;
     let storage: RelayStorage;
     let serverURL: URL;
@@ -237,6 +237,12 @@ describe("Test for Shop", () => {
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = `http://127.0.0.1:${config.server.port}/callback`;
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+
+            client = new TestClient({
+                headers: {
+                    Authorization: config.relay.accessKey,
+                },
+            });
         });
 
         before("Create TestServer", async () => {

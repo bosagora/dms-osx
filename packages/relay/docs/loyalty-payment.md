@@ -340,11 +340,15 @@
 
 `GET /v1/shop/list`
 
+#### - HTTP Header
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
 #### - 입력 파라메타들
 
 | 파라메타명      | 유형     | 필수 | 설명                       |
 |------------|--------| ---- |--------------------------|
-| accessKey  | string | Yes  | 접근 비밀키                   |
 | pageNumber | number | Yes  | 페이지 번호, 1부터 시작됨          |                                                                                                                                                                                                     |
 | pageSize   | number | Yes  | 페이지당 레코드 갯수, 최소 1, 최대 50 |
 
@@ -406,11 +410,16 @@
 
 `POST /v1/payment/new/open`
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
 #### - 입력 파라메타들
 
 | 파라메타명 | 유형   | 필수 | 설명                                                             |
 | ---------- | ------ | ---- | ---------------------------------------------------------------- |
-| accessKey  | string | Yes  | 비밀키                                                           |
 | purchaseId | string | Yes  | 구매 아이디                                                      |
 | amount     | string | Yes  | 상품가격 (소수점이하 18자리로 표시된 문자, 소수점 포함하지 않음) |
 | currency   | string | Yes  | 환률코드(usd, krw, kios, point...)                               |
@@ -459,11 +468,16 @@
 
 `POST /v1/payment/new/close`
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
 #### - 입력 파라메타들
 
 | 파라메타명     | 유형      | 필수 | 설명                                  |
 |-----------|---------| ---- |-------------------------------------|
-| accessKey | string  | Yes  | 비밀키                                 |
 | confirm   | boolean | Yes  | 정상 또는 취소 여부 (true: 정상처리, false: 취소) |
 | paymentId | string  | Yes  | 지불 아이디                              |
 
@@ -505,11 +519,16 @@
 
 `POST /v1/payment/cancel/open`
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
 #### - 입력 파라메타들
 
 | 파라메타명 | 유형   | 필수 | 설명        |
 | ---------- | ------ | ---- | ----------- |
-| accessKey  | string | Yes  | 비밀키      |
 | paymentId  | string | Yes  | 지불 아이디 |
 
 #### - 결과
@@ -550,11 +569,16 @@
 
 `POST /v1/payment/cancel/close`
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
 #### - 입력 파라메타들
 
 | 파라메타명 | 유형   | 필수 | 설명                                  |
 | ---------- | ------ | ---- |-------------------------------------|
-| accessKey  | string | Yes  | 비밀키                                 |
 | confirm   | boolean | Yes  | 정상 또는 취소 여부 (true: 정상처리, false: 취소) |
 | paymentId  | string | Yes  | 지불 아이디                              |
 
@@ -592,9 +616,15 @@
 [1.1. 시퀀스 다이어그램](#11-신규결제에-대한-사용자가-승인-했을-때-과정) 의 11번에서 사용된다.
 [1.3. 시퀀스 다이어그램](#13-취소결제에-대한-상점주가-승인-했을-때-과정) 의 7번에서 사용된다.
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
+### - 입력
 | 필드 1    | 필드 2            | 유형   | 필수 | 설명                                                                                                                                                                                                           |
 | --------- |-----------------| ------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| accessKey |                 | string | Yes  | 비밀키                                                                                                                                                                                                         |
 | type      |                 | string | Yes  | "pay_new": 결제요청<br/>"pay_cancel":취소요청                                                                                                                                                                  |
 | code      |                 | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃                                                                                                                           |
 | message   |                 | string | Yes  | 응답 메세지                                                                                                                                                                                                    |
@@ -627,7 +657,6 @@
 
 ```json
 {
-    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "pay_new",
     "code": 0,
     "message": "Success",
@@ -657,7 +686,6 @@
 
 ```json
 {
-    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "pay_new",
     "code": 4000,
     "message": "Denied by user",
@@ -687,7 +715,6 @@
 
 ```json
 {
-    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "pay_cancel",
     "code": 0,
     "message": "Success",
@@ -717,7 +744,6 @@
 
 ```json
 {
-    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "pay_cancel",
     "code": 4000,
     "message": "Denied by user",
@@ -757,11 +783,16 @@
 
 `POST /v1/shop/update/create`
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
 #### - 입력 파라메타들
 
 | 파라메타명      | 유형   | 필수 | 설명                                   |
 | --------------- | ------ | ---- | -------------------------------------- |
-| accessKey       | string | Yes  | 비밀키                                 |
 | shopId          | string | Yes  | 상점 아이디                            |
 | name            | string | Yes  | 상점 이름                              |
 | currency        | string | Yes  | 상점의 결제 통화             |
@@ -793,11 +824,16 @@
 
 `POST /v1/shop/status/create`
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
 #### - 입력 파라메타들
 
 | 파라메타명 | 유형   | 필수 | 설명                                 |
 | ---------- | ------ | ---- | ------------------------------------ |
-| accessKey  | string | Yes  | 비밀키                               |
 | shopId     | string | Yes  | 상점 아이디                          |
 | status     | int    | Yes  | 활성상태<br/>1 : 활성<br/>2 : 비활성 |
 
@@ -821,9 +857,16 @@
 
 ### 5.3. 콜백 상점용 엔드포인트의 응답 데이터의 형태
 
+#### - HTTP Header
+
+| 키               | 설명           |
+|-----------------|--------------|
+| Authorization   | 접근 비밀키       |
+
+#### - 입력
+
 | 필드 1    | 필드 2            | 유형   | 필수 | 설명                                                                 |
 | --------- |-----------------| ------ | ---- |--------------------------------------------------------------------|
-| accessKey |                 | string | Yes  | 비밀키                                                                |
 | type      |                 | string | Yes  | "shop_add": 추가<br/>"shop_update": 정보수정<br/>"shop_status":상태수정      |
 | code      |                 | int    | Yes  | 0: 성공<br/>4000: 거부<br/>5000: 컨트랙트 오류<br/>6000: 서버오류<br/>7000: 타임아웃 |
 | message   |                 | string | Yes  | 응답 메세지                                                             |
@@ -842,7 +885,6 @@
 
 ```json
 {
-    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "shop_add",
     "code": 0,
     "message": "Success",
@@ -861,7 +903,6 @@
 
 ```json
 {
-    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "shop_update",
     "code": 0,
     "message": "Success",
@@ -880,7 +921,6 @@
 
 ```json
 {
-    "accessKey": "0x9812176e565a007a84c5d2fc4cf842b12eb26dbc7568b4e40fc4f2418f2c8f54",
     "type": "shop_status",
     "code": 0,
     "message": "Success",

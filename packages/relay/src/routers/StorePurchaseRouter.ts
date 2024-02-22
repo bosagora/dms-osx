@@ -23,7 +23,6 @@ import { BigNumber } from "@ethersproject/bignumber";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 
-import extend from "extend";
 import { ContractLoyaltyType, GWI_UNIT, IStorePurchaseData, PHONE_NULL } from "../types";
 
 export class StorePurchaseRouter {
@@ -179,7 +178,6 @@ export class StorePurchaseRouter {
         this.app.post(
             "/v1/purchase/save",
             [
-                body("accessKey").exists(),
                 body("purchaseId").exists().not().isEmpty(),
                 body("timestamp").exists().isNumeric(),
                 body("account").exists().trim().isEthereumAddress(),
@@ -199,7 +197,7 @@ export class StorePurchaseRouter {
 
         this.app.post(
             "/v1/purchase/cancel",
-            [body("accessKey").exists(), body("purchaseId").exists().not().isEmpty()],
+            [body("purchaseId").exists().not().isEmpty()],
             this.purchase_cancel.bind(this)
         );
 
@@ -243,9 +241,7 @@ export class StorePurchaseRouter {
      * @private
      */
     private async purchase_save(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/purchase/save ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/purchase/save ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -253,7 +249,8 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -323,9 +320,7 @@ export class StorePurchaseRouter {
      * @private
      */
     private async purchase_cancel(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/purchase/cancel ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/purchase/cancel ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -333,7 +328,8 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -352,9 +348,7 @@ export class StorePurchaseRouter {
      * @private
      */
     private async purchase_user_provide(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/purchase/user/provide ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/purchase/user/provide ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -394,9 +388,7 @@ export class StorePurchaseRouter {
      * @private
      */
     private async purchase_user_provide_total(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/purchase/user/provide/total ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/purchase/user/provide/total ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -428,9 +420,7 @@ export class StorePurchaseRouter {
      * @private
      */
     private async purchase_shop_provide(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/purchase/shop/provide ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/purchase/shop/provide ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -466,9 +456,7 @@ export class StorePurchaseRouter {
      * @private
      */
     private async purchase_shop_provide_total(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/purchase/shop/provide/total ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/purchase/shop/provide/total ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

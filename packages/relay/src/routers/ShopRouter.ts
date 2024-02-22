@@ -25,7 +25,6 @@ import {
 } from "../types";
 import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
-import extend from "extend";
 
 export class ShopRouter {
     /**
@@ -143,7 +142,6 @@ export class ShopRouter {
         this.app.post(
             "/v1/shop/update/create",
             [
-                body("accessKey").exists(),
                 body("shopId")
                     .exists()
                     .trim()
@@ -168,7 +166,6 @@ export class ShopRouter {
         this.app.post(
             "/v1/shop/status/create",
             [
-                body("accessKey").exists(),
                 body("shopId")
                     .exists()
                     .trim()
@@ -222,11 +219,7 @@ export class ShopRouter {
         );
         this.app.get(
             "/v1/shop/list",
-            [
-                query("accessKey").exists(),
-                query("pageNumber").exists().trim().isNumeric(),
-                query("pageSize").exists().trim().isNumeric(),
-            ],
+            [query("pageNumber").exists().trim().isNumeric(), query("pageSize").exists().trim().isNumeric()],
             this.shop_list.bind(this)
         );
     }
@@ -354,9 +347,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_update_create(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/shop/update/create ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/shop/update/create ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -364,7 +355,8 @@ export class ShopRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -432,9 +424,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_update_approval(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/shop/update/approval ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/shop/update/approval ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -545,9 +535,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_status_create(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/shop/status/create ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/shop/status/create ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -556,7 +544,8 @@ export class ShopRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -626,9 +615,7 @@ export class ShopRouter {
      * @private
      */
     private async shop_status_approval(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/shop/status/approval ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/shop/status/approval ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -877,7 +864,8 @@ export class ShopRouter {
         }
 
         try {
-            const accessKey: string = String(req.query.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
