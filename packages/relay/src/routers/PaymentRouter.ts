@@ -183,7 +183,6 @@ export class PaymentRouter {
         this.app.post(
             "/v1/payment/new/open",
             [
-                body("accessKey").exists(),
                 body("purchaseId").exists(),
                 body("amount").exists().custom(Validation.isAmount),
                 body("currency").exists(),
@@ -198,11 +197,7 @@ export class PaymentRouter {
 
         this.app.post(
             "/v1/payment/new/close",
-            [
-                body("accessKey").exists(),
-                body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]),
-                body("paymentId").exists(),
-            ],
+            [body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]), body("paymentId").exists()],
             this.payment_new_close.bind(this)
         );
 
@@ -220,19 +215,11 @@ export class PaymentRouter {
 
         this.app.get("/v1/payment/item", [query("paymentId").exists()], this.payment_item.bind(this));
 
-        this.app.post(
-            "/v1/payment/cancel/open",
-            [body("accessKey").exists(), body("paymentId").exists()],
-            this.payment_cancel_open.bind(this)
-        );
+        this.app.post("/v1/payment/cancel/open", [body("paymentId").exists()], this.payment_cancel_open.bind(this));
 
         this.app.post(
             "/v1/payment/cancel/close",
-            [
-                body("accessKey").exists(),
-                body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]),
-                body("paymentId").exists(),
-            ],
+            [body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]), body("paymentId").exists()],
             this.payment_cancel_close.bind(this)
         );
 
@@ -662,7 +649,8 @@ export class PaymentRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -978,7 +966,8 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const accessKey: string = String(req.body.accessKey).trim();
+        let accessKey = req.get("Authorization");
+        if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
         if (accessKey !== this._config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }
@@ -1249,7 +1238,8 @@ export class PaymentRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -1494,7 +1484,8 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const accessKey: string = String(req.body.accessKey).trim();
+        let accessKey = req.get("Authorization");
+        if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
         if (accessKey !== this._config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }

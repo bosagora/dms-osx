@@ -7,10 +7,10 @@ import { ContractLoyaltyPaymentStatus, LoyaltyPaymentTaskStatus } from "../types
 import { ContractUtils } from "../utils/ContractUtils";
 import { Scheduler } from "./Scheduler";
 
-import axios from "axios";
 import URI from "urijs";
 
 import * as hre from "hardhat";
+import { HTTPClient } from "../utils/Utils";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
@@ -83,13 +83,16 @@ export class CloseScheduler extends Scheduler {
             logger.info(`CloseScheduler.onNewPayment ${payment.paymentId}`);
 
             const serverURL = this.config.relay.relayEndpoint;
+            const client = new HTTPClient({
+                headers: {
+                    Authorization: this.config.relay.accessKey,
+                },
+            });
 
-            const client = axios.create();
             try {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: this.config.relay.accessKey,
                         confirm: false,
                         paymentId: payment.paymentId,
                     }
@@ -119,12 +122,15 @@ export class CloseScheduler extends Scheduler {
             logger.info(`CloseScheduler.onCancelPayment ${payment.paymentId}`);
 
             const serverURL = this.config.relay.relayEndpoint;
-            const client = axios.create();
+            const client = new HTTPClient({
+                headers: {
+                    Authorization: this.config.relay.accessKey,
+                },
+            });
             try {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
-                        accessKey: this.config.relay.accessKey,
                         confirm: false,
                         paymentId: payment.paymentId,
                     }
@@ -170,12 +176,15 @@ export class CloseScheduler extends Scheduler {
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
                 const serverURL = this.config.relay.relayEndpoint;
-                const client = axios.create();
+                const client = new HTTPClient({
+                    headers: {
+                        Authorization: this.config.relay.accessKey,
+                    },
+                });
                 try {
                     const response = await client.post(
                         URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                         {
-                            accessKey: this.config.relay.accessKey,
                             confirm: payment.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_NEW,
                             paymentId: payment.paymentId,
                         }
@@ -207,12 +216,15 @@ export class CloseScheduler extends Scheduler {
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {
                 const serverURL = this.config.relay.relayEndpoint;
-                const client = axios.create();
+                const client = new HTTPClient({
+                    headers: {
+                        Authorization: this.config.relay.accessKey,
+                    },
+                });
                 try {
                     const response = await client.post(
                         URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                         {
-                            accessKey: this.config.relay.accessKey,
                             confirm: payment.paymentStatus === LoyaltyPaymentTaskStatus.CLOSED_CANCEL,
                             paymentId: payment.paymentId,
                         }

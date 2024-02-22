@@ -20,7 +20,7 @@ describe("Test for ETC", function () {
     const provider = hre.waffle.provider;
     const [userWallet] = provider.getWallets();
 
-    const client = new TestClient();
+    let client: TestClient;
     let server: TestServer;
     let storage: RelayStorage;
     let serverURL: URL;
@@ -30,6 +30,11 @@ describe("Test for ETC", function () {
         before("Create Config", async () => {
             config = new Config();
             config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+            client = new TestClient({
+                headers: {
+                    Authorization: config.relay.accessKey,
+                },
+            });
         });
 
         before("Create TestServer", async () => {

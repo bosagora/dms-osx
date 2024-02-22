@@ -179,7 +179,6 @@ export class StorePurchaseRouter {
         this.app.post(
             "/v1/purchase/save",
             [
-                body("accessKey").exists(),
                 body("purchaseId").exists().not().isEmpty(),
                 body("timestamp").exists().isNumeric(),
                 body("account").exists().trim().isEthereumAddress(),
@@ -199,7 +198,7 @@ export class StorePurchaseRouter {
 
         this.app.post(
             "/v1/purchase/cancel",
-            [body("accessKey").exists(), body("purchaseId").exists().not().isEmpty()],
+            [body("purchaseId").exists().not().isEmpty()],
             this.purchase_cancel.bind(this)
         );
 
@@ -253,10 +252,12 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
+
             const purchaseId: string = String(req.body.purchaseId).trim();
             const timestamp: bigint = BigInt(String(req.body.timestamp).trim());
             let account: string = String(req.body.account).trim();
@@ -336,10 +337,12 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
+
             const purchaseId: string = String(req.body.purchaseId).trim();
             await this._storage.cancelStorePurchase(purchaseId);
             return res.status(200).json(this.makeResponseData(0, {}));

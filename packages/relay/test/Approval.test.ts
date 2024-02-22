@@ -63,7 +63,7 @@ describe("Test of Server", function () {
 
     const amount = Amount.make(20_000, 18);
 
-    const client = new TestClient();
+    let client: TestClient;
     let storage: RelayStorage;
     let server: TestServer;
     let serverURL: URL;
@@ -149,6 +149,12 @@ describe("Test of Server", function () {
             config.relay.approvalSecond = 2;
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+
+            client = new TestClient({
+                headers: {
+                    Authorization: config.relay.accessKey,
+                },
+            });
         });
 
         before("Create TestServer", async () => {
@@ -231,7 +237,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchase.purchaseId,
                     amount: purchaseAmount.toString(),
                     currency: "krw",
@@ -273,7 +278,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -288,7 +292,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     paymentId,
                 };
                 const response = await client.post(url, params);
@@ -329,7 +332,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -347,7 +349,6 @@ describe("Test of Server", function () {
             it("Create New Task for updating shop's information", async () => {
                 const url = URI(serverURL).directory("/v1/shop/update").filename("create").toString();
                 const params = {
-                    accessKey: config.relay.accessKey,
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
                     currency: shopData[0].currency,
@@ -389,7 +390,6 @@ describe("Test of Server", function () {
             it("Create New Task for updating shop's status", async () => {
                 const url = URI(serverURL).directory("/v1/shop/status").filename("create").toString();
                 const params = {
-                    accessKey: config.relay.accessKey,
                     shopId: shopData[0].shopId,
                     status: ContractShopStatus.ACTIVE,
                 };

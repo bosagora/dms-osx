@@ -143,7 +143,6 @@ export class ShopRouter {
         this.app.post(
             "/v1/shop/update/create",
             [
-                body("accessKey").exists(),
                 body("shopId")
                     .exists()
                     .trim()
@@ -168,7 +167,6 @@ export class ShopRouter {
         this.app.post(
             "/v1/shop/status/create",
             [
-                body("accessKey").exists(),
                 body("shopId")
                     .exists()
                     .trim()
@@ -222,11 +220,7 @@ export class ShopRouter {
         );
         this.app.get(
             "/v1/shop/list",
-            [
-                query("accessKey").exists(),
-                query("pageNumber").exists().trim().isNumeric(),
-                query("pageSize").exists().trim().isNumeric(),
-            ],
+            [query("pageNumber").exists().trim().isNumeric(), query("pageSize").exists().trim().isNumeric()],
             this.shop_list.bind(this)
         );
     }
@@ -364,7 +358,8 @@ export class ShopRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -556,7 +551,8 @@ export class ShopRouter {
 
         const signerItem = await this.getRelaySigner();
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -877,7 +873,8 @@ export class ShopRouter {
         }
 
         try {
-            const accessKey: string = String(req.query.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }

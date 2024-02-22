@@ -52,7 +52,7 @@ describe("Test for Shop", function () {
     let exchangerContract: LoyaltyExchanger;
     let ledgerContract: Ledger;
 
-    const client = new TestClient();
+    let client: TestClient;
     let server: TestServer;
     let storage: RelayStorage;
     let serverURL: URL;
@@ -148,6 +148,12 @@ describe("Test for Shop", function () {
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+
+            client = new TestClient({
+                headers: {
+                    Authorization: config.relay.accessKey,
+                },
+            });
         });
 
         before("Create TestServer", async () => {
@@ -223,7 +229,6 @@ describe("Test for Shop", function () {
                 const url = URI(serverURL).directory("/v1/shop/update").filename("create").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     shopId: shopData[0].shopId,
                     name: "새로운 이름",
                     currency: shopData[0].currency,
@@ -310,7 +315,6 @@ describe("Test for Shop", function () {
                 const url = URI(serverURL).directory("/v1/shop/status").filename("create").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     shopId: shopData[0].shopId,
                     status: ContractShopStatus.INACTIVE,
                 };
