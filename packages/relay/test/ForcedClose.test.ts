@@ -57,7 +57,7 @@ describe("Test of Server", function () {
 
     const amount = Amount.make(20_000, 18);
 
-    const client = new TestClient();
+    let client: TestClient;
     let storage: RelayStorage;
     let server: TestServer;
     let serverURL: URL;
@@ -146,6 +146,12 @@ describe("Test of Server", function () {
             config.relay.paymentTimeoutSecond = 2;
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+
+            client = new TestClient({
+                headers: {
+                    Authorization: config.relay.accessKey,
+                },
+            });
         });
 
         before("Create TestServer", async () => {
@@ -228,7 +234,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchase.purchaseId,
                     amount: purchaseAmount.toString(),
                     currency: "krw",
@@ -420,7 +425,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchase.purchaseId,
                     amount: purchaseAmount.toString(),
                     currency: "krw",
@@ -454,7 +458,6 @@ describe("Test of Server", function () {
             it("Close New Payment", async () => {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("close").toString();
                 const params = {
-                    accessKey: config.relay.accessKey,
                     confirm: true,
                     paymentId,
                 };
@@ -472,7 +475,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     paymentId,
                 };
                 const response = await client.post(url, params);

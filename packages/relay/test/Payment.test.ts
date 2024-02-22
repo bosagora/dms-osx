@@ -63,7 +63,7 @@ describe("Test of Server", function () {
 
     const expression = "*/1 * * * * *";
 
-    const client = new TestClient();
+    let client: TestClient;
     let storage: RelayStorage;
     let server: TestServer;
     let serverURL: URL;
@@ -185,6 +185,12 @@ describe("Test of Server", function () {
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+
+            client = new TestClient({
+                headers: {
+                    Authorization: config.relay.accessKey,
+                },
+            });
         });
 
         before("Create TestServer", async () => {
@@ -324,7 +330,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchaseOfLoyalty.purchaseId,
                     amount: amountOfLoyalty.toString(),
                     currency: "krw",
@@ -425,7 +430,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchaseOfLoyalty.purchaseId,
                     amount: amountOfLoyalty.toString(),
                     currency: "krw",
@@ -584,7 +588,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -774,7 +777,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchaseOfLoyalty.purchaseId,
                     amount: amountOfLoyalty.toString(),
                     currency: "krw",
@@ -838,7 +840,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -872,7 +873,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     paymentId,
                 };
                 const response = await client.post(url, params);
@@ -942,7 +942,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -1158,7 +1157,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchaseOfLoyalty.purchaseId,
                     amount: amountOfLoyalty.toString(),
                     currency: "krw",
@@ -1222,7 +1220,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -1256,7 +1253,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     paymentId,
                 };
                 const response = await client.post(url, params);
@@ -1304,7 +1300,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -1497,7 +1492,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("open").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         purchaseId: purchaseOfLoyalty.purchaseId,
                         amount: amountOfLoyalty.toString(),
                         currency: "krw",
@@ -1574,7 +1568,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -1754,7 +1747,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchaseOfLoyalty.purchaseId,
                     amount: amountOfLoyalty.toString(),
                     currency: "krw",
@@ -1818,7 +1810,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -1852,7 +1843,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     paymentId,
                 };
                 const response = await client.post(url, params);
@@ -1921,7 +1911,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -2129,7 +2118,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     purchaseId: purchaseOfLoyalty.purchaseId,
                     amount: amountOfLoyalty.toString(),
                     currency: "krw",
@@ -2197,7 +2185,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -2231,7 +2218,6 @@ describe("Test of Server", function () {
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
                 const params = {
-                    accessKey: config.relay.accessKey,
                     paymentId,
                 };
                 const response = await client.post(url, params);
@@ -2279,7 +2265,6 @@ describe("Test of Server", function () {
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                     {
-                        accessKey: config.relay.accessKey,
                         confirm: true,
                         paymentId,
                     }
@@ -2571,7 +2556,6 @@ describe("Test of Server", function () {
             const url = URI(serverURL).directory("/v1/payment/new").filename("open").toString();
 
             const params = {
-                accessKey: config.relay.accessKey,
                 purchaseId: purchaseOfLoyalty.purchaseId,
                 amount: amountOfLoyalty.toString(),
                 currency: "krw",
@@ -2610,7 +2594,6 @@ describe("Test of Server", function () {
             const response = await client.post(
                 URI(serverURL).directory("/v1/payment/new").filename("close").toString(),
                 {
-                    accessKey: config.relay.accessKey,
                     confirm: true,
                     paymentId,
                 }
@@ -2629,7 +2612,6 @@ describe("Test of Server", function () {
             const url = URI(serverURL).directory("/v1/payment/cancel").filename("open").toString();
 
             const params = {
-                accessKey: config.relay.accessKey,
                 paymentId,
             };
             const response = await client.post(url, params);
@@ -2665,7 +2647,6 @@ describe("Test of Server", function () {
             const response = await client.post(
                 URI(serverURL).directory("/v1/payment/cancel").filename("close").toString(),
                 {
-                    accessKey: config.relay.accessKey,
                     confirm: true,
                     paymentId,
                 }

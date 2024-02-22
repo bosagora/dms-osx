@@ -325,7 +325,11 @@ export class WatchScheduler extends Scheduler {
         data: PaymentResultData
     ) {
         try {
-            const client = new HTTPClient();
+            const client = new HTTPClient({
+                headers: {
+                    Authorization: this.config.relay.callbackAccessKey,
+                },
+            });
             const res = await client.post(this.config.relay.callbackEndpoint, {
                 accessKey: this.config.relay.callbackAccessKey,
                 type,

@@ -36,7 +36,6 @@ import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
 import express from "express";
-import extend from "extend";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
@@ -183,7 +182,6 @@ export class PaymentRouter {
         this.app.post(
             "/v1/payment/new/open",
             [
-                body("accessKey").exists(),
                 body("purchaseId").exists(),
                 body("amount").exists().custom(Validation.isAmount),
                 body("currency").exists(),
@@ -198,11 +196,7 @@ export class PaymentRouter {
 
         this.app.post(
             "/v1/payment/new/close",
-            [
-                body("accessKey").exists(),
-                body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]),
-                body("paymentId").exists(),
-            ],
+            [body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]), body("paymentId").exists()],
             this.payment_new_close.bind(this)
         );
 
@@ -220,19 +214,11 @@ export class PaymentRouter {
 
         this.app.get("/v1/payment/item", [query("paymentId").exists()], this.payment_item.bind(this));
 
-        this.app.post(
-            "/v1/payment/cancel/open",
-            [body("accessKey").exists(), body("paymentId").exists()],
-            this.payment_cancel_open.bind(this)
-        );
+        this.app.post("/v1/payment/cancel/open", [body("paymentId").exists()], this.payment_cancel_open.bind(this));
 
         this.app.post(
             "/v1/payment/cancel/close",
-            [
-                body("accessKey").exists(),
-                body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]),
-                body("paymentId").exists(),
-            ],
+            [body("confirm").exists().trim().toLowerCase().isIn(["true", "false"]), body("paymentId").exists()],
             this.payment_cancel_close.bind(this)
         );
 
@@ -364,9 +350,7 @@ export class PaymentRouter {
      * @private
      */
     private async user_balance(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/user/balance ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/user/balance ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -396,9 +380,7 @@ export class PaymentRouter {
      * @private
      */
     private async phone_balance(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/phone/balance ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/phone/balance ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -437,9 +419,7 @@ export class PaymentRouter {
      * @private
      */
     private async phone_hash(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/phone/hash ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/phone/hash ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -463,9 +443,7 @@ export class PaymentRouter {
      * @private
      */
     private async convert_currency(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/convert/currency ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/convert/currency ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -492,9 +470,7 @@ export class PaymentRouter {
      * @private
      */
     private async shop_info(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/shop/info ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/shop/info ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -530,9 +506,7 @@ export class PaymentRouter {
      * @private
      */
     private async shop_withdrawal(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/shop/withdrawal ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/shop/withdrawal ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -564,9 +538,7 @@ export class PaymentRouter {
      * @private
      */
     private async payment_info(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/info ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/info ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -652,9 +624,7 @@ export class PaymentRouter {
      * @private
      */
     private async payment_new_open(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/payment/new/open ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/payment/new/open ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -662,7 +632,8 @@ export class PaymentRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -813,9 +784,7 @@ export class PaymentRouter {
      * @private
      */
     private async payment_new_approval(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/payment/new/approval ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/payment/new/approval ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -969,16 +938,15 @@ export class PaymentRouter {
      * @private
      */
     private async payment_new_close(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/payment/new/close ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/payment/new/close ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const accessKey: string = String(req.body.accessKey).trim();
+        let accessKey = req.get("Authorization");
+        if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
         if (accessKey !== this._config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }
@@ -1186,9 +1154,7 @@ export class PaymentRouter {
      * @private
      */
     private async payment_item(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.query);
-        params.accessKey = undefined;
-        logger.http(`GET /v1/payment/item ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`GET /v1/payment/item ${req.ip}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1239,9 +1205,7 @@ export class PaymentRouter {
      * @private
      */
     private async payment_cancel_open(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/payment/cancel/open ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/payment/cancel/open ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1249,7 +1213,8 @@ export class PaymentRouter {
         }
 
         try {
-            const accessKey: string = String(req.body.accessKey).trim();
+            let accessKey = req.get("Authorization");
+            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
@@ -1335,9 +1300,7 @@ export class PaymentRouter {
      * @private
      */
     private async payment_cancel_approval(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/payment/cancel/approval ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/payment/cancel/approval ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1485,16 +1448,15 @@ export class PaymentRouter {
      * @private
      */
     private async payment_cancel_close(req: express.Request, res: express.Response) {
-        const params = extend(true, {}, req.body);
-        params.accessKey = undefined;
-        logger.http(`POST /v1/payment/cancel/close ${req.ip}:${JSON.stringify(params)}`);
+        logger.http(`POST /v1/payment/cancel/close ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const accessKey: string = String(req.body.accessKey).trim();
+        let accessKey = req.get("Authorization");
+        if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
         if (accessKey !== this._config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }

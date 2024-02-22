@@ -11,8 +11,8 @@ export class TestServer extends DefaultServer {}
 export class TestClient {
     private client: AxiosInstance;
 
-    constructor() {
-        this.client = axios.create();
+    constructor(config?: AxiosRequestConfig) {
+        this.client = axios.create(config);
     }
 
     public get(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse> {
