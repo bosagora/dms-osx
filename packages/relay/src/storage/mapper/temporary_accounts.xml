@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="temporary_accounts">
+
+    <insert id="postAccount">
+        INSERT INTO temporary_accounts
+        (
+            "account"                   ,
+            "temporary_account"         ,
+            "timestamp"
+        )
+        VALUES
+        (
+            #{account}               ,
+            #{temporary_account}     ,
+            now()
+        )
+        ON CONFLICT ("sequence")
+        DO UPDATE
+           SET
+               "account" = EXCLUDED."account",
+               "temporary_account" = EXCLUDED."temporary_account",
+               "timestamp" = EXCLUDED."timestamp";
+    </insert>
+
+    <select id="getRealAccount">
+        SELECT * FROM temporary_accounts WHERE LOWER("temporary_account") = LOWER(#{temporary_account}) AND (EXTRACT(EPOCH FROM (now() - "timestamp")) <![CDATA[<]]> 60);
+    </select>
+
+    <select id="removeExpiredAccount">
+        DELETE FROM temporary_accounts WHERE EXTRACT(EPOCH FROM (now() - "timestamp")) <![CDATA[>]]> 300;
+    </select>
+</mapper>

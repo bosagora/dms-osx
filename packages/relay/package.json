@@ -25,6 +25,7 @@
         "test:Payment": "TESTING=true hardhat test test/Payment.test.ts",
         "test:Approval": "TESTING=true hardhat test test/Approval.test.ts",
         "test:ForcedClose": "TESTING=true hardhat test test/ForcedClose.test.ts",
+        "test:TemporaryAccount": "TESTING=true hardhat test test/TempararyAccount.test.ts",
         "test:ETC": "TESTING=true hardhat test test/ETC.test.ts"
     },
     "repository": {

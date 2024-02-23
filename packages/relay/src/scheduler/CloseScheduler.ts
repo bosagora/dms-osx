@@ -63,6 +63,7 @@ export class CloseScheduler extends Scheduler {
             await this.onCancelPayment();
             await this.onCheckConsistencyOfNewPayment();
             await this.onCheckConsistencyOfCancelPayment();
+            await this.onRemoveExpiredAccount();
         } catch (error) {
             logger.error(`Failed to execute the CloseScheduler: ${error}`);
         }
@@ -241,5 +242,9 @@ export class CloseScheduler extends Scheduler {
                 await this.storage.updatePaymentContractStatus(payment.paymentId, loyaltyPaymentData.status);
             }
         }
+    }
+
+    private async onRemoveExpiredAccount() {
+        await this.storage.removeExpiredAccount();
     }
 }
