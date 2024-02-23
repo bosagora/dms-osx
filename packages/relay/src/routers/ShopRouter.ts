@@ -385,6 +385,11 @@ export class ShopRouter {
                 await this._storage.postTask(item);
 
                 const mobileData = await this._storage.getMobile(item.account, MobileType.SHOP_APP);
+
+                if (!process.env.TESTING && mobileData === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
+                }
+
                 if (mobileData !== undefined) {
                     /// 사용자에게 메세지 발송
                     const to = mobileData.token;
@@ -394,8 +399,6 @@ export class ShopRouter {
                     contents.push(`상점이름 : ${item.name}`);
                     contents.push(`정산 환률 심벌 : ${item.currency}`);
                     await this._sender.send(to, title, contents.join(", "), data);
-                } else {
-                    if (!process.env.TESTING) logger.error("Can not found a mobile to send notifications to");
                 }
 
                 return res.status(200).json(
@@ -573,6 +576,11 @@ export class ShopRouter {
 
                 /// 사용자에게 푸쉬 메세지 발송
                 const mobileData = await this._storage.getMobile(item.account, MobileType.SHOP_APP);
+
+                if (!process.env.TESTING && mobileData === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
+                }
+
                 if (mobileData !== undefined) {
                     /// 사용자에게 메세지 발송
                     const to = mobileData.token;
@@ -582,8 +590,6 @@ export class ShopRouter {
                     contents.push(`상점이름 : ${item.name}`);
                     contents.push(`변경할 상태값 : ${item.status === ContractShopStatus.ACTIVE ? "활성" : "비활성"}`);
                     await this._sender.send(to, title, contents.join(", "), data);
-                } else {
-                    if (!process.env.TESTING) logger.error("Can not found a mobile to send notifications to");
                 }
 
                 return res.status(200).json(
