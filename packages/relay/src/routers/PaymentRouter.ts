@@ -802,6 +802,11 @@ export class PaymentRouter {
             const shopInfo = await shopContract.shopOf(item.shopId);
 
             const mobileData = await this._storage.getMobile(item.account, MobileType.USER_APP);
+
+            if (!process.env.TESTING && mobileData === undefined) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
+            }
+
             if (mobileData !== undefined) {
                 /// 사용자에게 메세지 발송
                 const to = mobileData.token;
@@ -817,8 +822,6 @@ export class PaymentRouter {
                 else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`);
 
                 await this._sender.send(to, title, contents.join(", "), data);
-            } else {
-                if (!process.env.TESTING) logger.error("Can not found a mobile to send notifications to");
             }
 
             return res.status(200).json(
@@ -1316,6 +1319,11 @@ export class PaymentRouter {
                 const shopInfo = await shopContract.shopOf(item.shopId);
 
                 const mobileData = await this._storage.getMobile(shopInfo.account, MobileType.SHOP_APP);
+
+                if (!process.env.TESTING && mobileData === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
+                }
+
                 if (mobileData !== undefined) {
                     /// 상점주에게 메세지 발송
                     const to = mobileData.token;

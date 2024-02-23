@@ -1184,6 +1184,8 @@
 | 2001 | 파라메타의 검증에 실패하였습니다<br/>Failed to check the validity of parameters                                                          |
 | 2002 | 엑세스키가 유효하지 않습니다<br/>The access key entered is not valid                                                                   |
 | 2003 | 지불아이디가 존재하지 않습니다<br/>The payment ID is not exist                                                                          |
+| 2004 | 임시주소가 존재하지 않거나 사용기간이 만료되었습니다<br/>Temporary address that does not exist                                                    |
+| 2005 | 사용자 모바일의 알림이 허용되지 않았습니다<br/User's mobile notification is not allowed                                                      |
 | 2020 | 지불에 대한 상태코드는 승인을 할 수 없습니다<br/>The status code for this payment cannot be approved                                         |
 | 2022 | 지불에 대한 상태코드는 취소를 할 수 없습니다<br/>The status code for this payment cannot be cancel                                           |
 | 2024 | 지불에 대한 상태코드는 종료처리를 할 수 없습니다<br/>The status code for this payment cannot process closing                                   |
