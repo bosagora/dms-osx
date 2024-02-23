@@ -93,11 +93,27 @@
 
     </sql>
 
+    <sql id="temporary_accounts">
+        CREATE TABLE IF NOT EXISTS temporary_accounts
+        (
+            "sequence"              BIGINT generated always as identity,
+            "account"               VARCHAR(42)  NOT NULL,
+            "temporary_account"     VARCHAR(42)  NOT NULL,
+            "timestamp"             TIMESTAMP,
+            PRIMARY KEY ("sequence")
+        );
+        CREATE SEQUENCE IF NOT EXISTS temporary_accounts_sequence_seq;
+        CREATE INDEX IF NOT EXISTS temporary_accounts_temporary_account_index
+            on temporary_accounts (temporary_account);
+
+    </sql>
+
     <select id="create_table">
         <include refid="payments"/>
         <include refid="tasks"/>
         <include refid="mobiles"/>
         <include refid="purchase"/>
+        <include refid="temporary_accounts"/>
     </select>
 
     <select id="drop_table">
@@ -105,6 +121,7 @@
         DROP TABLE tasks;
         DROP TABLE mobiles;
         DROP TABLE purchases;
+        DROP TABLE temporary_accounts;
     </select>
 
 </mapper>

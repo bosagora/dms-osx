@@ -19,6 +19,8 @@ import {
     ShopTaskStatus,
     TaskResultType,
 } from "../types";
+import { ContractUtils } from "../utils/ContractUtils";
+import * as hre from "hardhat";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -35,6 +37,7 @@ export class RelayStorage extends Storage {
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/task.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/mobile.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/purchase.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/temporary_accounts.xml")]);
         await this.createTables();
     }
 
@@ -857,4 +860,61 @@ export class RelayStorage extends Storage {
         });
     }
     /// endregion
+
+    public async getTemporaryAccount(account: string): Promise<string> {
+        let temporary_account: string;
+        while (true) {
+            temporary_account = ContractUtils.getTemporaryAccount();
+            if ((await this.getRealAccount(temporary_account)) === undefined) break;
+        }
+
+        const timestamp = ContractUtils.getTimeStampBigInt();
+        return new Promise<string>(async (resolve, reject) => {
+            this.queryForMapper("temporary_accounts", "postAccount", {
+                account: account.toLowerCase(),
+                temporary_account: temporary_account.toLowerCase(),
+                timestamp: timestamp.toString(),
+            })
+                .then(() => {
+                    return resolve(temporary_account);
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getRealAccount(temporary_account: string): Promise<string | undefined> {
+        return new Promise<string | undefined>(async (resolve, reject) => {
+            this.queryForMapper("temporary_accounts", "getRealAccount", {
+                temporary_account,
+                timestamp: (ContractUtils.getTimeStampBigInt() - BigInt(60)).toString(),
+            })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        return resolve(hre.ethers.utils.getAddress(result.rows[0].account));
+                    } else {
+                        return resolve(undefined);
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public removeExpiredAccount(): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("temporary_accounts", "removeExpiredAccount", {})
+                .then((result) => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
 }

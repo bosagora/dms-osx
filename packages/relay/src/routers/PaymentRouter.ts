@@ -169,6 +169,17 @@ export class PaymentRouter {
             this.shop_withdrawal.bind(this)
         );
 
+        this.app.post(
+            "/v1/payment/account/temporary",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.payment_account_temporary.bind(this)
+        );
+
         this.app.get(
             "/v1/payment/info",
             [
@@ -358,7 +369,15 @@ export class PaymentRouter {
         }
 
         try {
-            const account: string = String(req.query.account).trim();
+            let account: string = String(req.query.account).trim();
+            if (ContractUtils.isTemporaryAccount(account)) {
+                const realAccount = await this._storage.getRealAccount(account);
+                if (realAccount === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
+                } else {
+                    account = realAccount;
+                }
+            }
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
             const balance =
                 loyaltyType === ContractLoyaltyType.POINT
@@ -533,6 +552,42 @@ export class PaymentRouter {
     }
 
     /**
+     * POST /v1/payment/account/temporary
+     * @private
+     */
+    private async payment_account_temporary(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/payment/account/temporary ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const account: string = String(req.body.account).trim().toLowerCase();
+        const signature: string = String(req.body.signature).trim();
+
+        try {
+            const message = ContractUtils.getAccountMessage(
+                account,
+                await (await this.getLedgerContract()).nonceOf(account)
+            );
+            if (!ContractUtils.verifyMessage(account, message, signature)) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+            }
+            const temporaryAccount = await this._storage.getTemporaryAccount(account);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    temporaryAccount,
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/payment/account/temporary : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
      * 결제 / 결제정보를 제공한다
      * GET /v1/payment/info
      * @private
@@ -546,9 +601,19 @@ export class PaymentRouter {
         }
 
         try {
-            const account: string = String(req.query.account).trim();
+            let account: string = String(req.query.account).trim();
+            if (ContractUtils.isTemporaryAccount(account)) {
+                const realAccount = await this._storage.getRealAccount(account);
+                if (realAccount === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
+                } else {
+                    account = realAccount;
+                }
+            }
+
             const amount: BigNumber = BigNumber.from(req.query.amount);
             const currency: string = String(req.query.currency).trim().toLowerCase();
+
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
 
             const feeRate = await (await this.getLedgerContract()).getFee();
@@ -638,11 +703,20 @@ export class PaymentRouter {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
 
+            let account: string = String(req.body.account).trim();
+            if (ContractUtils.isTemporaryAccount(account)) {
+                const realAccount = await this._storage.getRealAccount(account);
+                if (realAccount === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
+                } else {
+                    account = realAccount;
+                }
+            }
+
             const purchaseId: string = String(req.body.purchaseId).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
             const currency: string = String(req.body.currency).trim();
             const shopId: string = String(req.body.shopId).trim();
-            const account: string = String(req.body.account).trim();
 
             const feeRate = await (await this.getLedgerContract()).getFee();
             const rate = await (await this.getCurrencyRateContract()).get(currency.toLowerCase());

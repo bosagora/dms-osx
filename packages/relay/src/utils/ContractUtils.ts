@@ -208,6 +208,18 @@ export class ContractUtils {
 
     // endregion
 
+    // region
+
+    public static getAccountMessage(account: string, nonce: BigNumberish, chainId?: BigNumberish): Uint8Array {
+        const encodedResult = defaultAbiCoder.encode(
+            ["address", "uint256", "uint256"],
+            [account, chainId ? chainId : hre.ethers.provider.network.chainId, nonce]
+        );
+        return arrayify(keccak256(encodedResult));
+    }
+
+    // endregion
+
     // region Shop
 
     public static getShopId(account: string): string {
@@ -628,5 +640,16 @@ export class ContractUtils {
         const secret = "0x" + Buffer.from(randomBytes(32)).toString("hex");
         const secretLock = keccak256(defaultAbiCoder.encode(["bytes32"], [secret]));
         return [secret, secretLock];
+    }
+
+    public static getTemporaryAccount(): string {
+        return hre.ethers.utils.getAddress("0xffffffff" + Buffer.from(randomBytes(12)).toString("hex") + "00000000");
+    }
+
+    public static isTemporaryAccount(address: string): boolean {
+        return (
+            address.substring(0, 10).toLowerCase() === "0xffffffff" &&
+            address.substring(address.length - 8) === "00000000"
+        );
     }
 }
