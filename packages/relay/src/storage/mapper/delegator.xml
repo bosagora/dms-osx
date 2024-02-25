@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="delegators">
+
+    <insert id="postDelegator">
+        INSERT INTO delegators
+        (
+            account,
+            delegator,
+            content
+        )
+        VALUES
+        (
+            #{account},
+            #{delegator},
+            #{content}
+        )
+        ON CONFLICT (account)
+        DO UPDATE
+        SET
+            delegator = EXCLUDED.delegator,
+            content = EXCLUDED.content;
+    </insert>
+
+    <select id="getDelegator">
+        SELECT * FROM delegators WHERE LOWER(account) = LOWER(#{account});
+    </select>
+
+    <select id="removeDelegator">
+        DELETE FROM delegators WHERE LOWER(account) = LOWER(#{account});
+    </select>
+</mapper>

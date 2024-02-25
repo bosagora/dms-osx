@@ -21,6 +21,8 @@ import { randomBytes } from "@ethersproject/random";
 // tslint:disable-next-line:no-implicit-dependencies
 import { verifyMessage } from "@ethersproject/wallet";
 
+import * as crypto from "crypto";
+
 import * as hre from "hardhat";
 
 export class ContractUtils {
@@ -681,5 +683,17 @@ export class ContractUtils {
             address.substring(0, 10).toLowerCase() === "0xffffffff" &&
             address.substring(address.length - 8) === "00000000"
         );
+    }
+
+    public static encrypt(val: string, key: string): string {
+        const cipher = crypto.createCipheriv("aes-256-cbc", key, "5183666c72eec9e4");
+        const encrypted = cipher.update(val, "utf8", "base64");
+        return encrypted + cipher.final("base64");
+    }
+
+    public static decrypt(encrypted: string, key: string): string {
+        const decipher = crypto.createDecipheriv("aes-256-cbc", key, "5183666c72eec9e4");
+        const decrypted = decipher.update(encrypted, "base64", "utf8");
+        return decrypted + decipher.final("utf8");
     }
 }
