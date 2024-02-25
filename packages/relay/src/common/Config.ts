@@ -311,6 +311,7 @@ export class RelayConfig implements IRelayConfig {
     public expoAccessToken: string;
     public relayEndpoint: string;
     public storePurchaseWaitingSecond: number;
+    public encryptKey: string;
 
     /**
      * Constructor
@@ -328,6 +329,7 @@ export class RelayConfig implements IRelayConfig {
         this.expoAccessToken = defaults.expoAccessToken;
         this.relayEndpoint = defaults.relayEndpoint;
         this.storePurchaseWaitingSecond = defaults.storePurchaseWaitingSecond;
+        this.encryptKey = defaults.encryptKey;
     }
 
     /**
@@ -351,6 +353,7 @@ export class RelayConfig implements IRelayConfig {
             expoAccessToken: "",
             relayEndpoint: "",
             storePurchaseWaitingSecond: 694800,
+            encryptKey: "",
         };
     }
 
@@ -611,6 +614,7 @@ export interface IRelayConfig {
     expoAccessToken: string;
     relayEndpoint: string;
     storePurchaseWaitingSecond: number;
+    encryptKey: string;
 }
 
 export interface IContractsConfig {

@@ -93,6 +93,16 @@
 
     </sql>
 
+    <sql id="delegators">
+        CREATE TABLE IF NOT EXISTS delegators
+        (
+            "account"               VARCHAR(42)  NOT NULL,
+            "delegator"             VARCHAR(42)  NOT NULL,
+            "content"               VARCHAR(130)  NOT NULL,
+            PRIMARY KEY ("account")
+        );
+    </sql>
+
     <sql id="temporary_accounts">
         CREATE TABLE IF NOT EXISTS temporary_accounts
         (
@@ -113,6 +123,7 @@
         <include refid="tasks"/>
         <include refid="mobiles"/>
         <include refid="purchase"/>
+        <include refid="delegators"/>
         <include refid="temporary_accounts"/>
     </select>
 
@@ -121,6 +132,7 @@
         DROP TABLE tasks;
         DROP TABLE mobiles;
         DROP TABLE purchases;
+        DROP TABLE delegators;
         DROP TABLE temporary_accounts;
     </select>
 

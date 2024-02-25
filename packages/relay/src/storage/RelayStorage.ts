@@ -20,7 +20,10 @@ import {
     TaskResultType,
 } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
+
 import * as hre from "hardhat";
+
+import { Wallet } from "ethers";
 
 /**
  * The class that inserts and reads the ledger into the database.
@@ -37,6 +40,7 @@ export class RelayStorage extends Storage {
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/task.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/mobile.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/purchase.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/delegator.xml")]);
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/mapper/temporary_accounts.xml")]);
         await this.createTables();
     }
@@ -753,7 +757,7 @@ export class RelayStorage extends Storage {
     public cancelStorePurchase(purchaseId: string): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("purchase", "updateCancel", { purchaseId })
-                .then((result) => {
+                .then(() => {
                     return resolve();
                 })
                 .catch((reason) => {
@@ -917,4 +921,78 @@ export class RelayStorage extends Storage {
                 });
         });
     }
+
+    // region Delegator
+    public async createDelegator(account: string, key: string): Promise<string> {
+        const wallet = hre.ethers.Wallet.createRandom();
+
+        return new Promise<string>(async (resolve, reject) => {
+            this.queryForMapper("delegators", "postDelegator", {
+                account: account.toLowerCase(),
+                delegator: wallet.address,
+                content: ContractUtils.encrypt(wallet.privateKey, key),
+            })
+                .then(() => {
+                    return resolve(wallet.address);
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public hasDelegator(account: string): Promise<boolean> {
+        return new Promise<boolean>(async (resolve, reject) => {
+            this.queryForMapper("delegators", "getDelegator", {
+                account,
+            })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        return resolve(true);
+                    } else {
+                        return resolve(false);
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getDelegator(account: string, key: string): Promise<Wallet | undefined> {
+        return new Promise<Wallet | undefined>(async (resolve, reject) => {
+            this.queryForMapper("delegators", "getDelegator", {
+                account,
+            })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        return resolve(new Wallet(ContractUtils.decrypt(result.rows[0].content, key)));
+                    } else {
+                        return resolve(undefined);
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public removeDelegator(account: string): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("delegators", "removeDelegator", {
+                account,
+            })
+                .then((result) => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+    /// endregion
 }
