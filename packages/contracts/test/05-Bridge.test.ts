@@ -5,11 +5,11 @@ import "@openzeppelin/hardhat-upgrades";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
+    Bridge,
     CurrencyRate,
     IBIP20DelegatedTransfer,
-    Bridge,
-    LoyaltyBridge,
     Ledger,
+    LoyaltyBridge,
     LoyaltyBurner,
     LoyaltyConsumer,
     LoyaltyExchanger,
@@ -17,8 +17,8 @@ import {
     LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
-    Validator,
     TestKIOS,
+    Validator,
 } from "../typechain-types";
 
 import chai, { expect } from "chai";
@@ -59,7 +59,8 @@ describe("Test for Ledger", () => {
     const addShopData = async (shopData: IShopData[]) => {
         for (const elem of shopData) {
             const nonce = await shopContract.nonceOf(elem.wallet.address);
-            const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
+            const message = ContractUtils.getShopAccountMessage(elem.shopId, elem.wallet.address, nonce);
+            const signature = await ContractUtils.signMessage(elem.wallet, message);
             await shopContract
                 .connect(deployments.accounts.certifier)
                 .add(elem.shopId, elem.name, elem.currency, elem.wallet.address, signature);
@@ -119,9 +120,9 @@ describe("Test for Ledger", () => {
         )
             .to.emit(bridgeContract, "BridgeDeposited")
             .withNamedArgs({
-                depositId: depositId,
+                depositId,
                 account: deployments.accounts.users[0].address,
-                amount: amount,
+                amount,
             });
         expect(await tokenContract.balanceOf(deployments.accounts.users[0].address)).to.deep.equal(
             oldTokenBalance.sub(amount)
@@ -181,9 +182,9 @@ describe("Test for Ledger", () => {
         )
             .to.emit(loyaltyBridgeContract, "BridgeDeposited")
             .withNamedArgs({
-                depositId: depositId,
+                depositId,
                 account: deployments.accounts.users[0].address,
-                amount: amount,
+                amount,
             });
         expect(await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address)).to.deep.equal(
             oldTokenBalance.sub(amount)

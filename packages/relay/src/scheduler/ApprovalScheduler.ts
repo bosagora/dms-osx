@@ -267,7 +267,8 @@ export class ApprovalScheduler extends Scheduler {
             if (wallet !== undefined) {
                 logger.info(`ApprovalScheduler.onUpdateTask ${task.taskId}`);
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
-                const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);
+                const message = ContractUtils.getShopAccountMessage(task.shopId, task.account, nonce);
+                const signature = await ContractUtils.signMessage(new Wallet(wallet.privateKey), message);
 
                 const serverURL = this.config.relay.relayEndpoint;
                 const client = axios.create();
@@ -300,7 +301,8 @@ export class ApprovalScheduler extends Scheduler {
             if (wallet !== undefined) {
                 logger.info(`ApprovalScheduler.onStatusTask ${task.taskId}`);
                 const nonce = await (await this.getShopContract()).nonceOf(wallet.address);
-                const signature = await ContractUtils.signShop(new Wallet(wallet.privateKey), task.shopId, nonce);
+                const message = ContractUtils.getShopAccountMessage(task.shopId, task.account, nonce);
+                const signature = await ContractUtils.signMessage(new Wallet(wallet.privateKey), message);
 
                 const serverURL = this.config.relay.relayEndpoint;
                 const client = axios.create();

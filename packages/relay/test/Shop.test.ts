@@ -187,7 +187,8 @@ describe("Test for Shop", function () {
         it("Add", async () => {
             for (const elem of shopData) {
                 const nonce = await shopContract.nonceOf(elem.wallet.address);
-                const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
+                const message = ContractUtils.getShopAccountMessage(elem.shopId, elem.wallet.address, nonce);
+                const signature = await ContractUtils.signMessage(elem.wallet, message);
 
                 const uri = URI(serverURL).directory("/v1/shop").filename("add");
                 const url = uri.toString();
@@ -261,7 +262,12 @@ describe("Test for Shop", function () {
                     URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
                 );
                 const nonce = await shopContract.nonceOf(shopData[0].wallet.address);
-                const signature = await ContractUtils.signShop(shopData[0].wallet, shopData[0].shopId, nonce);
+                const message = ContractUtils.getShopAccountMessage(
+                    responseItem.data.data.shopId,
+                    shopData[0].wallet.address,
+                    nonce
+                );
+                const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
 
                 const response = await client.post(
                     URI(serverURL).directory("/v1/shop/update").filename("approval").toString(),
@@ -346,7 +352,12 @@ describe("Test for Shop", function () {
                     URI(serverURL).directory("/v1/shop/task").addQuery("taskId", taskId).toString()
                 );
                 const nonce = await shopContract.nonceOf(shopData[0].wallet.address);
-                const signature = await ContractUtils.signShop(shopData[0].wallet, shopData[0].shopId, nonce);
+                const message = ContractUtils.getShopAccountMessage(
+                    responseItem.data.data.shopId,
+                    shopData[0].wallet.address,
+                    nonce
+                );
+                const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
 
                 const response = await client.post(
                     URI(serverURL).directory("/v1/shop/status").filename("approval").toString(),

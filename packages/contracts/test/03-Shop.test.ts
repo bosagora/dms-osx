@@ -85,6 +85,8 @@ describe("Test for Shop", () => {
         },
     ];
 
+    const delegator = shopData[1].wallet;
+
     before("Deploy", async () => {
         await deployAllContract();
     });
@@ -112,7 +114,8 @@ describe("Test for Shop", () => {
     it("Success", async () => {
         for (const elem of shopData) {
             const nonce = await shopContract.nonceOf(elem.wallet.address);
-            const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
+            const message = ContractUtils.getShopAccountMessage(elem.shopId, elem.wallet.address, nonce);
+            const signature = await ContractUtils.signMessage(elem.wallet, message);
             await expect(
                 shopContract
                     .connect(deployments.accounts.certifier)
@@ -138,11 +141,12 @@ describe("Test for Shop", () => {
     it("Update", async () => {
         const elem = shopData[0];
         elem.name = "New Shop";
-        const signature = await ContractUtils.signShop(
-            elem.wallet,
+        const message = ContractUtils.getShopAccountMessage(
             elem.shopId,
+            elem.wallet.address,
             await shopContract.nonceOf(elem.wallet.address)
         );
+        const signature = await ContractUtils.signMessage(elem.wallet, message);
         await expect(
             shopContract
                 .connect(deployments.accounts.certifier)
@@ -166,11 +170,12 @@ describe("Test for Shop", () => {
 
     it("Change status", async () => {
         for (const elem of shopData) {
-            const signature = await ContractUtils.signShop(
-                elem.wallet,
+            const message = ContractUtils.getShopAccountMessage(
                 elem.shopId,
+                elem.wallet.address,
                 await shopContract.nonceOf(elem.wallet.address)
             );
+            const signature = await ContractUtils.signMessage(elem.wallet, message);
             await expect(
                 shopContract
                     .connect(deployments.accounts.certifier)
@@ -189,5 +194,97 @@ describe("Test for Shop", () => {
             const shop = await shopContract.shopOf(elem.shopId);
             expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
         }
+    });
+
+    it("Change status", async () => {
+        for (const elem of shopData) {
+            const message = ContractUtils.getShopAccountMessage(
+                elem.shopId,
+                elem.wallet.address,
+                await shopContract.nonceOf(elem.wallet.address)
+            );
+            const signature = await ContractUtils.signMessage(elem.wallet, message);
+            await expect(
+                shopContract
+                    .connect(deployments.accounts.certifier)
+                    .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature)
+            )
+                .to.emit(shopContract, "ChangedShopStatus")
+                .withNamedArgs({
+                    shopId: elem.shopId,
+                    status: ContractShopStatus.ACTIVE,
+                });
+        }
+    });
+
+    it("Change delegator", async () => {
+        const elem = shopData[0];
+        elem.name = "New Shop";
+        const message = ContractUtils.getShopDelegatorAccountMessage(
+            elem.shopId,
+            delegator.address,
+            elem.wallet.address,
+            await shopContract.nonceOf(elem.wallet.address)
+        );
+        const signature = await ContractUtils.signMessage(elem.wallet, message);
+        await expect(
+            shopContract
+                .connect(deployments.accounts.certifier)
+                .changeDelegator(elem.shopId, delegator.address, elem.wallet.address, signature)
+        )
+            .to.emit(shopContract, "ChangedDelegator")
+            .withNamedArgs({
+                shopId: elem.shopId,
+                delegator: delegator.address,
+            });
+    });
+
+    it("Check delegator", async () => {
+        const elem = shopData[0];
+        const shop = await shopContract.shopOf(elem.shopId);
+        expect(shop.delegator).to.deep.equal(delegator.address);
+    });
+
+    it("Update by delegator", async () => {
+        const elem = shopData[0];
+        elem.name = "New Shop";
+        const message = ContractUtils.getShopAccountMessage(
+            elem.shopId,
+            delegator.address,
+            await shopContract.nonceOf(delegator.address)
+        );
+        const signature = await ContractUtils.signMessage(delegator, message);
+        await expect(
+            shopContract
+                .connect(deployments.accounts.certifier)
+                .update(elem.shopId, "new name", "usd", delegator.address, signature)
+        )
+            .to.emit(shopContract, "UpdatedShop")
+            .withNamedArgs({
+                shopId: elem.shopId,
+                name: "new name",
+                currency: "usd",
+                account: delegator.address,
+            });
+    });
+
+    it("Change status", async () => {
+        const elem = shopData[0];
+        const message = ContractUtils.getShopAccountMessage(
+            elem.shopId,
+            delegator.address,
+            await shopContract.nonceOf(delegator.address)
+        );
+        const signature = await ContractUtils.signMessage(delegator, message);
+        await expect(
+            shopContract
+                .connect(deployments.accounts.certifier)
+                .changeStatus(elem.shopId, ContractShopStatus.INACTIVE, delegator.address, signature)
+        )
+            .to.emit(shopContract, "ChangedShopStatus")
+            .withNamedArgs({
+                shopId: elem.shopId,
+                status: ContractShopStatus.INACTIVE,
+            });
     });
 });

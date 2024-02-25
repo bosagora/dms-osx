@@ -263,7 +263,12 @@ export class ShopRouter {
 
             try {
                 const contract = await this.getShopContract();
-                if (!ContractUtils.verifyShop(shopId, await contract.nonceOf(account), account, signature))
+                const message = ContractUtils.getShopAccountMessage(
+                    item.shopId,
+                    item.account,
+                    await contract.nonceOf(account)
+                );
+                if (!ContractUtils.verifyMessage(account, message, signature))
                     return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
                 const tx = await contract.connect(signerItem.signer).add(shopId, name, currency, account, signature);
@@ -450,9 +455,9 @@ export class ShopRouter {
                 }
 
                 const nonce = await contract.nonceOf(item.account);
-                if (!ContractUtils.verifyShop(item.shopId, nonce, item.account, signature)) {
+                const message = ContractUtils.getShopAccountMessage(item.shopId, item.account, nonce);
+                if (!ContractUtils.verifyMessage(item.account, message, signature))
                     return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
-                }
 
                 if (ContractUtils.getTimeStamp() - item.timestamp > this._config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
@@ -641,16 +646,13 @@ export class ShopRouter {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2040"));
                 }
 
-                if (
-                    !ContractUtils.verifyShop(
-                        item.shopId,
-                        await (await this.getShopContract()).nonceOf(item.account),
-                        item.account,
-                        signature
-                    )
-                ) {
+                const message = ContractUtils.getShopAccountMessage(
+                    item.shopId,
+                    item.account,
+                    await (await this.getShopContract()).nonceOf(item.account)
+                );
+                if (!ContractUtils.verifyMessage(item.account, message, signature))
                     return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
-                }
 
                 if (ContractUtils.getTimeStamp() - item.timestamp > this._config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
@@ -750,7 +752,8 @@ export class ShopRouter {
 
             // 서명검증
             const nonce = await (await this.getShopContract()).nonceOf(account);
-            if (!ContractUtils.verifyShop(shopId, nonce, account, signature))
+            const message = ContractUtils.getShopAccountMessage(shopId, account, nonce);
+            if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
             const tx = await (await this.getShopContract())
@@ -789,7 +792,8 @@ export class ShopRouter {
 
             // 서명검증
             const nonce = await (await this.getShopContract()).nonceOf(account);
-            if (!ContractUtils.verifyShop(shopId, nonce, account, signature))
+            const message = ContractUtils.getShopAccountMessage(shopId, account, nonce);
+            if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
             const tx = await (await this.getShopContract())

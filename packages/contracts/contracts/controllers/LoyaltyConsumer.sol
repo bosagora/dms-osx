@@ -293,7 +293,9 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
         require(block.timestamp <= loyaltyPayments[_paymentId].timestamp + 86400 * 7, "1534");
 
         IShop.ShopData memory shopInfo = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
-        bytes32 dataHash = keccak256(
+        bool pass1 = false;
+        bool pass2 = false;
+        bytes32 dataHash1 = keccak256(
             abi.encode(
                 _paymentId,
                 loyaltyPayments[_paymentId].purchaseId,
@@ -302,7 +304,21 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
                 ledgerContract.nonceOf(shopInfo.account)
             )
         );
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == shopInfo.account, "1501");
+        pass1 = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash1), _signature) == shopInfo.account;
+
+        if (shopInfo.delegator != address(0x0)) {
+            bytes32 dataHash2 = keccak256(
+                abi.encode(
+                    _paymentId,
+                    loyaltyPayments[_paymentId].purchaseId,
+                    shopInfo.delegator,
+                    block.chainid,
+                    ledgerContract.nonceOf(shopInfo.delegator)
+                )
+            );
+            pass2 = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash2), _signature) == shopInfo.delegator;
+        }
+        require(pass1 || pass2, "1501");
 
         ledgerContract.increaseNonce(shopInfo.account);
 
