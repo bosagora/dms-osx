@@ -373,6 +373,7 @@ export class RelayConfig implements IRelayConfig {
         if (config.relayEndpoint !== undefined) this.relayEndpoint = config.relayEndpoint;
         if (config.storePurchaseWaitingSecond !== undefined)
             this.storePurchaseWaitingSecond = config.storePurchaseWaitingSecond;
+        if (config.encryptKey !== undefined) this.encryptKey = config.encryptKey;
     }
 }
 

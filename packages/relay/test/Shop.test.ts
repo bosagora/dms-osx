@@ -405,5 +405,59 @@ describe("Test for Shop", function () {
                 expect(shop.status).to.deep.equal(ContractShopStatus.INACTIVE);
             });
         });
+
+        context("Shop delegator", () => {
+            let delegator: string;
+            it("Endpoint POST /v1/shop/account/delegator/create", async () => {
+                const url = URI(serverURL).directory("/v1/shop/account/delegator").filename("create").toString();
+
+                const nonce = await shopContract.nonceOf(shopData[0].wallet.address);
+                const message = ContractUtils.getShopAccountMessage(
+                    shopData[0].shopId,
+                    shopData[0].wallet.address,
+                    nonce
+                );
+                const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
+                const params = {
+                    shopId: shopData[0].shopId,
+                    account: shopData[0].wallet.address,
+                    signature,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+
+                delegator = response.data.data.delegator;
+            });
+
+            it("Endpoint POST /v1/shop/account/delegator/save", async () => {
+                const url = URI(serverURL).directory("/v1/shop/account/delegator").filename("save").toString();
+
+                const nonce = await shopContract.nonceOf(shopData[0].wallet.address);
+                const message = ContractUtils.getShopDelegatorAccountMessage(
+                    shopData[0].shopId,
+                    delegator,
+                    shopData[0].wallet.address,
+                    nonce
+                );
+                const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
+                const params = {
+                    shopId: shopData[0].shopId,
+                    delegator,
+                    account: shopData[0].wallet.address,
+                    signature,
+                };
+                const response = await client.post(url, params);
+
+                assert.deepStrictEqual(response.data.code, 0);
+                assert.ok(response.data.data !== undefined);
+            });
+
+            it("Check delegator", async () => {
+                const shop = await shopContract.shopOf(shopData[0].shopId);
+                expect(shop.delegator).to.deep.equal(delegator);
+            });
+        });
     });
 });
