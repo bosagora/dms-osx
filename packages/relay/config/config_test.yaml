@@ -55,6 +55,9 @@ scheduler:
     - name: purchase
       enable: true
       expression: "*/1 * * * * *"
+    - name: delegatorApproval
+      enable: true
+      expression: "*/1 * * * * *"
 
 relay:
   managerKeys:
