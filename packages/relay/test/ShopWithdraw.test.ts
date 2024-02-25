@@ -30,6 +30,7 @@ import { AddressZero } from "@ethersproject/constants";
 
 import { Deployments } from "./helper/Deployments";
 import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
+import { ContractShopStatus } from "dms-osx-artifacts/src/types";
 
 chai.use(solidity);
 
@@ -533,11 +534,12 @@ describe("Test for Shop", () => {
 
             it("Open Withdrawal", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShop(
-                    shopData[shopIndex].wallet,
+                const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
+                    shopData[shopIndex].wallet.address,
                     nonce
                 );
+                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
 
                 const uri = URI(serverURL).directory("/v1/shop/withdrawal").filename("open");
                 const url = uri.toString();
@@ -573,11 +575,12 @@ describe("Test for Shop", () => {
 
             it("Close Withdrawal", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShop(
-                    shopData[shopIndex].wallet,
+                const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
+                    shopData[shopIndex].wallet.address,
                     nonce
                 );
+                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
 
                 const uri = URI(serverURL).directory("/v1/shop/withdrawal").filename("close");
                 const url = uri.toString();

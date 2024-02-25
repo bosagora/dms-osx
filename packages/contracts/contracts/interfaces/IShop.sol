@@ -22,6 +22,7 @@ interface IShop {
         string name; // 상점 이름
         string currency; // 상점의 결제 통화
         address account; // 상점주의 지갑주소
+        address delegator; // 위임자의 지갑주소
         uint256 providedAmount; // 제공된 결제통화의 총량
         uint256 usedAmount; // 사용된 결제통화의 총량
         uint256 settledAmount; // 정산된 결제통화의 총량

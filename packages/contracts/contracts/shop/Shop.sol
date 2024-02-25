@@ -22,6 +22,8 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
     event UpdatedShop(bytes32 shopId, string name, string currency, address account, ShopStatus status);
     /// @notice 상점의 정보가 변경될 때 발생되는 이벤트
     event ChangedShopStatus(bytes32 shopId, ShopStatus status);
+    /// @notice 상점의 위임자가 변경될 때 발생되는 이벤트
+    event ChangedDelegator(bytes32 shopId, address delegator);
     /// @notice 상점에서 제공한 마일리지가 증가할 때 발생되는 이벤트
     event IncreasedProvidedAmount(bytes32 shopId, uint256 increase, uint256 total, string currency, string purchaseId);
     /// @notice 상점에서 사용된 마일리지가 증가할 때 발생되는 이벤트
@@ -112,6 +114,7 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
             name: _name,
             currency: _currency,
             account: _account,
+            delegator: address(0x0),
             providedAmount: 0,
             usedAmount: 0,
             settledAmount: 0,
@@ -145,7 +148,10 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 id = _shopId;
         require(shops[id].status != ShopStatus.INVALID, "1201");
         require(currencyRate.support(_currency), "1211");
-        require(shops[id].account == _account, "1050");
+        require(
+            shops[id].account == _account || (shops[id].delegator != address(0x0) && shops[id].delegator == _account),
+            "1050"
+        );
 
         bytes32 dataHash = keccak256(abi.encode(id, _account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
@@ -189,7 +195,10 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         bytes32 id = _shopId;
         require(_status != ShopStatus.INVALID, "1201");
         require(shops[id].status != ShopStatus.INVALID, "1201");
-        require(shops[id].account == _account, "1050");
+        require(
+            shops[id].account == _account || (shops[id].delegator != address(0x0) && shops[id].delegator == _account),
+            "1050"
+        );
 
         bytes32 dataHash = keccak256(abi.encode(id, _account, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
@@ -199,6 +208,30 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         nonce[_account]++;
 
         emit ChangedShopStatus(shops[id].shopId, shops[id].status);
+    }
+
+    /// @notice 상점상태를 수정합니다
+    /// @param _shopId 상점 아이디
+    /// @param _delegator 상점의 위임자의 주소
+    /// @dev 중계서버를 통해서 호출됩니다.
+    function changeDelegator(
+        bytes32 _shopId,
+        address _delegator,
+        address _account,
+        bytes calldata _signature
+    ) external virtual {
+        bytes32 id = _shopId;
+        require(shops[id].status != ShopStatus.INVALID, "1201");
+        require(shops[id].account == _account, "1050");
+
+        bytes32 dataHash = keccak256(abi.encode(id, _delegator, _account, block.chainid, nonce[_account]));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
+
+        shops[id].delegator = _delegator;
+
+        nonce[_account]++;
+
+        emit ChangedDelegator(shops[id].shopId, shops[id].delegator);
     }
 
     /// @notice 지갑주소로 등록한 상점의 아이디들을 리턴한다.

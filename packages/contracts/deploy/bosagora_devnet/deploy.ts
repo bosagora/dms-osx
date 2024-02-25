@@ -665,11 +665,8 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
 
         for (const shop of shopData) {
             const nonce = await contract.nonceOf(shop.address);
-            const signature = await ContractUtils.signShop(
-                new Wallet(shop.privateKey, ethers.provider),
-                shop.shopId,
-                nonce
-            );
+            const message = ContractUtils.getShopAccountMessage(shop.shopId, shop.address, nonce);
+            const signature = await ContractUtils.signMessage(new Wallet(shop.privateKey, ethers.provider), message);
             const tx = await contract
                 .connect(new Wallet(shop.privateKey, ethers.provider))
                 .add(shop.shopId, shop.name, shop.currency, shop.address, signature);
@@ -786,11 +783,11 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         for (const user of users) {
             if (user.loyaltyType === 1) {
                 const signer = new Wallet(user.privateKey).connect(ethers.provider);
-                const nonce = await contract.nonceOf(user.address);
-                const signature = await ContractUtils.signLoyaltyType(signer, nonce);
+                const nonce2 = await contract.nonceOf(user.address);
+                const signature2 = await ContractUtils.signLoyaltyType(signer, nonce2);
                 const tx10 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
                     .connect(signer)
-                    .changeToLoyaltyToken(user.address, signature);
+                    .changeToLoyaltyToken(user.address, signature2);
                 console.log(`Change user's loyalty type (tx: ${tx10.hash})...`);
                 // await tx10.wait();
 

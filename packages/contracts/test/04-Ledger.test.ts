@@ -82,7 +82,8 @@ describe("Test for Ledger", () => {
     const addShopData = async (shopData: IShopData[]) => {
         for (const elem of shopData) {
             const nonce = await shopContract.nonceOf(elem.wallet.address);
-            const signature = await ContractUtils.signShop(elem.wallet, elem.shopId, nonce);
+            const message = ContractUtils.getShopAccountMessage(elem.shopId, elem.wallet.address, nonce);
+            const signature = await ContractUtils.signMessage(elem.wallet, message);
             await shopContract
                 .connect(deployments.accounts.certifier)
                 .add(elem.shopId, elem.name, elem.currency, elem.wallet.address, signature);
@@ -2482,11 +2483,12 @@ describe("Test for Ledger", () => {
 
             it("Open Withdrawal", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShop(
-                    shopData[shopIndex].wallet,
+                const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
+                    shopData[shopIndex].wallet.address,
                     nonce
                 );
+                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
                         .connect(shopData[shopIndex].wallet.connect(waffle.provider))
@@ -2504,11 +2506,12 @@ describe("Test for Ledger", () => {
 
             it("Close Withdrawal", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShop(
-                    shopData[shopIndex].wallet,
+                const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
+                    shopData[shopIndex].wallet.address,
                     nonce
                 );
+                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
                         .connect(shopData[shopIndex].wallet.connect(waffle.provider))
@@ -3164,11 +3167,12 @@ describe("Test for Ledger", () => {
 
             it("Open Withdrawal", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShop(
-                    shopData[shopIndex].wallet,
+                const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
+                    shopData[shopIndex].wallet.address,
                     nonce
                 );
+                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
                         .connect(shopData[shopIndex].wallet.connect(waffle.provider))
@@ -3187,11 +3191,12 @@ describe("Test for Ledger", () => {
 
             it("Close Withdrawal", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const signature = await ContractUtils.signShop(
-                    shopData[shopIndex].wallet,
+                const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
+                    shopData[shopIndex].wallet.address,
                     nonce
                 );
+                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
                         .connect(shopData[shopIndex].wallet.connect(waffle.provider))

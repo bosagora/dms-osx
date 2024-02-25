@@ -637,7 +637,8 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
     {
         for (const shop of deployment.shops) {
             const nonce = await contract.nonceOf(shop.wallet.address);
-            const signature = await ContractUtils.signShop(shop.wallet, shop.shopId, nonce);
+            const message = ContractUtils.getShopAccountMessage(shop.shopId, shop.wallet.address, nonce);
+            const signature = await ContractUtils.signMessage(shop.wallet, message);
             const tx3 = await contract
                 .connect(shop.wallet)
                 .add(shop.shopId, shop.name, shop.currency, shop.wallet.address, signature);
@@ -746,8 +747,8 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         const nonce = await (deployment.getContract("TestKIOS") as TestKIOS).nonceOf(accounts.owner.address);
         const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount, nonce);
         const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx1 = await contract.connect(accounts.owner).depositLiquidity(assetAmount, signature);
-        console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
-        await tx1.wait();
+        const tx21 = await contract.connect(accounts.owner).depositLiquidity(assetAmount, signature);
+        console.log(`Deposit liquidity token (tx: ${tx21.hash})...`);
+        await tx21.wait();
     }
 }
