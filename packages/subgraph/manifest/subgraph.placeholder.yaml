@@ -123,7 +123,7 @@ dataSources:
         - name: LoyaltyTransfer
           file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyTransfer.sol/LoyaltyTransfer.json
       eventHandlers:
-        - event: TransferredLoyaltyToken(address,address,uint256,uint256,uint256)
+        - event: TransferredLoyaltyToken(address,address,uint256,uint256,uint256,uint256)
           handler: handleTransferredLoyaltyToken
       file: ./src/ledger.ts
 

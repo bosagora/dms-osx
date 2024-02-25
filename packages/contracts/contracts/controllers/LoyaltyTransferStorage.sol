@@ -6,6 +6,8 @@ import "../interfaces/ILedger.sol";
 
 contract LoyaltyTransferStorage {
     address internal foundationAccount;
+    address internal feeAccount;
+    uint256 internal fee;
 
     ILedger internal ledgerContract;
 

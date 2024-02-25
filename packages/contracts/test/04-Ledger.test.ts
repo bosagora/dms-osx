@@ -3352,9 +3352,10 @@ describe("Test for Ledger", () => {
         });
 
         it("Transfer token", async () => {
+            const fee = await transferContract.getFee();
             const oldTokenBalance0 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
             const oldTokenBalance1 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[1].address);
-            const transferAmount = oldTokenBalance0;
+            const transferAmount = oldTokenBalance0.sub(fee);
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
             const message = await ContractUtils.getTransferMessage(
                 deployments.accounts.users[0].address,
@@ -3376,10 +3377,11 @@ describe("Test for Ledger", () => {
                     from: deployments.accounts.users[0].address,
                     to: deployments.accounts.users[1].address,
                     amount: transferAmount,
+                    fee,
                 });
             const newTokenBalance0 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
             const newTokenBalance1 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[1].address);
-            expect(newTokenBalance0).to.deep.equal(oldTokenBalance0.sub(transferAmount));
+            expect(newTokenBalance0).to.deep.equal(oldTokenBalance0.sub(transferAmount.add(fee)));
             expect(newTokenBalance1).to.deep.equal(oldTokenBalance1.add(transferAmount));
         });
     });
