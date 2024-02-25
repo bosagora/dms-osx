@@ -26,6 +26,9 @@ import {
 import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
 
+// tslint:disable-next-line:no-implicit-dependencies
+import { AddressZero } from "@ethersproject/constants";
+
 export class ShopRouter {
     /**
      *
@@ -122,6 +125,49 @@ export class ShopRouter {
     }
 
     public registerRoutes() {
+        this.app.post(
+            "/v1/shop/account/delegator/create",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("account").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_account_delegator_create.bind(this)
+        );
+        this.app.post(
+            "/v1/shop/account/delegator/remove",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("account").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_account_delegator_remove.bind(this)
+        );
+        this.app.post(
+            "/v1/shop/account/delegator/save",
+            [
+                body("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                body("account").exists().trim().isEthereumAddress(),
+                body("delegator").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.shop_account_delegator_save.bind(this)
+        );
         this.app.post(
             "/v1/shop/add",
             [
@@ -222,6 +268,150 @@ export class ShopRouter {
             [query("pageNumber").exists().trim().isNumeric(), query("pageSize").exists().trim().isNumeric()],
             this.shop_list.bind(this)
         );
+    }
+
+    /**
+     * POST /v1/shop/account/delegator/create
+     * @private
+     */
+    private async shop_account_delegator_create(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/account/delegator/create ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const shopId: string = String(req.body.shopId).trim();
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
+
+            try {
+                const contract = await this.getShopContract();
+                const message = ContractUtils.getShopAccountMessage(shopId, account, await contract.nonceOf(account));
+                if (!ContractUtils.verifyMessage(account, message, signature))
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+                const delegator = await this._storage.createDelegator(account, this._config.relay.encryptKey);
+
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        shopId,
+                        account,
+                        delegator,
+                    })
+                );
+            } catch (error: any) {
+                const msg = ResponseMessage.getEVMErrorMessage(error);
+                logger.error(`POST /v1/shop/account/delegator/create : ${msg.error.message}`);
+                return res.status(200).json(msg);
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/shop/account/delegator/create : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * POST /v1/shop/account/delegator/remove
+     * @private
+     */
+    private async shop_account_delegator_remove(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/account/delegator/create ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const shopId: string = String(req.body.shopId).trim();
+            const account: string = String(req.body.account).trim();
+            const signature: string = String(req.body.signature).trim(); // 서명
+
+            try {
+                const contract = await this.getShopContract();
+                const message = ContractUtils.getShopAccountMessage(shopId, account, await contract.nonceOf(account));
+                if (!ContractUtils.verifyMessage(account, message, signature))
+                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+                await this._storage.removeDelegator(account);
+
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        shopId,
+                        account,
+                    })
+                );
+            } catch (error: any) {
+                const msg = ResponseMessage.getEVMErrorMessage(error);
+                logger.error(`POST /v1/shop/account/delegator/remove : ${msg.error.message}`);
+                return res.status(200).json(msg);
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/shop/account/delegator/remove : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * POST /v1/shop/account/delegator/save
+     * @private
+     */
+    private async shop_account_delegator_save(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/account/delegator/save ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const shopId: string = String(req.body.shopId).trim();
+            const account: string = String(req.body.account).trim();
+            const delegator: string = String(req.body.delegator).trim();
+            const signature: string = String(req.body.signature).trim();
+
+            const contract = await this.getShopContract();
+            const message = ContractUtils.getShopDelegatorAccountMessage(
+                shopId,
+                delegator,
+                account,
+                await contract.nonceOf(account)
+            );
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+            if (delegator !== AddressZero) {
+                const savedDelegator = await this._storage.getDelegator(account, this._config.relay.encryptKey);
+                if (savedDelegator === undefined) return res.status(200).json(ResponseMessage.getErrorMessage("2006"));
+                const wallet = new hre.ethers.Wallet(savedDelegator);
+                if (wallet.address.toLowerCase() !== delegator.toLowerCase())
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2006"));
+            } else {
+                await this._storage.removeDelegator(account);
+            }
+
+            const tx = await contract.connect(signerItem.signer).changeDelegator(shopId, delegator, account, signature);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    shopId,
+                    delegator,
+                    account,
+                    txHash: tx.hash,
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/shop/account/delegator/save : ${msg.error.message}`);
+            return res.status(200).json(msg);
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
     }
 
     /**
@@ -389,6 +579,27 @@ export class ShopRouter {
                 };
                 await this._storage.postTask(item);
 
+                let hasDelegator: boolean = false;
+                if (shopInfo.delegator !== AddressZero) {
+                    const wallet = await this._storage.getDelegator(shopInfo.account, this._config.relay.encryptKey);
+                    if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
+                        hasDelegator = true;
+                    }
+                }
+
+                if (hasDelegator) {
+                    return res.status(200).json(
+                        this.makeResponseData(0, {
+                            taskId: item.taskId,
+                            shopId: item.shopId,
+                            name: item.name,
+                            currency: item.currency,
+                            taskStatus: item.taskStatus,
+                            timestamp: item.timestamp,
+                        })
+                    );
+                }
+
                 const mobileData = await this._storage.getMobile(item.account, MobileType.SHOP_APP);
 
                 if (!process.env.TESTING && mobileData === undefined) {
@@ -454,10 +665,32 @@ export class ShopRouter {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2040"));
                 }
 
-                const nonce = await contract.nonceOf(item.account);
-                const message = ContractUtils.getShopAccountMessage(item.shopId, item.account, nonce);
-                if (!ContractUtils.verifyMessage(item.account, message, signature))
-                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                const shopContract = await this.getShopContract();
+                const shopInfo = await shopContract.shopOf(item.shopId);
+                let approver: string = item.account;
+
+                let hasDelegator: boolean = false;
+                if (shopInfo.delegator !== AddressZero) {
+                    const wallet = await this._storage.getDelegator(item.account, this._config.relay.encryptKey);
+                    if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
+                        hasDelegator = true;
+                        approver = wallet.address;
+                    }
+                }
+
+                if (!hasDelegator) {
+                    const nonce = await shopContract.nonceOf(item.account);
+                    const message = ContractUtils.getShopAccountMessage(item.shopId, item.account, nonce);
+                    if (!ContractUtils.verifyMessage(item.account, message, signature)) {
+                        return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                    }
+                } else {
+                    const nonce = await shopContract.nonceOf(shopInfo.delegator);
+                    const message = ContractUtils.getShopAccountMessage(item.shopId, shopInfo.delegator, nonce);
+                    if (!ContractUtils.verifyMessage(shopInfo.delegator, message, signature)) {
+                        return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                    }
+                }
 
                 if (ContractUtils.getTimeStamp() - item.timestamp > this._config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
@@ -479,7 +712,7 @@ export class ShopRouter {
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .update(item.shopId, item.name, item.currency, item.account, signature);
+                            .update(item.shopId, item.name, item.currency, approver, signature);
 
                         item.taskStatus = ShopTaskStatus.SENT_TX;
                         item.txId = tx.hash;
@@ -579,6 +812,26 @@ export class ShopRouter {
                 };
                 await this._storage.postTask(item);
 
+                let hasDelegator: boolean = false;
+                if (shopInfo.delegator !== AddressZero) {
+                    const wallet = await this._storage.getDelegator(shopInfo.account, this._config.relay.encryptKey);
+                    if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
+                        hasDelegator = true;
+                    }
+                }
+
+                if (hasDelegator) {
+                    return res.status(200).json(
+                        this.makeResponseData(0, {
+                            taskId: item.taskId,
+                            shopId: item.shopId,
+                            status: item.status,
+                            taskStatus: item.taskStatus,
+                            timestamp: item.timestamp,
+                        })
+                    );
+                }
+
                 /// 사용자에게 푸쉬 메세지 발송
                 const mobileData = await this._storage.getMobile(item.account, MobileType.SHOP_APP);
 
@@ -646,13 +899,32 @@ export class ShopRouter {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2040"));
                 }
 
-                const message = ContractUtils.getShopAccountMessage(
-                    item.shopId,
-                    item.account,
-                    await (await this.getShopContract()).nonceOf(item.account)
-                );
-                if (!ContractUtils.verifyMessage(item.account, message, signature))
-                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                const shopContract = await this.getShopContract();
+                const shopInfo = await shopContract.shopOf(item.shopId);
+                let approver: string = item.account;
+
+                let hasDelegator: boolean = false;
+                if (shopInfo.delegator !== AddressZero) {
+                    const wallet = await this._storage.getDelegator(shopInfo.account, this._config.relay.encryptKey);
+                    if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
+                        hasDelegator = true;
+                        approver = wallet.address;
+                    }
+                }
+
+                if (!hasDelegator) {
+                    const nonce = await shopContract.nonceOf(item.account);
+                    const message = ContractUtils.getShopAccountMessage(item.shopId, item.account, nonce);
+                    if (!ContractUtils.verifyMessage(item.account, message, signature)) {
+                        return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                    }
+                } else {
+                    const nonce = await shopContract.nonceOf(shopInfo.delegator);
+                    const message = ContractUtils.getShopAccountMessage(item.shopId, shopInfo.delegator, nonce);
+                    if (!ContractUtils.verifyMessage(shopInfo.delegator, message, signature)) {
+                        return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                    }
+                }
 
                 if (ContractUtils.getTimeStamp() - item.timestamp > this._config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
@@ -674,7 +946,7 @@ export class ShopRouter {
                     try {
                         const tx = await contract
                             .connect(signerItem.signer)
-                            .changeStatus(item.shopId, item.status, item.account, signature);
+                            .changeStatus(item.shopId, item.status, approver, signature);
 
                         item.taskStatus = ShopTaskStatus.SENT_TX;
                         item.txId = tx.hash;

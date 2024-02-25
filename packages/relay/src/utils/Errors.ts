@@ -58,6 +58,7 @@ export class ResponseMessage {
         ["2003", "The payment ID is not exist"],
         ["2004", "Temporary address that does not exist"],
         ["2005", "Mobile notification not allowed"],
+        ["2006", "Mobile notification not allowed"],
         ["2020", "The status code for this payment cannot be approved"],
         ["2022", "The status code for this payment cannot be cancel"],
         ["2024", "The status code for this payment cannot process closing"],

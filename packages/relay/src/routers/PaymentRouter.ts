@@ -31,7 +31,7 @@ import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
 import { Validation } from "../validation";
 
-import { BigNumber, ContractTransaction } from "ethers";
+import { BigNumber, ContractTransaction, Wallet } from "ethers";
 import { body, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
@@ -1318,6 +1318,42 @@ export class PaymentRouter {
                 const shopContract = await this.getShopContract();
                 const shopInfo = await shopContract.shopOf(item.shopId);
 
+                let hasDelegator: boolean = false;
+                if (shopInfo.delegator !== AddressZero) {
+                    const wallet = await this._storage.getDelegator(shopInfo.account, this._config.relay.encryptKey);
+                    if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
+                        hasDelegator = true;
+                    }
+                }
+
+                if (hasDelegator) {
+                    return res.status(200).json(
+                        this.makeResponseData(0, {
+                            paymentId: item.paymentId,
+                            purchaseId: item.purchaseId,
+                            amount: item.amount.toString(),
+                            currency: item.currency,
+                            shopId: item.shopId,
+                            account: item.account,
+                            loyaltyType: item.loyaltyType,
+                            paidPoint: item.paidPoint.toString(),
+                            paidToken: item.paidToken.toString(),
+                            paidValue: item.paidValue.toString(),
+                            feePoint: item.feePoint.toString(),
+                            feeToken: item.feeToken.toString(),
+                            feeValue: item.feeValue.toString(),
+                            totalPoint: item.totalPoint.toString(),
+                            totalToken: item.totalToken.toString(),
+                            totalValue: item.totalValue.toString(),
+                            paymentStatus: item.paymentStatus,
+                            openNewTimestamp: item.openNewTimestamp,
+                            closeNewTimestamp: item.closeNewTimestamp,
+                            openCancelTimestamp: item.openCancelTimestamp,
+                            closeCancelTimestamp: item.closeCancelTimestamp,
+                        })
+                    );
+                }
+
                 const mobileData = await this._storage.getMobile(shopInfo.account, MobileType.SHOP_APP);
 
                 if (!process.env.TESTING && mobileData === undefined) {
@@ -1409,16 +1445,40 @@ export class PaymentRouter {
                 const shopContract = await this.getShopContract();
                 const shopData = await shopContract.shopOf(item.shopId);
 
-                if (
-                    !ContractUtils.verifyLoyaltyCancelPayment(
-                        item.paymentId,
-                        item.purchaseId,
-                        await (await this.getLedgerContract()).nonceOf(shopData.account),
-                        shopData.account,
-                        signature
-                    )
-                ) {
-                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                let hasDelegator: boolean = false;
+                if (shopData.delegator !== AddressZero) {
+                    const wallet = await this._storage.getDelegator(shopData.account, this._config.relay.encryptKey);
+                    if (wallet !== undefined && wallet.address.toLowerCase() === shopData.delegator.toLowerCase()) {
+                        hasDelegator = true;
+                    }
+                }
+
+                if (!hasDelegator) {
+                    const nonce = await (await this.getLedgerContract()).nonceOf(shopData.account);
+                    if (
+                        !ContractUtils.verifyLoyaltyCancelPayment(
+                            item.paymentId,
+                            item.purchaseId,
+                            nonce,
+                            shopData.account,
+                            signature
+                        )
+                    ) {
+                        return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                    }
+                } else {
+                    const nonce = await (await this.getLedgerContract()).nonceOf(shopData.delegator);
+                    if (
+                        !ContractUtils.verifyLoyaltyCancelPayment(
+                            item.paymentId,
+                            item.purchaseId,
+                            nonce,
+                            shopData.delegator,
+                            signature
+                        )
+                    ) {
+                        return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+                    }
                 }
 
                 if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > this._config.relay.paymentTimeoutSecond) {
