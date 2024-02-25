@@ -13,11 +13,21 @@ import "./LoyaltyTransferStorage.sol";
 
 contract LoyaltyTransfer is LoyaltyTransferStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @notice 토큰이 전송될 때 발생되는 이벤트
-    event TransferredLoyaltyToken(address from, address to, uint256 amount, uint256 balanceOfFrom, uint256 balanceOfTo);
+    event TransferredLoyaltyToken(
+        address from,
+        address to,
+        uint256 amount,
+        uint256 fee,
+        uint256 balanceOfFrom,
+        uint256 balanceOfTo
+    );
 
     function initialize() external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
+
+        fee = 1e16;
+
         isSetLedger = false;
     }
 
@@ -27,6 +37,7 @@ contract LoyaltyTransfer is LoyaltyTransferStorage, Initializable, OwnableUpgrad
         if (!isSetLedger) {
             ledgerContract = ILedger(_contractAddress);
             foundationAccount = ledgerContract.getFoundationAccount();
+            feeAccount = ledgerContract.getFeeAccount();
             isSetLedger = true;
         }
     }
@@ -42,18 +53,29 @@ contract LoyaltyTransfer is LoyaltyTransferStorage, Initializable, OwnableUpgrad
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _from, "1501");
         require(ledgerContract.loyaltyTypeOf(_from) == ILedger.LoyaltyType.TOKEN, "1520");
         require(ledgerContract.loyaltyTypeOf(_to) == ILedger.LoyaltyType.TOKEN, "1520");
-        require(ledgerContract.tokenBalanceOf(_from) >= _amount, "1511");
+        require(ledgerContract.tokenBalanceOf(_from) >= _amount + fee, "1511");
         require(_amount % 1 gwei == 0, "1030");
 
         ledgerContract.transferToken(_from, _to, _amount);
+        ledgerContract.transferToken(_from, feeAccount, fee);
         ledgerContract.increaseNonce(_from);
 
         emit TransferredLoyaltyToken(
             _from,
             _to,
             _amount,
+            fee,
             ledgerContract.tokenBalanceOf(_from),
             ledgerContract.tokenBalanceOf(_to)
         );
+    }
+
+    function getFee() external view returns (uint256) {
+        return fee;
+    }
+
+    function changeFee(uint256 _fee) external {
+        require(_msgSender() == owner(), "1050");
+        fee = _fee;
     }
 }
