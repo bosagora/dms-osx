@@ -266,6 +266,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
             pointBalances[_account] += _loyaltyPoint;
             tokenBalances[_sender] -= amountToken;
+            tokenBalances[foundationAccount] += amountToken;
         }
         uint256 balance = pointBalances[_account];
         emit ProvidedPoint(_account, _loyaltyPoint, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
