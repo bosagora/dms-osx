@@ -808,18 +808,39 @@ export class PaymentRouter {
             }
 
             if (mobileData !== undefined) {
+                let title, shopLabel, amountLabel, pointLabel, tokenLabel: string;
+                if (mobileData.language === "kr") {
+                    title = "마일리지 사용 알림";
+                    shopLabel = "구매처";
+                    amountLabel = "구매 금액";
+                    pointLabel = "포인트 사용";
+                    tokenLabel = "토큰 사용";
+                } else {
+                    title = "Loyalty usage notification";
+                    shopLabel = "Place of purchase";
+                    amountLabel = "Amount";
+                    pointLabel = "Points used";
+                    tokenLabel = "Token used";
+                }
                 /// 사용자에게 메세지 발송
                 const to = mobileData.token;
-                const title = "마일리지 사용 알림";
                 const contents: string[] = [];
-                const data = { type: "new", paymentId: item.paymentId, timestamp: item.openNewTimestamp, timeout: 30 };
-                contents.push(`구매처 : ${shopInfo.name}`);
+                const data = {
+                    type: "new",
+                    paymentId: item.paymentId,
+                    timestamp: item.openNewTimestamp,
+                    timeout: 30,
+                };
+                contents.push(`${shopLabel} : ${shopInfo.name}`);
                 contents.push(
-                    `구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)} ${item.currency.toUpperCase()}`
+                    `${amountLabel} : ${new Amount(item.amount, 18).toDisplayString(
+                        true,
+                        0
+                    )} ${item.currency.toUpperCase()}`
                 );
                 if (item.loyaltyType === ContractLoyaltyType.POINT)
-                    contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
-                else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`);
+                    contents.push(`${pointLabel} : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
+                else contents.push(`${tokenLabel} : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`);
 
                 await this._sender.send(to, title, contents.join(", "), data);
             }
@@ -1362,8 +1383,21 @@ export class PaymentRouter {
 
                 if (mobileData !== undefined) {
                     /// 상점주에게 메세지 발송
+                    let title, shopLabel, amountLabel, pointLabel, tokenLabel: string;
+                    if (mobileData.language === "kr") {
+                        title = "마일리지 사용 취소 알림";
+                        shopLabel = "구매처";
+                        amountLabel = "구매 금액";
+                        pointLabel = "포인트 사용";
+                        tokenLabel = "토큰 사용";
+                    } else {
+                        title = "Loyalty cancellation notification";
+                        shopLabel = "Place of purchase";
+                        amountLabel = "Amount";
+                        pointLabel = "Points used";
+                        tokenLabel = "Token used";
+                    }
                     const to = mobileData.token;
-                    const title = "마일리지 사용 취소 알림";
                     const contents: string[] = [];
                     const data = {
                         type: "cancel",
@@ -1371,16 +1405,21 @@ export class PaymentRouter {
                         timestamp: item.openCancelTimestamp,
                         timeout: 30,
                     };
-                    contents.push(`구매처 : ${shopInfo.name}`);
+                    contents.push(`${shopLabel} : ${shopInfo.name}`);
                     contents.push(
-                        `구매 금액 : ${new Amount(item.amount, 18).toDisplayString(
+                        `${amountLabel} : ${new Amount(item.amount, 18).toDisplayString(
                             true,
                             0
                         )} ${item.currency.toUpperCase()}`
                     );
                     if (item.loyaltyType === ContractLoyaltyType.POINT)
-                        contents.push(`포인트 사용 : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
-                    else contents.push(`토큰 사용 : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`);
+                        contents.push(
+                            `${pointLabel} : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`
+                        );
+                    else
+                        contents.push(
+                            `${tokenLabel} : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`
+                        );
 
                     await this._sender.send(to, title, contents.join(", "), data);
                 }

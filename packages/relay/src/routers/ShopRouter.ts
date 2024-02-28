@@ -607,9 +607,19 @@ export class ShopRouter {
                 }
 
                 if (mobileData !== undefined) {
+                    /// 상점주에게 메세지 발송
+                    let title, shopLabel, currencyLabel: string;
+                    if (mobileData.language === "kr") {
+                        title = "상점 정보 변경 요청";
+                        shopLabel = "상점이름";
+                        currencyLabel = "정산 환률 심벌";
+                    } else {
+                        title = "Shop info. change notification";
+                        shopLabel = "Shop Name";
+                        currencyLabel = "Currency Symbol";
+                    }
                     /// 사용자에게 메세지 발송
                     const to = mobileData.token;
-                    const title = "KIOS 상점 정보 변경 요청";
                     const contents: string[] = [];
                     const data = {
                         type: "shop_update",
@@ -617,8 +627,8 @@ export class ShopRouter {
                         timestamp: item.timestamp,
                         timeout: 30,
                     };
-                    contents.push(`상점이름 : ${item.name}`);
-                    contents.push(`정산 환률 심벌 : ${item.currency}`);
+                    contents.push(`${shopLabel} : ${item.name}`);
+                    contents.push(`${currencyLabel} : ${item.currency}`);
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
 
@@ -845,13 +855,28 @@ export class ShopRouter {
                 }
 
                 if (mobileData !== undefined) {
-                    /// 사용자에게 메세지 발송
+                    /// 사용자에게 메세지 statusLabel
+                    let title, shopLabel, statusLabel, activeLabel, inactiveLabel: string;
+                    if (mobileData.language === "kr") {
+                        title = "상점 상태 변경 요청";
+                        shopLabel = "상점이름";
+                        statusLabel = "변경될 상태값";
+                        activeLabel = "활성";
+                        inactiveLabel = "비활성";
+                    } else {
+                        title = "Shop status change notification";
+                        shopLabel = "Shop Name";
+                        statusLabel = "Value";
+                        activeLabel = "Active";
+                        inactiveLabel = "Inactive";
+                    }
                     const to = mobileData.token;
-                    const title = "KIOS 상점 상태 변경 요청";
                     const contents: string[] = [];
                     const data = { type: "shop_status", taskId: item.taskId, timestamp: item.timestamp, timeout: 30 };
-                    contents.push(`상점이름 : ${item.name}`);
-                    contents.push(`변경할 상태값 : ${item.status === ContractShopStatus.ACTIVE ? "활성" : "비활성"}`);
+                    contents.push(`${shopLabel} : ${item.name}`);
+                    contents.push(
+                        `${statusLabel} : ${item.status === ContractShopStatus.ACTIVE ? activeLabel : inactiveLabel}`
+                    );
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
 
@@ -865,9 +890,7 @@ export class ShopRouter {
                     })
                 );
             } else {
-                return res
-                    .status(200)
-                    .json(this.makeResponseData(0, undefined, { message: "존재하지 않는 상점 아이디입니다" }));
+                return res.status(200).json(ResponseMessage.getErrorMessage("1201"));
             }
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
