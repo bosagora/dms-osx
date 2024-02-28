@@ -812,7 +812,7 @@ export class PaymentRouter {
                 const to = mobileData.token;
                 const title = "마일리지 사용 알림";
                 const contents: string[] = [];
-                const data = { type: "new", paymentId: item.paymentId };
+                const data = { type: "new", paymentId: item.paymentId, timestamp: item.openNewTimestamp, timeout: 30 };
                 contents.push(`구매처 : ${shopInfo.name}`);
                 contents.push(
                     `구매 금액 : ${new Amount(item.amount, 18).toDisplayString(true, 0)} ${item.currency.toUpperCase()}`
@@ -1365,7 +1365,12 @@ export class PaymentRouter {
                     const to = mobileData.token;
                     const title = "마일리지 사용 취소 알림";
                     const contents: string[] = [];
-                    const data = { type: "cancel", paymentId: item.paymentId };
+                    const data = {
+                        type: "cancel",
+                        paymentId: item.paymentId,
+                        timestamp: item.openCancelTimestamp,
+                        timeout: 30,
+                    };
                     contents.push(`구매처 : ${shopInfo.name}`);
                     contents.push(
                         `구매 금액 : ${new Amount(item.amount, 18).toDisplayString(

@@ -611,7 +611,12 @@ export class ShopRouter {
                     const to = mobileData.token;
                     const title = "KIOS 상점 정보 변경 요청";
                     const contents: string[] = [];
-                    const data = { type: "shop_update", taskId: item.taskId };
+                    const data = {
+                        type: "shop_update",
+                        taskId: item.taskId,
+                        timestamp: item.timestamp,
+                        timeout: 30,
+                    };
                     contents.push(`상점이름 : ${item.name}`);
                     contents.push(`정산 환률 심벌 : ${item.currency}`);
                     await this._sender.send(to, title, contents.join(", "), data);
@@ -844,7 +849,7 @@ export class ShopRouter {
                     const to = mobileData.token;
                     const title = "KIOS 상점 상태 변경 요청";
                     const contents: string[] = [];
-                    const data = { type: "shop_status", taskId: item.taskId };
+                    const data = { type: "shop_status", taskId: item.taskId, timestamp: item.timestamp, timeout: 30 };
                     contents.push(`상점이름 : ${item.name}`);
                     contents.push(`변경할 상태값 : ${item.status === ContractShopStatus.ACTIVE ? "활성" : "비활성"}`);
                     await this._sender.send(to, title, contents.join(", "), data);
