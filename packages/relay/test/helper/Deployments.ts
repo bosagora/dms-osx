@@ -535,18 +535,14 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
     const contractName = "Bridge";
     console.log(`Deploy ${contractName}...`);
 
-    if (deployment.getContract("BridgeValidator") === undefined || deployment.getContract("TestKIOS") === undefined) {
+    if (deployment.getContract("BridgeValidator") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
     const factory = await ethers.getContractFactory("Bridge");
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [
-            await deployment.getContractAddress("BridgeValidator"),
-            await deployment.getContractAddress("TestKIOS"),
-            accounts.fee.address,
-        ],
+        [await deployment.getContractAddress("BridgeValidator"), accounts.fee.address],
         {
             initializer: "initialize",
             kind: "uups",
@@ -558,11 +554,14 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
     {
+        const tokenContract = (await deployment.getContract("TestKIOS")) as TestKIOS;
+        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
+        await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(1_000_000_000, 18).value;
         const nonce = await (deployment.getContract("TestKIOS") as TestKIOS).nonceOf(accounts.owner.address);
         const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount, nonce);
         const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx1 = await contract.connect(accounts.owner).depositLiquidity(assetAmount, signature);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, signature);
         console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
         await tx1.wait();
     }
@@ -743,11 +742,13 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         await tx12.wait();
     }
     {
+        const tokenContract = (await deployment.getContract("TestKIOS")) as TestKIOS;
+        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         const assetAmount = Amount.make(1_000_000_000, 18).value;
         const nonce = await (deployment.getContract("TestKIOS") as TestKIOS).nonceOf(accounts.owner.address);
         const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount, nonce);
         const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx21 = await contract.connect(accounts.owner).depositLiquidity(assetAmount, signature);
+        const tx21 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, signature);
         console.log(`Deposit liquidity token (tx: ${tx21.hash})...`);
         await tx21.wait();
     }

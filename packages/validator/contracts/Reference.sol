@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.2;
 
-import "dms-osx-artifacts/contracts/bridge/Bridge.sol";
-import "dms-osx-artifacts/contracts/bridge/BridgeValidator.sol";
 import "dms-osx-artifacts/contracts/controllers/LoyaltyBurner.sol";
 import "dms-osx-artifacts/contracts/controllers/LoyaltyConsumer.sol";
 import "dms-osx-artifacts/contracts/controllers/LoyaltyProvider.sol";
@@ -22,3 +20,6 @@ import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
 import "loyalty-tokens/contracts/KIOS.sol";
 
 import "dms-store-purchase-contracts/contracts/StorePurchase.sol";
+
+import "dms-bridge-contracts/contracts/bridge/Bridge.sol";
+import "dms-bridge-contracts/contracts/bridge/BridgeValidator.sol";

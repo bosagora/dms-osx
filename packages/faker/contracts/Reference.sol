@@ -13,3 +13,6 @@ import "dms-osx-artifacts/contracts/ledger/Ledger.sol";
 import "dms-osx-artifacts/contracts/shop/Shop.sol";
 import "dms-osx-artifacts/contracts/validator/Validator.sol";
 import "dms-osx-artifacts/contracts/token/TestKIOS.sol";
+
+import "dms-bridge-contracts/contracts/bridge/Bridge.sol";
+import "dms-bridge-contracts/contracts/bridge/BridgeValidator.sol";

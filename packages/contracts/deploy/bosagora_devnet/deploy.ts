@@ -21,6 +21,7 @@ import {
     PhoneLinkCollection,
     Shop,
     Validator,
+    TestKIOS,
 } from "../../typechain-types";
 
 import { BaseContract, Contract, Wallet } from "ethers";
@@ -771,10 +772,12 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         // await tx6.wait();
 
         const assetAmount2 = Amount.make(500_000_000, 18).value;
-        const nonce = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).nonceOf(accounts.owner.address);
+        const tokenContract = (await deployment.getContract("LoyaltyToken")) as LoyaltyToken;
+        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
+        const nonce = await tokenContract.nonceOf(accounts.owner.address);
         const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount2, nonce);
         const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx1 = await contract.connect(accounts.owner).depositLiquidity(assetAmount2, signature);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount2, signature);
         console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
         // await tx1.wait();
 

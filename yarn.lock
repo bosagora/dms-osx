@@ -3497,6 +3497,11 @@ discontinuous-range@1.0.0:
   resolved "https://registry.yarnpkg.com/discontinuous-range/-/discontinuous-range-1.0.0.tgz#e38331f0844bba49b9a9cb71c771585aab1bc65a"
   integrity sha512-c68LpLbO+7kP/b1Hr1qs8/BJ09F5khZGTxqxZuhzxpmwJKOgRFHJWIb9/KmqnqHhLdO55aOxFH/EGBvUQbL/RQ==
 
+dms-bridge-contracts@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/dms-bridge-contracts/-/dms-bridge-contracts-1.1.0.tgz#b90cd8edf4d8ab3e9f05dccfacd8891ac7ec31c9"
+  integrity sha512-rSyDY/6baFKtBpyxLrJ+AJiYsVAD2V19lRJ1qg39qGXkaGpbzG606pzsA3825a3Yt975h0uC/kur3Zl8kCWNRQ==
+
 dms-store-purchase-contracts@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/dms-store-purchase-contracts/-/dms-store-purchase-contracts-1.0.2.tgz#cb749f290c7e66f64e73c316272a96e698f3efc9"

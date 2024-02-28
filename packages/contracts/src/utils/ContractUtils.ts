@@ -573,4 +573,8 @@ export class ContractUtils {
         const secretLock = keccak256(defaultAbiCoder.encode(["bytes32"], [secret]));
         return [secret, secretLock];
     }
+
+    public static getTokenId(name: string, symbol: string): string {
+        return keccak256(defaultAbiCoder.encode(["string", "string"], [name, symbol]));
+    }
 }

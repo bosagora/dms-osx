@@ -5,6 +5,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
+    BIP20DelegatedTransfer,
     Bridge,
     CurrencyRate,
     IBIP20DelegatedTransfer,
@@ -27,6 +28,7 @@ import { solidity } from "ethereum-waffle";
 import { Wallet } from "ethers";
 
 import { Deployments } from "./helper/Deployments";
+import { string } from "hardhat/internal/core/params/argumentTypes";
 
 chai.use(solidity);
 
@@ -40,7 +42,7 @@ interface IShopData {
 describe("Test for Ledger", () => {
     const deployments = new Deployments();
     let validatorContract: Validator;
-    let tokenContract: IBIP20DelegatedTransfer;
+    let tokenContract: BIP20DelegatedTransfer;
     let ledgerContract: Ledger;
     let linkContract: PhoneLinkCollection;
     let currencyContract: CurrencyRate;
@@ -53,6 +55,7 @@ describe("Test for Ledger", () => {
     let bridgeContract: Bridge;
     let loyaltyBridgeContract: LoyaltyBridge;
 
+    let tokenId: string;
     let amount = Amount.make(100_000, 18).value;
     const fee = Amount.make(5, 18).value;
 
@@ -70,7 +73,7 @@ describe("Test for Ledger", () => {
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
 
-        tokenContract = deployments.getContract("TestKIOS") as IBIP20DelegatedTransfer;
+        tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
         validatorContract = deployments.getContract("Validator") as Validator;
         currencyContract = deployments.getContract("CurrencyRate") as CurrencyRate;
 
@@ -84,6 +87,7 @@ describe("Test for Ledger", () => {
         transferContract = deployments.getContract("LoyaltyTransfer") as LoyaltyTransfer;
         bridgeContract = deployments.getContract("Bridge") as Bridge;
         loyaltyBridgeContract = deployments.getContract("LoyaltyBridge") as LoyaltyBridge;
+        tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await addShopData(shopData);
     };
 
@@ -116,7 +120,7 @@ describe("Test for Ledger", () => {
         await expect(
             bridgeContract
                 .connect(deployments.accounts.certifiers[0])
-                .depositToBridge(depositId, deployments.accounts.users[0].address, amount, signature)
+                .depositToBridge(tokenId, depositId, deployments.accounts.users[0].address, amount, signature)
         )
             .to.emit(bridgeContract, "BridgeDeposited")
             .withNamedArgs({
@@ -137,11 +141,11 @@ describe("Test for Ledger", () => {
 
         await loyaltyBridgeContract
             .connect(deployments.accounts.bridgeValidators[0])
-            .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount);
+            .withdrawFromBridge(tokenId, depositId, deployments.accounts.users[0].address, amount);
         await expect(
             loyaltyBridgeContract
                 .connect(deployments.accounts.bridgeValidators[1])
-                .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount)
+                .withdrawFromBridge(tokenId, depositId, deployments.accounts.users[0].address, amount)
         )
             .to.emit(loyaltyBridgeContract, "BridgeWithdrawn")
             .withNamedArgs({
@@ -178,7 +182,7 @@ describe("Test for Ledger", () => {
         await expect(
             loyaltyBridgeContract
                 .connect(deployments.accounts.certifiers[0])
-                .depositToBridge(depositId, deployments.accounts.users[0].address, amount, signature)
+                .depositToBridge(tokenId, depositId, deployments.accounts.users[0].address, amount, signature)
         )
             .to.emit(loyaltyBridgeContract, "BridgeDeposited")
             .withNamedArgs({
@@ -201,11 +205,11 @@ describe("Test for Ledger", () => {
 
         await bridgeContract
             .connect(deployments.accounts.bridgeValidators[0])
-            .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount);
+            .withdrawFromBridge(tokenId, depositId, deployments.accounts.users[0].address, amount);
         await expect(
             bridgeContract
                 .connect(deployments.accounts.bridgeValidators[1])
-                .withdrawFromBridge(depositId, deployments.accounts.users[0].address, amount)
+                .withdrawFromBridge(tokenId, depositId, deployments.accounts.users[0].address, amount)
         )
             .to.emit(bridgeContract, "BridgeWithdrawn")
             .withNamedArgs({
