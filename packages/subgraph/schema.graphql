@@ -156,6 +156,7 @@ type BurnedUnPayablePoint @entity(immutable: true) {
 
 type BridgeDeposited @entity(immutable: true) {
   id: Bytes!
+  tokenId: Bytes! # bytes32
   depositId: Bytes! # bytes32
   account: Bytes! # address
   amount: BigInt! # uint256
@@ -167,6 +168,7 @@ type BridgeDeposited @entity(immutable: true) {
 
 type BridgeWithdrawn @entity(immutable: true) {
   id: Bytes!
+  tokenId: Bytes! # bytes32
   withdrawId: Bytes! # bytes32
   account: Bytes! # address
   amount: BigInt! # uint256

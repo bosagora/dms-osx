@@ -2,10 +2,11 @@
 
 pragma solidity ^0.8.2;
 
-import "loyalty-tokens/contracts/BIP20/IBIP20DelegatedTransfer.sol";
+import "loyalty-tokens/contracts/BIP20/BIP20DelegatedTransfer.sol";
 
-import "../interfaces/IBridge.sol";
-import "../interfaces/IBridgeValidator.sol";
+import "dms-bridge-contracts/contracts/interfaces/IBridge.sol";
+import "dms-bridge-contracts/contracts/interfaces/IBridgeValidator.sol";
+
 import "../interfaces/ILedger.sol";
 
 contract LoyaltyBridgeStorage {
@@ -21,5 +22,6 @@ contract LoyaltyBridgeStorage {
     bool internal isSetLedger;
     ILedger internal ledgerContract;
     IBridgeValidator internal validatorContract;
-    IBIP20DelegatedTransfer internal tokenContract;
+    BIP20DelegatedTransfer internal tokenContract;
+    bytes32 internal tokenId;
 }

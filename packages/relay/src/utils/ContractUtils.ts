@@ -696,4 +696,8 @@ export class ContractUtils {
         const decrypted = decipher.update(encrypted, "base64", "utf8");
         return decrypted + decipher.final("utf8");
     }
+
+    public static getTokenId(name: string, symbol: string): string {
+        return keccak256(defaultAbiCoder.encode(["string", "string"], [name, symbol]));
+    }
 }

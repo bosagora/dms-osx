@@ -36,4 +36,5 @@ contract LedgerStorage {
     IPhoneLinkCollection internal linkContract;
     IBIP20DelegatedTransfer internal tokenContract;
     ICurrencyRate internal currencyRateContract;
+    bytes32 internal tokenId;
 }

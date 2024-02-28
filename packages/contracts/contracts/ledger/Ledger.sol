@@ -8,7 +8,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import "../interfaces/IBridgeLiquidity.sol";
+import "loyalty-tokens/contracts/BIP20/BIP20DelegatedTransfer.sol";
+import "dms-bridge-contracts/contracts/interfaces/IBridgeLiquidity.sol";
+import "dms-bridge-contracts/contracts/lib/BridgeLib.sol";
+
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/ILedger.sol";
 import "./LedgerStorage.sol";
@@ -57,8 +60,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     event RemovedPhoneInfo(bytes32 phone, address account);
 
-    event DepositedLiquidity(address account, uint256 amount, uint256 liquidity);
-    event WithdrawnLiquidity(address account, uint256 amount, uint256 liquidity);
+    event DepositedLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
+    event WithdrawnLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
 
     /// @notice 생성자
     /// @param _foundationAccount 재단의 계정
@@ -99,6 +102,8 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         linkContract = IPhoneLinkCollection(_linkAddress);
         currencyRateContract = ICurrencyRate(_currencyRateAddress);
         fee = MAX_FEE;
+        BIP20DelegatedTransfer token = BIP20DelegatedTransfer(_tokenAddress);
+        tokenId = BridgeLib.getTokenId(token.name(), token.symbol());
 
         loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
         loyaltyTypes[settlementAccount] = LoyaltyType.TOKEN;
@@ -442,32 +447,35 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 예치합니다.
-    function depositLiquidity(uint256 _amount, bytes calldata _signature) external override {
+    function depositLiquidity(bytes32 _tokenId, uint256 _amount, bytes calldata _signature) external payable override {
+        require(_tokenId == tokenId, "1713");
         require(tokenContract.balanceOf(_msgSender()) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
 
         if (tokenContract.delegatedTransfer(_msgSender(), address(this), _amount, _signature)) {
             tokenBalances[bridgeAddress] += _amount;
             liquidity[_msgSender()] += _amount;
-            emit DepositedLiquidity(_msgSender(), _amount, liquidity[_msgSender()]);
+            emit DepositedLiquidity(_tokenId, _msgSender(), _amount, liquidity[_msgSender()]);
         }
     }
 
     /// @notice 브리지를 위한 유동성 자금을 인출합니다.
-    function withdrawLiquidity(uint256 _amount) external override {
+    function withdrawLiquidity(bytes32 _tokenId, uint256 _amount) external override {
+        require(_tokenId == tokenId, "1713");
         require(liquidity[_msgSender()] >= _amount, "1514");
         require(tokenBalances[bridgeAddress] >= _amount, "1511");
         require(tokenContract.balanceOf(address(this)) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
 
-        tokenContract.transferFrom(address(this), _msgSender(), _amount);
+        tokenContract.transfer(_msgSender(), _amount);
         liquidity[_msgSender()] -= _amount;
         tokenBalances[bridgeAddress] -= _amount;
-        emit WithdrawnLiquidity(_msgSender(), _amount, liquidity[_msgSender()]);
+        emit WithdrawnLiquidity(_tokenId, _msgSender(), _amount, liquidity[_msgSender()]);
     }
 
     /// @notice 브리지를 위한 유동성 자금을 조회합니다.
-    function getLiquidity(address _account) external view override returns (uint256) {
+    function getLiquidity(bytes32 _tokenId, address _account) external view override returns (uint256) {
+        require(_tokenId != tokenId, "1713");
         return liquidity[_account];
     }
 }

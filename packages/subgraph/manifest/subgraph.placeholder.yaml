@@ -169,9 +169,9 @@ dataSources:
         - name: LoyaltyBridge
           file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyBridge.sol/LoyaltyBridge.json
       eventHandlers:
-        - event: BridgeDeposited(bytes32,address,uint256,uint256)
+        - event: BridgeDeposited(bytes32,bytes32,address,uint256,uint256)
           handler: handleBridgeDeposited
-        - event: BridgeWithdrawn(bytes32,address,uint256,uint256)
+        - event: BridgeWithdrawn(bytes32,bytes32,address,uint256,uint256)
           handler: handleBridgeWithdrawn
       file: ./src/ledger.ts
 

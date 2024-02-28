@@ -745,6 +745,7 @@ export function handleBurnedUnPayablePointForHistory(event: BurnedUnPayablePoint
 
 export function handleBridgeDeposited(event: BridgeDepositedEvent): void {
     let entity = new BridgeDeposited(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.tokenId = event.params.tokenId;
     entity.depositId = event.params.depositId;
     entity.account = event.params.account;
     entity.amount = event.params.amount;
@@ -791,6 +792,7 @@ export function handleBridgeDepositedForHistory(event: BridgeDepositedEvent): vo
 
 export function handleBridgeWithdrawn(event: BridgeWithdrawnEvent): void {
     let entity = new BridgeWithdrawn(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    entity.tokenId = event.params.tokenId;
     entity.withdrawId = event.params.withdrawId;
     entity.account = event.params.account;
     entity.amount = event.params.amount;
