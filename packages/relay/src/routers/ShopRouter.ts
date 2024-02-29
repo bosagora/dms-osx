@@ -1175,7 +1175,7 @@ export class ShopRouter {
 
         try {
             let accessKey = req.get("Authorization");
-            if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
+            if (accessKey === undefined) accessKey = String(req.query.accessKey).trim();
             if (accessKey !== this._config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
