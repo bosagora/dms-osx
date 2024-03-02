@@ -47,7 +47,8 @@ export class CollectExchangeRateScheduler extends Scheduler {
             if (item !== undefined) {
                 usd = item.rate;
             }
-            rates.push(await this.getTokenPriceData(usd));
+            rates.push(await this.getTokenPriceDataKIOS(usd));
+            rates.push(await this.getTokenPriceDataPNB(usd));
 
             await this.storage.postExchangeRate(rates);
         } catch (error) {
@@ -95,7 +96,7 @@ export class CollectExchangeRateScheduler extends Scheduler {
         } else throw new Error("Error, Load Exchange Rate");
     }
 
-    private async getTokenPriceData(usd: bigint): Promise<IExchangeRate> {
+    private async getTokenPriceDataKIOS(usd: bigint): Promise<IExchangeRate> {
         const url = "https://api.lbkex.com/v2/ticker.do?symbol=the9_usdt";
         const client = new HTTPClient();
         const res = await client.get(url);
@@ -109,6 +110,23 @@ export class CollectExchangeRateScheduler extends Scheduler {
                 symbol: "KIOS",
                 rate: (BigInt(Math.floor(data.data[0].ticker.latest * 10000)) * usd) / 10000n,
             };
-        } else throw new Error("Error, Load Exchange Rate");
+        } else throw new Error("Error, Token KIOS Exchange Rate");
+    }
+
+    private async getTokenPriceDataPNB(usd: bigint): Promise<IExchangeRate> {
+        const url = "https://api.lbkex.com/v2/ticker.do?symbol=the9_usdt";
+        const client = new HTTPClient();
+        const res = await client.get(url);
+        if (res.status === 200) {
+            const data = res.data;
+            if (data.result !== "true") throw new Error("Error, Parse Token Price");
+            if (data.data.length === 0) throw new Error("Error, Can not found token symbol");
+            if (data.data[0].ticker === undefined) throw new Error("Error, Can not found token symbol");
+
+            return {
+                symbol: "PNB",
+                rate: (BigInt(Math.floor(data.data[0].ticker.latest * 10000)) * usd) / 10000n,
+            };
+        } else throw new Error("Error, Token PNB Exchange Rate");
     }
 }
