@@ -27,6 +27,7 @@
         (
             "purchaseId"        ,
             "timestamp"         ,
+            "provide_timestamp" ,
             "height"            ,
             "hash"              ,
             "contents"
@@ -36,6 +37,7 @@
         (
             #{item.purchaseId}   ,
             #{item.timestamp}    ,
+            #{item.provide_timestamp}  ,
             #{item.height}       ,
             #{item.hash}         ,
             #{item.contents}
@@ -57,7 +59,7 @@
 
     <select id="getTransaction">
         SELECT "contents" FROM purchase_transactions
-        WHERE "timestamp" <![CDATA[<]]> #{timestamp}
+        WHERE "provide_timestamp" <![CDATA[<=]]> #{timestamp}
             AND "canceled" = 'N'
             AND ("step" = 0 OR "step" = 4)
         LIMIT 256;

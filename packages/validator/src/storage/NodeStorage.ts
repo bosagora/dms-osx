@@ -90,6 +90,7 @@ export class NodeStorage extends Storage {
                 purchases.push({
                     purchaseId: txs[idx].purchaseId.toString(),
                     timestamp: txs[idx].timestamp.toString(),
+                    provide_timestamp: (txs[idx].timestamp + txs[idx].waiting).toString(),
                     height: block.header.height.toString(),
                     hash: hashFull(txs[idx]).toString(),
                     contents: JSON.stringify(txs[idx].toJSON()),
@@ -118,9 +119,9 @@ export class NodeStorage extends Storage {
         });
     }
 
-    public async getPurchaseTransaction(waiting: number): Promise<NewTransaction[]> {
+    public async getPurchaseTransaction(): Promise<NewTransaction[]> {
         const res = await this.queryForMapper("purchase_blocks", "getTransaction", {
-            timestamp: (ContractUtils.getTimeStampBigInt() - BigInt(waiting)).toString(),
+            timestamp: ContractUtils.getTimeStampBigInt().toString(),
         });
         return res.rows.map((m) => {
             return NewTransaction.reviver("", JSON.parse(m.contents.replace(/[\\]/gi, "")));

@@ -38,8 +38,7 @@ export class Node extends EventDispatcher {
         this.blockConfig = new BlockConfig(
             this.config.setting.GENESIS_TIME,
             this.config.setting.SECONDS_PER_SLOT,
-            this.config.setting.SLOTS_PER_EPOCH,
-            this.config.setting.waitedProvide
+            this.config.setting.SLOTS_PER_EPOCH
         );
         this.blockStorage = new BlockStorage(this.blockConfig, this.storage);
         this.signatureStorage = new SignatureStorage(this.storage);

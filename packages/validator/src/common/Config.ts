@@ -449,7 +449,6 @@ export class SchedulerConfig implements ISchedulerConfig {
 
 export class Setting implements ISetting {
     public ipfs_gateway_url: string;
-    public waitedProvide: number;
     public nptServer: string;
     public nptInterval: number;
     public SECONDS_PER_SLOT: number;
@@ -462,7 +461,6 @@ export class Setting implements ISetting {
     constructor() {
         const defaults = Setting.defaultValue();
         this.ipfs_gateway_url = defaults.ipfs_gateway_url;
-        this.waitedProvide = defaults.waitedProvide;
         this.nptServer = defaults.nptServer;
         this.nptInterval = defaults.nptInterval;
         this.SECONDS_PER_SLOT = defaults.SECONDS_PER_SLOT;
@@ -472,7 +470,6 @@ export class Setting implements ISetting {
 
     public readFromObject(config: ISetting) {
         if (config.ipfs_gateway_url !== undefined) this.ipfs_gateway_url = config.ipfs_gateway_url;
-        if (config.waitedProvide !== undefined) this.waitedProvide = config.waitedProvide;
         if (config.nptServer !== undefined) this.nptServer = config.nptServer;
         if (config.nptInterval !== undefined) this.nptInterval = config.nptInterval;
         if (config.SECONDS_PER_SLOT !== undefined) this.SECONDS_PER_SLOT = config.SECONDS_PER_SLOT;
@@ -486,7 +483,6 @@ export class Setting implements ISetting {
     public static defaultValue(): ISetting {
         return {
             ipfs_gateway_url: "",
-            waitedProvide: 86400 * 8,
             SECONDS_PER_SLOT: 12,
             SLOTS_PER_EPOCH: 32,
             GENESIS_TIME: 1704067200,
@@ -645,7 +641,6 @@ export interface ISchedulerConfig {
 
 export interface ISetting {
     ipfs_gateway_url: string;
-    waitedProvide: number;
     nptServer: string;
     nptInterval: number;
     SECONDS_PER_SLOT: number;

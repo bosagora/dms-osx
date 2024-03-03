@@ -41,7 +41,7 @@ export class Proposal extends NodeTask {
 
     private async loadPurchase(purchases: PurchaseRoot) {
         const contract = await this.getLoyaltyProviderContract();
-        const txs = await this.storage.getPurchaseTransaction(this.node.blockConfig.waitedProvide);
+        const txs = await this.storage.getPurchaseTransaction();
         if (txs.length > 0) {
             logger.info(`Proposal Purchase - Length : ${txs.length}`);
             const ids = [];

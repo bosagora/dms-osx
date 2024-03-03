@@ -8,8 +8,8 @@ import { Scheduler } from "../src/scheduler/Scheduler";
 import { NodeStorage } from "../src/storage/NodeStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
 import {
-    CurrencyRate,
     BIP20DelegatedTransfer,
+    CurrencyRate,
     Ledger,
     LoyaltyConsumer,
     LoyaltyExchanger,
@@ -126,7 +126,6 @@ describe("Test of Server", function () {
         config.contracts.purchaseAddress = storePurchaseContract.address;
 
         config.validator.keys = deployments.accounts.validators.map((m) => m.privateKey);
-        config.setting.waitedProvide = 0;
         config.setting.SECONDS_PER_SLOT = 5;
         config.setting.SLOTS_PER_EPOCH = 3;
         config.setting.ipfs_gateway_url = "http://127.0.0.1:8081";
