@@ -52,6 +52,7 @@ export interface INewPurchaseDetails {
 export interface INewPurchaseData {
     purchaseId: string;
     timestamp: number;
+    waiting: number;
     totalAmount: number;
     cashAmount: number;
     currency: string;
@@ -257,6 +258,7 @@ export class FakerStoreServer {
                     ? {
                           purchaseId,
                           timestamp: ContractUtils.getTimeStamp(),
+                          waiting: 0,
                           totalAmount,
                           cashAmount,
                           currency: "krw",
@@ -268,6 +270,7 @@ export class FakerStoreServer {
                     : {
                           purchaseId,
                           timestamp: ContractUtils.getTimeStamp(),
+                          waiting: 0,
                           totalAmount,
                           cashAmount,
                           currency: "krw",
@@ -295,6 +298,7 @@ export class FakerStoreServer {
                 this.sequence,
                 String(purchase.purchaseId).trim(),
                 BigInt(purchase.timestamp),
+                BigInt(purchase.waiting),
                 Amount.make(String(purchase.totalAmount).trim(), 18).value,
                 Amount.make(String(purchase.cashAmount).trim(), 18).value,
                 String(purchase.currency).trim(),

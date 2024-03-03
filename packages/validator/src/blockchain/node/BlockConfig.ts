@@ -2,13 +2,11 @@ export class BlockConfig {
     public GENESIS_TIME: bigint;
     public SECONDS_PER_SLOT: number;
     public SLOTS_PER_EPOCH: number;
-    public waitedProvide: number;
 
-    constructor(GENESIS_TIME: bigint, SECONDS_PER_SLOT: number, SLOTS_PER_EPOCH: number, waitedProvide: number) {
+    constructor(GENESIS_TIME: bigint, SECONDS_PER_SLOT: number, SLOTS_PER_EPOCH: number) {
         this.GENESIS_TIME = GENESIS_TIME;
         this.SECONDS_PER_SLOT = SECONDS_PER_SLOT;
         this.SLOTS_PER_EPOCH = SLOTS_PER_EPOCH;
-        this.waitedProvide = waitedProvide;
     }
 
     public getEpoch(slot: bigint): bigint {
