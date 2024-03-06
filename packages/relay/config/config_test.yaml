@@ -79,7 +79,6 @@ relay:
   forcedCloseSecond: 300
   expoAccessToken: "${EXPO_ACCESS_TOKEN}"
   relayEndpoint: "${RELAY_ENDPOINT}"
-  storePurchaseWaitingSecond: 694800
   encryptKey: "${RELAY_ENCRYPT_KEY}"
 
 contracts:

@@ -310,7 +310,6 @@ export class RelayConfig implements IRelayConfig {
     public forcedCloseSecond: number;
     public expoAccessToken: string;
     public relayEndpoint: string;
-    public storePurchaseWaitingSecond: number;
     public encryptKey: string;
 
     /**
@@ -328,7 +327,6 @@ export class RelayConfig implements IRelayConfig {
         this.forcedCloseSecond = defaults.forcedCloseSecond;
         this.expoAccessToken = defaults.expoAccessToken;
         this.relayEndpoint = defaults.relayEndpoint;
-        this.storePurchaseWaitingSecond = defaults.storePurchaseWaitingSecond;
         this.encryptKey = defaults.encryptKey;
     }
 
@@ -352,7 +350,6 @@ export class RelayConfig implements IRelayConfig {
             forcedCloseSecond: 300,
             expoAccessToken: "",
             relayEndpoint: "",
-            storePurchaseWaitingSecond: 694800,
             encryptKey: "",
         };
     }
@@ -371,8 +368,6 @@ export class RelayConfig implements IRelayConfig {
         if (config.forcedCloseSecond !== undefined) this.forcedCloseSecond = config.forcedCloseSecond;
         if (config.expoAccessToken !== undefined) this.expoAccessToken = config.expoAccessToken;
         if (config.relayEndpoint !== undefined) this.relayEndpoint = config.relayEndpoint;
-        if (config.storePurchaseWaitingSecond !== undefined)
-            this.storePurchaseWaitingSecond = config.storePurchaseWaitingSecond;
         if (config.encryptKey !== undefined) this.encryptKey = config.encryptKey;
     }
 }
@@ -614,7 +609,6 @@ export interface IRelayConfig {
     forcedCloseSecond: number;
     expoAccessToken: string;
     relayEndpoint: string;
-    storePurchaseWaitingSecond: number;
     encryptKey: string;
 }
 

@@ -180,6 +180,7 @@ export class StorePurchaseRouter {
             [
                 body("purchaseId").exists().not().isEmpty(),
                 body("timestamp").exists().isNumeric(),
+                body("waiting").exists().isNumeric(),
                 body("account").exists().trim().isEthereumAddress(),
                 body("phone")
                     .exists()
@@ -261,6 +262,7 @@ export class StorePurchaseRouter {
                 const purchaseData: IStorePurchaseData = {
                     purchaseId: String(req.body.purchaseId).trim(),
                     timestamp: BigInt(String(req.body.timestamp).trim()),
+                    waiting: BigInt(String(req.body.waiting).trim()),
                     account: String(req.body.account).trim(),
                     loyaltyType: ContractLoyaltyType.POINT,
                     currency: String(req.body.currency).trim(),
