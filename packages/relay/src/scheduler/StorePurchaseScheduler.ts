@@ -7,6 +7,7 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { Scheduler } from "./Scheduler";
 
 import * as hre from "hardhat";
+import { BigNumber } from "ethers";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
@@ -70,10 +71,7 @@ export class StorePurchaseScheduler extends Scheduler {
             const stored = await (await this.getProviderContract()).purchasesOf(purchase.purchaseId);
             if (stored) {
                 await this.storage.doneStorePurchase(purchase.purchaseId);
-            } else if (
-                purchase.timestamp <
-                ContractUtils.getTimeStampBigInt() - BigInt(this.config.relay.storePurchaseWaitingSecond)
-            ) {
+            } else if (purchase.timestamp + purchase.waiting + BigInt(60) < ContractUtils.getTimeStampBigInt()) {
                 await this.storage.doneStorePurchase(purchase.purchaseId);
             }
         }

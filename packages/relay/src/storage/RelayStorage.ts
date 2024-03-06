@@ -705,6 +705,7 @@ export class RelayStorage extends Storage {
             this.queryForMapper("purchase", "postStorePurchase", {
                 purchaseId: data.purchaseId,
                 timestamp: data.timestamp.toString(),
+                waiting: data.waiting.toString(),
                 account: data.account.toLowerCase(),
                 loyaltyType: data.loyaltyType,
                 currency: data.currency,
@@ -734,6 +735,7 @@ export class RelayStorage extends Storage {
                             return {
                                 purchaseId: m.purchaseId,
                                 timestamp: BigInt(m.timestamp.toString()),
+                                waiting: BigInt(m.waiting.toString()),
                                 account: m.account,
                                 loyaltyType: m.loyaltyType,
                                 currency: m.currency,
@@ -789,6 +791,7 @@ export class RelayStorage extends Storage {
                             return {
                                 account: m.account,
                                 timestamp: BigInt(m.timestamp.toString()),
+                                waiting: BigInt(m.waiting.toString()),
                                 loyaltyType: m.loyaltyType,
                                 currency: m.currency,
                                 providePoint: BigNumber.from(m.providePoint.toString()).mul(GWI_UNIT),

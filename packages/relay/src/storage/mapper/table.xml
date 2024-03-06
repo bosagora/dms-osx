@@ -71,6 +71,7 @@
         (
             "purchaseId"            VARCHAR(66) NOT NULL,
             "timestamp"             BIGINT NOT NULL,
+            "waiting"               BIGINT NOT NULL,
             "account"               VARCHAR(42)  NOT NULL,
             "loyaltyType"           INTEGER NOT NULL,
             "currency"              VARCHAR(12) NOT NULL,

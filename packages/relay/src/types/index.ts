@@ -236,6 +236,7 @@ export interface IGraphPageInfo {
 export interface IStorePurchaseData {
     purchaseId: string;
     timestamp: bigint;
+    waiting: bigint;
     account: string;
     loyaltyType: number;
     currency: string;
