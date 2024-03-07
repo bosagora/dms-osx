@@ -454,6 +454,7 @@ export class Setting implements ISetting {
     public SECONDS_PER_SLOT: number;
     public SLOTS_PER_EPOCH: number;
     public GENESIS_TIME: bigint;
+    public enabledNode: boolean;
 
     /**
      * Constructor
@@ -466,6 +467,7 @@ export class Setting implements ISetting {
         this.SECONDS_PER_SLOT = defaults.SECONDS_PER_SLOT;
         this.SLOTS_PER_EPOCH = defaults.SLOTS_PER_EPOCH;
         this.GENESIS_TIME = BigInt(defaults.GENESIS_TIME);
+        this.enabledNode = defaults.enabledNode;
     }
 
     public readFromObject(config: ISetting) {
@@ -475,6 +477,7 @@ export class Setting implements ISetting {
         if (config.SECONDS_PER_SLOT !== undefined) this.SECONDS_PER_SLOT = config.SECONDS_PER_SLOT;
         if (config.SLOTS_PER_EPOCH !== undefined) this.SLOTS_PER_EPOCH = config.SLOTS_PER_EPOCH;
         if (config.GENESIS_TIME !== undefined) this.GENESIS_TIME = BigInt(config.GENESIS_TIME);
+        if (config.enabledNode !== undefined) this.enabledNode = config.enabledNode;
     }
 
     /**
@@ -488,6 +491,7 @@ export class Setting implements ISetting {
             GENESIS_TIME: 1704067200,
             nptServer: "kr.pool.ntp.org",
             nptInterval: 10000,
+            enabledNode: true,
         } as unknown as ISetting;
     }
 }
@@ -643,6 +647,7 @@ export interface ISetting {
     ipfs_gateway_url: string;
     nptServer: string;
     nptInterval: number;
+    enabledNode: boolean;
     SECONDS_PER_SLOT: number;
     SLOTS_PER_EPOCH: number;
     GENESIS_TIME: bigint;

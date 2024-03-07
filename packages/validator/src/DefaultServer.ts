@@ -35,7 +35,9 @@ export class DefaultServer extends WebService {
         this.node = new Node(this.config, this.storage);
 
         if (!schedules) schedules = [];
-        schedules.push(new NodeScheduler(this.node));
+        if (this.config.setting.enabledNode) {
+            schedules.push(new NodeScheduler(this.node));
+        }
         schedules.forEach((m) => this.schedules.push(m));
         this.schedules.forEach((m) =>
             m.setOption({
