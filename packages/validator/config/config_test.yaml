@@ -55,6 +55,7 @@ setting:
     ipfs_gateway_url: "${NODE_IPFS_GATEWAY_URL}"
     nptServer: "kr.pool.ntp.org"
     nptInterval: 10
+    enabledNode: true
     SECONDS_PER_SLOT: ${SECONDS_PER_SLOT}
     SLOTS_PER_EPOCH: ${SLOTS_PER_EPOCH}
     GENESIS_TIME: ${GENESIS_TIME}
