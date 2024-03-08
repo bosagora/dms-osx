@@ -65,7 +65,7 @@ describe("Test for Ledger", () => {
             const message = ContractUtils.getShopAccountMessage(elem.shopId, elem.wallet.address, nonce);
             const signature = await ContractUtils.signMessage(elem.wallet, message);
             await shopContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .add(elem.shopId, elem.name, elem.currency, elem.wallet.address, signature);
         }
     };
@@ -101,7 +101,7 @@ describe("Test for Ledger", () => {
         const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
 
         await exchangerContract
-            .connect(deployments.accounts.certifier)
+            .connect(deployments.accounts.certifiers[0])
             .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
     });
 

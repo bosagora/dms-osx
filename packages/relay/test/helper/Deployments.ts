@@ -42,7 +42,6 @@ interface IDeployedContract {
 export interface IAccount {
     deployer: Wallet;
     owner: Wallet;
-    certifier: Wallet;
     foundation: Wallet;
     settlements: Wallet;
     fee: Wallet;
@@ -74,7 +73,6 @@ export class Deployments {
             foundation,
             settlements,
             fee,
-            certifier,
             certifier01,
             certifier02,
             certifier03,
@@ -134,7 +132,6 @@ export class Deployments {
         this.accounts = {
             deployer,
             owner,
-            certifier,
             foundation,
             settlements,
             fee,

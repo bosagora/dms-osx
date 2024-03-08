@@ -341,7 +341,7 @@ describe("Test for Shop", () => {
 
                 const [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -365,7 +365,7 @@ describe("Test for Shop", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 )
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
@@ -461,7 +461,7 @@ describe("Test for Shop", () => {
 
                 const [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         purchaseId: purchase.purchaseId,
                         paymentId,
                         amount: purchaseAmount,
@@ -485,7 +485,7 @@ describe("Test for Shop", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 

@@ -337,7 +337,7 @@ describe("Test of Server", function () {
                 const requestId = ContractUtils.getRequestId(phoneHash, userData[userIndex].address, nonce);
                 await expect(
                     linkContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .addRequest(requestId, phoneHash, userData[userIndex].address, signature)
                 )
                     .to.emit(linkContract, "AddedRequestItem")
@@ -495,7 +495,7 @@ describe("Test of Server", function () {
                 const requestId = ContractUtils.getRequestId(phoneHash, userData[userIndex].address, nonce);
                 await expect(
                     linkContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .addRequest(requestId, phoneHash, userData[userIndex].address, signature)
                 )
                     .to.emit(linkContract, "AddedRequestItem")
