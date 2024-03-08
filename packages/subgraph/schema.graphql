@@ -45,6 +45,9 @@ type UserTradeHistory @entity(immutable: true) {
   amountPoint: BigInt!
   amountToken: BigInt!
   amountValue: BigInt!
+  feePoint: BigInt!
+  feeToken: BigInt!
+  feeValue: BigInt!
   currency: String
   balancePoint: BigInt!
   balanceToken: BigInt!

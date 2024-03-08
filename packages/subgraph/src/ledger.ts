@@ -154,6 +154,9 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.depositedToken.div(AmountUnit);
     entity.amountValue = event.params.depositedValue.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
 
@@ -180,6 +183,9 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.withdrawnToken.div(AmountUnit);
     entity.amountValue = event.params.withdrawnValue.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
 
@@ -227,6 +233,9 @@ export function handleChangedPointForHistory(event: ChangedToPayablePointEvent):
     entity.amountPoint = event.params.changedPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.changedValue.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
 
@@ -257,6 +266,9 @@ export function handleChangedToLoyaltyTokenForHistory(event: ChangedToLoyaltyTok
     entity.amountPoint = event.params.amountPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.amountPoint.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balancePoint = BigInt.fromI32(0);
     entity.balanceToken = balanceEntity.token;
     entity.purchaseId = "";
@@ -277,6 +289,9 @@ export function handleChangedToLoyaltyTokenForHistory(event: ChangedToLoyaltyTok
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amountToken.div(AmountUnit);
     entity.amountValue = event.params.amountPoint.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balancePoint = BigInt.fromI32(0);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
 
@@ -355,6 +370,9 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.providedValue.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.currency = event.params.currency;
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
@@ -385,6 +403,9 @@ export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.providedToken.div(AmountUnit);
     entity.amountValue = event.params.providedValue.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.currency = event.params.currency;
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
@@ -415,6 +436,9 @@ export function handleSettlementForHistory(event: ProvidedTokenForSettlementEven
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = event.params.providedToken.div(AmountUnit);
     entity.amountValue = event.params.providedPoint.div(AmountUnit);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.currency = event.params.currency;
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
@@ -454,6 +478,9 @@ export function handleTransferredLoyaltyTokenForHistory(event: TransferredLoyalt
         entity.amountPoint = BigInt.fromI32(0);
         entity.amountToken = event.params.amount.div(AmountUnit);
         entity.amountValue = BigInt.fromI32(0);
+        entity.feePoint = BigInt.fromI32(0);
+        entity.feeToken = event.params.fee.div(AmountUnit);
+        entity.feeValue = BigInt.fromI32(0);
         entity.currency = "TOKEN";
         entity.balanceToken = balanceEntity.token;
         entity.balancePoint = balanceEntity.point;
@@ -485,6 +512,9 @@ export function handleTransferredLoyaltyTokenForHistory(event: TransferredLoyalt
         entity.amountPoint = BigInt.fromI32(0);
         entity.amountToken = event.params.amount.div(AmountUnit);
         entity.amountValue = BigInt.fromI32(0);
+        entity.feePoint = BigInt.fromI32(0);
+        entity.feeToken = BigInt.fromI32(0);
+        entity.feeValue = BigInt.fromI32(0);
         entity.currency = "TOKEN";
         entity.balanceToken = balanceEntity.token;
         entity.balancePoint = balanceEntity.point;
@@ -558,9 +588,12 @@ export function handlePaidPointForHistory(event: LoyaltyPaymentEventEvent): void
     entity.action = UserAction.USED;
     entity.cancel = false;
     entity.loyaltyType = LoyaltyType.POINT;
-    entity.amountPoint = event.params.payment.paidPoint.div(AmountUnit);
+    entity.amountPoint = event.params.payment.paidPoint.plus(event.params.payment.feePoint).div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
-    entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
+    entity.feePoint = event.params.payment.feePoint.div(AmountUnit);
+    entity.feeToken = event.params.payment.feeToken.div(AmountUnit);
+    entity.feeValue = event.params.payment.feeValue.div(AmountUnit);
     entity.currency = event.params.payment.currency;
     entity.balancePoint = balanceEntity.point;
     entity.balanceToken = balanceEntity.token;
@@ -589,8 +622,11 @@ export function handlePaidTokenForHistory(event: LoyaltyPaymentEventEvent): void
     entity.cancel = false;
     entity.loyaltyType = LoyaltyType.TOKEN;
     entity.amountPoint = BigInt.fromI32(0);
-    entity.amountToken = event.params.payment.paidToken.div(AmountUnit);
-    entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.amountToken = event.params.payment.paidToken.plus(event.params.payment.feeToken).div(AmountUnit);
+    entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
+    entity.feePoint = event.params.payment.feePoint.div(AmountUnit);
+    entity.feeToken = event.params.payment.feeToken.div(AmountUnit);
+    entity.feeValue = event.params.payment.feeValue.div(AmountUnit);
     entity.currency = event.params.payment.currency;
     entity.balanceToken = balanceEntity.token;
     entity.balancePoint = balanceEntity.point;
@@ -618,9 +654,12 @@ export function handleCanceledPointForHistory(event: LoyaltyPaymentEventEvent): 
     entity.action = UserAction.USED;
     entity.cancel = true;
     entity.loyaltyType = LoyaltyType.POINT;
-    entity.amountPoint = event.params.payment.paidPoint.div(AmountUnit);
+    entity.amountPoint = event.params.payment.paidPoint.plus(event.params.payment.feePoint).div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
-    entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
+    entity.feePoint = event.params.payment.feePoint.div(AmountUnit);
+    entity.feeToken = event.params.payment.feeToken.div(AmountUnit);
+    entity.feeValue = event.params.payment.feeValue.div(AmountUnit);
     entity.currency = event.params.payment.currency;
     entity.balancePoint = balanceEntity.point;
     entity.balanceToken = balanceEntity.token;
@@ -649,8 +688,11 @@ export function handleCanceledTokenForHistory(event: LoyaltyPaymentEventEvent): 
     entity.cancel = true;
     entity.loyaltyType = LoyaltyType.TOKEN;
     entity.amountPoint = BigInt.fromI32(0);
-    entity.amountToken = event.params.payment.paidToken.div(AmountUnit);
-    entity.amountValue = event.params.payment.paidValue.div(AmountUnit);
+    entity.amountToken = event.params.payment.paidToken.plus(event.params.payment.feeToken).div(AmountUnit);
+    entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
+    entity.feePoint = event.params.payment.feePoint.div(AmountUnit);
+    entity.feeToken = event.params.payment.feeToken.div(AmountUnit);
+    entity.feeValue = event.params.payment.feeValue.div(AmountUnit);
     entity.currency = event.params.payment.currency;
     entity.balanceToken = balanceEntity.token;
     entity.balancePoint = balanceEntity.point;
@@ -699,6 +741,9 @@ export function handleBurnedPointForHistory(event: BurnedPointEvent): void {
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amount.div(AmountUnit);
     entity.amountValue = BigInt.fromI32(0);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balanceToken = balanceEntity.token;
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
@@ -778,6 +823,9 @@ export function handleBridgeDepositedForHistory(event: BridgeDepositedEvent): vo
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amount.div(AmountUnit);
     entity.amountValue = BigInt.fromI32(0);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balanceToken = balanceEntity.token;
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
@@ -825,6 +873,9 @@ export function handleBridgeWithdrawnForHistory(event: BridgeWithdrawnEvent): vo
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amount.div(AmountUnit);
     entity.amountValue = BigInt.fromI32(0);
+    entity.feePoint = BigInt.fromI32(0);
+    entity.feeToken = BigInt.fromI32(0);
+    entity.feeValue = BigInt.fromI32(0);
     entity.balanceToken = balanceEntity.token;
     entity.balancePoint = balanceEntity.point;
     entity.purchaseId = "";
