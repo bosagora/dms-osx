@@ -70,7 +70,7 @@
         "chai": "^4.3.7",
         "chai-http": "^4.3.7",
         "cors": "^2.8.5",
-        "del-osx-artifacts": "^2.2.0",
+        "del-osx-artifacts": "^2.3.0",
         "dms-bridge-contracts": "^1.2.0",
         "dms-osx-artifacts": "^2.9.1",
         "dotenv": "^10.0.0",

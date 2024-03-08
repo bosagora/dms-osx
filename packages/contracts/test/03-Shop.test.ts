@@ -118,7 +118,7 @@ describe("Test for Shop", () => {
             const signature = await ContractUtils.signMessage(elem.wallet, message);
             await expect(
                 shopContract
-                    .connect(deployments.accounts.certifier)
+                    .connect(deployments.accounts.certifiers[0])
                     .add(elem.shopId, elem.name, elem.currency.toLowerCase(), elem.wallet.address, signature)
             )
                 .to.emit(shopContract, "AddedShop")
@@ -149,7 +149,7 @@ describe("Test for Shop", () => {
         const signature = await ContractUtils.signMessage(elem.wallet, message);
         await expect(
             shopContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .update(elem.shopId, elem.name, "usd", elem.wallet.address, signature)
         )
             .to.emit(shopContract, "UpdatedShop")
@@ -178,7 +178,7 @@ describe("Test for Shop", () => {
             const signature = await ContractUtils.signMessage(elem.wallet, message);
             await expect(
                 shopContract
-                    .connect(deployments.accounts.certifier)
+                    .connect(deployments.accounts.certifiers[0])
                     .changeStatus(elem.shopId, ContractShopStatus.INACTIVE, elem.wallet.address, signature)
             )
                 .to.emit(shopContract, "ChangedShopStatus")
@@ -206,7 +206,7 @@ describe("Test for Shop", () => {
             const signature = await ContractUtils.signMessage(elem.wallet, message);
             await expect(
                 shopContract
-                    .connect(deployments.accounts.certifier)
+                    .connect(deployments.accounts.certifiers[0])
                     .changeStatus(elem.shopId, ContractShopStatus.ACTIVE, elem.wallet.address, signature)
             )
                 .to.emit(shopContract, "ChangedShopStatus")
@@ -229,7 +229,7 @@ describe("Test for Shop", () => {
         const signature = await ContractUtils.signMessage(elem.wallet, message);
         await expect(
             shopContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .changeDelegator(elem.shopId, delegator.address, elem.wallet.address, signature)
         )
             .to.emit(shopContract, "ChangedDelegator")
@@ -256,7 +256,7 @@ describe("Test for Shop", () => {
         const signature = await ContractUtils.signMessage(delegator, message);
         await expect(
             shopContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .update(elem.shopId, "new name", "usd", delegator.address, signature)
         )
             .to.emit(shopContract, "UpdatedShop")
@@ -278,7 +278,7 @@ describe("Test for Shop", () => {
         const signature = await ContractUtils.signMessage(delegator, message);
         await expect(
             shopContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .changeStatus(elem.shopId, ContractShopStatus.INACTIVE, delegator.address, signature)
         )
             .to.emit(shopContract, "ChangedShopStatus")

@@ -85,7 +85,7 @@ describe("Test for Ledger", () => {
             const message = ContractUtils.getShopAccountMessage(elem.shopId, elem.wallet.address, nonce);
             const signature = await ContractUtils.signMessage(elem.wallet, message);
             await shopContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .add(elem.shopId, elem.name, elem.currency, elem.wallet.address, signature);
         }
     };
@@ -463,7 +463,7 @@ describe("Test for Ledger", () => {
                 requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[3].address, nonce);
                 await expect(
                     linkContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .addRequest(requestId, hash, deployments.accounts.users[3].address, signature)
                 )
                     .to.emit(linkContract, "AddedRequestItem")
@@ -566,7 +566,7 @@ describe("Test for Ledger", () => {
                 const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .changeToPayablePoint(phoneHash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToPayablePoint")
@@ -588,7 +588,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
@@ -763,7 +763,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
@@ -923,7 +923,7 @@ describe("Test for Ledger", () => {
                 requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[4].address, nonce);
                 await expect(
                     linkContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .addRequest(requestId, hash, deployments.accounts.users[4].address, signature)
                 )
                     .to.emit(linkContract, "AddedRequestItem")
@@ -1048,7 +1048,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
@@ -1207,7 +1207,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
@@ -1223,7 +1223,7 @@ describe("Test for Ledger", () => {
                 requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[userIndex].address, nonce);
                 await expect(
                     linkContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .addRequest(requestId, hash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(linkContract, "AddedRequestItem")
@@ -1247,7 +1247,7 @@ describe("Test for Ledger", () => {
                 const tokenAmount = unPayableAmount.mul(multiple).div(price);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .changeToPayablePoint(phoneHash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToPayablePoint")
@@ -1298,7 +1298,7 @@ describe("Test for Ledger", () => {
                 [secret, secretLock] = ContractUtils.getSecret();
 
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1340,7 +1340,7 @@ describe("Test for Ledger", () => {
 
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1382,7 +1382,7 @@ describe("Test for Ledger", () => {
 
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1408,7 +1408,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1454,7 +1454,7 @@ describe("Test for Ledger", () => {
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1488,7 +1488,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1515,7 +1515,7 @@ describe("Test for Ledger", () => {
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .openCancelLoyaltyPayment(paymentId, secretLock, signature)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1526,7 +1526,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeCancelLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1563,7 +1563,7 @@ describe("Test for Ledger", () => {
                 );
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1601,7 +1601,7 @@ describe("Test for Ledger", () => {
                 );
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1646,7 +1646,7 @@ describe("Test for Ledger", () => {
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1675,7 +1675,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1728,7 +1728,7 @@ describe("Test for Ledger", () => {
                 const oldFeeBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.fee.address);
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -1767,7 +1767,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1803,7 +1803,7 @@ describe("Test for Ledger", () => {
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .openCancelLoyaltyPayment(paymentId, secretLock, signature)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -1814,7 +1814,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeCancelLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -2026,7 +2026,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
 
                 await exchangerContract
-                    .connect(deployments.accounts.certifier)
+                    .connect(deployments.accounts.certifiers[0])
                     .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
             });
 
@@ -2341,7 +2341,7 @@ describe("Test for Ledger", () => {
 
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -2355,7 +2355,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 )
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
@@ -2442,7 +2442,7 @@ describe("Test for Ledger", () => {
 
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -2456,7 +2456,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -3019,7 +3019,7 @@ describe("Test for Ledger", () => {
 
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -3033,7 +3033,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 )
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
@@ -3064,7 +3064,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[userIndex], nonce);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .changeToLoyaltyToken(deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToLoyaltyToken")
@@ -3121,7 +3121,7 @@ describe("Test for Ledger", () => {
 
                 [secret, secretLock] = ContractUtils.getSecret();
                 await expect(
-                    consumerContract.connect(deployments.accounts.certifier).openNewLoyaltyPayment({
+                    consumerContract.connect(deployments.accounts.certifiers[0]).openNewLoyaltyPayment({
                         paymentId,
                         purchaseId: purchase.purchaseId,
                         amount: purchaseAmount,
@@ -3135,7 +3135,7 @@ describe("Test for Ledger", () => {
 
                 await expect(
                     consumerContract
-                        .connect(deployments.accounts.certifier)
+                        .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
                 ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
@@ -3269,7 +3269,7 @@ describe("Test for Ledger", () => {
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
             const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
             await exchangerContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
         });
 
@@ -3277,7 +3277,7 @@ describe("Test for Ledger", () => {
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[1].address);
             const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[1], nonce);
             await exchangerContract
-                .connect(deployments.accounts.certifier)
+                .connect(deployments.accounts.certifiers[0])
                 .changeToLoyaltyToken(deployments.accounts.users[1].address, signature);
         });
 
@@ -3545,7 +3545,7 @@ describe("Test for Ledger", () => {
             requestId = ContractUtils.getRequestId(hash, deployments.accounts.users[userIndex].address, nonce);
             await expect(
                 linkContract
-                    .connect(deployments.accounts.certifier)
+                    .connect(deployments.accounts.certifiers[0])
                     .addRequest(requestId, hash, deployments.accounts.users[userIndex].address, signature)
             )
                 .to.emit(linkContract, "AddedRequestItem")

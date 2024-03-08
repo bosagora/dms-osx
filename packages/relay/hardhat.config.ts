@@ -63,17 +63,6 @@ function getAccounts() {
     }
 
     if (
-        process.env.CERTIFIER !== undefined &&
-        process.env.CERTIFIER.trim() !== "" &&
-        reg_bytes64.test(process.env.CERTIFIER)
-    ) {
-        accounts.push(process.env.CERTIFIER);
-    } else {
-        process.env.CERTIFIER = Wallet.createRandom().privateKey;
-        accounts.push(process.env.CERTIFIER);
-    }
-
-    if (
         process.env.CERTIFIER01 !== undefined &&
         process.env.CERTIFIER01.trim() !== "" &&
         reg_bytes64.test(process.env.CERTIFIER01)
