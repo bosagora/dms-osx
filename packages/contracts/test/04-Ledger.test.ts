@@ -2361,7 +2361,7 @@ describe("Test for Ledger", () => {
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
-                        account: deployments.accounts.settlements.address,
+                        account: deployments.accounts.settlement.address,
                         shopId: shop.shopId,
                         providedPoint: Amount.make(200, 18).value,
                     });
@@ -3039,7 +3039,7 @@ describe("Test for Ledger", () => {
                     .to.emit(consumerContract, "LoyaltyPaymentEvent")
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
-                        account: deployments.accounts.settlements.address,
+                        account: deployments.accounts.settlement.address,
                         shopId: shop.shopId,
                         providedPoint: Amount.make(100, 18).value,
                     });

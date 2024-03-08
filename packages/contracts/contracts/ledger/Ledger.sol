@@ -63,51 +63,57 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     event DepositedLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
     event WithdrawnLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
 
+    struct ManagementAddresses {
+        address foundation;
+        address settlement;
+        address fee;
+        address txFee;
+    }
+
+    struct ContractAddresses {
+        address token;
+        address phoneLink;
+        address currencyRate;
+        address provider;
+        address consumer;
+        address exchanger;
+        address burner;
+        address transfer;
+        address bridge;
+    }
+
     /// @notice 생성자
-    /// @param _foundationAccount 재단의 계정
-    /// @param _settlementAccount 정산금 계정
-    /// @param _feeAccount 수수료 계정
-    /// @param _tokenAddress 토큰 컨트랙트의 주소
-    /// @param _linkAddress 전화번호-지갑주소 링크 컨트랙트의 주소
-    /// @param _currencyRateAddress 환률을 제공하는 컨트랙트의 주소
     function initialize(
-        address _foundationAccount,
-        address _settlementAccount,
-        address _feeAccount,
-        address _tokenAddress,
-        address _linkAddress,
-        address _currencyRateAddress,
-        address _providerAddress,
-        address _consumerAddress,
-        address _exchangerAddress,
-        address _burnerAddress,
-        address _transferAddress,
-        address _bridgeAddress
+        ManagementAddresses memory managements,
+        ContractAddresses memory contracts
     ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
 
-        foundationAccount = _foundationAccount;
-        settlementAccount = _settlementAccount;
-        feeAccount = _feeAccount;
-        providerAddress = _providerAddress;
-        consumerAddress = _consumerAddress;
-        exchangerAddress = _exchangerAddress;
-        burnerAddress = _burnerAddress;
-        transferAddress = _transferAddress;
-        tokenAddress = _tokenAddress;
-        bridgeAddress = _bridgeAddress;
+        foundationAccount = managements.foundation;
+        settlementAccount = managements.settlement;
+        feeAccount = managements.fee;
+        txFeeAccount = managements.txFee;
 
-        tokenContract = IBIP20DelegatedTransfer(_tokenAddress);
-        linkContract = IPhoneLinkCollection(_linkAddress);
-        currencyRateContract = ICurrencyRate(_currencyRateAddress);
+        providerAddress = contracts.provider;
+        consumerAddress = contracts.consumer;
+        exchangerAddress = contracts.exchanger;
+        burnerAddress = contracts.burner;
+        transferAddress = contracts.transfer;
+        tokenAddress = contracts.token;
+        bridgeAddress = contracts.bridge;
+
+        tokenContract = IBIP20DelegatedTransfer(contracts.token);
+        linkContract = IPhoneLinkCollection(contracts.phoneLink);
+        currencyRateContract = ICurrencyRate(contracts.currencyRate);
         fee = MAX_FEE;
-        BIP20DelegatedTransfer token = BIP20DelegatedTransfer(_tokenAddress);
+        BIP20DelegatedTransfer token = BIP20DelegatedTransfer(contracts.token);
         tokenId = BridgeLib.getTokenId(token.name(), token.symbol());
 
         loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
         loyaltyTypes[settlementAccount] = LoyaltyType.TOKEN;
         loyaltyTypes[feeAccount] = LoyaltyType.TOKEN;
+        loyaltyTypes[txFeeAccount] = LoyaltyType.TOKEN;
 
         temporaryAddress = address(0x0);
     }
@@ -419,6 +425,10 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     function getFeeAccount() external view override returns (address) {
         return feeAccount;
+    }
+
+    function getTxFeeAccount() external view override returns (address) {
+        return txFeeAccount;
     }
 
     function getTokenAddress() external view override returns (address) {

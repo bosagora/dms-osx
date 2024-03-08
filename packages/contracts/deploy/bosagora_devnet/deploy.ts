@@ -58,8 +58,9 @@ interface IAccount {
     deployer: Wallet;
     owner: Wallet;
     foundation: Wallet;
-    settlements: Wallet;
+    settlement: Wallet;
     fee: Wallet;
+    txFee: Wallet;
     validators: Wallet[];
     linkValidators: Wallet[];
     bridgeValidators: Wallet[];
@@ -87,8 +88,9 @@ class Deployments {
             deployer,
             owner,
             foundation,
-            settlements,
+            settlement,
             fee,
+            txFee,
             certifier01,
             certifier02,
             certifier03,
@@ -132,8 +134,9 @@ class Deployments {
             deployer,
             owner,
             foundation,
-            settlements,
+            settlement,
             fee,
+            txFee,
             validators: [
                 validator01,
                 validator02,
@@ -696,18 +699,23 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     const contract = (await upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [
-            accounts.foundation.address,
-            accounts.settlements.address,
-            accounts.fee.address,
-            await deployment.getContractAddress("LoyaltyToken"),
-            await deployment.getContractAddress("PhoneLinkCollection"),
-            await deployment.getContractAddress("CurrencyRate"),
-            await deployment.getContractAddress("LoyaltyProvider"),
-            await deployment.getContractAddress("LoyaltyConsumer"),
-            await deployment.getContractAddress("LoyaltyExchanger"),
-            await deployment.getContractAddress("LoyaltyBurner"),
-            await deployment.getContractAddress("LoyaltyTransfer"),
-            await deployment.getContractAddress("LoyaltyBridge"),
+            {
+                foundation: accounts.foundation.address,
+                settlement: accounts.settlement.address,
+                fee: accounts.fee.address,
+                txFee: accounts.txFee.address,
+            },
+            {
+                token: await deployment.getContractAddress("LoyaltyToken"),
+                phoneLink: await deployment.getContractAddress("PhoneLinkCollection"),
+                currencyRate: await deployment.getContractAddress("CurrencyRate"),
+                provider: await deployment.getContractAddress("LoyaltyProvider"),
+                consumer: await deployment.getContractAddress("LoyaltyConsumer"),
+                exchanger: await deployment.getContractAddress("LoyaltyExchanger"),
+                burner: await deployment.getContractAddress("LoyaltyBurner"),
+                transfer: await deployment.getContractAddress("LoyaltyTransfer"),
+                bridge: await deployment.getContractAddress("LoyaltyBridge"),
+            },
         ],
         {
             initializer: "initialize",

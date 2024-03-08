@@ -15,7 +15,7 @@ contract LoyaltyBridgeStorage {
     mapping(bytes32 => mapping(address => bool)) internal confirmations;
 
     address internal foundationAccount;
-    address internal feeAccount;
+    address internal txFeeAccount;
 
     uint256 internal fee;
 
