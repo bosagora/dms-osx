@@ -22,6 +22,7 @@ contract LedgerStorage {
     address public foundationAccount;
     address public settlementAccount;
     address public feeAccount;
+    address public txFeeAccount;
     address public providerAddress;
     address public consumerAddress;
     address public exchangerAddress;

@@ -370,7 +370,7 @@ describe("Test for Shop", () => {
                 )
                     .to.emit(consumerContract, "ProvidedTokenForSettlement")
                     .withNamedArgs({
-                        account: deployments.accounts.settlements.address,
+                        account: deployments.accounts.settlement.address,
                         shopId: shop.shopId,
                         providedPoint: Amount.make(200, 18).value,
                     })
