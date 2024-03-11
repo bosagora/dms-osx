@@ -206,7 +206,7 @@
 ## 2. URL
 
 -   메인넷: https://relay.kios.bosagora.org
--   테스트넷: https://relay.kios.testnet.bosagora.org
+-   테스트넷: https://relay.test.kios.bosagora.org
 -   개발넷: http://relay.devnet.bosagora.org:7070
 
 [상단으로 이동](#로열티를-사용한-결제-프로세스)
