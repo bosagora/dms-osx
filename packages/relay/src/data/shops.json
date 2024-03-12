@@ -1,69 +1,69 @@
 [
     {
-        "shopId": "0xbe96d74202df38fd21462ffcef10dfe0fcbd7caa3947689a3903e8b6b8749fda",
+        "shopId": "0x0000be96d74202df38fd21462ffcef10dfe0fcbd7caa3947689a3903e8b6b874",
         "name": "Shop-0001",
         "currency": "krw",
         "address": "0xafFe745418Ad24c272175e5B58610A8a35e2EcDa",
         "privateKey": "0xa237d68cbb66fd5f76e7b321156c46882546ad87d662dec8b82703ac31efbf0a"
     },
     {
-        "shopId": "0x5f59d6b480ff5a30044dcd7fe3b28c69b6d0d725ca469d1b685b57dfc1055d7f",
+        "shopId": "0x00005f59d6b480ff5a30044dcd7fe3b28c69b6d0d725ca469d1b685b57dfc105",
         "name": "Shop-0002",
         "currency": "krw",
         "address": "0xD10ADf251463A260242c216c8c7D3e736eBdB398",
         "privateKey": "0x05152ad8d5b14d3f65539e0e42131bc72cbdd16c486cb215d60b7dc113ca1ebd"
     },
     {
-        "shopId": "0x08f12f827f0521be34e7563948dc778cb80f7498cebb57cb1a62840d96eb143c",
+        "shopId": "0x000008f12f827f0521be34e7563948dc778cb80f7498cebb57cb1a62840d96eb",
         "name": "Shop-0003",
         "currency": "krw",
         "address": "0xD12e250C8F5C3720297CeBF5A50655A8e2348847",
         "privateKey": "0xf4b8aa615834c57d1e4836c683c8d3460f8ff232667dc317f82844e674ee4f26"
     },
     {
-        "shopId": "0xbefa86be32da60a87a843bf3e63e77092040ee044f854e8d318d1eb18d208f4d",
+        "shopId": "0x0000befa86be32da60a87a843bf3e63e77092040ee044f854e8d318d1eb18d20",
         "name": "Shop-0004",
         "currency": "krw",
         "address": "0x57D5E271FF8A4d49AE793B8b6Cf005E33FA4FA48",
         "privateKey": "0xe58b3ae0e68a04996d6c13c9f9cb65b2d88ada662f28edd67db8c8e1ef45eed4"
     },
     {
-        "shopId": "0x3ecc54754b835d04ee5b4df7d0d0eb4e0eafc33ac8de4d282d641f7f054d1c27",
+        "shopId": "0x00003ecc54754b835d04ee5b4df7d0d0eb4e0eafc33ac8de4d282d641f7f054d",
         "name": "Shop-0005",
         "currency": "krw",
         "address": "0x14De3f38D8deB7fFc5c15859bA05e4B088F8F631",
         "privateKey": "0x1f2246394971c643d371a2b2ab9176d34b98c0a84a6aa5e4e53f73ab6119dcc1"
     },
     {
-        "shopId": "0x548b7faa282b8721218962e3c1ae43608009534663de91a1548e37cc1c6980a5",
+        "shopId": "0x0000548b7faa282b8721218962e3c1ae43608009534663de91a1548e37cc1c69",
         "name": "Shop-0006",
         "currency": "krw",
         "address": "0xA9c5559da87A7511D28e87C751dAfE65374Ce59f",
         "privateKey": "0x49d28e02787ca6f2827065c83c9c4de2369b4d18d132505d3c01ba35a4558214"
     },
     {
-        "shopId": "0x08bde9ef98803841f22e8bc577a69fc47913914a8f5fa60e016aaa74bc86dd47",
+        "shopId": "0x000008bde9ef98803841f22e8bc577a69fc47913914a8f5fa60e016aaa74bc86",
         "name": "Shop-0007",
         "currency": "krw",
         "address": "0xAAa610aE6711B810921ca06629c42a3E127851cd",
         "privateKey": "0xd72fb7fe49fd18f92481cbee186050816631391b4a25d579b7cff7efdf7099d3"
     },
     {
-        "shopId": "0x04ef11be936f49f6388dd20d062e43170fd7ce9e968e51426317e284b9309361",
+        "shopId": "0x000004ef11be936f49f6388dd20d062e43170fd7ce9e968e51426317e284b930",
         "name": "Shop-0008",
         "currency": "krw",
         "address": "0x4BbfEd63b19954A357C1Dfc3Ba8820d2eE31Bbcf",
         "privateKey": "0x90ee852d612e080fb99914d40e0cd75edf928ca895bdda8b91be4b464c55edfc"
     },
     {
-        "shopId": "0x6bad0e0f6ad0fdd7660393b45f452a0eca3f6f1f0eeb25c5902e46a1ffeeef3f",
+        "shopId": "0x00006bad0e0f6ad0fdd7660393b45f452a0eca3f6f1f0eeb25c5902e46a1ffee",
         "name": "Shop-0009",
         "currency": "krw",
         "address": "0xe3812c628b1E0245Eed4A548914e32C9eeFda019",
         "privateKey": "0x8bfcb398c9cb1c7c11790a2293f6d4d8c0adc5f2bd3620561dd81e2db2e9a83e"
     },
     {
-        "shopId": "0x2a23595cf31762a61502546e8b9f947baf3bd55040d9bd535f8afdbff409fa60",
+        "shopId": "0x00002a23595cf31762a61502546e8b9f947baf3bd55040d9bd535f8afdbff409",
         "name": "Shop-0010",
         "currency": "krw",
         "address": "0xfD8072e4809BFADd90ad6D60aF31C8dCd7a46990",

@@ -2,7 +2,7 @@ import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
 import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
-import { ContractUtils } from "../src/utils/ContractUtils";
+import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
 import {
     BIP20DelegatedTransfer,
     CurrencyRate,
@@ -151,7 +151,7 @@ describe("Test of Server", function () {
     context("Test point relay endpoints", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -603,7 +603,7 @@ describe("Test of Server", function () {
     context("Test point relay endpoints - Cancel Confirm", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -984,7 +984,7 @@ describe("Test of Server", function () {
     context("Test point relay endpoints - Cancel Deny", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -1329,7 +1329,7 @@ describe("Test of Server", function () {
     context("Test token relay endpoints", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -1583,7 +1583,7 @@ describe("Test of Server", function () {
     context("Test token relay endpoints - Cancel Confirm", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -1954,7 +1954,7 @@ describe("Test of Server", function () {
     context("Test token relay endpoints - Cancel Deny", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -2388,7 +2388,7 @@ describe("Test of Server", function () {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 

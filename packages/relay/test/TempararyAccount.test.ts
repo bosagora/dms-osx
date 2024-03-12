@@ -32,6 +32,7 @@ import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import { ContractLoyaltyType, LoyaltyPaymentTaskStatus } from "../src/types";
 import { Deployments } from "./helper/Deployments";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
+import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -152,7 +153,7 @@ describe("Test of Server", function () {
     context("Test point relay endpoints", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 

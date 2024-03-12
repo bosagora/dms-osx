@@ -4,7 +4,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { waffle } from "hardhat";
 
 import { Amount } from "../src/utils/Amount";
-import { ContractUtils } from "../src/utils/ContractUtils";
+import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
 import {
     CurrencyRate,
     ERC20,
@@ -237,7 +237,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -1853,7 +1853,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -2012,7 +2012,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -2199,7 +2199,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -2650,7 +2650,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -2883,7 +2883,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -3257,7 +3257,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
@@ -3466,7 +3466,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 

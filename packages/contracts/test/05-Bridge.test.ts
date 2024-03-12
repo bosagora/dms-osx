@@ -8,7 +8,6 @@ import {
     BIP20DelegatedTransfer,
     Bridge,
     CurrencyRate,
-    IBIP20DelegatedTransfer,
     Ledger,
     LoyaltyBridge,
     LoyaltyBurner,
@@ -28,7 +27,6 @@ import { solidity } from "ethereum-waffle";
 import { Wallet } from "ethers";
 
 import { Deployments } from "./helper/Deployments";
-import { string } from "hardhat/internal/core/params/argumentTypes";
 
 chai.use(solidity);
 

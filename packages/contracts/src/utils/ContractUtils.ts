@@ -23,6 +23,11 @@ import { verifyMessage } from "@ethersproject/wallet";
 
 import * as hre from "hardhat";
 
+export enum LoyaltyNetworkID {
+    KIOS,
+    PNB,
+}
+
 export class ContractUtils {
     public static findLog(receipt: ContractReceipt, iface: Interface, eventName: string): Log | undefined {
         return receipt.logs.find((log) => log.topics[0] === id(iface.getEvent(eventName).format("sighash")));
@@ -145,9 +150,12 @@ export class ContractUtils {
 
     // region Shop
 
-    public static getShopId(account: string): string {
+    public static getShopId(account: string, networkId: LoyaltyNetworkID): string {
         const encodedResult = defaultAbiCoder.encode(["address", "bytes32"], [account, randomBytes(32)]);
-        return keccak256(encodedResult);
+        const encodedBuffer = this.StringToBuffer(keccak256(encodedResult));
+        const networkIdBuffer = Buffer.allocUnsafe(2);
+        networkIdBuffer.writeUInt16BE(networkId);
+        return this.BufferToString(Buffer.from([...networkIdBuffer, ...encodedBuffer.subarray(0, 30)]));
     }
 
     public static getShopAccountMessage(

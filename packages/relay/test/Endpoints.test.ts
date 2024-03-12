@@ -27,6 +27,7 @@ import { Wallet } from "ethers";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -134,7 +135,7 @@ describe("Test of Server", function () {
     context("Test token & point relay endpoints", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 

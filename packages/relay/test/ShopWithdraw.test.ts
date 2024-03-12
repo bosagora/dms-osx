@@ -31,6 +31,7 @@ import { AddressZero } from "@ethersproject/constants";
 import { Deployments } from "./helper/Deployments";
 import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
 import { ContractShopStatus } from "dms-osx-artifacts/src/types";
+import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
 
 chai.use(solidity);
 
@@ -204,7 +205,7 @@ describe("Test for Shop", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 

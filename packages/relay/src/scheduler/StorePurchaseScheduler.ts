@@ -7,7 +7,6 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { Scheduler } from "./Scheduler";
 
 import * as hre from "hardhat";
-import { BigNumber } from "ethers";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.

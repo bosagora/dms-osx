@@ -4,7 +4,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { ethers, upgrades } from "hardhat";
 
 import { ContractShopStatus } from "../src/types";
-import { ContractUtils } from "../src/utils/ContractUtils";
+import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
 import { CurrencyRate, ERC20, Shop, Validator } from "../typechain-types";
 
 import chai, { expect } from "chai";
@@ -107,7 +107,7 @@ describe("Test for Shop", () => {
 
     before("Set Shop ID", async () => {
         for (const elem of shopData) {
-            elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+            elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
         }
     });
 

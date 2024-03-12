@@ -22,7 +22,8 @@
         "test:CurrencyRate": "hardhat test test/01-CurrencyRate.test.ts",
         "test:Shop": "hardhat test test/03-Shop.test.ts",
         "test:Ledger": "hardhat test test/04-Ledger.test.ts",
-        "test:Bridge": "hardhat test test/05-Bridge.test.ts"
+        "test:Bridge": "hardhat test test/05-Bridge.test.ts",
+        "test:ShopId": "hardhat test test/06-ShopId.test.ts"
     },
     "repository": {
         "type": "git",

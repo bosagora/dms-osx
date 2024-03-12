@@ -35,6 +35,7 @@ import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import { Deployments } from "./helper/Deployments";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 import { TestClient, TestServer } from "./helper/Utility";
+import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
 
 chai.use(solidity);
 
@@ -115,7 +116,7 @@ describe("Test for Shop", function () {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 

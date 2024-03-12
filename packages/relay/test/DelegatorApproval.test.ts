@@ -38,6 +38,7 @@ import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
 import * as assert from "assert";
 import * as path from "path";
 import { URL } from "url";
+import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -114,7 +115,7 @@ describe("Test of Delegator", function () {
     context("Test delegator approval", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
             }
         });
 
