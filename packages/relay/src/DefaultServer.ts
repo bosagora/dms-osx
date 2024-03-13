@@ -14,6 +14,8 @@ import { INotificationEventHandler, INotificationSender, NotificationSender } fr
 import { StorePurchaseRouter } from "./routers/StorePurchaseRouter";
 import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
+import { register } from "prom-client";
+import { Metrics } from "./metrics/Metrics";
 
 export class DefaultServer extends WebService {
     /**
@@ -34,6 +36,8 @@ export class DefaultServer extends WebService {
     public readonly etcRouter: ETCRouter;
     public readonly purchaseRouter: StorePurchaseRouter;
 
+    private readonly metrics: Metrics;
+
     /**
      * Constructor
      * @param config Configuration
@@ -50,25 +54,47 @@ export class DefaultServer extends WebService {
         handler?: INotificationEventHandler
     ) {
         super(config.server.port, config.server.address);
+        register.clear();
+        this.metrics = new Metrics();
+        this.metrics.create("gauge", "status", "serve status");
+        this.metrics.create("summary", "success", "request success");
+        this.metrics.create("summary", "failure", "request failure");
+        this.metrics.createGauge("certifier_balance", "certifier balance", ["address"]);
 
         this.config = config;
         this.storage = storage;
         this.graph = graph;
         this.sender = new NotificationSender(this.config, handler);
         this.relaySigners = new RelaySigners(this.config);
-        this.defaultRouter = new DefaultRouter(this);
-        this.ledgerRouter = new LedgerRouter(this, this.config, this.storage, this.graph, this.relaySigners);
-        this.shopRouter = new ShopRouter(this, this.config, this.storage, this.graph, this.relaySigners, this.sender);
-        this.paymentRouter = new PaymentRouter(
+        this.defaultRouter = new DefaultRouter(this, this.config, this.metrics);
+        this.ledgerRouter = new LedgerRouter(
             this,
             this.config,
+            this.metrics,
+            this.storage,
+            this.graph,
+            this.relaySigners
+        );
+        this.shopRouter = new ShopRouter(
+            this,
+            this.config,
+            this.metrics,
             this.storage,
             this.graph,
             this.relaySigners,
             this.sender
         );
-        this.etcRouter = new ETCRouter(this, this.config, this.storage, this.graph, this.sender);
-        this.purchaseRouter = new StorePurchaseRouter(this, this.config, this.storage, this.graph);
+        this.paymentRouter = new PaymentRouter(
+            this,
+            this.config,
+            this.metrics,
+            this.storage,
+            this.graph,
+            this.relaySigners,
+            this.sender
+        );
+        this.etcRouter = new ETCRouter(this, this.config, this.metrics, this.storage, this.graph, this.sender);
+        this.purchaseRouter = new StorePurchaseRouter(this, this.config, this.metrics, this.storage, this.graph);
 
         if (schedules) {
             schedules.forEach((m) => this.schedules.push(m));

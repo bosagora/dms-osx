@@ -93,6 +93,7 @@
         "pgtools": "^1.0.1",
         "prettier": "^2.5.1",
         "prettier-plugin-solidity": "^1.1.1",
+        "prom-client": "^15.1.0",
         "smart-buffer": "^4.1.0",
         "solhint": "^3.3.6",
         "solidity-coverage": "^0.8.2",

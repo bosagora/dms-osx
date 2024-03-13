@@ -24,6 +24,8 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
 
 import { ContractLoyaltyType, GWI_UNIT, IStorePurchaseData, PHONE_NULL } from "../types";
+import { Metrics } from "../metrics/Metrics";
+import { Wallet } from "ethers";
 
 export class StorePurchaseRouter {
     /**
@@ -37,6 +39,8 @@ export class StorePurchaseRouter {
      * @private
      */
     private readonly _config: Config;
+
+    private readonly _metrics: Metrics;
 
     /**
      * ERC20 토큰 컨트랙트
@@ -75,12 +79,14 @@ export class StorePurchaseRouter {
      *
      * @param service  WebService
      * @param config Configuration
+     * @param metrics Metrics
      * @param storage
      * @param graph
      */
-    constructor(service: WebService, config: Config, storage: RelayStorage, graph: GraphStorage) {
+    constructor(service: WebService, config: Config, metrics: Metrics, storage: RelayStorage, graph: GraphStorage) {
         this._web_service = service;
         this._config = config;
+        this._metrics = metrics;
 
         this._storage = storage;
         this._graph = graph;
@@ -309,10 +315,12 @@ export class StorePurchaseRouter {
                 }
                 await this._storage.postStorePurchase(purchaseData);
             }
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, {}));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/purchase/save : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -337,10 +345,12 @@ export class StorePurchaseRouter {
             }
             const purchaseId: string = String(req.body.purchaseId).trim();
             await this._storage.cancelStorePurchase(purchaseId);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, {}));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/purchase/cancel : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -360,6 +370,7 @@ export class StorePurchaseRouter {
         try {
             const account: string = String(req.query.account).trim();
             const data = await this._storage.getToBeProvideOfUser(account);
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(
                     0,
@@ -381,6 +392,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/user/provide : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -401,6 +413,7 @@ export class StorePurchaseRouter {
             const account: string = String(req.query.account).trim();
             const data = await this._storage.getTotalToBeProvideOfUser(account);
             const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     account,
@@ -413,6 +426,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/user/provide/total : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -432,6 +446,7 @@ export class StorePurchaseRouter {
         try {
             const shopId: string = String(req.query.shopId).trim();
             const data = await this._storage.getToBeProvideOfShop(shopId);
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(
                     0,
@@ -449,6 +464,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/shop/provide : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -468,6 +484,7 @@ export class StorePurchaseRouter {
         try {
             const shopId: string = String(req.query.shopId).trim();
             const data = await this._storage.getTotalToBeProvideOfShop(shopId);
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     shopId,
@@ -477,6 +494,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/shop/provide/total : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }

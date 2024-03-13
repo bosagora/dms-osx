@@ -19,6 +19,7 @@ import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ResponseMessage } from "../utils/Errors";
+import { Metrics } from "../metrics/Metrics";
 
 export class LedgerRouter {
     /**
@@ -32,6 +33,8 @@ export class LedgerRouter {
      * @private
      */
     private readonly _config: Config;
+
+    private readonly _metrics: Metrics;
 
     private readonly _relaySigners: RelaySigners;
 
@@ -72,6 +75,7 @@ export class LedgerRouter {
      *
      * @param service  WebService
      * @param config Configuration
+     * @param metrics Metrics
      * @param storage
      * @param graph
      * @param relaySigners
@@ -79,12 +83,14 @@ export class LedgerRouter {
     constructor(
         service: WebService,
         config: Config,
+        metrics: Metrics,
         storage: RelayStorage,
         graph: GraphStorage,
         relaySigners: RelaySigners
     ) {
         this._web_service = service;
         this._config = config;
+        this._metrics = metrics;
 
         this._storage = storage;
         this._graph = graph;
@@ -280,10 +286,12 @@ export class LedgerRouter {
                 .changeToLoyaltyToken(account, signature);
 
             logger.http(`TxHash(changeToLoyaltyToken): ${tx.hash}`);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/ledger/changeToLoyaltyToken : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -319,10 +327,12 @@ export class LedgerRouter {
                 .changeToPayablePoint(phone, account, signature);
 
             logger.http(`TxHash(changeToPayablePoint): ${tx.hash}`);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/ledger/changeToPayablePoint : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -358,10 +368,12 @@ export class LedgerRouter {
                 .removePhoneInfo(account, signature);
 
             logger.http(`TxHash(removePhoneInfoOfLedger): ${tx.hash}`);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/ledger/removePhoneInfo : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -397,10 +409,12 @@ export class LedgerRouter {
                 .remove(account, signature);
 
             logger.http(`TxHash(removePhoneInfoOfLink): ${tx.hash}`);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/link/removePhoneInfo : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
