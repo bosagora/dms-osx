@@ -28,6 +28,7 @@ import { HTTPClient } from "../utils/Utils";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+import { Metrics } from "../metrics/Metrics";
 
 export class ShopRouter {
     /**
@@ -41,6 +42,8 @@ export class ShopRouter {
      * @private
      */
     private readonly _config: Config;
+
+    private readonly _metrics: Metrics;
 
     private readonly _relaySigners: RelaySigners;
 
@@ -59,6 +62,7 @@ export class ShopRouter {
      *
      * @param service  WebService
      * @param config Configuration
+     * @param metrics Metrics
      * @param storage
      * @param graph
      * @param relaySigners
@@ -67,6 +71,7 @@ export class ShopRouter {
     constructor(
         service: WebService,
         config: Config,
+        metrics: Metrics,
         storage: RelayStorage,
         graph: GraphStorage,
         relaySigners: RelaySigners,
@@ -74,6 +79,7 @@ export class ShopRouter {
     ) {
         this._web_service = service;
         this._config = config;
+        this._metrics = metrics;
 
         this._storage = storage;
         this._graph = graph;
@@ -282,34 +288,30 @@ export class ShopRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
+        const shopId: string = String(req.body.shopId).trim();
+        const account: string = String(req.body.account).trim();
+        const signature: string = String(req.body.signature).trim(); // 서명
+
         try {
-            const shopId: string = String(req.body.shopId).trim();
-            const account: string = String(req.body.account).trim();
-            const signature: string = String(req.body.signature).trim(); // 서명
+            const contract = await this.getShopContract();
+            const message = ContractUtils.getShopAccountMessage(shopId, account, await contract.nonceOf(account));
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
-            try {
-                const contract = await this.getShopContract();
-                const message = ContractUtils.getShopAccountMessage(shopId, account, await contract.nonceOf(account));
-                if (!ContractUtils.verifyMessage(account, message, signature))
-                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+            const delegator = await this._storage.createDelegator(account, this._config.relay.encryptKey);
 
-                const delegator = await this._storage.createDelegator(account, this._config.relay.encryptKey);
-
-                return res.status(200).json(
-                    this.makeResponseData(0, {
-                        shopId,
-                        account,
-                        delegator,
-                    })
-                );
-            } catch (error: any) {
-                const msg = ResponseMessage.getEVMErrorMessage(error);
-                logger.error(`POST /v1/shop/account/delegator/create : ${msg.error.message}`);
-                return res.status(200).json(msg);
-            }
+            this._metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    shopId,
+                    account,
+                    delegator,
+                })
+            );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/account/delegator/create : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -326,33 +328,29 @@ export class ShopRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
+        const shopId: string = String(req.body.shopId).trim();
+        const account: string = String(req.body.account).trim();
+        const signature: string = String(req.body.signature).trim(); // 서명
+
         try {
-            const shopId: string = String(req.body.shopId).trim();
-            const account: string = String(req.body.account).trim();
-            const signature: string = String(req.body.signature).trim(); // 서명
+            const contract = await this.getShopContract();
+            const message = ContractUtils.getShopAccountMessage(shopId, account, await contract.nonceOf(account));
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
-            try {
-                const contract = await this.getShopContract();
-                const message = ContractUtils.getShopAccountMessage(shopId, account, await contract.nonceOf(account));
-                if (!ContractUtils.verifyMessage(account, message, signature))
-                    return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+            await this._storage.removeDelegator(account);
 
-                await this._storage.removeDelegator(account);
-
-                return res.status(200).json(
-                    this.makeResponseData(0, {
-                        shopId,
-                        account,
-                    })
-                );
-            } catch (error: any) {
-                const msg = ResponseMessage.getEVMErrorMessage(error);
-                logger.error(`POST /v1/shop/account/delegator/remove : ${msg.error.message}`);
-                return res.status(200).json(msg);
-            }
+            this._metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    shopId,
+                    account,
+                })
+            );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/account/delegator/remove : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -397,6 +395,7 @@ export class ShopRouter {
             }
 
             const tx = await contract.connect(signerItem.signer).changeDelegator(shopId, delegator, account, signature);
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     shopId,
@@ -408,6 +407,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/account/delegator/save : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -469,6 +469,7 @@ export class ShopRouter {
                 item.taskStatus = ShopTaskStatus.SENT_TX;
                 await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime, item.taskStatus);
 
+                this._metrics.add("success", 1);
                 return res.status(200).json(
                     this.makeResponseData(0, {
                         taskId: item.taskId,
@@ -492,6 +493,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/add : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -516,6 +518,7 @@ export class ShopRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2033"));
             }
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     taskId: item.taskId,
@@ -532,6 +535,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/shop/task : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -632,6 +636,7 @@ export class ShopRouter {
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
 
+                this._metrics.add("success", 1);
                 return res.status(200).json(
                     this.makeResponseData(0, {
                         taskId: item.taskId,
@@ -648,6 +653,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/update/create : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -734,6 +740,7 @@ export class ShopRouter {
                         item.txTime = ContractUtils.getTimeStamp();
                         await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime, item.taskStatus);
 
+                        this._metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 taskId: item.taskId,
@@ -751,6 +758,7 @@ export class ShopRouter {
 
                         const msg = ResponseMessage.getEVMErrorMessage(error);
                         logger.error(`POST /v1/shop/update/approval : ${msg.error.message}`);
+                        this._metrics.add("failure", 1);
                         return res.status(200).json(msg);
                     }
                 } else {
@@ -764,6 +772,7 @@ export class ShopRouter {
                         this.getCallBackResponse(item)
                     );
 
+                    this._metrics.add("success", 1);
                     return res.status(200).json(
                         this.makeResponseData(0, {
                             taskId: item.taskId,
@@ -779,6 +788,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/update/approval : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -836,6 +846,7 @@ export class ShopRouter {
                 }
 
                 if (hasDelegator) {
+                    this._metrics.add("success", 1);
                     return res.status(200).json(
                         this.makeResponseData(0, {
                             taskId: item.taskId,
@@ -880,6 +891,7 @@ export class ShopRouter {
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
 
+                this._metrics.add("success", 1);
                 return res.status(200).json(
                     this.makeResponseData(0, {
                         taskId: item.taskId,
@@ -895,6 +907,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/status/create : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -966,6 +979,7 @@ export class ShopRouter {
                         data.error.message,
                         this.getCallBackResponse(item)
                     );
+                    this._metrics.add("success", 1);
                     return res.status(200).json(data);
                 }
 
@@ -981,6 +995,7 @@ export class ShopRouter {
                         item.txTime = ContractUtils.getTimeStamp();
                         await this._storage.updateTaskTx(item.taskId, item.txId, item.txTime, item.taskStatus);
 
+                        this._metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 taskId: item.taskId,
@@ -997,6 +1012,7 @@ export class ShopRouter {
 
                         const msg = ResponseMessage.getEVMErrorMessage(error);
                         logger.error(`POST /v1/shop/status/approval : ${msg.error.message}`);
+                        this._metrics.add("failure", 1);
                         return res.status(200).json(msg);
                     }
                 } else {
@@ -1010,6 +1026,7 @@ export class ShopRouter {
                         this.getCallBackResponse(item)
                     );
 
+                    this._metrics.add("success", 1);
                     return res.status(200).json(
                         this.makeResponseData(0, {
                             taskId: item.taskId,
@@ -1024,6 +1041,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/status/approval : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -1061,10 +1079,12 @@ export class ShopRouter {
                 .openWithdrawal(shopId, amount, account, signature);
 
             logger.http(`TxHash(/v1/shop/withdrawal/open): ${tx.hash}`);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/withdrawal/open : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -1101,10 +1121,12 @@ export class ShopRouter {
                 .closeWithdrawal(shopId, account, signature);
 
             logger.http(`TxHash(/v1/shop/withdrawal/close): ${tx.hash}`);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/shop/withdrawal/close : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -1187,6 +1209,7 @@ export class ShopRouter {
 
             const shops = await this._graph.getShopList(pageNumber, pageSize);
             const pageInfo = await this._graph.getShopPageInfo(pageSize);
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     pageInfo,
@@ -1211,6 +1234,7 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/shop/list : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }

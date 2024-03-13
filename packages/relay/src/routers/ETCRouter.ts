@@ -10,6 +10,7 @@ import { INotificationSender } from "../delegator/NotificationSender";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ResponseMessage } from "../utils/Errors";
 import { GraphStorage } from "../storage/GraphStorage";
+import { Metrics } from "../metrics/Metrics";
 
 export class ETCRouter {
     /**
@@ -24,6 +25,8 @@ export class ETCRouter {
      */
     private readonly _config: Config;
 
+    private readonly _metrics: Metrics;
+
     private _storage: RelayStorage;
     private _graph: GraphStorage;
 
@@ -33,6 +36,7 @@ export class ETCRouter {
      *
      * @param service  WebService
      * @param config Configuration
+     * @param metrics Metrics
      * @param storage
      * @param graph
      * @param sender
@@ -40,12 +44,14 @@ export class ETCRouter {
     constructor(
         service: WebService,
         config: Config,
+        metrics: Metrics,
         storage: RelayStorage,
         graph: GraphStorage,
         sender: INotificationSender
     ) {
         this._web_service = service;
         this._config = config;
+        this._metrics = metrics;
         this._storage = storage;
         this._graph = graph;
         this._sender = sender;
@@ -134,10 +140,12 @@ export class ETCRouter {
             };
             await this._storage.postMobile(item);
 
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, item));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/mobile/register : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -171,10 +179,12 @@ export class ETCRouter {
             if (mobileData !== undefined) {
                 await this._sender.send(mobileData.token, title, contents, { type: contentType });
             }
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, {}));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/mobile/send : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }

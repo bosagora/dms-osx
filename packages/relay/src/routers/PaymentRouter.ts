@@ -39,6 +39,7 @@ import express from "express";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+import { Metrics } from "../metrics/Metrics";
 
 export class PaymentRouter {
     /**
@@ -52,6 +53,8 @@ export class PaymentRouter {
      * @private
      */
     private readonly _config: Config;
+
+    private readonly _metrics: Metrics;
 
     private readonly _relaySigners: RelaySigners;
 
@@ -94,6 +97,7 @@ export class PaymentRouter {
      *
      * @param service  WebService
      * @param config Configuration
+     * @param metrics Metrics
      * @param storage
      * @param graph
      * @param relaySigners
@@ -103,6 +107,7 @@ export class PaymentRouter {
     constructor(
         service: WebService,
         config: Config,
+        metrics: Metrics,
         storage: RelayStorage,
         graph: GraphStorage,
         relaySigners: RelaySigners,
@@ -110,6 +115,7 @@ export class PaymentRouter {
     ) {
         this._web_service = service;
         this._config = config;
+        this._metrics = metrics;
 
         this._storage = storage;
         this._graph = graph;
@@ -383,12 +389,14 @@ export class PaymentRouter {
                 loyaltyType === ContractLoyaltyType.POINT
                     ? await (await this.getLedgerContract()).pointBalanceOf(account)
                     : await (await this.getLedgerContract()).tokenBalanceOf(account);
+            this._metrics.add("success", 1);
             return res
                 .status(200)
                 .json(this.makeResponseData(0, { account, loyaltyType, balance: balance.toString() }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/user/balance : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -415,12 +423,14 @@ export class PaymentRouter {
                     loyaltyType === ContractLoyaltyType.POINT
                         ? await (await this.getLedgerContract()).pointBalanceOf(account)
                         : await (await this.getLedgerContract()).tokenBalanceOf(account);
+                this._metrics.add("success", 1);
                 return res
                     .status(200)
                     .json(this.makeResponseData(0, { phone, account, loyaltyType, balance: balance.toString() }));
             } else {
                 const loyaltyType = ContractLoyaltyType.POINT;
                 const balance = await (await this.getLedgerContract()).unPayablePointBalanceOf(phone);
+                this._metrics.add("success", 1);
                 return res
                     .status(200)
                     .json(this.makeResponseData(0, { phone, loyaltyType, balance: balance.toString() }));
@@ -428,6 +438,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/phone/balance : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -448,10 +459,12 @@ export class PaymentRouter {
         try {
             const phone: string = String(req.query.phone).trim();
             const hash: string = ContractUtils.getPhoneHash(phone);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { phone, hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/phone/hash : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -475,10 +488,12 @@ export class PaymentRouter {
             const to: string = String(req.query.to).trim();
 
             const result = await (await this.getCurrencyRateContract()).convertCurrency(amount, from, to);
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { amount: result.toString() }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/convert/currency : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -511,10 +526,12 @@ export class PaymentRouter {
                 settledAmount: info.settledAmount.toString(),
                 withdrawnAmount: info.withdrawnAmount.toString(),
             };
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, shopInfo));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/shop/info : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -543,10 +560,12 @@ export class PaymentRouter {
                 withdrawStatus: status,
             };
 
+            this._metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, shopWithdrawalInfo));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/shop/withdrawal : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -575,6 +594,7 @@ export class PaymentRouter {
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
             }
             const temporaryAccount = await this._storage.getTemporaryAccount(account);
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     temporaryAccount,
@@ -583,6 +603,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/account/temporary : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -657,6 +678,7 @@ export class PaymentRouter {
             feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(10000));
             totalValue = paidValue.add(feeValue);
 
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     account,
@@ -680,6 +702,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/info : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -845,6 +868,7 @@ export class PaymentRouter {
                 await this._sender.send(to, title, contents.join(", "), data);
             }
 
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     paymentId: item.paymentId,
@@ -873,6 +897,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/new/open : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -960,6 +985,7 @@ export class PaymentRouter {
                                 item.paymentStatus
                             );
 
+                            this._metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1006,6 +1032,7 @@ export class PaymentRouter {
                             this.getCallBackResponse(item)
                         );
 
+                        this._metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1025,6 +1052,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/new/approval : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -1069,6 +1097,7 @@ export class PaymentRouter {
                             item.closeNewTimestamp
                         );
 
+                        this._metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1110,6 +1139,7 @@ export class PaymentRouter {
                                 item.paymentStatus,
                                 item.closeNewTimestamp
                             );
+                            this._metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1168,6 +1198,7 @@ export class PaymentRouter {
                             this.updateEvent(event, item);
                             await this._storage.updatePayment(item);
 
+                            this._metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1240,6 +1271,7 @@ export class PaymentRouter {
             } catch (error: any) {
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.error(`POST /v1/payment/new/close : ${msg.error.message}`);
+                this._metrics.add("failure", 1);
                 return res.status(200).json(msg);
             } finally {
                 this.releaseRelaySigner(signerItem);
@@ -1265,6 +1297,7 @@ export class PaymentRouter {
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             }
+            this._metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     paymentId: item.paymentId,
@@ -1293,6 +1326,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/item : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -1348,6 +1382,7 @@ export class PaymentRouter {
                 }
 
                 if (hasDelegator) {
+                    this._metrics.add("success", 1);
                     return res.status(200).json(
                         this.makeResponseData(0, {
                             paymentId: item.paymentId,
@@ -1424,6 +1459,7 @@ export class PaymentRouter {
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
 
+                this._metrics.add("success", 1);
                 return res.status(200).json(
                     this.makeResponseData(0, {
                         paymentId: item.paymentId,
@@ -1453,6 +1489,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/cancel/open : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -1557,6 +1594,7 @@ export class PaymentRouter {
                                 item.paymentStatus
                             );
 
+                            this._metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1603,6 +1641,7 @@ export class PaymentRouter {
                             this.getCallBackResponse(item)
                         );
 
+                        this._metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1621,6 +1660,7 @@ export class PaymentRouter {
             } catch (error: any) {
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
+                this._metrics.add("failure", 1);
                 return res.status(200).json(msg);
             } finally {
                 this.releaseRelaySigner(signerItem);
@@ -1667,6 +1707,7 @@ export class PaymentRouter {
                             item.closeCancelTimestamp
                         );
 
+                        this._metrics.add("success", 1);
                         res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1708,6 +1749,7 @@ export class PaymentRouter {
                                 item.paymentStatus,
                                 item.closeCancelTimestamp
                             );
+                            this._metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1766,6 +1808,7 @@ export class PaymentRouter {
                             this.updateEvent(event, item);
                             await this._storage.updatePayment(item);
 
+                            this._metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1838,6 +1881,7 @@ export class PaymentRouter {
             } catch (error: any) {
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.error(`POST /v1/payment/cancel/close : ${msg.error.message}`);
+                this._metrics.add("failure", 1);
                 return res.status(200).json(msg);
             } finally {
                 this.releaseRelaySigner(signerItem);
