@@ -75,6 +75,7 @@ type UserUnPayableTradeHistory @entity(immutable: true) {
 type UserBalance @entity {
   id: ID! # account
 
+  loyaltyType: Int!
   point: BigInt!
   token: BigInt!
 

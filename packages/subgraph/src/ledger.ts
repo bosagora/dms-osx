@@ -89,6 +89,7 @@ export function handleChangedBalancePoint(
         entity.save();
     } else {
         entity = new UserBalance(account.toHex());
+        entity.loyaltyType = 0;
         entity.point = balance.div(AmountUnit);
         entity.token = BigInt.fromI32(0);
         entity.blockNumber = blockNumber;
@@ -115,8 +116,34 @@ export function handleChangedBalanceToken(
         entity.save();
     } else {
         entity = new UserBalance(account.toHex());
+        entity.loyaltyType = 1;
         entity.token = balance.div(AmountUnit);
         entity.point = BigInt.fromI32(0);
+        entity.blockNumber = blockNumber;
+        entity.blockTimestamp = blockTimestamp;
+        entity.transactionHash = transactionHash;
+        entity.save();
+    }
+    return entity;
+}
+
+export function handleChangedLoyaltyType(
+    account: Bytes,
+    loyaltyType: i32,
+    blockNumber: BigInt,
+    blockTimestamp: BigInt,
+    transactionHash: Bytes
+): UserBalance {
+    let entity = UserBalance.load(account.toHex());
+    if (entity !== null) {
+        entity.loyaltyType = loyaltyType;
+        entity.blockNumber = blockNumber;
+        entity.blockTimestamp = blockTimestamp;
+        entity.transactionHash = transactionHash;
+        entity.save();
+    } else {
+        entity = new UserBalance(account.toHex());
+        entity.loyaltyType = loyaltyType;
         entity.blockNumber = blockNumber;
         entity.blockTimestamp = blockTimestamp;
         entity.transactionHash = transactionHash;
@@ -279,6 +306,22 @@ export function handleChangedToLoyaltyTokenForHistory(event: ChangedToLoyaltyTok
     entity.blockTimestamp = event.block.timestamp;
     entity.transactionHash = event.transaction.hash;
     entity.save();
+
+    handleChangedLoyaltyType(
+        event.params.account,
+        1,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
+
+    handleChangedBalanceToken(
+        event.params.account,
+        event.params.amountToken,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
 
     entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
