@@ -1,12 +1,12 @@
 import { IDatabaseConfig } from "../common/Config";
 import { Utils } from "../utils/Utils";
 import { Storage } from "./Storage";
+import { IStatisticsAccountInfo, IGraphPageInfo, IGraphShopData, IStatisticsShopInfo } from "../types";
 
 import { BigNumber } from "ethers";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
-import { IGraphPageInfo, IGraphShopData } from "../types";
 
 import { toChecksumAddress } from "ethereumjs-util";
 
@@ -25,6 +25,7 @@ export class GraphStorage extends Storage {
     public async initialize() {
         await super.initialize();
         MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/graph/shop.xml")]);
+        MybatisMapper.createMapper([path.resolve(Utils.getInitCWD(), "src/storage/graph/statistics.xml")]);
         await this.createTables();
     }
 
@@ -71,12 +72,115 @@ export class GraphStorage extends Storage {
                     if (result.rows.length > 0) {
                         const m = result.rows[0];
                         return resolve({
-                            totalCount: m.totalCount,
-                            totalPages: m.totalPages,
+                            totalCount: Number(m.totalCount),
+                            totalPages: Number(m.totalPages),
                         });
                     } else {
                         return reject(new Error(""));
                     }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getPhoneAccountStatistics(): Promise<IStatisticsAccountInfo> {
+        return new Promise<IStatisticsAccountInfo>(async (resolve, reject) => {
+            this.queryForMapper("statistics", "getPhoneAccountStatistics", { scheme: this.scheme })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        const m = result.rows[0];
+                        return resolve({
+                            account_count: Number(m.account_count),
+                            total_balance: Number(m.total_balance),
+                        });
+                    } else {
+                        return reject(new Error(""));
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getPointAccountStatistics(excluded: string[]): Promise<IStatisticsAccountInfo> {
+        return new Promise<IStatisticsAccountInfo>(async (resolve, reject) => {
+            this.queryForMapper("statistics", "getPointAccountStatistics", { scheme: this.scheme, excluded })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        const m = result.rows[0];
+                        return resolve({
+                            account_count: Number(m.account_count),
+                            total_balance: Number(m.total_balance),
+                        });
+                    } else {
+                        return reject(new Error(""));
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getTokenAccountStatistics(excluded: string[]): Promise<IStatisticsAccountInfo> {
+        return new Promise<IStatisticsAccountInfo>(async (resolve, reject) => {
+            this.queryForMapper("statistics", "getTokenAccountStatistics", { scheme: this.scheme, excluded })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        const m = result.rows[0];
+                        return resolve({
+                            account_count: Number(m.account_count),
+                            total_balance: Number(m.total_balance),
+                        });
+                    } else {
+                        return reject(new Error(""));
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getShopCount(): Promise<number> {
+        return new Promise<number>(async (resolve, reject) => {
+            this.queryForMapper("statistics", "getShopCount", { scheme: this.scheme })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        return resolve(Number(result.rows[0].shop_count));
+                    } else {
+                        return reject(new Error(""));
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getShopStatistics(): Promise<IStatisticsShopInfo[]> {
+        return new Promise<IStatisticsShopInfo[]>(async (resolve, reject) => {
+            this.queryForMapper("statistics", "getShopStatistics", { scheme: this.scheme })
+                .then((result) => {
+                    return resolve(
+                        result.rows.map((m) => {
+                            return {
+                                currency: m.currency,
+                                shop_count: Number(m.shop_count),
+                                total_provided_amount: Number(m.total_provided_amount),
+                                total_used_amount: Number(m.total_used_amount),
+                                total_withdrawable_amount: Number(m.total_withdrawable_amount),
+                            };
+                        })
+                    );
                 })
                 .catch((reason) => {
                     if (reason instanceof Error) return reject(reason);

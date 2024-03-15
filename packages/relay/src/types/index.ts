@@ -267,3 +267,21 @@ export interface IToBeProvideOfShop {
     providedAmount: BigNumber;
     purchaseId: string;
 }
+
+export interface IStatisticsAccountBalance {
+    name: string;
+    balance: number;
+}
+
+export interface IStatisticsAccountInfo {
+    account_count: number;
+    total_balance: number;
+}
+
+export interface IStatisticsShopInfo {
+    currency: number;
+    shop_count: number;
+    total_provided_amount: number;
+    total_used_amount: number;
+    total_withdrawable_amount: number;
+}
