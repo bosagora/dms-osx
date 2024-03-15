@@ -50,6 +50,8 @@ export class Config implements IConfig {
 
     public contracts: ContractsConfig;
 
+    public metrics: MetricsConfig;
+
     /**
      * Constructor
      */
@@ -61,6 +63,7 @@ export class Config implements IConfig {
         this.scheduler = new SchedulerConfig();
         this.relay = new RelayConfig();
         this.contracts = new ContractsConfig();
+        this.metrics = new MetricsConfig();
     }
 
     /**
@@ -110,6 +113,7 @@ export class Config implements IConfig {
         this.scheduler.readFromObject(cfg.scheduler);
         this.relay.readFromObject(cfg.relay);
         this.contracts.readFromObject(cfg.contracts);
+        this.metrics.readFromObject(cfg.metrics);
     }
 }
 
@@ -474,6 +478,40 @@ export class LoggingConfig implements ILoggingConfig {
     }
 }
 
+export class MetricsConfig implements IMetricsConfig {
+    /**
+     * Container for scheduler items
+     */
+    public accounts: IAddressItem[];
+
+    /**
+     * Constructor
+     */
+    constructor() {
+        const defaults = MetricsConfig.defaultValue();
+        this.accounts = defaults.accounts;
+    }
+
+    /**
+     * Returns default value
+     */
+    public static defaultValue(): IMetricsConfig {
+        return {
+            accounts: [],
+        } as unknown as IMetricsConfig;
+    }
+
+    /**
+     * Reads from Object
+     * @param config The object of ILoggingConfig
+     */
+    public readFromObject(config: IMetricsConfig) {
+        this.accounts = [];
+        if (config === undefined) return;
+        if (config.accounts !== undefined) this.accounts = config.accounts;
+    }
+}
+
 /**
  * Information on the scheduler.
  */
@@ -666,6 +704,15 @@ export interface ISchedulerConfig {
     getScheduler(name: string): ISchedulerItemConfig | undefined;
 }
 
+export interface IAddressItem {
+    name: string;
+    address: string;
+}
+
+export interface IMetricsConfig {
+    accounts: IAddressItem[];
+}
+
 /**
  * The interface of main config
  */
@@ -695,4 +742,6 @@ export interface IConfig {
     relay: IRelayConfig;
 
     contracts: IContractsConfig;
+
+    metrics: IMetricsConfig;
 }

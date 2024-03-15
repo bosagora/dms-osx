@@ -60,6 +60,22 @@ export class DefaultServer extends WebService {
         this.metrics.create("summary", "success", "request success");
         this.metrics.create("summary", "failure", "request failure");
         this.metrics.createGauge("certifier_balance", "certifier balance", ["address"]);
+        this.metrics.createGauge("system_account_balance", "the balance of the system account", ["name"]);
+        this.metrics.create("gauge", "phone_account_count", "phone account count");
+        this.metrics.create("gauge", "phone_account_total_balance", "phone account total balance");
+        this.metrics.create("gauge", "point_account_count", "point account count");
+        this.metrics.create("gauge", "point_account_total_balance", "point account total balance");
+        this.metrics.create("gauge", "token_account_count", "token account count");
+        this.metrics.create("gauge", "token_account_total_balance", "token account total balance");
+        this.metrics.create("gauge", "token_price", "token price");
+
+        this.metrics.create("gauge", "shop_count", "number of shops");
+        this.metrics.createGauge("shop_count_clear", "number of shops", ["currency"]);
+        this.metrics.createGauge("shop_total_provided_amount_clear", "total provided amount of shops", ["currency"]);
+        this.metrics.createGauge("shop_total_used_amount_clear", "total used amount of shops", ["currency"]);
+        this.metrics.createGauge("shop_total_withdrawable_amount_clear", "total withdrawable amount of shops", [
+            "currency",
+        ]);
 
         this.config = config;
         this.storage = storage;
@@ -102,6 +118,7 @@ export class DefaultServer extends WebService {
                 m.setOption({
                     config: this.config,
                     storage: this.storage,
+                    metrics: this.metrics,
                     graph: this.graph,
                     signers: this.relaySigners,
                 })

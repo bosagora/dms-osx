@@ -11,6 +11,7 @@ import { DelegatorApprovalScheduler } from "./scheduler/DelegatorApprovalSchedul
 import { Scheduler } from "./scheduler/Scheduler";
 import { StorePurchaseScheduler } from "./scheduler/StorePurchaseScheduler";
 import { WatchScheduler } from "./scheduler/WatchScheduler";
+import { MetricsScheduler } from "./scheduler/MetricsScheduler";
 
 let server: DefaultServer;
 
@@ -50,6 +51,10 @@ async function main() {
         scheduler = config.scheduler.getScheduler("delegatorApproval");
         if (scheduler && scheduler.enable) {
             schedulers.push(new DelegatorApprovalScheduler(scheduler.expression));
+        }
+        scheduler = config.scheduler.getScheduler("metrics");
+        if (scheduler && scheduler.enable) {
+            schedulers.push(new MetricsScheduler(scheduler.expression));
         }
     }
 

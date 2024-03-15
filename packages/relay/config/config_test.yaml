@@ -58,6 +58,9 @@ scheduler:
     - name: delegatorApproval
       enable: true
       expression: "*/1 * * * * *"
+    - name: metrics
+      enable: true
+      expression: "*/10 * * * * *"
 
 relay:
   managerKeys:
@@ -92,3 +95,14 @@ contracts:
   exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
   transferAddress: "${LOYALTY_TRANSFER_CONTRACT_ADDRESS}"
   bridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
+
+metrics:
+  accounts:
+    - name: "finance"
+      address: "0x4501F7aF010Cef3DcEaAfbc7Bfb2B39dE57df54d"
+    - name: "settlement"
+      address: "0x1Ea9d36d45A42C95A8752541Fa06047DEc482F89"
+    - name: "fee"
+      address: "0x6440665c7480451f28aE57A3d552DF3bA04383b1"
+    - name: "txFee"
+      address: "0x3633B7eBd5562316BD3740FAe1d5A4aD46DbD8f0"

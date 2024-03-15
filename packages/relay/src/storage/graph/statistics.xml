@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="statistics">
+    <select id="getPhoneAccountStatistics">
+        WITH accounts AS (
+            SELECT DISTINCT ON (phone) *
+            FROM ${scheme}.user_un_payable_trade_history
+            ORDER BY phone, vid DESC
+        )
+        SELECT
+            COUNT(phone) as account_count,
+            COALESCE(SUM(balance), 0) as total_balance
+        FROM accounts;
+    </select>
+
+    <select id="getPointAccountStatistics">
+        WITH accounts AS (
+            SELECT DISTINCT ON (id) *
+            FROM ${scheme}.user_balance
+            WHERE loyalty_type = 0
+            ORDER BY id, vid DESC
+        )
+        SELECT
+            COUNT(id) as account_count,
+            COALESCE(SUM(point), 0) as total_balance
+        FROM accounts
+        WHERE LOWER(id) NOT IN
+        <foreach collection="excluded" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>;
+    </select>
+
+    <select id="getTokenAccountStatistics">
+        WITH accounts AS (
+            SELECT DISTINCT ON (id) *
+            FROM ${scheme}.user_balance
+            WHERE loyalty_type = 1
+            ORDER BY id, vid DESC
+        )
+        SELECT
+            COUNT(id) as account_count,
+            COALESCE(SUM(token), 0) as total_balance
+        FROM accounts
+        WHERE LOWER(id) NOT IN
+        <foreach collection="excluded" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>;
+    </select>
+
+    <select id="getShopCount">
+        WITH shops AS (
+            SELECT DISTINCT ON (id) *
+        FROM ${scheme}.shop
+        ORDER BY id, vid DESC
+            )
+        SELECT
+            COUNT(shops.id) as shop_count
+        FROM shops
+        WHERE status = 1
+    </select>
+
+    <select id="getShopStatistics">
+        WITH shops AS (
+            SELECT DISTINCT ON (id) *
+            FROM ${scheme}.shop
+            ORDER BY id, vid DESC
+        )
+        SELECT
+            shops.currency,
+            COUNT(shops.id) as shop_count,
+            COALESCE(SUM(shops.provided_amount), 0) as total_provided_amount,
+            COALESCE(SUM(shops.used_amount), 0) as total_used_amount,
+            COALESCE(SUM(shops.settled_amount - shops.withdrawn_amount), 0) as total_withdrawable_amount
+        FROM shops
+        WHERE status = 1
+        GROUP BY currency;
+    </select>
+</mapper>
