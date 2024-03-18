@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-artifacts",
-    "version": "2.10.0",
+    "version": "2.10.2",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"
@@ -69,7 +69,7 @@
     },
     "dependencies": {
         "del-osx-artifacts": "^2.3.0",
-        "dms-bridge-contracts": "^1.2.0",
+        "dms-bridge-contracts": "^1.2.2",
         "multisig-wallet-contracts": "^1.1.0",
         "loyalty-tokens": "^1.0.5"
     }

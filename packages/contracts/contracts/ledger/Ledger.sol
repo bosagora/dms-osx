@@ -60,9 +60,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     event RemovedPhoneInfo(bytes32 phone, address account);
 
-    event DepositedLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
-    event WithdrawnLiquidity(bytes32 tokenId, address account, uint256 amount, uint256 liquidity);
-
     struct ManagementAddresses {
         address foundation;
         address settlement;

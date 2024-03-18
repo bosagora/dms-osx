@@ -18,9 +18,6 @@ import "../interfaces/ILedger.sol";
 import "./LoyaltyBridgeStorage.sol";
 
 contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable, IBridge {
-    event BridgeDeposited(bytes32 tokenId, bytes32 depositId, address account, uint256 amount, uint256 balance);
-    event BridgeWithdrawn(bytes32 tokenId, bytes32 withdrawId, address account, uint256 amount, uint256 balance);
-
     function initialize(address _validatorAddress) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
@@ -182,6 +179,11 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
             if (count >= validatorContract.getRequired()) return true;
         }
         return false;
+    }
+
+    /// @notice 입력된 주소에 대해 검증이 되었는지를 리턴합니다.
+    function isConfirmedOf(bytes32 _withdrawId, address validator) external view override returns (bool) {
+        return confirmations[_withdrawId][validator];
     }
 
     /// @notice 예치정보를 조회합니다
