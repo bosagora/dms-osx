@@ -521,6 +521,7 @@ export class PaymentRouter {
                 currency: info.currency,
                 status: info.status,
                 account: info.account,
+                delegator: info.delegator,
                 providedAmount: info.providedAmount.toString(),
                 usedAmount: info.usedAmount.toString(),
                 settledAmount: info.settledAmount.toString(),
