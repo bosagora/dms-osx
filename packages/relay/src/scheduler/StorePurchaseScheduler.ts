@@ -59,7 +59,7 @@ export class StorePurchaseScheduler extends Scheduler {
     private async getProviderContract(): Promise<LoyaltyProvider> {
         if (this._providerContract === undefined) {
             const factory = await hre.ethers.getContractFactory("LoyaltyProvider");
-            this._providerContract = factory.attach(this.config.contracts.providerAddress);
+            this._providerContract = factory.attach(this.config.contracts.loyaltyProviderAddress);
         }
         return this._providerContract;
     }

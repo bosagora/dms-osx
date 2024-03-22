@@ -110,7 +110,7 @@ export class WatchScheduler extends Scheduler {
     private async getConsumerContract(): Promise<LoyaltyConsumer> {
         if (this._consumerContract === undefined) {
             const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
-            this._consumerContract = factory.attach(this.config.contracts.consumerAddress);
+            this._consumerContract = factory.attach(this.config.contracts.loyaltyConsumerAddress);
         }
         return this._consumerContract;
     }

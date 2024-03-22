@@ -86,15 +86,16 @@ relay:
 
 contracts:
   tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"
-  ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
   phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
+  ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
   shopAddress : "${SHOP_CONTRACT_ADDRESS}"
   currencyRateAddress: "${CURRENCY_RATE_CONTRACT_ADDRESS}"
-  providerAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
-  consumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
-  exchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
-  transferAddress: "${LOYALTY_TRANSFER_CONTRACT_ADDRESS}"
-  bridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
+  loyaltyProviderAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
+  loyaltyConsumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
+  loyaltyExchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
+  loyaltyTransferAddress: "${LOYALTY_TRANSFER_CONTRACT_ADDRESS}"
+  loyaltyBridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
+  sideChainBridgeAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
 
 metrics:
   accounts:
