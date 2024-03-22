@@ -157,13 +157,7 @@ class Deployments {
                 validator15,
                 validator16,
             ],
-            bridgeValidators: [
-                bridgeValidator1,
-                bridgeValidator2,
-                bridgeValidator3,
-                bridgeValidator4,
-                bridgeValidator5,
-            ],
+            bridgeValidators: [bridgeValidator1, bridgeValidator2, bridgeValidator3],
             linkValidators: [linkValidator1, linkValidator2, linkValidator3],
             certifiers: [
                 certifier01,
@@ -248,7 +242,7 @@ class Deployments {
         }
     }
 
-    static filename = "./deploy/bosagora_devnet/deployed_contracts.json";
+    static filename = "./deploy/side_chain_devnet/deployed_contracts.json";
 
     public async loadContractInfo() {
         if (!fs.existsSync(Deployments.filename)) return;

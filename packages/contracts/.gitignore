@@ -141,3 +141,7 @@ artifacts
 
 *.iml
 
+
+/**/*/deployed_contracts.json
+
+.openzeppelin/

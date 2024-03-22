@@ -536,7 +536,12 @@ const config = {
             chainId: 2019,
             accounts: getAccounts(),
         },
-        bosagora_devnet: {
+        main_chain_devnet: {
+            url: "http://localhost:8540",
+            chainId: 24600,
+            accounts: getAccounts(),
+        },
+        side_chain_devnet: {
             url: "http://localhost:8545",
             chainId: 24680,
             accounts: getAccounts(),

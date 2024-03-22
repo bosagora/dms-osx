@@ -34,5 +34,4 @@ yarn-error.log*
 .env.localhost
 
 .idea
-/packages/contracts/.openzeppelin/unknown-24680.json
-/packages/contracts/deploy/bosagora_devnet/deployed_contracts.json
+
