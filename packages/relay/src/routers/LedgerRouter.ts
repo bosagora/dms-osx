@@ -11,7 +11,7 @@ import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
 import { ContractUtils } from "../utils/ContractUtils";
 
-import { body, validationResult } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
 import express from "express";
@@ -202,6 +202,12 @@ export class LedgerRouter {
     }
 
     public registerRoutes() {
+        this.app.get(
+            "/v1/ledger/nonce/:account",
+            [param("account").exists().trim().isEthereumAddress()],
+            this.getNonce.bind(this)
+        );
+
         // 포인트의 종류를 선택하는 기능
         this.app.post(
             "/v1/ledger/changeToLoyaltyToken",
@@ -243,19 +249,14 @@ export class LedgerRouter {
             ],
             this.removePhoneInfoOfLedger.bind(this)
         );
+    }
 
-        // 포인트의 종류를 선택하는 기능
-        this.app.post(
-            "/v1/link/removePhoneInfo",
-            [
-                body("account").exists().trim().isEthereumAddress(),
-                body("signature")
-                    .exists()
-                    .trim()
-                    .matches(/^(0x)[0-9a-f]{130}$/i),
-            ],
-            this.removePhoneInfoOfLink.bind(this)
-        );
+    private async getNonce(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/ledge/nonce ${req.ip}:${JSON.stringify(req.params)}`);
+        const account: string = String(req.params.account).trim();
+        const nonce = await (await this.getLedgerContract()).nonceOf(account);
+        this._metrics.add("success", 1);
+        return res.status(200).json(this.makeResponseData(0, { account, nonce: nonce.toString() }));
     }
 
     /**
@@ -373,47 +374,6 @@ export class LedgerRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/ledger/removePhoneInfo : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
-            return res.status(200).json(msg);
-        } finally {
-            this.releaseRelaySigner(signerItem);
-        }
-    }
-
-    /**
-     * 포인트의 종류를 선택한다.
-     * POST /v1/link/removePhoneInfo
-     * @private
-     */
-    private async removePhoneInfoOfLink(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/link/removePhoneInfo ${req.ip}:${JSON.stringify(req.body)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        const signerItem = await this.getRelaySigner();
-        try {
-            const account: string = String(req.body.account).trim();
-            const signature: string = String(req.body.signature).trim(); // 서명
-
-            // 서명검증
-            const userNonce = await (await this.getPhoneLinkerContract()).nonceOf(account);
-            const message = ContractUtils.getRemoveMessage(account, userNonce);
-            if (!ContractUtils.verifyMessage(account, message, signature))
-                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
-
-            const tx = await (await this.getPhoneLinkerContract())
-                .connect(signerItem.signer)
-                .remove(account, signature);
-
-            logger.http(`TxHash(removePhoneInfoOfLink): ${tx.hash}`);
-            this._metrics.add("success", 1);
-            return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/link/removePhoneInfo : ${msg.error.message}`);
             this._metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {

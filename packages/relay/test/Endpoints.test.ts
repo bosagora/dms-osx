@@ -221,6 +221,48 @@ describe("Test of Server", function () {
                 expect(loyaltyType).to.equal(1);
             });
         });
+
+        context("Nonce", () => {
+            it("Get Nonce of Ledger", async () => {
+                const userIndex = 0;
+                const account = deployments.accounts.users[userIndex].address;
+                const url = URI(serverURL).directory(`/v1/ledger/nonce/${account}`).toString();
+                const response = await client.get(url);
+
+                expect(response.data.code).to.equal(0);
+                expect(response.data.data).to.not.equal(undefined);
+            });
+
+            it("Get Nonce of Shop", async () => {
+                const userIndex = 0;
+                const account = deployments.accounts.users[userIndex].address;
+                const url = URI(serverURL).directory(`/v1/shop/nonce/${account}`).toString();
+                const response = await client.get(url);
+
+                expect(response.data.code).to.equal(0);
+                expect(response.data.data).to.not.equal(undefined);
+            });
+
+            it("Get Nonce of token in side chain", async () => {
+                const userIndex = 0;
+                const account = deployments.accounts.users[userIndex].address;
+                const url = URI(serverURL).directory(`/v1/token/side/nonce/${account}`).toString();
+                const response = await client.get(url);
+
+                expect(response.data.code).to.equal(0);
+                expect(response.data.data).to.not.equal(undefined);
+            });
+
+            it("Get Nonce of phone link", async () => {
+                const userIndex = 0;
+                const account = deployments.accounts.users[userIndex].address;
+                const url = URI(serverURL).directory(`/v1/link/nonce/${account}`).toString();
+                const response = await client.get(url);
+
+                expect(response.data.code).to.equal(0);
+                expect(response.data.data).to.not.equal(undefined);
+            });
+        });
     });
 
     context("Test token & point relay endpoints - using phone", () => {
