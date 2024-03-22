@@ -5,7 +5,7 @@ import { WebService } from "../service/WebService";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Validation } from "../validation";
 
-import { body, query, validationResult } from "express-validator";
+import { body, param, query, validationResult } from "express-validator";
 import * as hre from "hardhat";
 
 import { ContractTransaction } from "ethers";
@@ -131,6 +131,11 @@ export class ShopRouter {
     }
 
     public registerRoutes() {
+        this.app.get(
+            "/v1/shop/nonce/:account",
+            [param("account").exists().trim().isEthereumAddress()],
+            this.getNonce.bind(this)
+        );
         this.app.post(
             "/v1/shop/account/delegator/create",
             [
@@ -274,6 +279,14 @@ export class ShopRouter {
             [query("pageNumber").exists().trim().isNumeric(), query("pageSize").exists().trim().isNumeric()],
             this.shop_list.bind(this)
         );
+    }
+
+    private async getNonce(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/shop/nonce/:account ${req.ip}:${JSON.stringify(req.params)}`);
+        const account: string = String(req.params.account).trim();
+        const nonce = await (await this.getShopContract()).nonceOf(account);
+        this._metrics.add("success", 1);
+        return res.status(200).json(this.makeResponseData(0, { account, nonce: nonce.toString() }));
     }
 
     /**

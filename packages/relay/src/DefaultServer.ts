@@ -9,13 +9,15 @@ import { ShopRouter } from "./routers/ShopRouter";
 import { Scheduler } from "./scheduler/Scheduler";
 import { WebService } from "./service/WebService";
 
+import { register } from "prom-client";
 import { RelaySigners } from "./contract/Signers";
 import { INotificationEventHandler, INotificationSender, NotificationSender } from "./delegator/NotificationSender";
+import { Metrics } from "./metrics/Metrics";
 import { StorePurchaseRouter } from "./routers/StorePurchaseRouter";
+import { TokenRouter } from "./routers/TokenRouter";
 import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
-import { register } from "prom-client";
-import { Metrics } from "./metrics/Metrics";
+import { PhoneLinkRouter } from "./routers/PhoneLinkRouter";
 
 export class DefaultServer extends WebService {
     /**
@@ -35,6 +37,8 @@ export class DefaultServer extends WebService {
     private readonly sender: INotificationSender;
     public readonly etcRouter: ETCRouter;
     public readonly purchaseRouter: StorePurchaseRouter;
+    public readonly tokenRouter: TokenRouter;
+    public readonly phonelinkRouter: PhoneLinkRouter;
 
     private readonly metrics: Metrics;
 
@@ -111,6 +115,22 @@ export class DefaultServer extends WebService {
         );
         this.etcRouter = new ETCRouter(this, this.config, this.metrics, this.storage, this.graph, this.sender);
         this.purchaseRouter = new StorePurchaseRouter(this, this.config, this.metrics, this.storage, this.graph);
+        this.tokenRouter = new TokenRouter(
+            this,
+            this.config,
+            this.metrics,
+            this.storage,
+            this.graph,
+            this.relaySigners
+        );
+        this.phonelinkRouter = new PhoneLinkRouter(
+            this,
+            this.config,
+            this.metrics,
+            this.storage,
+            this.graph,
+            this.relaySigners
+        );
 
         if (schedules) {
             schedules.forEach((m) => this.schedules.push(m));
@@ -150,6 +170,8 @@ export class DefaultServer extends WebService {
         this.paymentRouter.registerRoutes();
         this.etcRouter.registerRoutes();
         this.purchaseRouter.registerRoutes();
+        this.tokenRouter.registerRoutes();
+        this.phonelinkRouter.registerRoutes();
 
         for (const m of this.schedules) await m.start();
 
