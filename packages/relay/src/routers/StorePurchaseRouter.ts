@@ -134,7 +134,7 @@ export class StorePurchaseRouter {
     private async getExchangerContract(): Promise<LoyaltyExchanger> {
         if (this._exchangerContract === undefined) {
             const factory = await hre.ethers.getContractFactory("LoyaltyExchanger");
-            this._exchangerContract = factory.attach(this._config.contracts.exchangerAddress);
+            this._exchangerContract = factory.attach(this._config.contracts.loyaltyExchangerAddress);
         }
         return this._exchangerContract;
     }

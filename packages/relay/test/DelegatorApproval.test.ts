@@ -141,10 +141,10 @@ describe("Test of Delegator", function () {
             config.contracts.phoneLinkerAddress = linkContract.address;
             config.contracts.shopAddress = shopContract.address;
             config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.consumerAddress = consumerContract.address;
-            config.contracts.providerAddress = providerContract.address;
-            config.contracts.exchangerAddress = exchangerContract.address;
             config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.loyaltyProviderAddress = providerContract.address;
+            config.contracts.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.approvalSecond = 2;

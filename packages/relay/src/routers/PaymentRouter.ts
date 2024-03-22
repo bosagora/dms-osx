@@ -332,7 +332,7 @@ export class PaymentRouter {
     private async getConsumerContract(): Promise<LoyaltyConsumer> {
         if (this._consumerContract === undefined) {
             const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
-            this._consumerContract = factory.attach(this._config.contracts.consumerAddress);
+            this._consumerContract = factory.attach(this._config.contracts.loyaltyConsumerAddress);
         }
         return this._consumerContract;
     }
