@@ -11,15 +11,22 @@ import { logger } from "../common/Logger";
 import { WebService } from "../service/WebService";
 import { ContractUtils } from "../utils/ContractUtils";
 
-import { body, param, validationResult } from "express-validator";
-import * as hre from "hardhat";
-
-import express from "express";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
+import { Metrics } from "../metrics/Metrics";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
+import { ContractLoyaltyType } from "../types";
 import { ResponseMessage } from "../utils/Errors";
-import { Metrics } from "../metrics/Metrics";
+
+// tslint:disable-next-line:no-implicit-dependencies
+import { AddressZero } from "@ethersproject/constants";
+
+import { BigNumber } from "ethers";
+import express from "express";
+import { body, param, query, validationResult } from "express-validator";
+import { PhoneNumberFormat, PhoneNumberUtil } from "google-libphonenumber";
+import * as hre from "hardhat";
+import { Validation } from "../validation";
 
 export class LedgerRouter {
     /**
@@ -71,6 +78,8 @@ export class LedgerRouter {
     private _storage: RelayStorage;
     private _graph: GraphStorage;
 
+    private _phoneUtil: PhoneNumberUtil;
+
     /**
      *
      * @param service  WebService
@@ -88,6 +97,7 @@ export class LedgerRouter {
         graph: GraphStorage,
         relaySigners: RelaySigners
     ) {
+        this._phoneUtil = PhoneNumberUtil.getInstance();
         this._web_service = service;
         this._config = config;
         this._metrics = metrics;
@@ -249,6 +259,33 @@ export class LedgerRouter {
             ],
             this.removePhoneInfoOfLedger.bind(this)
         );
+
+        this.app.get(
+            "/v1/ledger/balance/account/:account",
+            [param("account").exists().trim().isEthereumAddress()],
+            this.balance_account.bind(this)
+        );
+
+        this.app.get("/v1/ledger/balance/phone/:phone", [param("phone").exists()], this.balance_phone.bind(this));
+
+        this.app.get(
+            "/v1/ledger/balance/phoneHash/:phoneHash",
+            [
+                param("phoneHash")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.balance_hash.bind(this)
+        );
+
+        this.app.get("/v1/phone/hash/:phone", [param("phone")], this.phone_hash.bind(this));
+
+        this.app.get(
+            "/v1/currency/convert",
+            [query("amount").exists().custom(Validation.isAmount), query("from").exists(), query("to").exists()],
+            this.currency_convert.bind(this)
+        );
     }
 
     private async getNonce(req: express.Request, res: express.Response) {
@@ -378,6 +415,253 @@ export class LedgerRouter {
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    private async balance_account(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/ledger/balance/account/:account ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            let account: string = String(req.params.account).trim();
+            if (ContractUtils.isTemporaryAccount(account)) {
+                const realAccount = await this._storage.getRealAccount(account);
+                if (realAccount === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
+                } else {
+                    account = realAccount;
+                }
+            }
+            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+            if (loyaltyType === ContractLoyaltyType.POINT) {
+                const balance = await (await this.getLedgerContract()).pointBalanceOf(account);
+                const value = BigNumber.from(balance);
+                this._metrics.add("success", 1);
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        account,
+                        loyaltyType,
+                        point: { balance: balance.toString(), value: value.toString() },
+                        token: { balance: "0", value: "0" },
+                    })
+                );
+            } else {
+                const balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
+                const value = await (await this.getCurrencyRateContract()).convertTokenToPoint(balance);
+                this._metrics.add("success", 1);
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        account,
+                        loyaltyType,
+                        point: { balance: "0", value: "0" },
+                        token: { balance: balance.toString(), value: value.toString() },
+                    })
+                );
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/ledger/balance/account/:account : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    private async balance_phone(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/ledger/balance/phone/:phone ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+        let phone: string = String(req.params.phone).trim();
+        try {
+            const number = this._phoneUtil.parseAndKeepRawInput(phone, "ZZ");
+            if (!this._phoneUtil.isValidNumber(number)) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            } else {
+                phone = this._phoneUtil.format(number, PhoneNumberFormat.INTERNATIONAL);
+            }
+        } catch (error) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+        }
+        const phoneHash: string = ContractUtils.getPhoneHash(phone);
+
+        try {
+            const account: string = await (await this.getPhoneLinkerContract()).toAddress(phoneHash);
+            if (account !== AddressZero) {
+                const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+                if (loyaltyType === ContractLoyaltyType.POINT) {
+                    const balance = await (await this.getLedgerContract()).pointBalanceOf(account);
+                    const value = BigNumber.from(balance);
+                    this._metrics.add("success", 1);
+                    return res.status(200).json(
+                        this.makeResponseData(0, {
+                            phone,
+                            phoneHash,
+                            account,
+                            loyaltyType,
+                            point: { balance: balance.toString(), value: value.toString() },
+                            token: { balance: "0", value: "0" },
+                        })
+                    );
+                } else {
+                    const balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
+                    const value = await (await this.getCurrencyRateContract()).convertTokenToPoint(balance);
+                    this._metrics.add("success", 1);
+                    return res.status(200).json(
+                        this.makeResponseData(0, {
+                            phone,
+                            phoneHash,
+                            account,
+                            loyaltyType,
+                            point: { balance: "0", value: "0" },
+                            token: { balance: balance.toString(), value: value.toString() },
+                        })
+                    );
+                }
+            } else {
+                const loyaltyType = ContractLoyaltyType.POINT;
+                const balance = await (await this.getLedgerContract()).unPayablePointBalanceOf(phoneHash);
+                const value = BigNumber.from(balance);
+                this._metrics.add("success", 1);
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        phone,
+                        phoneHash,
+                        account,
+                        loyaltyType,
+                        point: { balance: balance.toString(), value: value.toString() },
+                        token: { balance: "0", value: "0" },
+                    })
+                );
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/ledger/balance/phone/:phone : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    private async balance_hash(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/ledger/balance/phoneHash/:phoneHash ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+        const phoneHash: string = String(req.params.phoneHash).trim();
+
+        try {
+            const account: string = await (await this.getPhoneLinkerContract()).toAddress(phoneHash);
+            if (account !== AddressZero) {
+                const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+                if (loyaltyType === ContractLoyaltyType.POINT) {
+                    const balance = await (await this.getLedgerContract()).pointBalanceOf(account);
+                    const value = BigNumber.from(balance);
+                    this._metrics.add("success", 1);
+                    return res.status(200).json(
+                        this.makeResponseData(0, {
+                            account,
+                            loyaltyType,
+                            point: { balance: balance.toString(), value: value.toString() },
+                            token: { balance: "0", value: "0" },
+                        })
+                    );
+                } else {
+                    const balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
+                    const value = await (await this.getCurrencyRateContract()).convertTokenToPoint(balance);
+                    this._metrics.add("success", 1);
+                    return res.status(200).json(
+                        this.makeResponseData(0, {
+                            phoneHash,
+                            account,
+                            loyaltyType,
+                            point: { balance: "0", value: "0" },
+                            token: { balance: balance.toString(), value: value.toString() },
+                        })
+                    );
+                }
+            } else {
+                const loyaltyType = ContractLoyaltyType.POINT;
+                const balance = await (await this.getLedgerContract()).unPayablePointBalanceOf(phoneHash);
+                const value = BigNumber.from(balance);
+                this._metrics.add("success", 1);
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        phoneHash,
+                        account,
+                        loyaltyType,
+                        point: { balance: balance.toString(), value: value.toString() },
+                        token: { balance: "0", value: "0" },
+                    })
+                );
+            }
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/ledger/balance/phoneHash/:phoneHash : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    private async phone_hash(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/phone/hash/:phone ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        let phone: string = String(req.params.phone).trim();
+        try {
+            const number = this._phoneUtil.parseAndKeepRawInput(phone, "ZZ");
+            if (!this._phoneUtil.isValidNumber(number)) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            } else {
+                phone = this._phoneUtil.format(number, PhoneNumberFormat.INTERNATIONAL);
+            }
+        } catch (error) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+        }
+        const phoneHash: string = ContractUtils.getPhoneHash(phone);
+
+        try {
+            this._metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { phone, phoneHash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/phone/hash/:phone : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    private async currency_convert(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/currency/convert ${req.ip}:${JSON.stringify(req.query)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const amount: BigNumber = BigNumber.from(req.query.amount);
+            const from: string = String(req.query.from).trim();
+            const to: string = String(req.query.to).trim();
+
+            const result = await (await this.getCurrencyRateContract()).convertCurrency(amount, from, to);
+            this._metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { amount: result.toString() }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/currency/convert : ${msg.error.message}`);
+            this._metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 }
