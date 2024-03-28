@@ -1,14 +1,11 @@
 import "@nomiclabs/hardhat-ethers";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
-import { ContractLoyaltyPaymentStatus, LoyaltyPaymentTaskStatus, ShopTaskStatus, TaskResultType } from "../types/index";
-import { Scheduler } from "./Scheduler";
-
-import { BIP20DelegatedTransfer, Ledger, LoyaltyConsumer, Shop } from "../../typechain-types";
-
-import * as hre from "hardhat";
+import { ContractManager } from "../contract/ContractManager";
 import { RelayStorage } from "../storage/RelayStorage";
+import { ContractLoyaltyPaymentStatus, LoyaltyPaymentTaskStatus, ShopTaskStatus, TaskResultType } from "../types/index";
 import { ContractUtils } from "../utils/ContractUtils";
+import { Scheduler } from "./Scheduler";
 
 import axios from "axios";
 import URI from "urijs";
@@ -26,14 +23,8 @@ export interface IWalletData {
  */
 export class DelegatorApprovalScheduler extends Scheduler {
     private _config: Config | undefined;
-
+    private _contractManager: ContractManager | undefined;
     private _storage: RelayStorage | undefined;
-
-    private _tokenContract: BIP20DelegatedTransfer | undefined;
-
-    private _ledgerContract: Ledger | undefined;
-
-    private _shopContract: Shop | undefined;
 
     constructor(expression: string) {
         super(expression);
@@ -55,48 +46,25 @@ export class DelegatorApprovalScheduler extends Scheduler {
         }
     }
 
+    private get contractManager(): ContractManager {
+        if (this._contractManager !== undefined) return this._contractManager;
+        else {
+            logger.error("ContractManager is not ready yet.");
+            process.exit(1);
+        }
+    }
+
     public setOption(options: any) {
         if (options) {
             if (options.config && options.config instanceof Config) this._config = options.config;
+            if (options.contractManager && options.contractManager instanceof ContractManager)
+                this._contractManager = options.contractManager;
             if (options.storage && options.storage instanceof RelayStorage) this._storage = options.storage;
         }
     }
 
     public async onStart() {
         //
-    }
-
-    private async getTokenContract(): Promise<BIP20DelegatedTransfer> {
-        if (this._tokenContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
-            this._tokenContract = factory.attach(this.config.contracts.tokenAddress) as BIP20DelegatedTransfer;
-        }
-        return this._tokenContract;
-    }
-
-    private async getLedgerContract(): Promise<Ledger> {
-        if (this._ledgerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("Ledger");
-            this._ledgerContract = factory.attach(this.config.contracts.ledgerAddress) as Ledger;
-        }
-        return this._ledgerContract;
-    }
-
-    private _consumerContract: LoyaltyConsumer | undefined;
-    private async getConsumerContract(): Promise<LoyaltyConsumer> {
-        if (this._consumerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
-            this._consumerContract = factory.attach(this.config.contracts.loyaltyConsumerAddress);
-        }
-        return this._consumerContract;
-    }
-
-    private async getShopContract(): Promise<Shop> {
-        if (this._shopContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("Shop");
-            this._shopContract = factory.attach(this.config.contracts.shopAddress) as Shop;
-        }
-        return this._shopContract;
     }
 
     protected async work() {
@@ -116,12 +84,12 @@ export class DelegatorApprovalScheduler extends Scheduler {
             LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX,
         ]);
         for (const payment of payments) {
-            const ledgerContract = await this.getLedgerContract();
-            const consumerContract = await this.getConsumerContract();
+            const ledgerContract = this.contractManager.sideLedgerContract;
+            const consumerContract = this.contractManager.sideLoyaltyConsumerContract;
             const loyaltyPaymentData = await consumerContract.loyaltyPaymentOf(payment.paymentId);
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) continue;
 
-            const shopInfo = await (await this.getShopContract()).shopOf(payment.shopId);
+            const shopInfo = await this.contractManager.sideShopContract.shopOf(payment.shopId);
             if (shopInfo.delegator !== AddressZero) {
                 const wallet = await this.storage.getDelegator(shopInfo.account, this.config.relay.encryptKey);
                 if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
@@ -131,7 +99,8 @@ export class DelegatorApprovalScheduler extends Scheduler {
                         wallet,
                         payment.paymentId,
                         payment.purchaseId,
-                        nonce
+                        nonce,
+                        this.contractManager.sideChainId
                     );
 
                     const serverURL = this.config.relay.relayEndpoint;
@@ -174,13 +143,18 @@ export class DelegatorApprovalScheduler extends Scheduler {
     private async onUpdateTask() {
         const tasks = await this.storage.getTasksStatusOf([TaskResultType.UPDATE], [ShopTaskStatus.OPENED]);
         for (const task of tasks) {
-            const shopInfo = await (await this.getShopContract()).shopOf(task.shopId);
+            const shopInfo = await this.contractManager.sideShopContract.shopOf(task.shopId);
             if (shopInfo.delegator !== AddressZero) {
                 const wallet = await this.storage.getDelegator(shopInfo.account, this.config.relay.encryptKey);
                 if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
                     logger.info(`DelegatorApprovalScheduler.onUpdateTask ${task.taskId}`);
-                    const nonce = await (await this.getShopContract()).nonceOf(shopInfo.delegator);
-                    const message = ContractUtils.getShopAccountMessage(task.shopId, shopInfo.delegator, nonce);
+                    const nonce = await this.contractManager.sideShopContract.nonceOf(shopInfo.delegator);
+                    const message = ContractUtils.getShopAccountMessage(
+                        task.shopId,
+                        shopInfo.delegator,
+                        nonce,
+                        this.contractManager.sideChainId
+                    );
                     const signature = await ContractUtils.signMessage(wallet, message);
 
                     const serverURL = this.config.relay.relayEndpoint;
@@ -210,13 +184,18 @@ export class DelegatorApprovalScheduler extends Scheduler {
     private async onStatusTask() {
         const tasks = await this.storage.getTasksStatusOf([TaskResultType.STATUS], [ShopTaskStatus.OPENED]);
         for (const task of tasks) {
-            const shopInfo = await (await this.getShopContract()).shopOf(task.shopId);
+            const shopInfo = await this.contractManager.sideShopContract.shopOf(task.shopId);
             if (shopInfo.delegator !== AddressZero) {
                 const wallet = await this.storage.getDelegator(shopInfo.account, this.config.relay.encryptKey);
                 if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
                     logger.info(`DelegatorApprovalScheduler.onStatusTask ${task.taskId}`);
-                    const nonce = await (await this.getShopContract()).nonceOf(shopInfo.delegator);
-                    const message = ContractUtils.getShopAccountMessage(task.shopId, shopInfo.delegator, nonce);
+                    const nonce = await this.contractManager.sideShopContract.nonceOf(shopInfo.delegator);
+                    const message = ContractUtils.getShopAccountMessage(
+                        task.shopId,
+                        shopInfo.delegator,
+                        nonce,
+                        this.contractManager.sideChainId
+                    );
                     const signature = await ContractUtils.signMessage(wallet, message);
 
                     const serverURL = this.config.relay.relayEndpoint;

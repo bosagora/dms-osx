@@ -12,6 +12,7 @@ import { Scheduler } from "./scheduler/Scheduler";
 import { StorePurchaseScheduler } from "./scheduler/StorePurchaseScheduler";
 import { WatchScheduler } from "./scheduler/WatchScheduler";
 import { MetricsScheduler } from "./scheduler/MetricsScheduler";
+import { ContractManager } from "./contract/ContractManager";
 
 let server: DefaultServer;
 
@@ -26,7 +27,7 @@ async function main() {
     logger.info(`address: ${config.server.address}`);
     logger.info(`port: ${config.server.port}`);
 
-    await ContractUtils.delay(3000);
+    await ContractUtils.delay(1000);
     const storage = await RelayStorage.make(config.database);
     const graph = await GraphStorage.make(config.graph);
 
@@ -58,7 +59,9 @@ async function main() {
         }
     }
 
-    server = new DefaultServer(config, storage, graph, schedulers);
+    const contractManager = new ContractManager(config);
+    await contractManager.attach();
+    server = new DefaultServer(config, contractManager, storage, graph, schedulers);
     return server.start().catch((error: any) => {
         // handle specific listen errors with friendly messages
         switch (error.code) {

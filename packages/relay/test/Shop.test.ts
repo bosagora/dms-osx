@@ -36,12 +36,16 @@ import { Deployments } from "./helper/Deployments";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 import { TestClient, TestServer } from "./helper/Utility";
 import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
+import { ContractManager } from "../src/contract/ContractManager";
 
 chai.use(solidity);
 
 describe("Test for Shop", function () {
     this.timeout(1000 * 60 * 5);
-    const deployments = new Deployments();
+    const config = new Config();
+    config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+    const contractManager = new ContractManager(config);
+    const deployments = new Deployments(config);
 
     let validatorContract: Validator;
     let tokenContract: BIP20DelegatedTransfer;
@@ -57,7 +61,6 @@ describe("Test for Shop", function () {
     let server: TestServer;
     let storage: RelayStorage;
     let serverURL: URL;
-    let config: Config;
 
     let fakerCallbackServer: FakerCallbackServer;
 
@@ -135,16 +138,14 @@ describe("Test for Shop", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -163,7 +164,8 @@ describe("Test for Shop", function () {
             const graph = await GraphStorage.make(config.graph);
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler("*/1 * * * * *"));
-            server = new TestServer(config, storage, graph, schedulers);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -188,7 +190,12 @@ describe("Test for Shop", function () {
         it("Add", async () => {
             for (const elem of shopData) {
                 const nonce = await shopContract.nonceOf(elem.wallet.address);
-                const message = ContractUtils.getShopAccountMessage(elem.shopId, elem.wallet.address, nonce);
+                const message = ContractUtils.getShopAccountMessage(
+                    elem.shopId,
+                    elem.wallet.address,
+                    nonce,
+                    contractManager.sideChainId
+                );
                 const signature = await ContractUtils.signMessage(elem.wallet, message);
 
                 const uri = URI(serverURL).directory("/v1/shop").filename("add");
@@ -266,7 +273,8 @@ describe("Test for Shop", function () {
                 const message = ContractUtils.getShopAccountMessage(
                     responseItem.data.data.shopId,
                     shopData[0].wallet.address,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
                 const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
 
@@ -356,7 +364,8 @@ describe("Test for Shop", function () {
                 const message = ContractUtils.getShopAccountMessage(
                     responseItem.data.data.shopId,
                     shopData[0].wallet.address,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
                 const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
 
@@ -416,7 +425,8 @@ describe("Test for Shop", function () {
                 const message = ContractUtils.getShopAccountMessage(
                     shopData[0].shopId,
                     shopData[0].wallet.address,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
                 const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
                 const params = {
@@ -440,7 +450,8 @@ describe("Test for Shop", function () {
                     shopData[0].shopId,
                     delegator,
                     shopData[0].wallet.address,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
                 const signature = await ContractUtils.signMessage(shopData[0].wallet, message);
                 const params = {

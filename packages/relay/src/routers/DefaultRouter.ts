@@ -1,42 +1,27 @@
+import { Config } from "../common/Config";
+import { ContractManager } from "../contract/ContractManager";
+import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
 
-import express from "express";
-
-import { Metrics } from "../metrics/Metrics";
-import { Config } from "../common/Config";
-
-import * as hre from "hardhat";
 import { BigNumber, Wallet } from "ethers";
+import express from "express";
+import * as hre from "hardhat";
 
 export class DefaultRouter {
-    /**
-     *
-     * @private
-     */
-    private _web_service: WebService;
+    private web_service: WebService;
+    private readonly config: Config;
+    private readonly contractManager: ContractManager;
+    private readonly metrics: Metrics;
 
-    /**
-     * The configuration of the database
-     * @private
-     */
-    private readonly _config: Config;
-
-    private readonly _metrics: Metrics;
-
-    /**
-     *
-     * @param service  WebService
-     * @param config Config
-     * @param metrics Metrics
-     */
-    constructor(service: WebService, config: Config, metrics: Metrics) {
-        this._web_service = service;
-        this._config = config;
-        this._metrics = metrics;
+    constructor(service: WebService, config: Config, contractManager: ContractManager, metrics: Metrics) {
+        this.web_service = service;
+        this.config = config;
+        this.contractManager = contractManager;
+        this.metrics = metrics;
     }
 
     private get app(): express.Application {
-        return this._web_service.app;
+        return this.web_service.app;
     }
 
     public registerRoutes() {
@@ -68,13 +53,13 @@ export class DefaultRouter {
      * @private
      */
     private async getMetrics(req: express.Request, res: express.Response) {
-        res.set("Content-Type", this._metrics.contentType());
-        this._metrics.add("status", 1);
-        for (const elem of this._config.relay.managerKeys) {
+        res.set("Content-Type", this.metrics.contentType());
+        this.metrics.add("status", 1);
+        for (const elem of this.config.relay.managerKeys) {
             const wallet = new Wallet(elem, hre.ethers.provider);
             const balance = (await wallet.getBalance()).div(BigNumber.from(1_000_000_000)).toNumber();
-            this._metrics.gaugeLabels("certifier_balance", { address: wallet.address }, balance);
+            this.metrics.gaugeLabels("certifier_balance", { address: wallet.address }, balance);
         }
-        res.end(await this._metrics.metrics());
+        res.end(await this.metrics.metrics());
     }
 }

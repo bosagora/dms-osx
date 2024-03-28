@@ -1,168 +1,49 @@
-import {
-    BIP20DelegatedTransfer,
-    CurrencyRate,
-    Ledger,
-    LoyaltyExchanger,
-    PhoneLinkCollection,
-    Shop,
-} from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ContractManager } from "../contract/ContractManager";
+import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
-
-import { body, query, validationResult } from "express-validator";
-import * as hre from "hardhat";
-
-import express from "express";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
+import { ContractLoyaltyType, GWI_UNIT, IStorePurchaseData, PHONE_NULL } from "../types";
 import { ResponseMessage } from "../utils/Errors";
+
+import { body, query, validationResult } from "express-validator";
+
+import express from "express";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { BigNumber } from "@ethersproject/bignumber";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 
-import { ContractLoyaltyType, GWI_UNIT, IStorePurchaseData, PHONE_NULL } from "../types";
-import { Metrics } from "../metrics/Metrics";
-import { Wallet } from "ethers";
-
 export class StorePurchaseRouter {
-    /**
-     *
-     * @private
-     */
-    private _web_service: WebService;
+    private web_service: WebService;
+    private readonly config: Config;
+    private readonly contractManager: ContractManager;
+    private readonly metrics: Metrics;
+    private storage: RelayStorage;
+    private graph: GraphStorage;
 
-    /**
-     * The configuration of the database
-     * @private
-     */
-    private readonly _config: Config;
+    constructor(
+        service: WebService,
+        config: Config,
+        contractManager: ContractManager,
+        metrics: Metrics,
+        storage: RelayStorage,
+        graph: GraphStorage
+    ) {
+        this.web_service = service;
+        this.config = config;
+        this.contractManager = contractManager;
+        this.metrics = metrics;
 
-    private readonly _metrics: Metrics;
-
-    /**
-     * ERC20 토큰 컨트랙트
-     * @private
-     */
-    private _tokenContract: BIP20DelegatedTransfer | undefined;
-
-    /**
-     * 사용자의 원장 컨트랙트
-     * @private
-     */
-    private _ledgerContract: Ledger | undefined;
-
-    /**
-     * 사용자의 원장 컨트랙트
-     * @private
-     */
-    private _shopContract: Shop | undefined;
-
-    /**
-     * 이메일 지갑주소 링크 컨트랙트
-     * @private
-     */
-    private _phoneLinkerContract: PhoneLinkCollection | undefined;
-
-    /**
-     * 환률 컨트랙트
-     * @private
-     */
-    private _currencyRateContract: CurrencyRate | undefined;
-
-    private _storage: RelayStorage;
-    private _graph: GraphStorage;
-
-    /**
-     *
-     * @param service  WebService
-     * @param config Configuration
-     * @param metrics Metrics
-     * @param storage
-     * @param graph
-     */
-    constructor(service: WebService, config: Config, metrics: Metrics, storage: RelayStorage, graph: GraphStorage) {
-        this._web_service = service;
-        this._config = config;
-        this._metrics = metrics;
-
-        this._storage = storage;
-        this._graph = graph;
+        this.storage = storage;
+        this.graph = graph;
     }
 
     private get app(): express.Application {
-        return this._web_service.app;
-    }
-
-    /**
-     * ERC20 토큰 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getTokenContract(): Promise<BIP20DelegatedTransfer> {
-        if (this._tokenContract === undefined) {
-            const tokenFactory = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
-            this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress);
-        }
-        return this._tokenContract;
-    }
-
-    /**
-     * 사용자의 원장 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getLedgerContract(): Promise<Ledger> {
-        if (this._ledgerContract === undefined) {
-            const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
-            this._ledgerContract = ledgerFactory.attach(this._config.contracts.ledgerAddress);
-        }
-        return this._ledgerContract;
-    }
-
-    private async getShopContract(): Promise<Shop> {
-        if (this._shopContract === undefined) {
-            const shopFactory = await hre.ethers.getContractFactory("Shop");
-            this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
-        }
-        return this._shopContract;
-    }
-
-    private _exchangerContract: LoyaltyExchanger | undefined;
-    private async getExchangerContract(): Promise<LoyaltyExchanger> {
-        if (this._exchangerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("LoyaltyExchanger");
-            this._exchangerContract = factory.attach(this._config.contracts.loyaltyExchangerAddress);
-        }
-        return this._exchangerContract;
-    }
-
-    /**
-     * 이메일 지갑주소 링크 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getPhoneLinkerContract(): Promise<PhoneLinkCollection> {
-        if (this._phoneLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
-            this._phoneLinkerContract = linkCollectionFactory.attach(this._config.contracts.phoneLinkerAddress);
-        }
-        return this._phoneLinkerContract;
-    }
-
-    /**
-     * 환률 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getCurrencyRateContract(): Promise<CurrencyRate> {
-        if (this._currencyRateContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("CurrencyRate");
-            this._currencyRateContract = factory.attach(this._config.contracts.currencyRateAddress);
-        }
-        return this._currencyRateContract;
+        return this.web_service.app;
     }
 
     /**
@@ -258,7 +139,7 @@ export class StorePurchaseRouter {
         try {
             let accessKey = req.get("Authorization");
             if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
+            if (accessKey !== this.config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
             const loyaltyValue: BigNumber = BigNumber.from(String(req.body.loyaltyValue).trim());
@@ -284,43 +165,47 @@ export class StorePurchaseRouter {
                 if (purchaseData.currency === "krw") {
                     loyaltyPoint = loyaltyValue;
                 } else {
-                    loyaltyPoint = await (
-                        await this.getCurrencyRateContract()
-                    ).convertCurrency(loyaltyValue, purchaseData.currency, "point");
+                    loyaltyPoint = await this.contractManager.sideCurrencyRateContract.convertCurrency(
+                        loyaltyValue,
+                        purchaseData.currency,
+                        "point"
+                    );
                 }
                 if (purchaseData.account === AddressZero && phone.toLowerCase() !== PHONE_NULL) {
-                    purchaseData.account = await (await this.getPhoneLinkerContract()).toAddress(phone);
+                    purchaseData.account = await this.contractManager.sidePhoneLinkerContract.toAddress(phone);
                 }
 
                 if (purchaseData.account !== AddressZero) {
-                    purchaseData.loyaltyType = await (
-                        await this.getLedgerContract()
-                    ).loyaltyTypeOf(purchaseData.account);
+                    purchaseData.loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(
+                        purchaseData.account
+                    );
                     if (purchaseData.loyaltyType === ContractLoyaltyType.POINT) {
                         purchaseData.providePoint = BigNumber.from(loyaltyPoint);
                         purchaseData.provideToken = BigNumber.from(0);
                         purchaseData.provideValue = BigNumber.from(loyaltyValue);
                     } else {
                         purchaseData.providePoint = BigNumber.from(0);
-                        purchaseData.provideToken = await (
-                            await this.getCurrencyRateContract()
-                        ).convertPointToToken(loyaltyPoint);
+                        purchaseData.provideToken =
+                            await this.contractManager.sideCurrencyRateContract.convertPointToToken(loyaltyPoint);
                         purchaseData.provideValue = BigNumber.from(loyaltyValue);
                     }
-                    const shopInfo = await (await this.getShopContract()).shopOf(purchaseData.shopId);
+                    const shopInfo = await this.contractManager.sideShopContract.shopOf(purchaseData.shopId);
                     purchaseData.shopCurrency = shopInfo.currency;
-                    purchaseData.shopProvidedAmount = await (
-                        await this.getCurrencyRateContract()
-                    ).convertCurrency(loyaltyValue, purchaseData.currency, purchaseData.shopCurrency);
+                    purchaseData.shopProvidedAmount =
+                        await this.contractManager.sideCurrencyRateContract.convertCurrency(
+                            loyaltyValue,
+                            purchaseData.currency,
+                            purchaseData.shopCurrency
+                        );
                 }
-                await this._storage.postStorePurchase(purchaseData);
+                await this.storage.postStorePurchase(purchaseData);
             }
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, {}));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/purchase/save : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -340,17 +225,17 @@ export class StorePurchaseRouter {
         try {
             let accessKey = req.get("Authorization");
             if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
+            if (accessKey !== this.config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
             const purchaseId: string = String(req.body.purchaseId).trim();
-            await this._storage.cancelStorePurchase(purchaseId);
-            this._metrics.add("success", 1);
+            await this.storage.cancelStorePurchase(purchaseId);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, {}));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/purchase/cancel : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -369,8 +254,8 @@ export class StorePurchaseRouter {
 
         try {
             const account: string = String(req.query.account).trim();
-            const data = await this._storage.getToBeProvideOfUser(account);
-            this._metrics.add("success", 1);
+            const data = await this.storage.getToBeProvideOfUser(account);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(
                     0,
@@ -392,7 +277,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/user/provide : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -411,9 +296,9 @@ export class StorePurchaseRouter {
 
         try {
             const account: string = String(req.query.account).trim();
-            const data = await this._storage.getTotalToBeProvideOfUser(account);
-            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
-            this._metrics.add("success", 1);
+            const data = await this.storage.getTotalToBeProvideOfUser(account);
+            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     account,
@@ -426,7 +311,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/user/provide/total : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -445,8 +330,8 @@ export class StorePurchaseRouter {
 
         try {
             const shopId: string = String(req.query.shopId).trim();
-            const data = await this._storage.getToBeProvideOfShop(shopId);
-            this._metrics.add("success", 1);
+            const data = await this.storage.getToBeProvideOfShop(shopId);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(
                     0,
@@ -464,7 +349,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/shop/provide : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -483,8 +368,8 @@ export class StorePurchaseRouter {
 
         try {
             const shopId: string = String(req.query.shopId).trim();
-            const data = await this._storage.getTotalToBeProvideOfShop(shopId);
-            this._metrics.add("success", 1);
+            const data = await this.storage.getTotalToBeProvideOfShop(shopId);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     shopId,
@@ -494,7 +379,7 @@ export class StorePurchaseRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/purchase/shop/provide/total : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }

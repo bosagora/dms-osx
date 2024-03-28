@@ -247,62 +247,105 @@ export class RelayConfig implements IRelayConfig {
 }
 
 export class ContractsConfig implements IContractsConfig {
-    public tokenAddress: string;
-    public ledgerAddress: string;
-    public phoneLinkerAddress: string;
-    public shopAddress: string;
-    public currencyRateAddress: string;
-    public loyaltyProviderAddress: string;
-    public loyaltyConsumerAddress: string;
-    public loyaltyExchangerAddress: string;
-    public loyaltyTransferAddress: string;
-    public loyaltyBridgeAddress: string;
-    public sideChainBridgeAddress: string;
+    public sideChain: {
+        network: string;
+        tokenAddress: string;
+        ledgerAddress: string;
+        phoneLinkerAddress: string;
+        shopAddress: string;
+        currencyRateAddress: string;
+        loyaltyProviderAddress: string;
+        loyaltyConsumerAddress: string;
+        loyaltyExchangerAddress: string;
+        loyaltyTransferAddress: string;
+        loyaltyBridgeAddress: string;
+        bridgeMainSideAddress: string;
+    };
+    public mainChain: {
+        network: string;
+        tokenAddress: string;
+        loyaltyBridgeAddress: string;
+        bridgeMainSideAddress: string;
+    };
 
     constructor() {
         const defaults = ContractsConfig.defaultValue();
 
-        this.tokenAddress = defaults.tokenAddress;
-        this.ledgerAddress = defaults.ledgerAddress;
-        this.phoneLinkerAddress = defaults.phoneLinkerAddress;
-        this.shopAddress = defaults.shopAddress;
-        this.currencyRateAddress = defaults.currencyRateAddress;
-        this.loyaltyProviderAddress = defaults.loyaltyProviderAddress;
-        this.loyaltyConsumerAddress = defaults.loyaltyConsumerAddress;
-        this.loyaltyExchangerAddress = defaults.loyaltyExchangerAddress;
-        this.loyaltyTransferAddress = defaults.loyaltyTransferAddress;
-        this.loyaltyBridgeAddress = defaults.loyaltyBridgeAddress;
-        this.sideChainBridgeAddress = defaults.sideChainBridgeAddress;
+        this.sideChain = {
+            network: defaults.sideChain.network,
+            tokenAddress: defaults.sideChain.tokenAddress,
+            ledgerAddress: defaults.sideChain.ledgerAddress,
+            phoneLinkerAddress: defaults.sideChain.phoneLinkerAddress,
+            shopAddress: defaults.sideChain.shopAddress,
+            currencyRateAddress: defaults.sideChain.currencyRateAddress,
+            loyaltyProviderAddress: defaults.sideChain.loyaltyProviderAddress,
+            loyaltyConsumerAddress: defaults.sideChain.loyaltyConsumerAddress,
+            loyaltyExchangerAddress: defaults.sideChain.loyaltyExchangerAddress,
+            loyaltyTransferAddress: defaults.sideChain.loyaltyTransferAddress,
+            loyaltyBridgeAddress: defaults.sideChain.loyaltyBridgeAddress,
+            bridgeMainSideAddress: defaults.sideChain.bridgeMainSideAddress,
+        };
+        this.mainChain = {
+            network: defaults.mainChain.network,
+            tokenAddress: defaults.mainChain.tokenAddress,
+            loyaltyBridgeAddress: defaults.mainChain.loyaltyBridgeAddress,
+            bridgeMainSideAddress: defaults.mainChain.bridgeMainSideAddress,
+        };
     }
 
     public static defaultValue(): IContractsConfig {
         return {
-            tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
-            ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
-            phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
-            shopAddress: process.env.SHOP_CONTRACT_ADDRESS || "",
-            currencyRateAddress: process.env.CURRENCY_RATE_CONTRACT_ADDRESS || "",
-            loyaltyProviderAddress: process.env.LOYALTY_PROVIDER_CONTRACT_ADDRESS || "",
-            loyaltyConsumerAddress: process.env.LOYALTY_CONSUMER_CONTRACT_ADDRESS || "",
-            loyaltyExchangerAddress: process.env.LOYALTY_EXCHANGER_CONTRACT_ADDRESS || "",
-            loyaltyTransferAddress: process.env.LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
-            loyaltyBridgeAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
-            sideChainBridgeAddress: process.env.SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS || "",
+            sideChain: {
+                network: "production_net",
+                tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
+                ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
+                phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
+                shopAddress: process.env.SHOP_CONTRACT_ADDRESS || "",
+                currencyRateAddress: process.env.CURRENCY_RATE_CONTRACT_ADDRESS || "",
+                loyaltyProviderAddress: process.env.LOYALTY_PROVIDER_CONTRACT_ADDRESS || "",
+                loyaltyConsumerAddress: process.env.LOYALTY_CONSUMER_CONTRACT_ADDRESS || "",
+                loyaltyExchangerAddress: process.env.LOYALTY_EXCHANGER_CONTRACT_ADDRESS || "",
+                loyaltyTransferAddress: process.env.LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
+                loyaltyBridgeAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
+                bridgeMainSideAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
+            },
+            mainChain: {
+                network: "bosagora_mainnet",
+                tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
+                loyaltyBridgeAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
+                bridgeMainSideAddress: process.env.LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
+            },
         };
     }
 
     public readFromObject(config: IContractsConfig) {
-        if (config.tokenAddress !== undefined) this.tokenAddress = config.tokenAddress;
-        if (config.ledgerAddress !== undefined) this.ledgerAddress = config.ledgerAddress;
-        if (config.phoneLinkerAddress !== undefined) this.phoneLinkerAddress = config.phoneLinkerAddress;
-        if (config.shopAddress !== undefined) this.shopAddress = config.shopAddress;
-        if (config.currencyRateAddress !== undefined) this.currencyRateAddress = config.currencyRateAddress;
-        if (config.loyaltyProviderAddress !== undefined) this.loyaltyProviderAddress = config.loyaltyProviderAddress;
-        if (config.loyaltyConsumerAddress !== undefined) this.loyaltyConsumerAddress = config.loyaltyConsumerAddress;
-        if (config.loyaltyExchangerAddress !== undefined) this.loyaltyExchangerAddress = config.loyaltyExchangerAddress;
-        if (config.loyaltyTransferAddress !== undefined) this.loyaltyTransferAddress = config.loyaltyTransferAddress;
-        if (config.loyaltyBridgeAddress !== undefined) this.loyaltyBridgeAddress = config.loyaltyBridgeAddress;
-        if (config.sideChainBridgeAddress !== undefined) this.sideChainBridgeAddress = config.sideChainBridgeAddress;
+        if (config.sideChain.network !== undefined) this.sideChain.network = config.sideChain.network;
+        if (config.sideChain.tokenAddress !== undefined) this.sideChain.tokenAddress = config.sideChain.tokenAddress;
+        if (config.sideChain.ledgerAddress !== undefined) this.sideChain.ledgerAddress = config.sideChain.ledgerAddress;
+        if (config.sideChain.phoneLinkerAddress !== undefined)
+            this.sideChain.phoneLinkerAddress = config.sideChain.phoneLinkerAddress;
+        if (config.sideChain.shopAddress !== undefined) this.sideChain.shopAddress = config.sideChain.shopAddress;
+        if (config.sideChain.currencyRateAddress !== undefined)
+            this.sideChain.currencyRateAddress = config.sideChain.currencyRateAddress;
+        if (config.sideChain.loyaltyProviderAddress !== undefined)
+            this.sideChain.loyaltyProviderAddress = config.sideChain.loyaltyProviderAddress;
+        if (config.sideChain.loyaltyConsumerAddress !== undefined)
+            this.sideChain.loyaltyConsumerAddress = config.sideChain.loyaltyConsumerAddress;
+        if (config.sideChain.loyaltyExchangerAddress !== undefined)
+            this.sideChain.loyaltyExchangerAddress = config.sideChain.loyaltyExchangerAddress;
+        if (config.sideChain.loyaltyTransferAddress !== undefined)
+            this.sideChain.loyaltyTransferAddress = config.sideChain.loyaltyTransferAddress;
+        if (config.sideChain.loyaltyBridgeAddress !== undefined)
+            this.sideChain.loyaltyBridgeAddress = config.sideChain.loyaltyBridgeAddress;
+        if (config.sideChain.bridgeMainSideAddress !== undefined)
+            this.sideChain.bridgeMainSideAddress = config.sideChain.bridgeMainSideAddress;
+
+        if (config.mainChain.network !== undefined) this.mainChain.network = config.mainChain.network;
+        if (config.mainChain.tokenAddress !== undefined) this.mainChain.tokenAddress = config.mainChain.tokenAddress;
+        if (config.mainChain.loyaltyBridgeAddress !== undefined)
+            this.mainChain.loyaltyBridgeAddress = config.mainChain.loyaltyBridgeAddress;
+        if (config.mainChain.bridgeMainSideAddress !== undefined)
+            this.mainChain.bridgeMainSideAddress = config.mainChain.bridgeMainSideAddress;
     }
 }
 
@@ -416,17 +459,26 @@ export interface IRelayConfig {
 }
 
 export interface IContractsConfig {
-    tokenAddress: string;
-    ledgerAddress: string;
-    phoneLinkerAddress: string;
-    shopAddress: string;
-    currencyRateAddress: string;
-    loyaltyProviderAddress: string;
-    loyaltyConsumerAddress: string;
-    loyaltyExchangerAddress: string;
-    loyaltyTransferAddress: string;
-    loyaltyBridgeAddress: string;
-    sideChainBridgeAddress: string;
+    sideChain: {
+        network: string;
+        tokenAddress: string;
+        ledgerAddress: string;
+        loyaltyProviderAddress: string;
+        loyaltyConsumerAddress: string;
+        loyaltyExchangerAddress: string;
+        phoneLinkerAddress: string;
+        shopAddress: string;
+        currencyRateAddress: string;
+        loyaltyTransferAddress: string;
+        loyaltyBridgeAddress: string;
+        bridgeMainSideAddress: string;
+    };
+    mainChain: {
+        network: string;
+        tokenAddress: string;
+        loyaltyBridgeAddress: string;
+        bridgeMainSideAddress: string;
+    };
 }
 
 export interface ISchedulerItemConfig {

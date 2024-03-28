@@ -1,64 +1,47 @@
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ContractManager } from "../contract/ContractManager";
+import { INotificationSender } from "../delegator/NotificationSender";
+import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
+import { GraphStorage } from "../storage/GraphStorage";
+import { RelayStorage } from "../storage/RelayStorage";
 import { ContractUtils } from "../utils/ContractUtils";
+import { ResponseMessage } from "../utils/Errors";
 
 import { body, validationResult } from "express-validator";
 
 import express from "express";
-import { INotificationSender } from "../delegator/NotificationSender";
-import { RelayStorage } from "../storage/RelayStorage";
-import { ResponseMessage } from "../utils/Errors";
-import { GraphStorage } from "../storage/GraphStorage";
-import { Metrics } from "../metrics/Metrics";
 
 export class ETCRouter {
-    /**
-     *
-     * @private
-     */
-    private _web_service: WebService;
+    private web_service: WebService;
+    private readonly config: Config;
+    private readonly contractManager: ContractManager;
+    private readonly metrics: Metrics;
+    private storage: RelayStorage;
+    private graph: GraphStorage;
+    private readonly sender: INotificationSender;
 
-    /**
-     * The configuration of the database
-     * @private
-     */
-    private readonly _config: Config;
-
-    private readonly _metrics: Metrics;
-
-    private _storage: RelayStorage;
-    private _graph: GraphStorage;
-
-    private readonly _sender: INotificationSender;
-
-    /**
-     *
-     * @param service  WebService
-     * @param config Configuration
-     * @param metrics Metrics
-     * @param storage
-     * @param graph
-     * @param sender
-     */
     constructor(
         service: WebService,
         config: Config,
+        contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
         graph: GraphStorage,
         sender: INotificationSender
     ) {
-        this._web_service = service;
-        this._config = config;
-        this._metrics = metrics;
-        this._storage = storage;
-        this._graph = graph;
-        this._sender = sender;
+        this.web_service = service;
+        this.config = config;
+        this.contractManager = contractManager;
+        this.metrics = metrics;
+        this.storage = storage;
+        this.graph = graph;
+        this.sender = sender;
     }
 
     private get app(): express.Application {
-        return this._web_service.app;
+        return this.web_service.app;
     }
 
     /**
@@ -138,14 +121,14 @@ export class ETCRouter {
                 language,
                 os,
             };
-            await this._storage.postMobile(item);
+            await this.storage.postMobile(item);
 
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, item));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/mobile/register : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -164,7 +147,7 @@ export class ETCRouter {
 
         let accessKey = req.get("Authorization");
         if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
-        if (accessKey !== this._config.relay.accessKey) {
+        if (accessKey !== this.config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }
 
@@ -175,16 +158,16 @@ export class ETCRouter {
             const contents: string = String(req.body.contents).trim();
             const contentType: string = String(req.body.contentType).trim();
 
-            const mobileData = await this._storage.getMobile(account, type);
+            const mobileData = await this.storage.getMobile(account, type);
             if (mobileData !== undefined) {
-                await this._sender.send(mobileData.token, title, contents, { type: contentType });
+                await this.sender.send(mobileData.token, title, contents, { type: contentType });
             }
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, {}));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/mobile/send : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }

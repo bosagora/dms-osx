@@ -1,15 +1,10 @@
 import "@nomiclabs/hardhat-ethers";
-import { Ledger, LoyaltyConsumer, Shop } from "../../typechain-types";
+import { LoyaltyConsumer, Shop } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ContractManager } from "../contract/ContractManager";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { RelayStorage } from "../storage/RelayStorage";
-import { ContractUtils } from "../utils/ContractUtils";
-import { HTTPClient } from "../utils/Utils";
-import { Scheduler } from "./Scheduler";
-
-import { BigNumber } from "ethers";
-import * as hre from "hardhat";
 import {
     ContractLoyaltyPaymentEvent,
     ContractLoyaltyType,
@@ -23,22 +18,21 @@ import {
     TaskResultCode,
     TaskResultType,
 } from "../types";
+import { ContractUtils } from "../utils/ContractUtils";
+import { HTTPClient } from "../utils/Utils";
+import { Scheduler } from "./Scheduler";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { ContractTransaction } from "@ethersproject/contracts";
+import { BigNumber } from "ethers";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
  */
 export class WatchScheduler extends Scheduler {
     private _config: Config | undefined;
-
+    private _contractManager: ContractManager | undefined;
     private _storage: RelayStorage | undefined;
-
-    private _ledgerContract: Ledger | undefined;
-
-    private _shopContract: Shop | undefined;
-
     private _signers: RelaySigners | undefined;
 
     constructor(expression: string) {
@@ -57,6 +51,14 @@ export class WatchScheduler extends Scheduler {
         if (this._storage !== undefined) return this._storage;
         else {
             logger.error("Storage is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    private get contractManager(): ContractManager {
+        if (this._contractManager !== undefined) return this._contractManager;
+        else {
+            logger.error("ContractManager is not ready yet.");
             process.exit(1);
         }
     }
@@ -80,6 +82,8 @@ export class WatchScheduler extends Scheduler {
     public setOption(options: any) {
         if (options) {
             if (options.config && options.config instanceof Config) this._config = options.config;
+            if (options.contractManager && options.contractManager instanceof ContractManager)
+                this._contractManager = options.contractManager;
             if (options.storage && options.storage instanceof RelayStorage) this._storage = options.storage;
             if (options.signers && options.signers instanceof RelaySigners) this._signers = options.signers;
         }
@@ -96,31 +100,6 @@ export class WatchScheduler extends Scheduler {
         } catch (error) {
             logger.error(`Failed to execute the WatchScheduler: ${error}`);
         }
-    }
-
-    private async getLedgerContract(): Promise<Ledger> {
-        if (this._ledgerContract === undefined) {
-            const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
-            this._ledgerContract = ledgerFactory.attach(this.config.contracts.ledgerAddress);
-        }
-        return this._ledgerContract;
-    }
-
-    private _consumerContract: LoyaltyConsumer | undefined;
-    private async getConsumerContract(): Promise<LoyaltyConsumer> {
-        if (this._consumerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
-            this._consumerContract = factory.attach(this.config.contracts.loyaltyConsumerAddress);
-        }
-        return this._consumerContract;
-    }
-
-    private async getShopContract(): Promise<Shop> {
-        if (this._shopContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("Shop");
-            this._shopContract = factory.attach(this.config.contracts.shopAddress) as Shop;
-        }
-        return this._shopContract;
     }
 
     /// region Payment
@@ -140,7 +119,7 @@ export class WatchScheduler extends Scheduler {
 
     private async onApproveNewPayment(payment: LoyaltyPaymentTaskData) {
         logger.info(`WatchScheduler.onApproveNewPayment ${payment.paymentId}`);
-        const contract = await this.getConsumerContract();
+        const contract = this.contractManager.sideLoyaltyConsumerContract;
         const signerItem = await this.getRelaySigner();
         try {
             if (signerItem.signer.provider) {
@@ -185,7 +164,7 @@ export class WatchScheduler extends Scheduler {
 
     private async onApproveCancelPayment(payment: LoyaltyPaymentTaskData) {
         logger.info(`WatchScheduler.onApproveCancelPayment ${payment.paymentId}`);
-        const contract = await this.getConsumerContract();
+        const contract = this.contractManager.sideLoyaltyConsumerContract;
         const signerItem = await this.getRelaySigner();
         try {
             if (signerItem.signer.provider) {
@@ -367,7 +346,7 @@ export class WatchScheduler extends Scheduler {
 
     private async onAddShop(task: ShopTaskData) {
         logger.info(`WatchScheduler.onAddShop ${task.taskId}`);
-        const contract = await this.getShopContract();
+        const contract = this.contractManager.sideShopContract;
         const signerItem = await this.getRelaySigner();
         try {
             if (signerItem.signer.provider) {
@@ -401,7 +380,7 @@ export class WatchScheduler extends Scheduler {
 
     private async onUpdateShop(task: ShopTaskData) {
         logger.info(`WatchScheduler.onUpdateShop ${task.taskId}`);
-        const contract = await this.getShopContract();
+        const contract = this.contractManager.sideShopContract;
         const signerItem = await this.getRelaySigner();
         try {
             if (signerItem.signer.provider) {
@@ -435,7 +414,7 @@ export class WatchScheduler extends Scheduler {
 
     private async onChangeStatusOfShop(task: ShopTaskData) {
         logger.info(`WatchScheduler.onChangeStatusOfShop ${task.taskId}`);
-        const contract = await this.getShopContract();
+        const contract = this.contractManager.sideShopContract;
         const signerItem = await this.getRelaySigner();
         try {
             if (signerItem.signer.provider) {

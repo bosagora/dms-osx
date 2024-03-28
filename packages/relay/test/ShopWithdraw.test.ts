@@ -30,8 +30,8 @@ import { AddressZero } from "@ethersproject/constants";
 
 import { Deployments } from "./helper/Deployments";
 import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
-import { ContractShopStatus } from "dms-osx-artifacts/src/types";
 import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
+import { ContractManager } from "../src/contract/ContractManager";
 
 chai.use(solidity);
 
@@ -58,7 +58,10 @@ interface IUserData {
 }
 
 describe("Test for Shop", () => {
-    const deployments = new Deployments();
+    const config = new Config();
+    config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+    const contractManager = new ContractManager(config);
+    const deployments = new Deployments(config);
 
     const userWallets = deployments.accounts.users;
     const shopWallets = deployments.accounts.shops;
@@ -82,7 +85,6 @@ describe("Test for Shop", () => {
     let server: TestServer;
     let storage: RelayStorage;
     let serverURL: URL;
-    let config: Config;
 
     context("Settlement of shops", () => {
         const userData: IUserData[] = [
@@ -225,16 +227,14 @@ describe("Test for Shop", () => {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = `http://127.0.0.1:${config.server.port}/callback`;
@@ -251,7 +251,8 @@ describe("Test for Shop", () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
             const graph = await GraphStorage.make(config.graph);
-            server = new TestServer(config, storage, graph);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph);
         });
 
         before("Start TestServer", async () => {
@@ -284,7 +285,11 @@ describe("Test for Shop", () => {
                         phone: phoneHash,
                         sender: deployments.accounts.foundation.address,
                     };
-                    const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                    const purchaseMessage = ContractUtils.getPurchasesMessage(
+                        0,
+                        [purchaseParam],
+                        contractManager.sideChainId
+                    );
                     const signatures = deployments.accounts.validators.map((m) =>
                         ContractUtils.signMessage(m, purchaseMessage)
                     );
@@ -337,7 +342,8 @@ describe("Test for Shop", () => {
                     purchaseAmount,
                     purchase.currency,
                     shop.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const [secret, secretLock] = ContractUtils.getSecret();
@@ -394,7 +400,11 @@ describe("Test for Shop", () => {
             it("Send loyalty type", async () => {
                 const userIndex = 0;
                 const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(userWallets[userIndex], nonce);
+                const signature = await ContractUtils.signLoyaltyType(
+                    userWallets[userIndex],
+                    nonce,
+                    contractManager.sideChainId
+                );
                 const uri = URI(serverURL).directory("/v1/ledger/changeToLoyaltyToken");
                 const url = uri.toString();
                 const response = await client.post(url, {
@@ -457,7 +467,8 @@ describe("Test for Shop", () => {
                     purchaseAmount,
                     purchase.currency,
                     shop.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const [secret, secretLock] = ContractUtils.getSecret();
@@ -539,7 +550,8 @@ describe("Test for Shop", () => {
                 const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
                     shopData[shopIndex].wallet.address,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
 
@@ -580,7 +592,8 @@ describe("Test for Shop", () => {
                 const message = ContractUtils.getShopAccountMessage(
                     shopData[shopIndex].shopId,
                     shopData[shopIndex].wallet.address,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
 

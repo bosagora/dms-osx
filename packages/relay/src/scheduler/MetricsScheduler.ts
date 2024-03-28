@@ -1,21 +1,19 @@
 import "@nomiclabs/hardhat-ethers";
-import { CurrencyRate, Ledger, LoyaltyToken } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ContractManager } from "../contract/ContractManager";
+import { Metrics } from "../metrics/Metrics";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
-import { Scheduler } from "./Scheduler";
-import { Metrics } from "../metrics/Metrics";
-
 import { IStatisticsAccountBalance } from "../types";
-
-import * as hre from "hardhat";
+import { Scheduler } from "./Scheduler";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
  */
 export class MetricsScheduler extends Scheduler {
     private _config: Config | undefined;
+    private _contractManager: ContractManager | undefined;
     private _metrics: Metrics | undefined;
     private _storage: RelayStorage | undefined;
     private _graph: GraphStorage | undefined;
@@ -48,6 +46,14 @@ export class MetricsScheduler extends Scheduler {
         }
     }
 
+    private get contractManager(): ContractManager {
+        if (this._contractManager !== undefined) return this._contractManager;
+        else {
+            logger.error("ContractManager is not ready yet.");
+            process.exit(1);
+        }
+    }
+
     private get graph(): GraphStorage {
         if (this._graph !== undefined) return this._graph;
         else {
@@ -59,6 +65,8 @@ export class MetricsScheduler extends Scheduler {
     public setOption(options: any) {
         if (options) {
             if (options.config && options.config instanceof Config) this._config = options.config;
+            if (options.contractManager && options.contractManager instanceof ContractManager)
+                this._contractManager = options.contractManager;
             if (options.storage && options.storage instanceof RelayStorage) this._storage = options.storage;
             if (options.graph && options.graph instanceof GraphStorage) this._graph = options.graph;
             if (options.metrics && options.metrics instanceof Metrics) this._metrics = options.metrics;
@@ -122,36 +130,9 @@ export class MetricsScheduler extends Scheduler {
         }
     }
 
-    private _ledgerContract: Ledger | undefined;
-    private async getLedgerContract(): Promise<Ledger> {
-        if (this._ledgerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("Ledger");
-            this._ledgerContract = factory.attach(this.config.contracts.ledgerAddress);
-        }
-        return this._ledgerContract;
-    }
-
-    private _currencyContract: CurrencyRate | undefined;
-    private async getCurrencyContract(): Promise<CurrencyRate> {
-        if (this._currencyContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("CurrencyRate");
-            this._currencyContract = factory.attach(this.config.contracts.currencyRateAddress);
-        }
-        return this._currencyContract;
-    }
-
-    private _tokenContract: LoyaltyToken | undefined;
-    private async getLoyaltyTokenContract(): Promise<LoyaltyToken> {
-        if (this._tokenContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("LoyaltyToken");
-            this._tokenContract = factory.attach(this.config.contracts.tokenAddress);
-        }
-        return this._tokenContract;
-    }
-
     private async scanBalance(): Promise<IStatisticsAccountBalance[]> {
         const res: IStatisticsAccountBalance[] = [];
-        const contract = await this.getLedgerContract();
+        const contract = this.contractManager.sideLedgerContract;
         for (const account of this.config.metrics.accounts) {
             const balance = await contract.tokenBalanceOf(account.address);
             res.push({
@@ -163,10 +144,8 @@ export class MetricsScheduler extends Scheduler {
     }
 
     private async scanTokenPrice(): Promise<number> {
-        const token = await this.getLoyaltyTokenContract();
-        const contract = await this.getCurrencyContract();
-        const symbol = await token.symbol();
-        const rate = await contract.get(symbol);
+        const symbol = await this.contractManager.sideTokenContract.symbol();
+        const rate = await this.contractManager.sideCurrencyRateContract.get(symbol);
         return Number(rate);
     }
 }

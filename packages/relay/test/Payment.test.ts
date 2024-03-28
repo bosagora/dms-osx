@@ -33,6 +33,7 @@ import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import { ContractLoyaltyType, LoyaltyPaymentTaskStatus } from "../src/types";
 import { Deployments } from "./helper/Deployments";
 import { FakerCallbackServer } from "./helper/FakerCallbackServer";
+import { ContractManager } from "../src/contract/ContractManager";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -42,7 +43,10 @@ chai.use(solidity);
 describe("Test of Server", function () {
     this.timeout(1000 * 60 * 5);
 
-    const deployments = new Deployments();
+    const config = new Config();
+    config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+    const contractManager = new ContractManager(config);
+    const deployments = new Deployments(config);
 
     const users = deployments.accounts.users;
     const shops = deployments.accounts.shops;
@@ -67,7 +71,6 @@ describe("Test of Server", function () {
     let storage: RelayStorage;
     let server: TestServer;
     let serverURL: URL;
-    let config: Config;
 
     let fakerCallbackServer: FakerCallbackServer;
 
@@ -171,16 +174,14 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -200,7 +201,8 @@ describe("Test of Server", function () {
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
             const graph = await GraphStorage.make(config.graph);
-            server = new TestServer(config, storage, graph, schedulers);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -261,7 +263,11 @@ describe("Test of Server", function () {
                     phone: phoneHash,
                     sender: deployments.accounts.foundation.address,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(
+                    0,
+                    [purchaseParam],
+                    contractManager.sideChainId
+                );
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
@@ -373,7 +379,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -408,7 +415,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -460,7 +468,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -490,7 +499,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -520,7 +530,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -567,7 +578,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
                 const response = await client.post(
                     URI(serverURL).directory("/v1/payment/new").filename("approval").toString(),
@@ -623,16 +635,14 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -646,7 +656,8 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
-            server = new TestServer(config, storage, graph, schedulers);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -708,7 +719,11 @@ describe("Test of Server", function () {
                     phone: phoneHash,
                     sender: deployments.accounts.foundation.address,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(
+                    0,
+                    [purchaseParam],
+                    contractManager.sideChainId
+                );
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
@@ -806,7 +821,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -902,7 +918,8 @@ describe("Test of Server", function () {
                     shopData[purchaseOfLoyalty.shopIndex].wallet,
                     paymentId,
                     responseItem.data.data.purchaseId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString();
@@ -1004,16 +1021,14 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1027,7 +1042,8 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
-            server = new TestServer(config, storage, graph, schedulers);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1089,7 +1105,11 @@ describe("Test of Server", function () {
                     phone: phoneHash,
                     sender: deployments.accounts.foundation.address,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(
+                    0,
+                    [purchaseParam],
+                    contractManager.sideChainId
+                );
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
@@ -1186,7 +1206,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -1276,7 +1297,8 @@ describe("Test of Server", function () {
                     shopData[purchaseOfLoyalty.shopIndex].wallet,
                     paymentId,
                     responseItem.data.data.purchaseId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString();
@@ -1349,16 +1371,14 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1372,7 +1392,8 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
-            server = new TestServer(config, storage, graph, schedulers);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1420,7 +1441,11 @@ describe("Test of Server", function () {
 
             it("Change loyalty type", async () => {
                 const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(users[purchase.userIndex], nonce);
+                const signature = await ContractUtils.signLoyaltyType(
+                    users[purchase.userIndex],
+                    nonce,
+                    contractManager.sideChainId
+                );
                 const url = URI(serverURL).directory("v1/ledger").filename("changeToLoyaltyToken").toString();
                 const response = await client.post(url, {
                     account: users[purchase.userIndex].address,
@@ -1448,7 +1473,11 @@ describe("Test of Server", function () {
                     phone: phoneHash,
                     sender: deployments.accounts.foundation.address,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(
+                    0,
+                    [purchaseParam],
+                    contractManager.sideChainId
+                );
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
@@ -1534,7 +1563,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -1603,16 +1633,14 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1626,7 +1654,8 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
-            server = new TestServer(config, storage, graph, schedulers);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1675,7 +1704,11 @@ describe("Test of Server", function () {
 
             it("Change loyalty type", async () => {
                 const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(users[purchase.userIndex], nonce);
+                const signature = await ContractUtils.signLoyaltyType(
+                    users[purchase.userIndex],
+                    nonce,
+                    contractManager.sideChainId
+                );
                 const url = URI(serverURL).directory("v1/ledger").filename("changeToLoyaltyToken").toString();
                 const response = await client.post(url, {
                     account: users[purchase.userIndex].address,
@@ -1703,7 +1736,11 @@ describe("Test of Server", function () {
                     phone: phoneHash,
                     sender: deployments.accounts.foundation.address,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(
+                    0,
+                    [purchaseParam],
+                    contractManager.sideChainId
+                );
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
@@ -1776,7 +1813,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -1871,7 +1909,8 @@ describe("Test of Server", function () {
                     shopData[purchaseOfLoyalty.shopIndex].wallet,
                     paymentId,
                     responseItem.data.data.purchaseId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString();
@@ -1974,16 +2013,14 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1997,7 +2034,8 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
-            server = new TestServer(config, storage, graph, schedulers);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -2046,7 +2084,11 @@ describe("Test of Server", function () {
 
             it("Change loyalty type", async () => {
                 const nonce = await ledgerContract.nonceOf(users[purchase.userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(users[purchase.userIndex], nonce);
+                const signature = await ContractUtils.signLoyaltyType(
+                    users[purchase.userIndex],
+                    nonce,
+                    contractManager.sideChainId
+                );
                 const url = URI(serverURL).directory("v1/ledger").filename("changeToLoyaltyToken").toString();
                 const response = await client.post(url, {
                     account: users[purchase.userIndex].address,
@@ -2074,7 +2116,11 @@ describe("Test of Server", function () {
                     phone: phoneHash,
                     sender: deployments.accounts.foundation.address,
                 };
-                const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                const purchaseMessage = ContractUtils.getPurchasesMessage(
+                    0,
+                    [purchaseParam],
+                    contractManager.sideChainId
+                );
                 const signatures = deployments.accounts.validators.map((m) =>
                     ContractUtils.signMessage(m, purchaseMessage)
                 );
@@ -2147,7 +2193,8 @@ describe("Test of Server", function () {
                     responseItem.data.data.amount,
                     responseItem.data.data.currency,
                     responseItem.data.data.shopId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const response = await client.post(
@@ -2241,7 +2288,8 @@ describe("Test of Server", function () {
                     shopData[purchaseOfLoyalty.shopIndex].wallet,
                     paymentId,
                     responseItem.data.data.purchaseId,
-                    nonce
+                    nonce,
+                    contractManager.sideChainId
                 );
 
                 const url = URI(serverURL).directory("/v1/payment/cancel").filename("approval").toString();
@@ -2333,7 +2381,8 @@ describe("Test of Server", function () {
                         responseItem.data.data.amount,
                         responseItem.data.data.currency,
                         responseItem.data.data.shopId,
-                        nonce
+                        nonce,
+                        contractManager.sideChainId
                     );
 
                     const response = await client.post(
@@ -2363,7 +2412,8 @@ describe("Test of Server", function () {
                         wallet,
                         receivedPaymentId,
                         responseItem.data.data.purchaseId,
-                        nonce
+                        nonce,
+                        contractManager.sideChainId
                     );
 
                     const response = await client.post(
@@ -2408,16 +2458,14 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
-            config.contracts.tokenAddress = tokenContract.address;
-            config.contracts.phoneLinkerAddress = linkContract.address;
-            config.contracts.shopAddress = shopContract.address;
-            config.contracts.ledgerAddress = ledgerContract.address;
-            config.contracts.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.loyaltyProviderAddress = providerContract.address;
-            config.contracts.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = tokenContract.address;
+            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
+            config.contracts.sideChain.shopAddress = shopContract.address;
+            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
+            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
+            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
+            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
+            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -2431,7 +2479,8 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
-            server = new TestServer(config, storage, graph, schedulers, mobilePhone);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph, schedulers, mobilePhone);
         });
 
         before("Start TestServer", async () => {
@@ -2513,7 +2562,7 @@ describe("Test of Server", function () {
                 phone: phoneHash,
                 sender: deployments.accounts.foundation.address,
             };
-            const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+            const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam], contractManager.sideChainId);
             const signatures = deployments.accounts.validators.map((m) =>
                 ContractUtils.signMessage(m, purchaseMessage)
             );

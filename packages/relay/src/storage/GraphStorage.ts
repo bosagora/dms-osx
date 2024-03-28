@@ -1,7 +1,7 @@
 import { IDatabaseConfig } from "../common/Config";
+import { IGraphPageInfo, IGraphShopData, IStatisticsAccountInfo, IStatisticsShopInfo } from "../types";
 import { Utils } from "../utils/Utils";
 import { Storage } from "./Storage";
-import { IStatisticsAccountInfo, IGraphPageInfo, IGraphShopData, IStatisticsShopInfo } from "../types";
 
 import { BigNumber } from "ethers";
 import MybatisMapper from "mybatis-mapper";

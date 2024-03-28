@@ -1,16 +1,11 @@
-import {
-    BIP20DelegatedTransfer,
-    CurrencyRate,
-    Ledger,
-    LoyaltyConsumer,
-    PhoneLinkCollection,
-    Shop,
-} from "../../typechain-types";
+import { LoyaltyConsumer } from "../../typechain-types";
 import { Amount } from "../common/Amount";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ContractManager } from "../contract/ContractManager";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { INotificationSender } from "../delegator/NotificationSender";
+import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
@@ -31,100 +26,47 @@ import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
 import { Validation } from "../validation";
 
-import { BigNumber, ContractTransaction, Wallet } from "ethers";
+import { BigNumber, ContractTransaction, ethers } from "ethers";
 import { body, query, validationResult } from "express-validator";
-import * as hre from "hardhat";
 
 import express from "express";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
-import { Metrics } from "../metrics/Metrics";
 
 export class PaymentRouter {
-    /**
-     *
-     * @private
-     */
-    private _web_service: WebService;
-
-    /**
-     * The configuration of the database
-     * @private
-     */
-    private readonly _config: Config;
-
-    private readonly _metrics: Metrics;
-
-    private readonly _relaySigners: RelaySigners;
-
-    /**
-     * ERC20 토큰 컨트랙트
-     * @private
-     */
-    private _tokenContract: BIP20DelegatedTransfer | undefined;
-
-    /**
-     * 사용자의 원장 컨트랙트
-     * @private
-     */
-    private _ledgerContract: Ledger | undefined;
-
-    /**
-     * 사용자의 원장 컨트랙트
-     * @private
-     */
-    private _shopContract: Shop | undefined;
-
-    /**
-     * 이메일 지갑주소 링크 컨트랙트
-     * @private
-     */
-    private _phoneLinkerContract: PhoneLinkCollection | undefined;
-
-    /**
-     * 환률 컨트랙트
-     * @private
-     */
-    private _currencyRateContract: CurrencyRate | undefined;
-
-    private _storage: RelayStorage;
-    private _graph: GraphStorage;
-
+    private web_service: WebService;
+    private readonly config: Config;
+    private readonly contractManager: ContractManager;
+    private readonly metrics: Metrics;
+    private readonly relaySigners: RelaySigners;
+    private storage: RelayStorage;
+    private graph: GraphStorage;
     private readonly _sender: INotificationSender;
 
-    /**
-     *
-     * @param service  WebService
-     * @param config Configuration
-     * @param metrics Metrics
-     * @param storage
-     * @param graph
-     * @param relaySigners
-     * @param sender
-     * @param sender
-     */
     constructor(
         service: WebService,
         config: Config,
+        contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
         graph: GraphStorage,
         relaySigners: RelaySigners,
         sender: INotificationSender
     ) {
-        this._web_service = service;
-        this._config = config;
-        this._metrics = metrics;
+        this.web_service = service;
+        this.config = config;
+        this.contractManager = contractManager;
+        this.metrics = metrics;
 
-        this._storage = storage;
-        this._graph = graph;
-        this._relaySigners = relaySigners;
+        this.storage = storage;
+        this.graph = graph;
+        this.relaySigners = relaySigners;
         this._sender = sender;
     }
 
     private get app(): express.Application {
-        return this._web_service.app;
+        return this.web_service.app;
     }
 
     public registerRoutes() {
@@ -256,8 +198,9 @@ export class PaymentRouter {
      * 트팬잭션을 중계할 때 사용될 서명자
      * @private
      */
-    private async getRelaySigner(): Promise<ISignerItem> {
-        return this._relaySigners.getSigner();
+    private async getRelaySigner(provider?: ethers.providers.Provider): Promise<ISignerItem> {
+        if (provider === undefined) provider = this.contractManager.sideChainProvider;
+        return this.relaySigners.getSigner(provider);
     }
 
     /***
@@ -266,75 +209,6 @@ export class PaymentRouter {
      */
     private releaseRelaySigner(signer: ISignerItem) {
         signer.using = false;
-    }
-
-    /**
-     * ERC20 토큰 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getTokenContract(): Promise<BIP20DelegatedTransfer> {
-        if (this._tokenContract === undefined) {
-            const tokenFactory = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
-            this._tokenContract = tokenFactory.attach(this._config.contracts.tokenAddress);
-        }
-        return this._tokenContract;
-    }
-
-    /**
-     * 사용자의 원장 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getLedgerContract(): Promise<Ledger> {
-        if (this._ledgerContract === undefined) {
-            const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
-            this._ledgerContract = ledgerFactory.attach(this._config.contracts.ledgerAddress);
-        }
-        return this._ledgerContract;
-    }
-
-    private async getShopContract(): Promise<Shop> {
-        if (this._shopContract === undefined) {
-            const shopFactory = await hre.ethers.getContractFactory("Shop");
-            this._shopContract = shopFactory.attach(this._config.contracts.shopAddress);
-        }
-        return this._shopContract;
-    }
-
-    /**
-     * 이메일 지갑주소 링크 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getPhoneLinkerContract(): Promise<PhoneLinkCollection> {
-        if (this._phoneLinkerContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
-            this._phoneLinkerContract = linkCollectionFactory.attach(this._config.contracts.phoneLinkerAddress);
-        }
-        return this._phoneLinkerContract;
-    }
-
-    /**
-     * 환률 컨트랙트를 리턴한다.
-     * 컨트랙트의 객체가 생성되지 않았다면 컨트랙트 주소를 이용하여 컨트랙트 객체를 생성한 후 반환한다.
-     * @private
-     */
-    private async getCurrencyRateContract(): Promise<CurrencyRate> {
-        if (this._currencyRateContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("CurrencyRate");
-            this._currencyRateContract = factory.attach(this._config.contracts.currencyRateAddress);
-        }
-        return this._currencyRateContract;
-    }
-
-    private _consumerContract: LoyaltyConsumer | undefined;
-    private async getConsumerContract(): Promise<LoyaltyConsumer> {
-        if (this._consumerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
-            this._consumerContract = factory.attach(this._config.contracts.loyaltyConsumerAddress);
-        }
-        return this._consumerContract;
     }
 
     /**
@@ -353,11 +227,11 @@ export class PaymentRouter {
     }
 
     private async getPaymentId(account: string): Promise<string> {
-        const nonce = await (await this.getLedgerContract()).nonceOf(account);
+        const nonce = await this.contractManager.sideLedgerContract.nonceOf(account);
         // 내부에 랜덤으로 32 Bytes 를 생성하여 ID를 생성하므로 무한반복될 가능성이 극히 낮음
         while (true) {
             const id = ContractUtils.getPaymentId(account, nonce);
-            if (await (await this.getConsumerContract()).isAvailablePaymentId(id)) return id;
+            if (await this.contractManager.sideLoyaltyConsumerContract.isAvailablePaymentId(id)) return id;
         }
     }
 
@@ -377,26 +251,26 @@ export class PaymentRouter {
         try {
             let account: string = String(req.query.account).trim();
             if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this._storage.getRealAccount(account);
+                const realAccount = await this.storage.getRealAccount(account);
                 if (realAccount === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
                 } else {
                     account = realAccount;
                 }
             }
-            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
             const balance =
                 loyaltyType === ContractLoyaltyType.POINT
-                    ? await (await this.getLedgerContract()).pointBalanceOf(account)
-                    : await (await this.getLedgerContract()).tokenBalanceOf(account);
-            this._metrics.add("success", 1);
+                    ? await this.contractManager.sideLedgerContract.pointBalanceOf(account)
+                    : await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
+            this.metrics.add("success", 1);
             return res
                 .status(200)
                 .json(this.makeResponseData(0, { account, loyaltyType, balance: balance.toString() }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/user/balance : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -416,21 +290,21 @@ export class PaymentRouter {
 
         try {
             const phone: string = String(req.query.phone).trim();
-            const account: string = await (await this.getPhoneLinkerContract()).toAddress(phone);
+            const account: string = await this.contractManager.sidePhoneLinkerContract.toAddress(phone);
             if (account !== AddressZero) {
-                const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+                const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
                 const balance =
                     loyaltyType === ContractLoyaltyType.POINT
-                        ? await (await this.getLedgerContract()).pointBalanceOf(account)
-                        : await (await this.getLedgerContract()).tokenBalanceOf(account);
-                this._metrics.add("success", 1);
+                        ? await this.contractManager.sideLedgerContract.pointBalanceOf(account)
+                        : await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
+                this.metrics.add("success", 1);
                 return res
                     .status(200)
                     .json(this.makeResponseData(0, { phone, account, loyaltyType, balance: balance.toString() }));
             } else {
                 const loyaltyType = ContractLoyaltyType.POINT;
-                const balance = await (await this.getLedgerContract()).unPayablePointBalanceOf(phone);
-                this._metrics.add("success", 1);
+                const balance = await this.contractManager.sideLedgerContract.unPayablePointBalanceOf(phone);
+                this.metrics.add("success", 1);
                 return res
                     .status(200)
                     .json(this.makeResponseData(0, { phone, loyaltyType, balance: balance.toString() }));
@@ -438,7 +312,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/phone/balance : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -459,12 +333,12 @@ export class PaymentRouter {
         try {
             const phone: string = String(req.query.phone).trim();
             const hash: string = ContractUtils.getPhoneHash(phone);
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { phone, hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/phone/hash : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -487,13 +361,13 @@ export class PaymentRouter {
             const from: string = String(req.query.from).trim();
             const to: string = String(req.query.to).trim();
 
-            const result = await (await this.getCurrencyRateContract()).convertCurrency(amount, from, to);
-            this._metrics.add("success", 1);
+            const result = await this.contractManager.sideCurrencyRateContract.convertCurrency(amount, from, to);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { amount: result.toString() }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/convert/currency : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -513,7 +387,7 @@ export class PaymentRouter {
 
         try {
             const shopId: string = String(req.query.shopId).trim();
-            const info = await (await this.getShopContract()).shopOf(shopId);
+            const info = await this.contractManager.sideShopContract.shopOf(shopId);
 
             const shopInfo = {
                 shopId: info.shopId,
@@ -527,12 +401,12 @@ export class PaymentRouter {
                 settledAmount: info.settledAmount.toString(),
                 withdrawnAmount: info.withdrawnAmount.toString(),
             };
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, shopInfo));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/shop/info : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -552,7 +426,7 @@ export class PaymentRouter {
 
         try {
             const shopId: string = String(req.query.shopId).trim();
-            const info = await (await this.getShopContract()).shopOf(shopId);
+            const info = await this.contractManager.sideShopContract.shopOf(shopId);
 
             const status = info.withdrawData.status === ContractWithdrawStatus.CLOSE ? "Closed" : "Opened";
             const shopWithdrawalInfo = {
@@ -561,12 +435,12 @@ export class PaymentRouter {
                 withdrawStatus: status,
             };
 
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, shopWithdrawalInfo));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/shop/withdrawal : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -589,13 +463,14 @@ export class PaymentRouter {
         try {
             const message = ContractUtils.getAccountMessage(
                 account,
-                await (await this.getLedgerContract()).nonceOf(account)
+                await this.contractManager.sideLedgerContract.nonceOf(account),
+                this.contractManager.sideChainId
             );
             if (!ContractUtils.verifyMessage(account, message, signature)) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
             }
-            const temporaryAccount = await this._storage.getTemporaryAccount(account);
-            this._metrics.add("success", 1);
+            const temporaryAccount = await this.storage.getTemporaryAccount(account);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     temporaryAccount,
@@ -604,7 +479,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/account/temporary : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -625,7 +500,7 @@ export class PaymentRouter {
         try {
             let account: string = String(req.query.account).trim();
             if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this._storage.getRealAccount(account);
+                const realAccount = await this.storage.getRealAccount(account);
                 if (realAccount === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
                 } else {
@@ -636,11 +511,11 @@ export class PaymentRouter {
             const amount: BigNumber = BigNumber.from(req.query.amount);
             const currency: string = String(req.query.currency).trim().toLowerCase();
 
-            const loyaltyType = await (await this.getLedgerContract()).loyaltyTypeOf(account);
+            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
 
-            const feeRate = await (await this.getLedgerContract()).getFee();
-            const rate = await (await this.getCurrencyRateContract()).get(currency.toLowerCase());
-            const multiple = await (await this.getCurrencyRateContract()).multiple();
+            const feeRate = await this.contractManager.sideLedgerContract.getFee();
+            const rate = await this.contractManager.sideCurrencyRateContract.get(currency.toLowerCase());
+            const multiple = await this.contractManager.sideCurrencyRateContract.multiple();
 
             let balance: BigNumber;
             let balanceValue: BigNumber;
@@ -655,7 +530,7 @@ export class PaymentRouter {
             let totalValue: BigNumber;
 
             if (loyaltyType === ContractLoyaltyType.POINT) {
-                balance = await (await this.getLedgerContract()).pointBalanceOf(account);
+                balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
                 balanceValue = ContractUtils.zeroGWEI(balance.mul(multiple).div(rate));
                 paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
                 feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
@@ -664,9 +539,9 @@ export class PaymentRouter {
                 feeToken = BigNumber.from(0);
                 totalToken = BigNumber.from(0);
             } else {
-                balance = await (await this.getLedgerContract()).tokenBalanceOf(account);
-                const symbol = await (await this.getTokenContract()).symbol();
-                const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
+                balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
+                const symbol = await this.contractManager.sideTokenContract.symbol();
+                const tokenRate = await this.contractManager.sideCurrencyRateContract.get(symbol);
                 balanceValue = ContractUtils.zeroGWEI(balance.mul(tokenRate).div(rate));
                 paidToken = ContractUtils.zeroGWEI(amount.mul(rate).div(tokenRate));
                 feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(10000));
@@ -679,7 +554,7 @@ export class PaymentRouter {
             feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(10000));
             totalValue = paidValue.add(feeValue);
 
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     account,
@@ -703,7 +578,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/info : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -723,13 +598,13 @@ export class PaymentRouter {
         try {
             let accessKey = req.get("Authorization");
             if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
+            if (accessKey !== this.config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
 
             let account: string = String(req.body.account).trim();
             if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this._storage.getRealAccount(account);
+                const realAccount = await this.storage.getRealAccount(account);
                 if (realAccount === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
                 } else {
@@ -742,9 +617,9 @@ export class PaymentRouter {
             const currency: string = String(req.body.currency).trim();
             const shopId: string = String(req.body.shopId).trim();
 
-            const feeRate = await (await this.getLedgerContract()).getFee();
-            const rate = await (await this.getCurrencyRateContract()).get(currency.toLowerCase());
-            const multiple = await (await this.getCurrencyRateContract()).multiple();
+            const feeRate = await this.contractManager.sideLedgerContract.getFee();
+            const rate = await this.contractManager.sideCurrencyRateContract.get(currency.toLowerCase());
+            const multiple = await this.contractManager.sideCurrencyRateContract.multiple();
 
             let balance: BigNumber;
             let paidPoint: BigNumber;
@@ -757,7 +632,7 @@ export class PaymentRouter {
             let totalToken: BigNumber;
             let totalValue: BigNumber;
 
-            const contract = await this.getLedgerContract();
+            const contract = this.contractManager.sideLedgerContract;
             const loyaltyType = await contract.loyaltyTypeOf(account);
             if (loyaltyType === ContractLoyaltyType.POINT) {
                 balance = await contract.pointBalanceOf(account);
@@ -772,8 +647,8 @@ export class PaymentRouter {
                 totalToken = BigNumber.from(0);
             } else {
                 balance = await contract.tokenBalanceOf(account);
-                const symbol = await (await this.getTokenContract()).symbol();
-                const tokenRate = await (await this.getCurrencyRateContract()).get(symbol);
+                const symbol = await this.contractManager.sideTokenContract.symbol();
+                const tokenRate = await this.contractManager.sideCurrencyRateContract.get(symbol);
                 paidToken = ContractUtils.zeroGWEI(amount.mul(rate).div(tokenRate));
                 feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(10000));
                 totalToken = paidToken.add(feeToken);
@@ -820,12 +695,12 @@ export class PaymentRouter {
                 openCancelTxId: "",
                 openCancelTxTime: 0,
             };
-            await this._storage.postPayment(item);
+            await this.storage.postPayment(item);
 
-            const shopContract = await this.getShopContract();
+            const shopContract = this.contractManager.sideShopContract;
             const shopInfo = await shopContract.shopOf(item.shopId);
 
-            const mobileData = await this._storage.getMobile(item.account, MobileType.USER_APP);
+            const mobileData = await this.storage.getMobile(item.account, MobileType.USER_APP);
 
             if (!process.env.TESTING && mobileData === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
@@ -869,7 +744,7 @@ export class PaymentRouter {
                 await this._sender.send(to, title, contents.join(", "), data);
             }
 
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     paymentId: item.paymentId,
@@ -898,7 +773,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/new/open : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -921,7 +796,7 @@ export class PaymentRouter {
             const approval: boolean = String(req.body.approval).trim().toLowerCase() === "true";
             const signature: string = String(req.body.signature).trim();
 
-            const item = await this._storage.getPayment(paymentId);
+            const item = await this.storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
@@ -940,15 +815,16 @@ export class PaymentRouter {
                         item.amount,
                         item.currency,
                         item.shopId,
-                        await (await this.getLedgerContract()).nonceOf(item.account),
+                        await this.contractManager.sideLedgerContract.nonceOf(item.account),
                         item.account,
-                        signature
+                        signature,
+                        this.contractManager.sideChainId
                     )
                 ) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
                 }
 
-                if (ContractUtils.getTimeStamp() - item.openNewTimestamp > this._config.relay.paymentTimeoutSecond) {
+                if (ContractUtils.getTimeStamp() - item.openNewTimestamp > this.config.relay.paymentTimeoutSecond) {
                     const data = ResponseMessage.getErrorMessage("7000");
 
                     await this.sendPaymentResult(
@@ -960,7 +836,7 @@ export class PaymentRouter {
                     return res.status(200).json(data);
                 }
 
-                const contract = await this.getConsumerContract();
+                const contract = this.contractManager.sideLoyaltyConsumerContract;
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (approval) {
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
@@ -979,14 +855,14 @@ export class PaymentRouter {
                             item.openNewTxId = tx.hash;
                             item.openNewTimestamp = ContractUtils.getTimeStamp();
                             item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX;
-                            await this._storage.updateOpenNewTx(
+                            await this.storage.updateOpenNewTx(
                                 item.paymentId,
                                 item.openNewTxId,
                                 item.openNewTimestamp,
                                 item.paymentStatus
                             );
 
-                            this._metrics.add("success", 1);
+                            this.metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1001,22 +877,22 @@ export class PaymentRouter {
                             );
                         } catch (error) {
                             item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_FAILED_TX;
-                            await this._storage.forcedUpdatePaymentStatus(item.paymentId, item.paymentStatus);
+                            await this.storage.forcedUpdatePaymentStatus(item.paymentId, item.paymentStatus);
                             const msg = ResponseMessage.getEVMErrorMessage(error);
                             logger.error(`POST /v1/payment/new/approval : ${msg.error.message}`);
                             return res.status(200).json(msg);
                         }
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2025"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_PAYMENT) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2027"));
                     } else {
                         return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
@@ -1024,7 +900,7 @@ export class PaymentRouter {
                 } else {
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.DENIED_NEW;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                         await this.sendPaymentResult(
                             TaskResultType.NEW,
@@ -1033,7 +909,7 @@ export class PaymentRouter {
                             this.getCallBackResponse(item)
                         );
 
-                        this._metrics.add("success", 1);
+                        this.metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1053,7 +929,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/new/approval : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
@@ -1074,31 +950,31 @@ export class PaymentRouter {
 
         let accessKey = req.get("Authorization");
         if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
-        if (accessKey !== this._config.relay.accessKey) {
+        if (accessKey !== this.config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }
 
         const confirm: boolean = String(req.body.confirm).trim().toLowerCase() === "true";
         const paymentId: string = String(req.body.paymentId).trim();
-        const item = await this._storage.getPayment(paymentId);
+        const item = await this.storage.getPayment(paymentId);
         if (item === undefined) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
         } else {
             const signerItem = await this.getRelaySigner();
             try {
-                const contract = await this.getConsumerContract();
+                const contract = this.contractManager.sideLoyaltyConsumerContract;
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
                     if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_NEW) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                         item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updateCloseNewTimestamp(
+                        await this.storage.updateCloseNewTimestamp(
                             item.paymentId,
                             item.paymentStatus,
                             item.closeNewTimestamp
                         );
 
-                        this._metrics.add("success", 1);
+                        this.metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1131,16 +1007,16 @@ export class PaymentRouter {
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_CONFIRMED_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX
                     ) {
-                        const timeout = this._config.relay.paymentTimeoutSecond - 5;
+                        const timeout = this.config.relay.paymentTimeoutSecond - 5;
                         if (ContractUtils.getTimeStamp() - item.openNewTimestamp > timeout) {
                             item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                             item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                            await this._storage.updateCloseNewTimestamp(
+                            await this.storage.updateCloseNewTimestamp(
                                 item.paymentId,
                                 item.paymentStatus,
                                 item.closeNewTimestamp
                             );
-                            this._metrics.add("success", 1);
+                            this.metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1175,7 +1051,7 @@ export class PaymentRouter {
                     ) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                         item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updateCloseNewTimestamp(
+                        await this.storage.updateCloseNewTimestamp(
                             item.paymentId,
                             item.paymentStatus,
                             item.closeNewTimestamp
@@ -1197,9 +1073,9 @@ export class PaymentRouter {
                                 : LoyaltyPaymentTaskStatus.FAILED_NEW;
                             item.closeNewTimestamp = ContractUtils.getTimeStamp();
                             this.updateEvent(event, item);
-                            await this._storage.updatePayment(item);
+                            await this.storage.updatePayment(item);
 
-                            this._metrics.add("success", 1);
+                            this.metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1236,7 +1112,7 @@ export class PaymentRouter {
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_NEW;
                     item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updateCloseNewTimestamp(
+                    await this.storage.updateCloseNewTimestamp(
                         item.paymentId,
                         item.paymentStatus,
                         item.closeNewTimestamp
@@ -1245,7 +1121,7 @@ export class PaymentRouter {
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_PAYMENT) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                     item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updateCloseNewTimestamp(
+                    await this.storage.updateCloseNewTimestamp(
                         item.paymentId,
                         item.paymentStatus,
                         item.closeNewTimestamp
@@ -1257,11 +1133,11 @@ export class PaymentRouter {
                     );
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
                         item.contractStatus = ContractLoyaltyPaymentStatus.FAILED_PAYMENT;
-                        await this._storage.updatePaymentContractStatus(item.paymentId, item.contractStatus);
+                        await this.storage.updatePaymentContractStatus(item.paymentId, item.contractStatus);
 
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_NEW;
                         item.closeNewTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updateCloseNewTimestamp(
+                        await this.storage.updateCloseNewTimestamp(
                             item.paymentId,
                             item.paymentStatus,
                             item.closeNewTimestamp
@@ -1272,7 +1148,7 @@ export class PaymentRouter {
             } catch (error: any) {
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.error(`POST /v1/payment/new/close : ${msg.error.message}`);
-                this._metrics.add("failure", 1);
+                this.metrics.add("failure", 1);
                 return res.status(200).json(msg);
             } finally {
                 this.releaseRelaySigner(signerItem);
@@ -1294,11 +1170,11 @@ export class PaymentRouter {
 
         try {
             const paymentId: string = String(req.query.paymentId).trim();
-            const item = await this._storage.getPayment(paymentId);
+            const item = await this.storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             }
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     paymentId: item.paymentId,
@@ -1327,7 +1203,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/payment/item : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
@@ -1348,12 +1224,12 @@ export class PaymentRouter {
         try {
             let accessKey = req.get("Authorization");
             if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
-            if (accessKey !== this._config.relay.accessKey) {
+            if (accessKey !== this.config.relay.accessKey) {
                 return res.json(ResponseMessage.getErrorMessage("2002"));
             }
 
             const paymentId: string = String(req.body.paymentId).trim();
-            const item = await this._storage.getPayment(paymentId);
+            const item = await this.storage.getPayment(paymentId);
             if (item === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
             } else {
@@ -1363,27 +1239,27 @@ export class PaymentRouter {
 
                 item.paymentStatus = LoyaltyPaymentTaskStatus.OPENED_CANCEL;
                 item.openCancelTimestamp = ContractUtils.getTimeStamp();
-                await this._storage.updateOpenCancelTimestamp(
+                await this.storage.updateOpenCancelTimestamp(
                     item.paymentId,
                     item.paymentStatus,
                     item.openCancelTimestamp
                 );
                 [item.secret, item.secretLock] = ContractUtils.getSecret();
-                await this._storage.updateSecret(item.paymentId, item.secret, item.secretLock);
+                await this.storage.updateSecret(item.paymentId, item.secret, item.secretLock);
 
-                const shopContract = await this.getShopContract();
+                const shopContract = this.contractManager.sideShopContract;
                 const shopInfo = await shopContract.shopOf(item.shopId);
 
                 let hasDelegator: boolean = false;
                 if (shopInfo.delegator !== AddressZero) {
-                    const wallet = await this._storage.getDelegator(shopInfo.account, this._config.relay.encryptKey);
+                    const wallet = await this.storage.getDelegator(shopInfo.account, this.config.relay.encryptKey);
                     if (wallet !== undefined && wallet.address.toLowerCase() === shopInfo.delegator.toLowerCase()) {
                         hasDelegator = true;
                     }
                 }
 
                 if (hasDelegator) {
-                    this._metrics.add("success", 1);
+                    this.metrics.add("success", 1);
                     return res.status(200).json(
                         this.makeResponseData(0, {
                             paymentId: item.paymentId,
@@ -1411,7 +1287,7 @@ export class PaymentRouter {
                     );
                 }
 
-                const mobileData = await this._storage.getMobile(shopInfo.account, MobileType.SHOP_APP);
+                const mobileData = await this.storage.getMobile(shopInfo.account, MobileType.SHOP_APP);
 
                 if (!process.env.TESTING && mobileData === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
@@ -1460,7 +1336,7 @@ export class PaymentRouter {
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
 
-                this._metrics.add("success", 1);
+                this.metrics.add("success", 1);
                 return res.status(200).json(
                     this.makeResponseData(0, {
                         paymentId: item.paymentId,
@@ -1490,7 +1366,7 @@ export class PaymentRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/payment/cancel/open : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
@@ -1510,7 +1386,7 @@ export class PaymentRouter {
         const paymentId: string = String(req.body.paymentId).trim();
         const approval: boolean = String(req.body.approval).trim().toLowerCase() === "true";
         const signature: string = String(req.body.signature).trim();
-        const item = await this._storage.getPayment(paymentId);
+        const item = await this.storage.getPayment(paymentId);
         if (item === undefined) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
         } else {
@@ -1524,46 +1400,48 @@ export class PaymentRouter {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
                 }
 
-                const shopContract = await this.getShopContract();
+                const shopContract = this.contractManager.sideShopContract;
                 const shopData = await shopContract.shopOf(item.shopId);
 
                 let hasDelegator: boolean = false;
                 if (shopData.delegator !== AddressZero) {
-                    const wallet = await this._storage.getDelegator(shopData.account, this._config.relay.encryptKey);
+                    const wallet = await this.storage.getDelegator(shopData.account, this.config.relay.encryptKey);
                     if (wallet !== undefined && wallet.address.toLowerCase() === shopData.delegator.toLowerCase()) {
                         hasDelegator = true;
                     }
                 }
 
                 if (!hasDelegator) {
-                    const nonce = await (await this.getLedgerContract()).nonceOf(shopData.account);
+                    const nonce = await this.contractManager.sideLedgerContract.nonceOf(shopData.account);
                     if (
                         !ContractUtils.verifyLoyaltyCancelPayment(
                             item.paymentId,
                             item.purchaseId,
                             nonce,
                             shopData.account,
-                            signature
+                            signature,
+                            this.contractManager.sideChainId
                         )
                     ) {
                         return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
                     }
                 } else {
-                    const nonce = await (await this.getLedgerContract()).nonceOf(shopData.delegator);
+                    const nonce = await this.contractManager.sideLedgerContract.nonceOf(shopData.delegator);
                     if (
                         !ContractUtils.verifyLoyaltyCancelPayment(
                             item.paymentId,
                             item.purchaseId,
                             nonce,
                             shopData.delegator,
-                            signature
+                            signature,
+                            this.contractManager.sideChainId
                         )
                     ) {
                         return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
                     }
                 }
 
-                if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > this._config.relay.paymentTimeoutSecond) {
+                if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > this.config.relay.paymentTimeoutSecond) {
                     const msg = ResponseMessage.getErrorMessage("7000");
 
                     await this.sendPaymentResult(
@@ -1576,7 +1454,7 @@ export class PaymentRouter {
                     return res.status(200).json(msg);
                 }
 
-                const contract = await this.getConsumerContract();
+                const contract = this.contractManager.sideLoyaltyConsumerContract;
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (approval) {
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
@@ -1588,14 +1466,14 @@ export class PaymentRouter {
                             item.openCancelTxId = tx.hash;
                             item.openCancelTimestamp = ContractUtils.getTimeStamp();
                             item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX;
-                            await this._storage.updateOpenCancelTx(
+                            await this.storage.updateOpenCancelTx(
                                 item.paymentId,
                                 item.openCancelTxId,
                                 item.openCancelTimestamp,
                                 item.paymentStatus
                             );
 
-                            this._metrics.add("success", 1);
+                            this.metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1610,22 +1488,22 @@ export class PaymentRouter {
                             );
                         } catch (error) {
                             item.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_FAILED_TX;
-                            await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                            await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                             const msg = ResponseMessage.getEVMErrorMessage(error);
                             logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
                             return res.status(200).json(msg);
                         }
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2025"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2026"));
                     } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
                         return res.status(200).json(ResponseMessage.getErrorMessage("2027"));
                     } else {
                         return res.status(200).json(ResponseMessage.getErrorMessage("2020"));
@@ -1633,7 +1511,7 @@ export class PaymentRouter {
                 } else {
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.DENIED_CANCEL;
-                        await this._storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
+                        await this.storage.updatePaymentStatus(item.paymentId, item.paymentStatus);
 
                         await this.sendPaymentResult(
                             TaskResultType.CANCEL,
@@ -1642,7 +1520,7 @@ export class PaymentRouter {
                             this.getCallBackResponse(item)
                         );
 
-                        this._metrics.add("success", 1);
+                        this.metrics.add("success", 1);
                         return res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1661,7 +1539,7 @@ export class PaymentRouter {
             } catch (error: any) {
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.error(`POST /v1/payment/cancel/approval : ${msg.error.message}`);
-                this._metrics.add("failure", 1);
+                this.metrics.add("failure", 1);
                 return res.status(200).json(msg);
             } finally {
                 this.releaseRelaySigner(signerItem);
@@ -1684,31 +1562,31 @@ export class PaymentRouter {
 
         let accessKey = req.get("Authorization");
         if (accessKey === undefined) accessKey = String(req.body.accessKey).trim();
-        if (accessKey !== this._config.relay.accessKey) {
+        if (accessKey !== this.config.relay.accessKey) {
             return res.json(ResponseMessage.getErrorMessage("2002"));
         }
 
         const confirm: boolean = String(req.body.confirm).trim().toLowerCase() === "true";
         const paymentId: string = String(req.body.paymentId).trim();
-        const item = await this._storage.getPayment(paymentId);
+        const item = await this.storage.getPayment(paymentId);
         if (item === undefined) {
             return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
         } else {
             const signerItem = await this.getRelaySigner();
             try {
-                const contract = await this.getConsumerContract();
+                const contract = this.contractManager.sideLoyaltyConsumerContract;
                 const loyaltyPaymentData = await contract.loyaltyPaymentOf(paymentId);
                 if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_PAYMENT) {
                     if (item.paymentStatus === LoyaltyPaymentTaskStatus.DENIED_CANCEL) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                         item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updateCloseCancelTimestamp(
+                        await this.storage.updateCloseCancelTimestamp(
                             item.paymentId,
                             item.paymentStatus,
                             item.closeCancelTimestamp
                         );
 
-                        this._metrics.add("success", 1);
+                        this.metrics.add("success", 1);
                         res.status(200).json(
                             this.makeResponseData(0, {
                                 paymentId: item.paymentId,
@@ -1741,16 +1619,16 @@ export class PaymentRouter {
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_CONFIRMED_TX ||
                         item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX
                     ) {
-                        const timeout = this._config.relay.paymentTimeoutSecond - 5;
+                        const timeout = this.config.relay.paymentTimeoutSecond - 5;
                         if (ContractUtils.getTimeStamp() - item.openCancelTimestamp > timeout) {
                             item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                             item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                            await this._storage.updateCloseCancelTimestamp(
+                            await this.storage.updateCloseCancelTimestamp(
                                 item.paymentId,
                                 item.paymentStatus,
                                 item.closeCancelTimestamp
                             );
-                            this._metrics.add("success", 1);
+                            this.metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1785,7 +1663,7 @@ export class PaymentRouter {
                     ) {
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                         item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updateCloseCancelTimestamp(
+                        await this.storage.updateCloseCancelTimestamp(
                             item.paymentId,
                             item.paymentStatus,
                             item.closeCancelTimestamp
@@ -1807,9 +1685,9 @@ export class PaymentRouter {
                                 : LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                             item.closeCancelTimestamp = ContractUtils.getTimeStamp();
                             this.updateEvent(event, item);
-                            await this._storage.updatePayment(item);
+                            await this.storage.updatePayment(item);
 
-                            this._metrics.add("success", 1);
+                            this.metrics.add("success", 1);
                             return res.status(200).json(
                                 this.makeResponseData(0, {
                                     paymentId: item.paymentId,
@@ -1846,7 +1724,7 @@ export class PaymentRouter {
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.CLOSED_CANCEL) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.CLOSED_CANCEL;
                     item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updateCloseCancelTimestamp(
+                    await this.storage.updateCloseCancelTimestamp(
                         item.paymentId,
                         item.paymentStatus,
                         item.closeCancelTimestamp
@@ -1855,7 +1733,7 @@ export class PaymentRouter {
                 } else if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.FAILED_PAYMENT) {
                     item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                     item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                    await this._storage.updateCloseCancelTimestamp(
+                    await this.storage.updateCloseCancelTimestamp(
                         item.paymentId,
                         item.paymentStatus,
                         item.closeCancelTimestamp
@@ -1867,11 +1745,11 @@ export class PaymentRouter {
                     );
                     if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.INVALID) {
                         item.contractStatus = ContractLoyaltyPaymentStatus.FAILED_CANCEL;
-                        await this._storage.updatePaymentContractStatus(item.paymentId, item.contractStatus);
+                        await this.storage.updatePaymentContractStatus(item.paymentId, item.contractStatus);
 
                         item.paymentStatus = LoyaltyPaymentTaskStatus.FAILED_CANCEL;
                         item.closeCancelTimestamp = ContractUtils.getTimeStamp();
-                        await this._storage.updateCloseCancelTimestamp(
+                        await this.storage.updateCloseCancelTimestamp(
                             item.paymentId,
                             item.paymentStatus,
                             item.closeCancelTimestamp
@@ -1882,7 +1760,7 @@ export class PaymentRouter {
             } catch (error: any) {
                 const msg = ResponseMessage.getEVMErrorMessage(error);
                 logger.error(`POST /v1/payment/cancel/close : ${msg.error.message}`);
-                this._metrics.add("failure", 1);
+                this.metrics.add("failure", 1);
                 return res.status(200).json(msg);
             } finally {
                 this.releaseRelaySigner(signerItem);
@@ -1988,8 +1866,8 @@ export class PaymentRouter {
     ) {
         try {
             const client = new HTTPClient();
-            const res = await client.post(this._config.relay.callbackEndpoint, {
-                accessKey: this._config.relay.callbackAccessKey,
+            const res = await client.post(this.config.relay.callbackEndpoint, {
+                accessKey: this.config.relay.callbackAccessKey,
                 type,
                 code,
                 message,
