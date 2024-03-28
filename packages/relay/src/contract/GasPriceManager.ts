@@ -1,6 +1,5 @@
 "use strict";
 
-import "@nomiclabs/hardhat-web3";
 import { BigNumber, ethers } from "ethers";
 
 export class GasPriceManager extends ethers.Signer {

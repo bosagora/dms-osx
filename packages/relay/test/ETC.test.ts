@@ -14,6 +14,7 @@ import path from "path";
 import assert from "assert";
 import * as hre from "hardhat";
 import { GraphStorage } from "../src/storage/GraphStorage";
+import { ContractManager } from "../src/contract/ContractManager";
 
 describe("Test for ETC", function () {
     this.timeout(1000 * 60 * 5);
@@ -42,7 +43,9 @@ describe("Test for ETC", function () {
 
             storage = await RelayStorage.make(config.database);
             const graph = await GraphStorage.make(config.graph);
-            server = new TestServer(config, storage, graph);
+            const contractManager = new ContractManager(config);
+            await contractManager.attach();
+            server = new TestServer(config, contractManager, storage, graph);
         });
 
         before("Start TestServer", async () => {

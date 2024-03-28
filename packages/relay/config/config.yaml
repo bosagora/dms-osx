@@ -85,17 +85,24 @@ relay:
   encryptKey: "${RELAY_ENCRYPT_KEY}"
 
 contracts:
-  tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"
-  phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
-  ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
-  shopAddress : "${SHOP_CONTRACT_ADDRESS}"
-  currencyRateAddress: "${CURRENCY_RATE_CONTRACT_ADDRESS}"
-  loyaltyProviderAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
-  loyaltyConsumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
-  loyaltyExchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
-  loyaltyTransferAddress: "${LOYALTY_TRANSFER_CONTRACT_ADDRESS}"
-  loyaltyBridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
-  sideChainBridgeAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
+  sideChain:
+    network: "production_net"
+    ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
+    phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
+    shopAddress : "${SHOP_CONTRACT_ADDRESS}"
+    currencyRateAddress: "${CURRENCY_RATE_CONTRACT_ADDRESS}"
+    loyaltyProviderAddress: "${LOYALTY_PROVIDER_CONTRACT_ADDRESS}"
+    loyaltyConsumerAddress: "${LOYALTY_CONSUMER_CONTRACT_ADDRESS}"
+    loyaltyExchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
+    loyaltyTransferAddress: "${LOYALTY_TRANSFER_CONTRACT_ADDRESS}"
+    tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"
+    loyaltyBridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
+    bridgeMainSideAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
+  mainChain:
+    network: "bosagora_testnet"
+    tokenAddress : "${MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS}"
+    loyaltyBridgeAddress: "${MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
+    bridgeMainSideAddress: "${MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
 
 metrics:
   accounts:

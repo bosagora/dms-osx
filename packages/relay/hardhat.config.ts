@@ -5,6 +5,7 @@ import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 import "solidity-docgen";
+import "./hardhat-change-network";
 
 import * as dotenv from "dotenv";
 import { Wallet } from "ethers";

@@ -18,13 +18,11 @@ import { TokenRouter } from "./routers/TokenRouter";
 import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
 import { PhoneLinkRouter } from "./routers/PhoneLinkRouter";
+import { ContractManager } from "./contract/ContractManager";
 
 export class DefaultServer extends WebService {
-    /**
-     * The configuration of the database
-     * @private
-     */
     private readonly config: Config;
+    private readonly contractManager: ContractManager;
     protected schedules: Scheduler[] = [];
 
     public readonly defaultRouter: DefaultRouter;
@@ -42,16 +40,9 @@ export class DefaultServer extends WebService {
 
     private readonly metrics: Metrics;
 
-    /**
-     * Constructor
-     * @param config Configuration
-     * @param storage
-     * @param graph
-     * @param schedules
-     * @param handler
-     */
     constructor(
         config: Config,
+        contractManager: ContractManager,
         storage: RelayStorage,
         graph: GraphStorage,
         schedules?: Scheduler[],
@@ -82,14 +73,16 @@ export class DefaultServer extends WebService {
         ]);
 
         this.config = config;
+        this.contractManager = contractManager;
         this.storage = storage;
         this.graph = graph;
         this.sender = new NotificationSender(this.config, handler);
         this.relaySigners = new RelaySigners(this.config);
-        this.defaultRouter = new DefaultRouter(this, this.config, this.metrics);
+        this.defaultRouter = new DefaultRouter(this, this.config, this.contractManager, this.metrics);
         this.ledgerRouter = new LedgerRouter(
             this,
             this.config,
+            this.contractManager,
             this.metrics,
             this.storage,
             this.graph,
@@ -98,6 +91,7 @@ export class DefaultServer extends WebService {
         this.shopRouter = new ShopRouter(
             this,
             this.config,
+            this.contractManager,
             this.metrics,
             this.storage,
             this.graph,
@@ -107,17 +101,34 @@ export class DefaultServer extends WebService {
         this.paymentRouter = new PaymentRouter(
             this,
             this.config,
+            this.contractManager,
             this.metrics,
             this.storage,
             this.graph,
             this.relaySigners,
             this.sender
         );
-        this.etcRouter = new ETCRouter(this, this.config, this.metrics, this.storage, this.graph, this.sender);
-        this.purchaseRouter = new StorePurchaseRouter(this, this.config, this.metrics, this.storage, this.graph);
+        this.etcRouter = new ETCRouter(
+            this,
+            this.config,
+            this.contractManager,
+            this.metrics,
+            this.storage,
+            this.graph,
+            this.sender
+        );
+        this.purchaseRouter = new StorePurchaseRouter(
+            this,
+            this.config,
+            this.contractManager,
+            this.metrics,
+            this.storage,
+            this.graph
+        );
         this.tokenRouter = new TokenRouter(
             this,
             this.config,
+            this.contractManager,
             this.metrics,
             this.storage,
             this.graph,
@@ -126,6 +137,7 @@ export class DefaultServer extends WebService {
         this.phonelinkRouter = new PhoneLinkRouter(
             this,
             this.config,
+            this.contractManager,
             this.metrics,
             this.storage,
             this.graph,
@@ -137,6 +149,7 @@ export class DefaultServer extends WebService {
             this.schedules.forEach((m) =>
                 m.setOption({
                     config: this.config,
+                    contractManager: this.contractManager,
                     storage: this.storage,
                     metrics: this.metrics,
                     graph: this.graph,

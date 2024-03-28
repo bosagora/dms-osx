@@ -7,6 +7,7 @@ import { NonceManager } from "@ethersproject/experimental";
 import { ContractUtils } from "../utils/ContractUtils";
 import { GasPriceManager } from "./GasPriceManager";
 
+import { ethers } from "ethers";
 import * as hre from "hardhat";
 
 export interface ISignerItem {
@@ -24,8 +25,8 @@ export class RelaySigners {
 
         this._signers = this._config.relay.managerKeys.map((m) => {
             return {
-                wallet: new Wallet(m, hre.ethers.provider),
-                signer: new Wallet(m, hre.ethers.provider) as Signer,
+                wallet: new Wallet(m),
+                signer: new Wallet(m) as Signer,
                 using: false,
             };
         });
@@ -35,8 +36,10 @@ export class RelaySigners {
      * 트팬잭션을 중계할 때 사용될 서명자
      * @private
      */
-    public async getSigner(): Promise<ISignerItem> {
+    public async getSigner(provider?: ethers.providers.Provider): Promise<ISignerItem> {
         let signerItem: ISignerItem | undefined;
+
+        if (provider === undefined) provider = hre.ethers.provider;
 
         const startTime = ContractUtils.getTimeStamp();
         while (true) {
@@ -53,11 +56,11 @@ export class RelaySigners {
 
         if (signerItem !== undefined) {
             signerItem.using = true;
-            signerItem.signer = new NonceManager(new GasPriceManager(signerItem.wallet));
+            signerItem.signer = new NonceManager(new GasPriceManager(signerItem.wallet.connect(provider)));
         } else {
             signerItem = this._signers[0];
             signerItem.using = true;
-            signerItem.signer = new NonceManager(new GasPriceManager(signerItem.wallet));
+            signerItem.signer = new NonceManager(new GasPriceManager(signerItem.wallet.connect(provider)));
         }
 
         return signerItem;

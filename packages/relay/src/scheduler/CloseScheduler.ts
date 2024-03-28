@@ -1,30 +1,22 @@
 import "@nomiclabs/hardhat-ethers";
-import { Ledger, LoyaltyConsumer } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ContractManager } from "../contract/ContractManager";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ContractLoyaltyPaymentStatus, LoyaltyPaymentTaskStatus } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
+import { HTTPClient } from "../utils/Utils";
 import { Scheduler } from "./Scheduler";
 
 import URI from "urijs";
-
-import * as hre from "hardhat";
-import { HTTPClient } from "../utils/Utils";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
  */
 export class CloseScheduler extends Scheduler {
     private _config: Config | undefined;
-
+    private _contractManager: ContractManager | undefined;
     private _storage: RelayStorage | undefined;
-
-    /**
-     * 사용자의 원장 컨트랙트
-     * @private
-     */
-    private _ledgerContract: Ledger | undefined;
 
     constructor(expression: string) {
         super(expression);
@@ -46,9 +38,19 @@ export class CloseScheduler extends Scheduler {
         }
     }
 
+    private get contractManager(): ContractManager {
+        if (this._contractManager !== undefined) return this._contractManager;
+        else {
+            logger.error("ContractManager is not ready yet.");
+            process.exit(1);
+        }
+    }
+
     public setOption(options: any) {
         if (options) {
             if (options.config && options.config instanceof Config) this._config = options.config;
+            if (options.contractManager && options.contractManager instanceof ContractManager)
+                this._contractManager = options.contractManager;
             if (options.storage && options.storage instanceof RelayStorage) this._storage = options.storage;
         }
     }
@@ -147,23 +149,6 @@ export class CloseScheduler extends Scheduler {
         }
     }
 
-    private async getLedgerContract(): Promise<Ledger> {
-        if (this._ledgerContract === undefined) {
-            const ledgerFactory = await hre.ethers.getContractFactory("Ledger");
-            this._ledgerContract = ledgerFactory.attach(this.config.contracts.ledgerAddress);
-        }
-        return this._ledgerContract;
-    }
-
-    private _consumerContract: LoyaltyConsumer | undefined;
-    private async getConsumerContract(): Promise<LoyaltyConsumer> {
-        if (this._consumerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
-            this._consumerContract = factory.attach(this.config.contracts.loyaltyConsumerAddress);
-        }
-        return this._consumerContract;
-    }
-
     private async onCheckConsistencyOfNewPayment() {
         const payments = await this.storage.getContractPaymentsStatusOf(
             [ContractLoyaltyPaymentStatus.OPENED_PAYMENT],
@@ -172,7 +157,7 @@ export class CloseScheduler extends Scheduler {
         for (const payment of payments) {
             logger.info(`CloseScheduler.onCheckConsistencyOfNewPayment ${payment.paymentId}`);
 
-            const contract = await this.getConsumerContract();
+            const contract = this.contractManager.sideLoyaltyConsumerContract;
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_PAYMENT) {
@@ -212,7 +197,7 @@ export class CloseScheduler extends Scheduler {
         for (const payment of payments) {
             logger.info(`CloseScheduler.onCheckConsistencyOfCancelPayment ${payment.paymentId}`);
 
-            const contract = await this.getConsumerContract();
+            const contract = this.contractManager.sideLoyaltyConsumerContract;
             const loyaltyPaymentData = await contract.loyaltyPaymentOf(payment.paymentId);
 
             if (loyaltyPaymentData.status === ContractLoyaltyPaymentStatus.OPENED_CANCEL) {

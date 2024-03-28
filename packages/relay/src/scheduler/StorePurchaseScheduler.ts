@@ -1,19 +1,17 @@
 import "@nomiclabs/hardhat-ethers";
-import { LoyaltyProvider } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
+import { ContractManager } from "../contract/ContractManager";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ContractUtils } from "../utils/ContractUtils";
 import { Scheduler } from "./Scheduler";
-
-import * as hre from "hardhat";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
  */
 export class StorePurchaseScheduler extends Scheduler {
     private _config: Config | undefined;
-
+    private _contractManager: ContractManager | undefined;
     private _storage: RelayStorage | undefined;
 
     constructor(expression: string) {
@@ -36,9 +34,19 @@ export class StorePurchaseScheduler extends Scheduler {
         }
     }
 
+    private get contractManager(): ContractManager {
+        if (this._contractManager !== undefined) return this._contractManager;
+        else {
+            logger.error("ContractManager is not ready yet.");
+            process.exit(1);
+        }
+    }
+
     public setOption(options: any) {
         if (options) {
             if (options.config && options.config instanceof Config) this._config = options.config;
+            if (options.contractManager && options.contractManager instanceof ContractManager)
+                this._contractManager = options.contractManager;
             if (options.storage && options.storage instanceof RelayStorage) this._storage = options.storage;
         }
     }
@@ -55,19 +63,10 @@ export class StorePurchaseScheduler extends Scheduler {
         }
     }
 
-    private _providerContract: LoyaltyProvider | undefined;
-    private async getProviderContract(): Promise<LoyaltyProvider> {
-        if (this._providerContract === undefined) {
-            const factory = await hre.ethers.getContractFactory("LoyaltyProvider");
-            this._providerContract = factory.attach(this.config.contracts.loyaltyProviderAddress);
-        }
-        return this._providerContract;
-    }
-
     private async onWatchStorePurchase() {
         const purchases = await this.storage.getStorePurchase();
         for (const purchase of purchases) {
-            const stored = await (await this.getProviderContract()).purchasesOf(purchase.purchaseId);
+            const stored = await this.contractManager.sideLoyaltyProviderContract.purchasesOf(purchase.purchaseId);
             if (stored) {
                 await this.storage.doneStorePurchase(purchase.purchaseId);
             } else if (purchase.timestamp + purchase.waiting + BigInt(60) < ContractUtils.getTimeStampBigInt()) {

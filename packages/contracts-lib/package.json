@@ -33,6 +33,6 @@
         "typescript": "^4.5.5"
     },
     "dependencies": {
-        "ethers": "npm:boa-ethers2@^5.7.9"
+        "ethers": "5.7.0"
     }
 }

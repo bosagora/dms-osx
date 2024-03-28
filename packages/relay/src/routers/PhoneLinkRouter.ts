@@ -1,67 +1,58 @@
-import { PhoneLinkCollection } from "../../typechain-types";
 import { Config } from "../common/Config";
 import { logger } from "../common/Logger";
-import { WebService } from "../service/WebService";
-import { ContractUtils } from "../utils/ContractUtils";
-
-import { body, param, validationResult } from "express-validator";
-import * as hre from "hardhat";
-
-import express from "express";
+import { ContractManager } from "../contract/ContractManager";
 import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { Metrics } from "../metrics/Metrics";
+import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
+import { ContractUtils } from "../utils/ContractUtils";
 import { ResponseMessage } from "../utils/Errors";
 
+import { body, param, validationResult } from "express-validator";
+
+import { ethers } from "ethers";
+import express from "express";
+
 export class PhoneLinkRouter {
-    private _web_service: WebService;
+    private web_service: WebService;
+    private readonly config: Config;
+    private readonly contractManager: ContractManager;
+    private readonly metrics: Metrics;
+    private readonly relaySigners: RelaySigners;
+    private storage: RelayStorage;
+    private graph: GraphStorage;
 
-    private readonly _config: Config;
-
-    private readonly _metrics: Metrics;
-
-    private readonly _relaySigners: RelaySigners;
-
-    private _storage: RelayStorage;
-    private _graph: GraphStorage;
-
-    /**
-     *
-     * @param service  WebService
-     * @param config Configuration
-     * @param metrics Metrics
-     * @param storage
-     * @param graph
-     * @param relaySigners
-     */
     constructor(
         service: WebService,
         config: Config,
+        contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
         graph: GraphStorage,
         relaySigners: RelaySigners
     ) {
-        this._web_service = service;
-        this._config = config;
-        this._metrics = metrics;
+        this.web_service = service;
+        this.config = config;
+        this.contractManager = contractManager;
+        this.metrics = metrics;
 
-        this._storage = storage;
-        this._graph = graph;
-        this._relaySigners = relaySigners;
+        this.storage = storage;
+        this.graph = graph;
+        this.relaySigners = relaySigners;
     }
 
     private get app(): express.Application {
-        return this._web_service.app;
+        return this.web_service.app;
     }
 
     /***
      * 트팬잭션을 중계할 때 사용될 서명자
      * @private
      */
-    private async getRelaySigner(): Promise<ISignerItem> {
-        return this._relaySigners.getSigner();
+    private async getRelaySigner(provider?: ethers.providers.Provider): Promise<ISignerItem> {
+        if (provider === undefined) provider = this.contractManager.sideChainProvider;
+        return this.relaySigners.getSigner(provider);
     }
 
     /***
@@ -70,15 +61,6 @@ export class PhoneLinkRouter {
      */
     private releaseRelaySigner(signer: ISignerItem) {
         signer.using = false;
-    }
-
-    private _phoneLinkContract: PhoneLinkCollection | undefined;
-    private async getPhoneLinkContract(): Promise<PhoneLinkCollection> {
-        if (this._phoneLinkContract === undefined) {
-            const linkCollectionFactory = await hre.ethers.getContractFactory("PhoneLinkCollection");
-            this._phoneLinkContract = linkCollectionFactory.attach(this._config.contracts.phoneLinkerAddress);
-        }
-        return this._phoneLinkContract;
     }
 
     /**
@@ -119,8 +101,8 @@ export class PhoneLinkRouter {
     private async phone_link_nonce(req: express.Request, res: express.Response) {
         logger.http(`GET /v1/link/main/nonce ${req.ip}:${JSON.stringify(req.params)}`);
         const account: string = String(req.params.account).trim();
-        const nonce = await (await this.getPhoneLinkContract()).nonceOf(account);
-        this._metrics.add("success", 1);
+        const nonce = await this.contractManager.sidePhoneLinkerContract.nonceOf(account);
+        this.metrics.add("success", 1);
         return res.status(200).json(this.makeResponseData(0, { account, nonce: nonce.toString() }));
     }
     /**
@@ -142,20 +124,22 @@ export class PhoneLinkRouter {
             const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
-            const userNonce = await (await this.getPhoneLinkContract()).nonceOf(account);
-            const message = ContractUtils.getRemoveMessage(account, userNonce);
+            const userNonce = await this.contractManager.sidePhoneLinkerContract.nonceOf(account);
+            const message = ContractUtils.getRemoveMessage(account, userNonce, this.contractManager.sideChainId);
             if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
-            const tx = await (await this.getPhoneLinkContract()).connect(signerItem.signer).remove(account, signature);
+            const tx = await this.contractManager.sidePhoneLinkerContract
+                .connect(signerItem.signer)
+                .remove(account, signature);
 
             logger.http(`TxHash(removePhoneInfoOfLink): ${tx.hash}`);
-            this._metrics.add("success", 1);
+            this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/link/removePhoneInfo : ${msg.error.message}`);
-            this._metrics.add("failure", 1);
+            this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
             this.releaseRelaySigner(signerItem);
