@@ -1,32 +1,34 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
-import { ethers, upgrades } from "hardhat";
 
 import { HardhatAccount } from "../../src/HardhatAccount";
 import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
+    Bridge,
     BridgeValidator,
     CurrencyRate,
-    LoyaltyToken,
     Ledger,
     LoyaltyBridge,
     LoyaltyBurner,
     LoyaltyConsumer,
     LoyaltyExchanger,
     LoyaltyProvider,
+    LoyaltyToken,
     LoyaltyTransfer,
     MultiSigWallet,
     PhoneLinkCollection,
     Shop,
-    Validator,
     TestKIOS,
+    Validator,
 } from "../../typechain-types";
 
 import { BaseContract, Contract, Wallet } from "ethers";
 
 import fs from "fs";
+
+import * as hre from "hardhat";
 
 const network = "bosagora_devnet";
 
@@ -83,7 +85,7 @@ class Deployments {
         this.deployments = new Map<string, IDeployedContract>();
         this.deployers = [];
 
-        const raws = HardhatAccount.keys.map((m) => new Wallet(m, ethers.provider));
+        const raws = HardhatAccount.keys.map((m) => new Wallet(m, hre.ethers.provider));
         const [
             deployer,
             owner,
@@ -181,13 +183,13 @@ class Deployments {
     }
 
     public async attachPreviousContracts() {
-        this.PHONE_LINK_COLLECTION_CONTRACT = (await ethers.getContractFactory("PhoneLinkCollection")).attach(
+        this.PHONE_LINK_COLLECTION_CONTRACT = (await hre.ethers.getContractFactory("PhoneLinkCollection")).attach(
             PHONE_LINK_COLLECTION_ADDRESSES[network]
         ) as PhoneLinkCollection;
-        this.MULTI_SIG_WALLET_CONTRACT = (await ethers.getContractFactory("MultiSigWallet")).attach(
+        this.MULTI_SIG_WALLET_CONTRACT = (await hre.ethers.getContractFactory("MultiSigWallet")).attach(
             MULTI_SIG_WALLET_ADDRESSES[network]
         ) as MultiSigWallet;
-        this.LOYALTY_TOKEN_CONTRACT = (await ethers.getContractFactory("LoyaltyToken")).attach(
+        this.LOYALTY_TOKEN_CONTRACT = (await hre.ethers.getContractFactory("LoyaltyToken")).attach(
             LOYALTY_TOKEN_ADDRESSES[network]
         ) as LoyaltyToken;
     }
@@ -260,7 +262,7 @@ class Deployments {
             this.deployments.set(key, {
                 name,
                 address,
-                contract: (await ethers.getContractFactory(name)).attach(address),
+                contract: (await hre.ethers.getContractFactory(name)).attach(address),
             });
         }
     }
@@ -280,8 +282,8 @@ class Deployments {
 async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
     const contractName = "PhoneLinkCollection";
     console.log(`Deploy ${contractName}...`);
-    const factory = await ethers.getContractFactory("PhoneLinkCollection");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("PhoneLinkCollection");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [accounts.linkValidators.map((m) => m.address)],
         {
@@ -367,8 +369,8 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
         return;
     }
 
-    const factory = await ethers.getContractFactory("Validator");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("Validator");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("LoyaltyToken"), accounts.validators.map((m) => m.address)],
         {
@@ -413,9 +415,9 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
         return;
     }
 
-    const factory = await ethers.getContractFactory("CurrencyRate");
+    const factory = await hre.ethers.getContractFactory("CurrencyRate");
     const tokenSymbol = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).symbol();
-    const contract = (await upgrades.deployProxy(
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("Validator"), tokenSymbol],
         {
@@ -456,8 +458,8 @@ async function deployLoyaltyBurner(accounts: IAccount, deployment: Deployments) 
         return;
     }
 
-    const factory = await ethers.getContractFactory("LoyaltyBurner");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("LoyaltyBurner");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("Validator"), await deployment.getContractAddress("PhoneLinkCollection")],
         {
@@ -483,8 +485,8 @@ async function deployLoyaltyProvider(accounts: IAccount, deployment: Deployments
         return;
     }
 
-    const factory = await ethers.getContractFactory("LoyaltyProvider");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("LoyaltyProvider");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [
             await deployment.getContractAddress("Validator"),
@@ -510,8 +512,8 @@ async function deployLoyaltyConsumer(accounts: IAccount, deployment: Deployments
         return;
     }
 
-    const factory = await ethers.getContractFactory("LoyaltyConsumer");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("LoyaltyConsumer");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("CurrencyRate")],
         {
@@ -536,8 +538,8 @@ async function deployLoyaltyExchanger(accounts: IAccount, deployment: Deployment
         return;
     }
 
-    const factory = await ethers.getContractFactory("LoyaltyExchanger");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("LoyaltyExchanger");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [
             await deployment.getContractAddress("PhoneLinkCollection"),
@@ -558,8 +560,8 @@ async function deployLoyaltyTransfer(accounts: IAccount, deployment: Deployments
     const contractName = "LoyaltyTransfer";
     console.log(`Deploy ${contractName}...`);
 
-    const factory = await ethers.getContractFactory("LoyaltyTransfer");
-    const contract = (await upgrades.deployProxy(factory.connect(accounts.owner), [], {
+    const factory = await hre.ethers.getContractFactory("LoyaltyTransfer");
+    const contract = (await hre.upgrades.deployProxy(factory.connect(accounts.owner), [], {
         initializer: "initialize",
         kind: "uups",
     })) as LoyaltyTransfer;
@@ -573,8 +575,8 @@ async function deployBridgeValidator(accounts: IAccount, deployment: Deployments
     const contractName = "BridgeValidator";
     console.log(`Deploy ${contractName}...`);
 
-    const factory = await ethers.getContractFactory("BridgeValidator");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("BridgeValidator");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.owner),
         [accounts.bridgeValidators.map((m) => m.address), 3],
         {
@@ -596,8 +598,8 @@ async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) 
         return;
     }
 
-    const factory = await ethers.getContractFactory("LoyaltyBridge");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("LoyaltyBridge");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("BridgeValidator")],
         {
@@ -623,8 +625,8 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
         return;
     }
 
-    const factory = await ethers.getContractFactory("Shop");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("Shop");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [
             await deployment.getContractAddress("CurrencyRate"),
@@ -667,9 +669,12 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
         for (const shop of shopData) {
             const nonce = await contract.nonceOf(shop.address);
             const message = ContractUtils.getShopAccountMessage(shop.shopId, shop.address, nonce);
-            const signature = await ContractUtils.signMessage(new Wallet(shop.privateKey, ethers.provider), message);
+            const signature = await ContractUtils.signMessage(
+                new Wallet(shop.privateKey, hre.ethers.provider),
+                message
+            );
             const tx = await contract
-                .connect(new Wallet(shop.privateKey, ethers.provider))
+                .connect(new Wallet(shop.privateKey, hre.ethers.provider))
                 .add(shop.shopId, shop.name, shop.currency, shop.address, signature);
             console.log(`Add shop data (tx: ${tx.hash})...`);
             // await tx.wait();
@@ -695,8 +700,8 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         return;
     }
 
-    const factory = await ethers.getContractFactory("Ledger");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("Ledger");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [
             {
@@ -776,21 +781,11 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         console.log(`Deposit foundation's amount (tx: ${tx6.hash})...`);
         // await tx6.wait();
 
-        const assetAmount2 = Amount.make(500_000_000, 18).value;
-        const tokenContract = (await deployment.getContract("LoyaltyToken")) as LoyaltyToken;
-        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
-        const nonce = await tokenContract.nonceOf(accounts.owner.address);
-        const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount2, nonce);
-        const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount2, signature);
-        console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
-        // await tx1.wait();
-
         console.log(`Deposit users.json`);
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
         for (const user of users) {
             if (user.loyaltyType === 1) {
-                const signer = new Wallet(user.privateKey).connect(ethers.provider);
+                const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
                 const nonce2 = await contract.nonceOf(user.address);
                 const signature2 = await ContractUtils.signLoyaltyType(signer, nonce2);
                 const tx10 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
@@ -862,7 +857,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         console.log(`Deposit users_mobile.json`);
         for (const user of users_mobile) {
             if (user.loyaltyType === 1) {
-                const signer = new Wallet(user.privateKey).connect(ethers.provider);
+                const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
                 const nonce = await (deployment.getContract("Ledger") as Ledger).nonceOf(user.address);
                 const signature = await ContractUtils.signLoyaltyType(signer, nonce);
                 const tx10 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
@@ -893,6 +888,68 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 // await tx9.wait();
             }
         }
+
+        const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+        {
+            const assetAmount2 = Amount.make(1_000_000_000, 18).value;
+            const tokenContract = (await deployment.getContract("LoyaltyToken")) as LoyaltyToken;
+            const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
+            const nonce = await tokenContract.nonceOf(accounts.owner.address);
+            const message = ContractUtils.getTransferMessage(
+                accounts.owner.address,
+                contract.address,
+                assetAmount2,
+                nonce,
+                chainId
+            );
+            const signature = await ContractUtils.signMessage(accounts.owner, message);
+            const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount2, signature);
+            console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
+            // await tx1.wait();
+        }
+    }
+}
+
+async function deploySideChainBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "SideChainBridge";
+    console.log(`Deploy ${contractName}...`);
+    if (deployment.getContract("BridgeValidator") === undefined) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+
+    const factory = await hre.ethers.getContractFactory("Bridge");
+    const contract = (await hre.upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [await deployment.getContractAddress("BridgeValidator"), accounts.txFee.address],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as Bridge;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    {
+        const tokenContract = (await deployment.getContract("LoyaltyToken")) as TestKIOS;
+        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
+        await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
+        const assetAmount = Amount.make(500_000_000, 18).value;
+        const nonce = await tokenContract.nonceOf(accounts.owner.address);
+        const message = ContractUtils.getTransferMessage(
+            accounts.owner.address,
+            contract.address,
+            assetAmount,
+            nonce,
+            chainId
+        );
+        const signature = await ContractUtils.signMessage(accounts.owner, message);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, signature);
+        console.log(`Deposit liquidity token to SideChainBridge (tx: ${tx1.hash})...`);
+        // await tx1.wait();
     }
 }
 
@@ -914,6 +971,7 @@ async function main() {
     deployments.addDeployer(deployLoyaltyBridge);
     deployments.addDeployer(deployShop);
     deployments.addDeployer(deployLedger);
+    deployments.addDeployer(deploySideChainBridge);
 
     // await deployments.loadContractInfo();
 
