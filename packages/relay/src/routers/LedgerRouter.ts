@@ -160,6 +160,46 @@ export class LedgerRouter {
             [query("amount").exists().custom(Validation.isAmount), query("from").exists(), query("to").exists()],
             this.currency_convert.bind(this)
         );
+
+        this.app.post(
+            "/v1/ledger/transfer",
+            [
+                query("amount").exists().custom(Validation.isAmount),
+                query("from").exists().trim().isEthereumAddress(),
+                query("to").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.ledger_transfer.bind(this)
+        );
+
+        this.app.post(
+            "/v1/ledger/withdraw_by_bridge",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.ledger_withdraw_by_bridge.bind(this)
+        );
+
+        this.app.post(
+            "/v1/ledger/deposit_by_bridge",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.ledger_deposit_by_bridge.bind(this)
+        );
     }
 
     private async getNonce(req: express.Request, res: express.Response) {
@@ -544,6 +584,134 @@ export class LedgerRouter {
             logger.error(`GET /v1/currency/convert : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    private async ledger_transfer(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/ledger/transfer ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const from: string = String(req.body.from).trim();
+            const to: string = String(req.body.to).trim();
+            const amount: BigNumber = BigNumber.from(req.body.amount);
+            const signature: string = String(req.body.signature).trim();
+            const nonce = await this.contractManager.sideLedgerContract.nonceOf(from);
+            const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.sideChainId);
+            if (!ContractUtils.verifyMessage(from, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+            const tx = await this.contractManager.sideLoyaltyTransferContract
+                .connect(signerItem.signer)
+                .transferToken(from, to, amount, signature);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { from, to, amount, txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/ledger/transfer : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    private async getDepositId(account: string): Promise<string> {
+        while (true) {
+            const id = ContractUtils.getRandomId(account);
+            if (await this.contractManager.sideLoyaltyBridgeContract.isAvailableDepositId(id)) return id;
+        }
+    }
+
+    private async ledger_withdraw_by_bridge(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/ledger/withdraw_by_bridge ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner();
+        try {
+            const account: string = String(req.body.account).trim();
+            const amount: BigNumber = BigNumber.from(req.body.amount);
+            const signature: string = String(req.body.signature).trim();
+            const nonce = await this.contractManager.sideLedgerContract.nonceOf(account);
+            const message = ContractUtils.getTransferMessage(
+                account,
+                this.contractManager.sideLoyaltyBridgeContract.address,
+                amount,
+                nonce,
+                this.contractManager.sideChainId
+            );
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+            const tokenId = ContractUtils.getTokenId(
+                await this.contractManager.sideTokenContract.name(),
+                await this.contractManager.sideTokenContract.symbol()
+            );
+            const depositId = this.getDepositId(account);
+            const tx = await this.contractManager.sideLoyaltyBridgeContract
+                .connect(signerItem.signer)
+                .depositToBridge(tokenId, depositId, account, amount, signature);
+
+            return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/ledger/withdraw_by_bridge : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    private async ledger_deposit_by_bridge(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/ledger/deposit_by_bridge ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner(this.contractManager.mainChainProvider);
+        try {
+            const account: string = String(req.body.account).trim();
+            const amount: BigNumber = BigNumber.from(req.body.amount);
+            const signature: string = String(req.body.signature).trim();
+            const nonce = await this.contractManager.mainTokenContract.nonceOf(account);
+            const message = ContractUtils.getTransferMessage(
+                account,
+                this.contractManager.mainLoyaltyBridgeContract.address,
+                amount,
+                nonce,
+                this.contractManager.mainChainId
+            );
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+            const tokenId = ContractUtils.getTokenId(
+                await this.contractManager.sideTokenContract.name(),
+                await this.contractManager.sideTokenContract.symbol()
+            );
+            const depositId = this.getDepositId(account);
+            const tx = await this.contractManager.mainLoyaltyBridgeContract
+                .connect(signerItem.signer)
+                .depositToBridge(tokenId, depositId, account, amount, signature);
+
+            return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/ledger/deposit_by_bridge : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        } finally {
+            this.releaseRelaySigner(signerItem);
         }
     }
 }

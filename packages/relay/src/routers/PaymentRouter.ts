@@ -707,6 +707,7 @@ export class PaymentRouter {
             }
 
             if (mobileData !== undefined) {
+                // tslint:disable-next-line:one-variable-per-declaration
                 let title, shopLabel, amountLabel, pointLabel, tokenLabel: string;
                 if (mobileData.language === "kr") {
                     title = "마일리지 사용 알림";
@@ -1295,6 +1296,7 @@ export class PaymentRouter {
 
                 if (mobileData !== undefined) {
                     /// 상점주에게 메세지 발송
+                    // tslint:disable-next-line:one-variable-per-declaration
                     let title, shopLabel, amountLabel, pointLabel, tokenLabel: string;
                     if (mobileData.language === "kr") {
                         title = "마일리지 사용 취소 알림";
