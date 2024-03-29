@@ -403,12 +403,12 @@ export class LedgerRouter {
         try {
             const number = this.phoneUtil.parseAndKeepRawInput(phone, "ZZ");
             if (!this.phoneUtil.isValidNumber(number)) {
-                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+                return res.status(200).json(ResponseMessage.getErrorMessage("2007"));
             } else {
                 phone = this.phoneUtil.format(number, PhoneNumberFormat.INTERNATIONAL);
             }
         } catch (error) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            return res.status(200).json(ResponseMessage.getErrorMessage("2007"));
         }
         const phoneHash: string = ContractUtils.getPhoneHash(phone);
 
@@ -543,12 +543,12 @@ export class LedgerRouter {
         try {
             const number = this.phoneUtil.parseAndKeepRawInput(phone, "ZZ");
             if (!this.phoneUtil.isValidNumber(number)) {
-                return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+                return res.status(200).json(ResponseMessage.getErrorMessage("2007"));
             } else {
                 phone = this.phoneUtil.format(number, PhoneNumberFormat.INTERNATIONAL);
             }
         } catch (error) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2003"));
+            return res.status(200).json(ResponseMessage.getErrorMessage("2007"));
         }
         const phoneHash: string = ContractUtils.getPhoneHash(phone);
 
