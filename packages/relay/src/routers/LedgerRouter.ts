@@ -708,8 +708,8 @@ export class LedgerRouter {
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
             const tokenId = ContractUtils.getTokenId(
-                await this.contractManager.sideTokenContract.name(),
-                await this.contractManager.sideTokenContract.symbol()
+                await this.contractManager.mainTokenContract.name(),
+                await this.contractManager.mainTokenContract.symbol()
             );
             const depositId = await this.getDepositId(account);
             const tx = await this.contractManager.mainLoyaltyBridgeContract
