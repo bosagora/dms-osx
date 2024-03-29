@@ -187,12 +187,12 @@ describe("Test of Server", function () {
                 deployments.getContractAddress("LoyaltyExchanger") || "";
             config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
             config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+            config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
             config.contracts.mainChain.loyaltyBridgeAddress =
                 deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
+            config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -657,12 +657,12 @@ describe("Test of Server", function () {
                 deployments.getContractAddress("LoyaltyExchanger") || "";
             config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
             config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+            config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
             config.contracts.mainChain.loyaltyBridgeAddress =
                 deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
+            config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1052,12 +1052,12 @@ describe("Test of Server", function () {
                 deployments.getContractAddress("LoyaltyExchanger") || "";
             config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
             config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+            config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
             config.contracts.mainChain.loyaltyBridgeAddress =
                 deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
+            config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1411,12 +1411,12 @@ describe("Test of Server", function () {
                 deployments.getContractAddress("LoyaltyExchanger") || "";
             config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
             config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+            config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
             config.contracts.mainChain.loyaltyBridgeAddress =
                 deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
+            config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1682,12 +1682,12 @@ describe("Test of Server", function () {
                 deployments.getContractAddress("LoyaltyExchanger") || "";
             config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
             config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+            config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
             config.contracts.mainChain.loyaltyBridgeAddress =
                 deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
+            config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -2071,12 +2071,12 @@ describe("Test of Server", function () {
                 deployments.getContractAddress("LoyaltyExchanger") || "";
             config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
             config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+            config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
             config.contracts.mainChain.loyaltyBridgeAddress =
                 deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
+            config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -2525,12 +2525,12 @@ describe("Test of Server", function () {
                 deployments.getContractAddress("LoyaltyExchanger") || "";
             config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
             config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+            config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
             config.contracts.mainChain.loyaltyBridgeAddress =
                 deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
+            config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
