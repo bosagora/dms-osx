@@ -7,12 +7,14 @@ import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
 import { ResponseMessage } from "../utils/Errors";
+import { ContractUtils } from "../utils/ContractUtils";
 
-import { param, validationResult } from "express-validator";
+import { body, param, query, validationResult } from "express-validator";
 
 import express from "express";
 
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
+import { Validation } from "../validation";
 
 export class TokenRouter {
     private web_service: WebService;
@@ -102,6 +104,34 @@ export class TokenRouter {
             [param("account").exists().trim().isEthereumAddress()],
             this.token_side_nonce.bind(this)
         );
+
+        this.app.post(
+            "/v1/token/main/transfer",
+            [
+                body("amount").exists().custom(Validation.isAmount),
+                body("from").exists().trim().isEthereumAddress(),
+                body("to").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.token_main_transfer.bind(this)
+        );
+
+        this.app.post(
+            "/v1/token/side/transfer",
+            [
+                body("amount").exists().custom(Validation.isAmount),
+                body("from").exists().trim().isEthereumAddress(),
+                body("to").exists().trim().isEthereumAddress(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.token_side_transfer.bind(this)
+        );
     }
 
     private async token_main_nonce(req: express.Request, res: express.Response) {
@@ -169,6 +199,72 @@ export class TokenRouter {
             logger.error(`POST /v1/token/side/balance/:account : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
+        }
+    }
+
+    private async token_main_transfer(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/token/main/transfer ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner(this.contractManager.mainChainProvider);
+        try {
+            const from: string = String(req.body.from).trim();
+            const to: string = String(req.body.to).trim();
+            const amount: BigNumber = BigNumber.from(req.body.amount);
+            const signature: string = String(req.body.signature).trim();
+            const nonce = await this.contractManager.mainTokenContract.nonceOf(from);
+            const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.mainChainId);
+            if (!ContractUtils.verifyMessage(from, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+            const tx = await this.contractManager.mainTokenContract
+                .connect(signerItem.signer)
+                .delegatedTransfer(from, to, amount, signature);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { from, to, amount, txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/token/main/transfer : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    private async token_side_transfer(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/token/side/transfer ${req.ip}:${JSON.stringify(req.body)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner(this.contractManager.sideChainProvider);
+        try {
+            const from: string = String(req.body.from).trim();
+            const to: string = String(req.body.to).trim();
+            const amount: BigNumber = BigNumber.from(req.body.amount);
+            const signature: string = String(req.body.signature).trim();
+            const nonce = await this.contractManager.sideTokenContract.nonceOf(from);
+            const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.sideChainId);
+            if (!ContractUtils.verifyMessage(from, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+            const tx = await this.contractManager.sideTokenContract
+                .connect(signerItem.signer)
+                .delegatedTransfer(from, to, amount, signature);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { from, to, amount, txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/token/side/transfer : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        } finally {
+            this.releaseRelaySigner(signerItem);
         }
     }
 }
