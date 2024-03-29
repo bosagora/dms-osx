@@ -27,7 +27,8 @@
         "test:ForcedClose": "TESTING=true hardhat test test/ForcedClose.test.ts",
         "test:TemporaryAccount": "TESTING=true hardhat test test/TempararyAccount.test.ts",
         "test:ETC": "TESTING=true hardhat test test/ETC.test.ts",
-        "test:DelegatorApproval": "TESTING=true hardhat test test/DelegatorApproval.test.ts"
+        "test:DelegatorApproval": "TESTING=true hardhat test test/DelegatorApproval.test.ts",
+        "test:LoyaltyTransfer": "TESTING=true hardhat test test/LoyaltyTransfer.test.ts"
     },
     "repository": {
         "type": "git",
