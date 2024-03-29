@@ -29,6 +29,7 @@
         "test:ETC": "TESTING=true hardhat test test/ETC.test.ts",
         "test:DelegatorApproval": "TESTING=true hardhat test test/DelegatorApproval.test.ts",
         "test:LoyaltyTransfer": "TESTING=true hardhat test test/LoyaltyTransfer.test.ts",
+        "test:LoyaltyBridge": "TESTING=true hardhat test test/LoyaltyBridge.test.ts",
         "test:DelegatedTransfer": "TESTING=true hardhat test test/DelegatedTransfer.test.ts"
     },
     "repository": {
