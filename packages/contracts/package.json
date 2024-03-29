@@ -71,6 +71,6 @@
         "del-osx-artifacts": "^2.3.0",
         "dms-bridge-contracts": "^1.2.2",
         "multisig-wallet-contracts": "^1.1.0",
-        "loyalty-tokens": "^1.0.5"
+        "loyalty-tokens": "^1.0.7"
     }
 }
