@@ -86,7 +86,7 @@ relay:
 
 contracts:
   sideChain:
-    network: "production_net"
+    network: "production_side"
     ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
     phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
     shopAddress : "${SHOP_CONTRACT_ADDRESS}"
@@ -99,7 +99,7 @@ contracts:
     loyaltyBridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
     bridgeAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
   mainChain:
-    network: "bosagora_testnet"
+    network: "production_main"
     tokenAddress : "${MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS}"
     loyaltyBridgeAddress: "${MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
     bridgeAddress: "${MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
