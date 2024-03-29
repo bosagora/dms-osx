@@ -164,9 +164,9 @@ export class LedgerRouter {
         this.app.post(
             "/v1/ledger/transfer",
             [
-                query("amount").exists().custom(Validation.isAmount),
-                query("from").exists().trim().isEthereumAddress(),
-                query("to").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
+                body("from").exists().trim().isEthereumAddress(),
+                body("to").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
                     .trim()
@@ -601,6 +601,10 @@ export class LedgerRouter {
             const to: string = String(req.body.to).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
             const signature: string = String(req.body.signature).trim();
+
+            const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(from);
+            if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
+
             const nonce = await this.contractManager.sideLedgerContract.nonceOf(from);
             const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.sideChainId);
             if (!ContractUtils.verifyMessage(from, message, signature))
