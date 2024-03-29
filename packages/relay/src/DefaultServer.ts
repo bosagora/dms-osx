@@ -10,15 +10,15 @@ import { Scheduler } from "./scheduler/Scheduler";
 import { WebService } from "./service/WebService";
 
 import { register } from "prom-client";
+import { ContractManager } from "./contract/ContractManager";
 import { RelaySigners } from "./contract/Signers";
 import { INotificationEventHandler, INotificationSender, NotificationSender } from "./delegator/NotificationSender";
 import { Metrics } from "./metrics/Metrics";
+import { PhoneLinkRouter } from "./routers/PhoneLinkRouter";
 import { StorePurchaseRouter } from "./routers/StorePurchaseRouter";
 import { TokenRouter } from "./routers/TokenRouter";
 import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
-import { PhoneLinkRouter } from "./routers/PhoneLinkRouter";
-import { ContractManager } from "./contract/ContractManager";
 
 export class DefaultServer extends WebService {
     private readonly config: Config;

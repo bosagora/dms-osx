@@ -1,8 +1,11 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
 import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
-import { ContractUtils } from "../src/utils/ContractUtils";
+import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
 import {
     BIP20DelegatedTransfer,
     CurrencyRate,
@@ -27,7 +30,6 @@ import { Wallet } from "ethers";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
-import { LoyaltyNetworkID } from "dms-osx-artifacts/src/utils/ContractUtils";
 import { ContractManager } from "../src/contract/ContractManager";
 
 // tslint:disable-next-line:no-var-requires
@@ -158,16 +160,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
 
             config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
@@ -457,14 +466,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;

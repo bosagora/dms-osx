@@ -1,3 +1,6 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+
 import { Config } from "../src/common/Config";
 import { ContractUtils } from "../src/utils/ContractUtils";
 

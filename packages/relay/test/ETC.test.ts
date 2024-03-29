@@ -1,20 +1,18 @@
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-waffle";
 
-import { RelayStorage } from "../src/storage/RelayStorage";
-import { TestClient, TestServer } from "./helper/Utility";
-
-import URI from "urijs";
-import { URL } from "url";
 import { Config } from "../src/common/Config";
+import { ContractManager } from "../src/contract/ContractManager";
+import { GraphStorage } from "../src/storage/GraphStorage";
+import { RelayStorage } from "../src/storage/RelayStorage";
 import { ContractUtils } from "../src/utils/ContractUtils";
-
-import path from "path";
+import { TestClient, TestServer } from "./helper/Utility";
 
 import assert from "assert";
 import * as hre from "hardhat";
-import { GraphStorage } from "../src/storage/GraphStorage";
-import { ContractManager } from "../src/contract/ContractManager";
+import path from "path";
+import URI from "urijs";
+import { URL } from "url";
 
 describe("Test for ETC", function () {
     this.timeout(1000 * 60 * 5);
