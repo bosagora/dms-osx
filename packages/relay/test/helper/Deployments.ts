@@ -245,6 +245,7 @@ export class Deployments {
 async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
     const contractName = "PhoneLinkCollection";
     console.log(`Deploy ${contractName}...`);
+
     await hre.changeNetwork(deployment.config.contracts.sideChain.network);
     const factory = await hre.ethers.getContractFactory("PhoneLinkCollection");
     const contract = (await hre.upgrades.deployProxy(
@@ -798,7 +799,7 @@ async function deployMainChainToken(accounts: IAccount, deployment: Deployments)
     const contractName = "MainChainKIOS";
     console.log(`Deploy ${contractName}...`);
 
-    hre.changeNetwork(deployment.config.contracts.mainChain.network);
+    await hre.changeNetwork(deployment.config.contracts.mainChain.network);
     const factory = await hre.ethers.getContractFactory("TestKIOS");
     const contract = (await factory.connect(accounts.deployer).deploy(accounts.owner.address)) as TestKIOS;
     await contract.deployed();
@@ -810,6 +811,23 @@ async function deployMainChainToken(accounts: IAccount, deployment: Deployments)
 
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
+
+    {
+        const userAmount = Amount.make(200_000, 18);
+        const tx2 = await contract.connect(accounts.owner).multiTransfer(
+            accounts.users.map((m) => m.address),
+            userAmount.value
+        );
+        console.log(`Transfer token to users (tx: ${tx2.hash})...`);
+        await tx2.wait();
+
+        const tx3 = await contract.connect(accounts.owner).multiTransfer(
+            accounts.shops.map((m) => m.address),
+            userAmount.value
+        );
+        console.log(`Transfer token to shops (tx: ${tx3.hash})...`);
+        await tx3.wait();
+    }
 }
 
 async function deployMainChainBridge(accounts: IAccount, deployment: Deployments) {
@@ -821,7 +839,7 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
         return;
     }
 
-    hre.changeNetwork(deployment.config.contracts.mainChain.network);
+    await hre.changeNetwork(deployment.config.contracts.mainChain.network);
     const factory = await hre.ethers.getContractFactory("Bridge");
     const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
@@ -866,7 +884,7 @@ async function deployMainChainLoyaltyBridge(accounts: IAccount, deployment: Depl
         return;
     }
 
-    hre.changeNetwork(deployment.config.contracts.mainChain.network);
+    await hre.changeNetwork(deployment.config.contracts.mainChain.network);
     const factory = await hre.ethers.getContractFactory("Bridge");
     const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),

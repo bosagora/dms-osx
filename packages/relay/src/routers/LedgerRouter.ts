@@ -644,6 +644,10 @@ export class LedgerRouter {
             const account: string = String(req.body.account).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
             const signature: string = String(req.body.signature).trim();
+
+            const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
+            if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
+
             const nonce = await this.contractManager.sideLedgerContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
                 account,
@@ -659,7 +663,7 @@ export class LedgerRouter {
                 await this.contractManager.sideTokenContract.name(),
                 await this.contractManager.sideTokenContract.symbol()
             );
-            const depositId = this.getDepositId(account);
+            const depositId = await this.getDepositId(account);
             const tx = await this.contractManager.sideLoyaltyBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, signature);
@@ -688,6 +692,10 @@ export class LedgerRouter {
             const account: string = String(req.body.account).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
             const signature: string = String(req.body.signature).trim();
+
+            const balance = await this.contractManager.mainTokenContract.balanceOf(account);
+            if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
+
             const nonce = await this.contractManager.mainTokenContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
                 account,
@@ -703,7 +711,7 @@ export class LedgerRouter {
                 await this.contractManager.sideTokenContract.name(),
                 await this.contractManager.sideTokenContract.symbol()
             );
-            const depositId = this.getDepositId(account);
+            const depositId = await this.getDepositId(account);
             const tx = await this.contractManager.mainLoyaltyBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, signature);
