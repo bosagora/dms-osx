@@ -7,7 +7,6 @@ import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
 
 import "loyalty-tokens/contracts/LoyaltyToken.sol";
 import "loyalty-tokens/contracts/KIOS.sol";
-import "loyalty-tokens/contracts/PNB.sol";
 
 import "dms-bridge-contracts/contracts/interfaces/IBridge.sol";
 import "dms-bridge-contracts/contracts/interfaces/IBridgeLiquidity.sol";
