@@ -83,7 +83,13 @@ export class ResponseMessage {
             return { code: Number(code), error: { message } };
         }
 
-        if (ContractUtils.isErrorOfEVM(error)) {
+        if (code !== "") {
+            const defaultCode = "5000";
+            const defaultMessage = code;
+            if (defaultMessage !== undefined) {
+                return { code: Number(defaultCode), error: { message: defaultMessage } };
+            }
+        } else if (ContractUtils.isErrorOfEVM(error)) {
             const defaultCode = "5000";
             const defaultMessage = error.reason ? error.reason : ResponseMessage.messages.get(defaultCode);
             if (defaultMessage !== undefined) {
