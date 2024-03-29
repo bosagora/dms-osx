@@ -216,6 +216,9 @@ export class TokenRouter {
             const to: string = String(req.body.to).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
             const signature: string = String(req.body.signature).trim();
+            const balance = await this.contractManager.mainTokenContract.balanceOf(from);
+            if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
+
             const nonce = await this.contractManager.mainTokenContract.nonceOf(from);
             const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.mainChainId);
             if (!ContractUtils.verifyMessage(from, message, signature))
@@ -249,6 +252,9 @@ export class TokenRouter {
             const to: string = String(req.body.to).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
             const signature: string = String(req.body.signature).trim();
+            const balance = await this.contractManager.sideTokenContract.balanceOf(from);
+            if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
+
             const nonce = await this.contractManager.sideTokenContract.nonceOf(from);
             const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.sideChainId);
             if (!ContractUtils.verifyMessage(from, message, signature))
