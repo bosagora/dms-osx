@@ -1,7 +1,15 @@
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+
 import { Amount } from "../src/common/Amount";
 import { Config } from "../src/common/Config";
+import { ContractManager } from "../src/contract/ContractManager";
+import { INotificationEventHandler } from "../src/delegator/NotificationSender";
+import { Scheduler } from "../src/scheduler/Scheduler";
+import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
+import { ContractLoyaltyType, LoyaltyPaymentTaskStatus } from "../src/types";
 import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
 import {
     BIP20DelegatedTransfer,
@@ -14,6 +22,8 @@ import {
     Shop,
     Validator,
 } from "../typechain-types";
+import { Deployments } from "./helper/Deployments";
+import { FakerCallbackServer } from "./helper/FakerCallbackServer";
 import { getPurchaseId, TestClient, TestServer } from "./helper/Utility";
 
 import chai, { expect } from "chai";
@@ -21,19 +31,11 @@ import { solidity } from "ethereum-waffle";
 
 import * as path from "path";
 import { URL } from "url";
-
 import * as assert from "assert";
 import { BigNumber, Wallet } from "ethers";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
-import { INotificationEventHandler } from "../src/delegator/NotificationSender";
-import { Scheduler } from "../src/scheduler/Scheduler";
-import { WatchScheduler } from "../src/scheduler/WatchScheduler";
-import { ContractLoyaltyType, LoyaltyPaymentTaskStatus } from "../src/types";
-import { Deployments } from "./helper/Deployments";
-import { FakerCallbackServer } from "./helper/FakerCallbackServer";
-import { ContractManager } from "../src/contract/ContractManager";
 
 // tslint:disable-next-line:no-var-requires
 const URI = require("urijs");
@@ -174,14 +176,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -635,14 +646,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1021,14 +1041,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1371,14 +1400,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -1633,14 +1671,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -2013,14 +2060,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
@@ -2458,14 +2514,23 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = tokenContract.address;
-            config.contracts.sideChain.phoneLinkerAddress = linkContract.address;
-            config.contracts.sideChain.shopAddress = shopContract.address;
-            config.contracts.sideChain.ledgerAddress = ledgerContract.address;
-            config.contracts.sideChain.loyaltyConsumerAddress = consumerContract.address;
-            config.contracts.sideChain.loyaltyProviderAddress = providerContract.address;
-            config.contracts.sideChain.loyaltyExchangerAddress = exchangerContract.address;
-            config.contracts.sideChain.currencyRateAddress = currencyRateContract.address;
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.bridgeMainSideAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.bridgeMainSideAddress = deployments.getContractAddress("MainChainBridge") || "";
 
             config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";

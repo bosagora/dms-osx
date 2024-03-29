@@ -1,18 +1,17 @@
 import { Config } from "./common/Config";
 import { logger } from "./common/Logger";
+import { ContractManager } from "./contract/ContractManager";
 import { DefaultServer } from "./DefaultServer";
-import { GraphStorage } from "./storage/GraphStorage";
-import { RelayStorage } from "./storage/RelayStorage";
-import { ContractUtils } from "./utils/ContractUtils";
-
 import { ApprovalScheduler } from "./scheduler/ApprovalScheduler";
 import { CloseScheduler } from "./scheduler/CloseScheduler";
 import { DelegatorApprovalScheduler } from "./scheduler/DelegatorApprovalScheduler";
+import { MetricsScheduler } from "./scheduler/MetricsScheduler";
 import { Scheduler } from "./scheduler/Scheduler";
 import { StorePurchaseScheduler } from "./scheduler/StorePurchaseScheduler";
 import { WatchScheduler } from "./scheduler/WatchScheduler";
-import { MetricsScheduler } from "./scheduler/MetricsScheduler";
-import { ContractManager } from "./contract/ContractManager";
+import { GraphStorage } from "./storage/GraphStorage";
+import { RelayStorage } from "./storage/RelayStorage";
+import { ContractUtils } from "./utils/ContractUtils";
 
 let server: DefaultServer;
 
