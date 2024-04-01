@@ -221,7 +221,9 @@ class Deployments {
 
         for (const key of Object.keys(data)) {
             let name: string;
-            if (key === "SideChainBridge") {
+            if (key === "LoyaltyBridge") {
+                name = "Bridge";
+            } else if (key === "MainChainBridge") {
                 name = "Bridge";
             } else {
                 name = key;
@@ -322,7 +324,7 @@ async function deployBridgeValidator(accounts: IAccount, deployment: Deployments
     const factory = await hre.ethers.getContractFactory("BridgeValidator");
     const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.owner),
-        [accounts.bridgeValidators.map((m) => m.address), 3],
+        [accounts.bridgeValidators.map((m) => m.address), 2],
         {
             initializer: "initialize",
             kind: "uups",
