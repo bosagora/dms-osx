@@ -60,12 +60,12 @@ describe("Test of Bridge", function () {
         config.contracts.sideChain.loyaltyExchangerAddress = deployments.getContractAddress("LoyaltyExchanger") || "";
         config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
         config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-        config.contracts.sideChain.bridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
+        config.contracts.sideChain.chainBridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
         config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
         config.contracts.mainChain.loyaltyBridgeAddress =
             deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-        config.contracts.mainChain.bridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
+        config.contracts.mainChain.chainBridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
         config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
         config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
@@ -104,13 +104,13 @@ describe("Test of Bridge", function () {
         const amount = Amount.make(500, 18).value;
 
         const balance0 = await contractManager.mainTokenContract.balanceOf(account.address);
-        const balance1 = await contractManager.mainTokenContract.balanceOf(contractManager.mainBridge.address);
+        const balance1 = await contractManager.mainTokenContract.balanceOf(contractManager.mainChainBridge.address);
         const balance2 = await contractManager.sideTokenContract.balanceOf(account.address);
 
         const nonce = await contractManager.mainTokenContract.nonceOf(account.address);
         const message = await ContractUtils.getTransferMessage(
             account.address,
-            contractManager.mainBridge.address,
+            contractManager.mainChainBridge.address,
             amount,
             nonce,
             contractManager.mainChainId
@@ -129,25 +129,25 @@ describe("Test of Bridge", function () {
         expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
         /// Approve of Validators
-        await contractManager.sideBridge
+        await contractManager.sideChainBridge
             .connect(deployments.accounts.bridgeValidators[0])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.sideBridge
+        await contractManager.sideChainBridge
             .connect(deployments.accounts.bridgeValidators[1])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.sideBridge
+        await contractManager.sideChainBridge
             .connect(deployments.accounts.bridgeValidators[2])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
         ///
 
         expect(await contractManager.mainTokenContract.balanceOf(account.address)).to.deep.equal(balance0.sub(amount));
-        expect(await contractManager.mainTokenContract.balanceOf(contractManager.mainBridge.address)).to.deep.equal(
-            balance1.add(amount)
-        );
+        expect(
+            await contractManager.mainTokenContract.balanceOf(contractManager.mainChainBridge.address)
+        ).to.deep.equal(balance1.add(amount));
 
-        const fee = await contractManager.sideBridge.getFee(tokenId);
+        const fee = await contractManager.sideChainBridge.getFee(tokenId);
         expect(await contractManager.sideTokenContract.balanceOf(account.address)).to.deep.equal(
             balance2.add(amount).sub(fee)
         );
@@ -163,13 +163,13 @@ describe("Test of Bridge", function () {
         const amount = Amount.make(200, 18).value;
 
         const balance0 = await contractManager.mainTokenContract.balanceOf(account.address);
-        const balance1 = await contractManager.mainTokenContract.balanceOf(contractManager.mainBridge.address);
+        const balance1 = await contractManager.mainTokenContract.balanceOf(contractManager.mainChainBridge.address);
         const balance2 = await contractManager.sideTokenContract.balanceOf(account.address);
 
         const nonce = await contractManager.sideTokenContract.nonceOf(account.address);
         const message = await ContractUtils.getTransferMessage(
             account.address,
-            contractManager.sideBridge.address,
+            contractManager.sideChainBridge.address,
             amount,
             nonce,
             contractManager.sideChainId
@@ -188,26 +188,26 @@ describe("Test of Bridge", function () {
         expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
         /// Approve of Validators
-        await contractManager.mainBridge
+        await contractManager.mainChainBridge
             .connect(deployments.accounts.bridgeValidators[0])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.mainBridge
+        await contractManager.mainChainBridge
             .connect(deployments.accounts.bridgeValidators[1])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.mainBridge
+        await contractManager.mainChainBridge
             .connect(deployments.accounts.bridgeValidators[2])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
         ///
 
-        const fee = await contractManager.mainBridge.getFee(tokenId);
+        const fee = await contractManager.mainChainBridge.getFee(tokenId);
         expect(await contractManager.mainTokenContract.balanceOf(account.address)).to.deep.equal(
             balance0.add(amount).sub(fee)
         );
-        expect(await contractManager.mainTokenContract.balanceOf(contractManager.mainBridge.address)).to.deep.equal(
-            balance1.sub(amount)
-        );
+        expect(
+            await contractManager.mainTokenContract.balanceOf(contractManager.mainChainBridge.address)
+        ).to.deep.equal(balance1.sub(amount));
         //
         expect(await contractManager.sideTokenContract.balanceOf(account.address)).to.deep.equal(balance2.sub(amount));
     });

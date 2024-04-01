@@ -259,13 +259,13 @@ export class ContractsConfig implements IContractsConfig {
         loyaltyExchangerAddress: string;
         loyaltyTransferAddress: string;
         loyaltyBridgeAddress: string;
-        bridgeAddress: string;
+        chainBridgeAddress: string;
     };
     public mainChain: {
         network: string;
         tokenAddress: string;
         loyaltyBridgeAddress: string;
-        bridgeAddress: string;
+        chainBridgeAddress: string;
     };
 
     constructor() {
@@ -283,20 +283,20 @@ export class ContractsConfig implements IContractsConfig {
             loyaltyExchangerAddress: defaults.sideChain.loyaltyExchangerAddress,
             loyaltyTransferAddress: defaults.sideChain.loyaltyTransferAddress,
             loyaltyBridgeAddress: defaults.sideChain.loyaltyBridgeAddress,
-            bridgeAddress: defaults.sideChain.bridgeAddress,
+            chainBridgeAddress: defaults.sideChain.chainBridgeAddress,
         };
         this.mainChain = {
             network: defaults.mainChain.network,
             tokenAddress: defaults.mainChain.tokenAddress,
             loyaltyBridgeAddress: defaults.mainChain.loyaltyBridgeAddress,
-            bridgeAddress: defaults.mainChain.bridgeAddress,
+            chainBridgeAddress: defaults.mainChain.chainBridgeAddress,
         };
     }
 
     public static defaultValue(): IContractsConfig {
         return {
             sideChain: {
-                network: "production_net",
+                network: "production_side",
                 tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
                 ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
                 phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
@@ -306,14 +306,14 @@ export class ContractsConfig implements IContractsConfig {
                 loyaltyConsumerAddress: process.env.LOYALTY_CONSUMER_CONTRACT_ADDRESS || "",
                 loyaltyExchangerAddress: process.env.LOYALTY_EXCHANGER_CONTRACT_ADDRESS || "",
                 loyaltyTransferAddress: process.env.LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
-                loyaltyBridgeAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
-                bridgeAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
+                loyaltyBridgeAddress: process.env.SIDE_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
+                chainBridgeAddress: process.env.SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS || "",
             },
             mainChain: {
-                network: "bosagora_mainnet",
-                tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
-                loyaltyBridgeAddress: process.env.LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
-                bridgeAddress: process.env.LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
+                network: "production_main",
+                tokenAddress: process.env.MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS || "",
+                loyaltyBridgeAddress: process.env.MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
+                chainBridgeAddress: process.env.MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS || "",
             },
         };
     }
@@ -337,13 +337,15 @@ export class ContractsConfig implements IContractsConfig {
             this.sideChain.loyaltyTransferAddress = config.sideChain.loyaltyTransferAddress;
         if (config.sideChain.loyaltyBridgeAddress !== undefined)
             this.sideChain.loyaltyBridgeAddress = config.sideChain.loyaltyBridgeAddress;
-        if (config.sideChain.bridgeAddress !== undefined) this.sideChain.bridgeAddress = config.sideChain.bridgeAddress;
+        if (config.sideChain.chainBridgeAddress !== undefined)
+            this.sideChain.chainBridgeAddress = config.sideChain.chainBridgeAddress;
 
         if (config.mainChain.network !== undefined) this.mainChain.network = config.mainChain.network;
         if (config.mainChain.tokenAddress !== undefined) this.mainChain.tokenAddress = config.mainChain.tokenAddress;
         if (config.mainChain.loyaltyBridgeAddress !== undefined)
             this.mainChain.loyaltyBridgeAddress = config.mainChain.loyaltyBridgeAddress;
-        if (config.mainChain.bridgeAddress !== undefined) this.mainChain.bridgeAddress = config.mainChain.bridgeAddress;
+        if (config.mainChain.chainBridgeAddress !== undefined)
+            this.mainChain.chainBridgeAddress = config.mainChain.chainBridgeAddress;
     }
 }
 
@@ -469,13 +471,13 @@ export interface IContractsConfig {
         currencyRateAddress: string;
         loyaltyTransferAddress: string;
         loyaltyBridgeAddress: string;
-        bridgeAddress: string;
+        chainBridgeAddress: string;
     };
     mainChain: {
         network: string;
         tokenAddress: string;
         loyaltyBridgeAddress: string;
-        bridgeAddress: string;
+        chainBridgeAddress: string;
     };
 }
 

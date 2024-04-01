@@ -29,11 +29,11 @@ export class ContractManager {
     private _sideLoyaltyExchangerContract: LoyaltyExchanger | undefined;
     private _sideLoyaltyTransferContract: LoyaltyTransfer | undefined;
     private _sideLoyaltyBridgeContract: LoyaltyBridge | undefined;
-    private _sideBridge: Bridge | undefined;
+    private _sideChainBridge: Bridge | undefined;
 
     private _mainTokenContract: BIP20DelegatedTransfer | undefined;
     private _mainLoyaltyBridgeContract: Bridge | undefined;
-    private _mainBridge: Bridge | undefined;
+    private _mainChainBridge: Bridge | undefined;
 
     private _sideChainProvider: ethers.providers.Provider | undefined;
     private _mainChainProvider: ethers.providers.Provider | undefined;
@@ -80,7 +80,7 @@ export class ContractManager {
         this._sideLoyaltyBridgeContract = factory9.attach(this.config.contracts.sideChain.loyaltyBridgeAddress);
 
         const factory10 = await hre.ethers.getContractFactory("Bridge");
-        this._sideBridge = factory10.attach(this.config.contracts.sideChain.bridgeAddress);
+        this._sideChainBridge = factory10.attach(this.config.contracts.sideChain.chainBridgeAddress);
 
         await hre.changeNetwork(this.config.contracts.mainChain.network);
         this._mainChainProvider = hre.ethers.provider;
@@ -92,7 +92,7 @@ export class ContractManager {
         this._mainLoyaltyBridgeContract = factory12.attach(this.config.contracts.mainChain.loyaltyBridgeAddress);
 
         const factory13 = await hre.ethers.getContractFactory("Bridge");
-        this._mainBridge = factory13.attach(this.config.contracts.mainChain.bridgeAddress);
+        this._mainChainBridge = factory13.attach(this.config.contracts.mainChain.chainBridgeAddress);
 
         this._mainChainId = (await this._mainChainProvider.getNetwork()).chainId;
     }
@@ -209,10 +209,10 @@ export class ContractManager {
         }
     }
 
-    public get sideBridge(): Bridge {
-        if (this._sideBridge !== undefined) return this._sideBridge;
+    public get sideChainBridge(): Bridge {
+        if (this._sideChainBridge !== undefined) return this._sideChainBridge;
         else {
-            logger.error("sideBridge is not ready yet.");
+            logger.error("sideChainBridge is not ready yet.");
             process.exit(1);
         }
     }
@@ -233,10 +233,10 @@ export class ContractManager {
         }
     }
 
-    public get mainBridge(): Bridge {
-        if (this._mainBridge !== undefined) return this._mainBridge;
+    public get mainChainBridge(): Bridge {
+        if (this._mainChainBridge !== undefined) return this._mainChainBridge;
         else {
-            logger.error("mainBridge is not ready yet.");
+            logger.error("mainChainBridge is not ready yet.");
             process.exit(1);
         }
     }

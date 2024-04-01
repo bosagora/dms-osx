@@ -96,13 +96,13 @@ contracts:
     loyaltyExchangerAddress: "${LOYALTY_EXCHANGER_CONTRACT_ADDRESS}"
     loyaltyTransferAddress: "${LOYALTY_TRANSFER_CONTRACT_ADDRESS}"
     tokenAddress : "${TOKEN_CONTRACT_ADDRESS}"
-    loyaltyBridgeAddress: "${LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
-    bridgeAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
+    loyaltyBridgeAddress: "${SIDE_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
+    chainBridgeAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
   mainChain:
     network: "hardhat"
     tokenAddress : "${MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS}"
     loyaltyBridgeAddress: "${MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
-    bridgeAddress: "${MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
+    chainBridgeAddress: "${MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
 
 metrics:
   accounts:
