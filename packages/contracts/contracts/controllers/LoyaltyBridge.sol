@@ -205,4 +205,10 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         require(_msgSender() == owner(), "1050");
         fee = _fee;
     }
+
+    /// @notice 전체 유동성 자금을 조회합니다.
+    function getTotalLiquidity(bytes32 _tokenId) external view override returns (uint256) {
+        require(_tokenId == tokenId, "1713");
+        return ledgerContract.tokenBalanceOf(address(this));
+    }
 }

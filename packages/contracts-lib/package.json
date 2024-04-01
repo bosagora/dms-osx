@@ -1,6 +1,6 @@
 {
     "name": "dms-osx-lib",
-    "version": "2.10.2",
+    "version": "2.10.3",
     "description": "",
     "main": "dist/bundle-cjs.js",
     "module": "dist/bundle-esm.js",
