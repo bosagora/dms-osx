@@ -11,6 +11,8 @@ import { ContractUtils } from "../utils/ContractUtils";
 
 import { body, param, query, validationResult } from "express-validator";
 
+import { AddressZero } from "@ethersproject/constants";
+
 import express from "express";
 
 import { BigNumber, ethers } from "ethers";
@@ -132,6 +134,10 @@ export class TokenRouter {
             ],
             this.token_side_transfer.bind(this)
         );
+        this.app.get("/v1/chain/main/id", [], this.chain_main_id.bind(this));
+        this.app.get("/v1/chain/side/id", [], this.chain_side_id.bind(this));
+        this.app.get("/v1/chain/main/info", [], this.chain_main_info.bind(this));
+        this.app.get("/v1/chain/side/info", [], this.chain_side_info.bind(this));
     }
 
     private async token_main_nonce(req: express.Request, res: express.Response) {
@@ -271,6 +277,105 @@ export class TokenRouter {
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         } finally {
             this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    /**
+     * 메인체인의 체인 아이디
+     * GET /v1/chain/main/id
+     * @private
+     */
+    private async chain_main_id(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/chain/main/id ${req.ip}:${JSON.stringify(req.params)}`);
+        try {
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { chainId: this.contractManager.mainChainId }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/chain/main/id : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * 사이드체인의 체인 아이디
+     * GET /v1/chain/side/id
+     * @private
+     */
+    private async chain_side_id(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/chain/side/id ${req.ip}:${JSON.stringify(req.params)}`);
+        try {
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { chainId: this.contractManager.sideChainId }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/chain/side/id : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * 메인체인의 체인 정보
+     * GET /v1/chain/main/info
+     * @private
+     */
+    private async chain_main_info(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/chain/main/info ${req.ip}:${JSON.stringify(req.params)}`);
+        try {
+            this.metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    url: this.contractManager.mainChainURL,
+                    network: {
+                        name: "main-chain",
+                        chainId: this.contractManager.mainChainId,
+                        ensAddress: AddressZero,
+                    },
+                    contract: {
+                        token: this.contractManager.mainTokenContract.address,
+                        chainBridge: this.contractManager.mainChainBridgeContract.address,
+                        loyaltyBridge: this.contractManager.mainLoyaltyBridgeContract.address,
+                    },
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/chain/main/info : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
+    }
+    /**
+     * 사이드체인의 체인 정보
+     * GET /v1/chain/side/info
+     * @private
+     */
+    private async chain_side_info(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/chain/side/info ${req.ip}:${JSON.stringify(req.params)}`);
+        try {
+            this.metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    url: this.contractManager.sideChainURL,
+                    network: {
+                        name: "side-chain",
+                        chainId: this.contractManager.sideChainId,
+                        ensAddress: AddressZero,
+                    },
+                    contract: {
+                        token: this.contractManager.sideTokenContract.address,
+                        chainBridge: this.contractManager.sideChainBridgeContract.address,
+                        loyaltyBridge: this.contractManager.sideLoyaltyBridgeContract.address,
+                    },
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/chain/side/info : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
         }
     }
 }

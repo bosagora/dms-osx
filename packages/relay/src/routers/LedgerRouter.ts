@@ -176,7 +176,7 @@ export class LedgerRouter {
         );
 
         this.app.post(
-            "/v1/ledger/withdraw_by_bridge",
+            "/v1/ledger/withdraw_via_bridge",
             [
                 body("account").exists().trim().isEthereumAddress(),
                 body("amount").exists().custom(Validation.isAmount),
@@ -185,11 +185,11 @@ export class LedgerRouter {
                     .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.ledger_withdraw_by_bridge.bind(this)
+            this.ledger_withdraw_via_bridge.bind(this)
         );
 
         this.app.post(
-            "/v1/ledger/deposit_by_bridge",
+            "/v1/ledger/deposit_via_bridge",
             [
                 body("account").exists().trim().isEthereumAddress(),
                 body("amount").exists().custom(Validation.isAmount),
@@ -198,7 +198,7 @@ export class LedgerRouter {
                     .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.ledger_deposit_by_bridge.bind(this)
+            this.ledger_deposit_via_bridge.bind(this)
         );
     }
 
@@ -624,15 +624,22 @@ export class LedgerRouter {
         }
     }
 
-    private async getDepositId(account: string): Promise<string> {
+    private async getDepositIdMainChain(account: string): Promise<string> {
+        while (true) {
+            const id = ContractUtils.getRandomId(account);
+            if (await this.contractManager.mainLoyaltyBridgeContract.isAvailableDepositId(id)) return id;
+        }
+    }
+
+    private async getDepositIdSideChain(account: string): Promise<string> {
         while (true) {
             const id = ContractUtils.getRandomId(account);
             if (await this.contractManager.sideLoyaltyBridgeContract.isAvailableDepositId(id)) return id;
         }
     }
 
-    private async ledger_withdraw_by_bridge(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/ledger/withdraw_by_bridge ${req.ip}:${JSON.stringify(req.body)}`);
+    private async ledger_withdraw_via_bridge(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/ledger/withdraw_via_bridge ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -663,7 +670,7 @@ export class LedgerRouter {
                 await this.contractManager.sideTokenContract.name(),
                 await this.contractManager.sideTokenContract.symbol()
             );
-            const depositId = await this.getDepositId(account);
+            const depositId = await this.getDepositIdSideChain(account);
             const tx = await this.contractManager.sideLoyaltyBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, signature);
@@ -671,7 +678,7 @@ export class LedgerRouter {
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/ledger/withdraw_by_bridge : ${msg.error.message}`);
+            logger.error(`POST /v1/ledger/withdraw_via_bridge : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         } finally {
@@ -679,8 +686,8 @@ export class LedgerRouter {
         }
     }
 
-    private async ledger_deposit_by_bridge(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/ledger/deposit_by_bridge ${req.ip}:${JSON.stringify(req.body)}`);
+    private async ledger_deposit_via_bridge(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/ledger/deposit_via_bridge ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -711,7 +718,7 @@ export class LedgerRouter {
                 await this.contractManager.mainTokenContract.name(),
                 await this.contractManager.mainTokenContract.symbol()
             );
-            const depositId = await this.getDepositId(account);
+            const depositId = await this.getDepositIdMainChain(account);
             const tx = await this.contractManager.mainLoyaltyBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, signature);
@@ -719,7 +726,7 @@ export class LedgerRouter {
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/ledger/deposit_by_bridge : ${msg.error.message}`);
+            logger.error(`POST /v1/ledger/deposit_via_bridge : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         } finally {

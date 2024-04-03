@@ -141,7 +141,7 @@ describe("Test of LoyaltyBridge", function () {
             contractManager.mainChainId
         );
         const signature = await ContractUtils.signMessage(account, message);
-        const response = await client.post(URI(serverURL).directory("/v1/ledger/deposit_by_bridge").toString(), {
+        const response = await client.post(URI(serverURL).directory("/v1/ledger/deposit_via_bridge").toString(), {
             account: account.address,
             amount: amount.toString(),
             signature,
@@ -202,7 +202,7 @@ describe("Test of LoyaltyBridge", function () {
             contractManager.sideChainId
         );
         const signature = await ContractUtils.signMessage(account, message);
-        const response = await client.post(URI(serverURL).directory("/v1/ledger/withdraw_by_bridge").toString(), {
+        const response = await client.post(URI(serverURL).directory("/v1/ledger/withdraw_via_bridge").toString(), {
             account: account.address,
             amount: amount.toString(),
             signature,

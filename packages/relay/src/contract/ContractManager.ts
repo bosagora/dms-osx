@@ -16,6 +16,7 @@ import { logger } from "../common/Logger";
 
 import { ethers } from "ethers";
 import * as hre from "hardhat";
+import { HttpNetworkConfig } from "hardhat/src/types/config";
 
 export class ContractManager {
     private readonly config: Config;
@@ -29,16 +30,20 @@ export class ContractManager {
     private _sideLoyaltyExchangerContract: LoyaltyExchanger | undefined;
     private _sideLoyaltyTransferContract: LoyaltyTransfer | undefined;
     private _sideLoyaltyBridgeContract: LoyaltyBridge | undefined;
-    private _sideChainBridge: Bridge | undefined;
+    private _sideChainBridgeContract: Bridge | undefined;
 
     private _mainTokenContract: BIP20DelegatedTransfer | undefined;
     private _mainLoyaltyBridgeContract: Bridge | undefined;
-    private _mainChainBridge: Bridge | undefined;
+    private _mainChainBridgeContract: Bridge | undefined;
 
     private _sideChainProvider: ethers.providers.Provider | undefined;
     private _mainChainProvider: ethers.providers.Provider | undefined;
+
     private _sideChainId: number | undefined;
     private _mainChainId: number | undefined;
+
+    private _sideChainURL: string | undefined;
+    private _mainChainURL: string | undefined;
 
     constructor(config: Config) {
         this.config = config;
@@ -48,6 +53,10 @@ export class ContractManager {
         await hre.changeNetwork(this.config.contracts.sideChain.network);
         this._sideChainProvider = hre.ethers.provider;
         this._sideChainId = (await this._sideChainProvider.getNetwork()).chainId;
+
+        const hardhatConfig = hre.config.networks[this.config.contracts.sideChain.network] as HttpNetworkConfig;
+        if (hardhatConfig.url !== undefined) this._sideChainURL = hardhatConfig.url;
+        else this._sideChainURL = "";
 
         const factory1 = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
         this._sideTokenContract = factory1.attach(this.config.contracts.sideChain.tokenAddress);
@@ -80,10 +89,15 @@ export class ContractManager {
         this._sideLoyaltyBridgeContract = factory9.attach(this.config.contracts.sideChain.loyaltyBridgeAddress);
 
         const factory10 = await hre.ethers.getContractFactory("Bridge");
-        this._sideChainBridge = factory10.attach(this.config.contracts.sideChain.chainBridgeAddress);
+        this._sideChainBridgeContract = factory10.attach(this.config.contracts.sideChain.chainBridgeAddress);
 
         await hre.changeNetwork(this.config.contracts.mainChain.network);
         this._mainChainProvider = hre.ethers.provider;
+        this._mainChainId = (await this._mainChainProvider.getNetwork()).chainId;
+
+        const hardhatConfig2 = hre.config.networks[this.config.contracts.mainChain.network] as HttpNetworkConfig;
+        if (hardhatConfig2.url !== undefined) this._mainChainURL = hardhatConfig2.url;
+        else this._mainChainURL = "";
 
         const factory11 = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
         this._mainTokenContract = factory11.attach(this.config.contracts.mainChain.tokenAddress);
@@ -92,9 +106,7 @@ export class ContractManager {
         this._mainLoyaltyBridgeContract = factory12.attach(this.config.contracts.mainChain.loyaltyBridgeAddress);
 
         const factory13 = await hre.ethers.getContractFactory("Bridge");
-        this._mainChainBridge = factory13.attach(this.config.contracts.mainChain.chainBridgeAddress);
-
-        this._mainChainId = (await this._mainChainProvider.getNetwork()).chainId;
+        this._mainChainBridgeContract = factory13.attach(this.config.contracts.mainChain.chainBridgeAddress);
     }
 
     public get mainChainProvider(): ethers.providers.Provider {
@@ -113,6 +125,14 @@ export class ContractManager {
         }
     }
 
+    public get mainChainURL(): string {
+        if (this._mainChainURL !== undefined) return this._mainChainURL;
+        else {
+            logger.error("mainChainURL is not ready yet.");
+            process.exit(1);
+        }
+    }
+
     public get sideChainProvider(): ethers.providers.Provider {
         if (this._sideChainProvider !== undefined) return this._sideChainProvider;
         else {
@@ -125,6 +145,14 @@ export class ContractManager {
         if (this._sideChainId !== undefined) return this._sideChainId;
         else {
             logger.error("sideChainId is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get sideChainURL(): string {
+        if (this._sideChainURL !== undefined) return this._sideChainURL;
+        else {
+            logger.error("sideChainURL is not ready yet.");
             process.exit(1);
         }
     }
@@ -209,10 +237,10 @@ export class ContractManager {
         }
     }
 
-    public get sideChainBridge(): Bridge {
-        if (this._sideChainBridge !== undefined) return this._sideChainBridge;
+    public get sideChainBridgeContract(): Bridge {
+        if (this._sideChainBridgeContract !== undefined) return this._sideChainBridgeContract;
         else {
-            logger.error("sideChainBridge is not ready yet.");
+            logger.error("sideChainBridgeContract is not ready yet.");
             process.exit(1);
         }
     }
@@ -233,10 +261,10 @@ export class ContractManager {
         }
     }
 
-    public get mainChainBridge(): Bridge {
-        if (this._mainChainBridge !== undefined) return this._mainChainBridge;
+    public get mainChainBridgeContract(): Bridge {
+        if (this._mainChainBridgeContract !== undefined) return this._mainChainBridgeContract;
         else {
-            logger.error("mainChainBridge is not ready yet.");
+            logger.error("mainChainBridgeContract is not ready yet.");
             process.exit(1);
         }
     }

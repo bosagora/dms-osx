@@ -159,10 +159,17 @@ export class BridgeRouter {
         }
     }
 
-    private async getDepositId(account: string): Promise<string> {
+    private async getDepositIdMainChain(account: string): Promise<string> {
         while (true) {
             const id = ContractUtils.getRandomId(account);
-            if (await this.contractManager.sideChainBridge.isAvailableDepositId(id)) return id;
+            if (await this.contractManager.mainChainBridgeContract.isAvailableDepositId(id)) return id;
+        }
+    }
+
+    private async getDepositIdSideChain(account: string): Promise<string> {
+        while (true) {
+            const id = ContractUtils.getRandomId(account);
+            if (await this.contractManager.sideChainBridgeContract.isAvailableDepositId(id)) return id;
         }
     }
 
@@ -186,7 +193,7 @@ export class BridgeRouter {
             const nonce = await this.contractManager.sideTokenContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
                 account,
-                this.contractManager.sideChainBridge.address,
+                this.contractManager.sideChainBridgeContract.address,
                 amount,
                 nonce,
                 this.contractManager.sideChainId
@@ -198,8 +205,8 @@ export class BridgeRouter {
                 await this.contractManager.sideTokenContract.name(),
                 await this.contractManager.sideTokenContract.symbol()
             );
-            const depositId = await this.getDepositId(account);
-            const tx = await this.contractManager.sideChainBridge
+            const depositId = await this.getDepositIdSideChain(account);
+            const tx = await this.contractManager.sideChainBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, signature);
 
@@ -234,7 +241,7 @@ export class BridgeRouter {
             const nonce = await this.contractManager.mainTokenContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
                 account,
-                this.contractManager.mainChainBridge.address,
+                this.contractManager.mainChainBridgeContract.address,
                 amount,
                 nonce,
                 this.contractManager.mainChainId
@@ -246,8 +253,8 @@ export class BridgeRouter {
                 await this.contractManager.mainTokenContract.name(),
                 await this.contractManager.mainTokenContract.symbol()
             );
-            const depositId = await this.getDepositId(account);
-            const tx = await this.contractManager.mainChainBridge
+            const depositId = await this.getDepositIdMainChain(account);
+            const tx = await this.contractManager.mainChainBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, signature);
 
