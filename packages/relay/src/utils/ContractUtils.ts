@@ -27,7 +27,7 @@ import * as hre from "hardhat";
 import { ethers } from "hardhat";
 
 export enum LoyaltyNetworkID {
-    KIOS,
+    LYT,
     PNB,
 }
 export class ContractUtils {

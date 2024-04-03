@@ -93,7 +93,7 @@ describe("Test for Ledger", () => {
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
 
-        tokenContract = deployments.getContract("TestKIOS") as ERC20;
+        tokenContract = deployments.getContract("TestLYT") as ERC20;
         validatorContract = deployments.getContract("Validator") as Validator;
         currencyContract = deployments.getContract("CurrencyRate") as CurrencyRate;
 
@@ -237,7 +237,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -1853,7 +1853,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -2012,7 +2012,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -2199,7 +2199,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -2650,7 +2650,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -2883,7 +2883,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -3257,7 +3257,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -3466,7 +3466,7 @@ describe("Test for Ledger", () => {
 
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 

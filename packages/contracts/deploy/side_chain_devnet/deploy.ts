@@ -20,7 +20,7 @@ import {
     MultiSigWallet,
     PhoneLinkCollection,
     Shop,
-    TestKIOS,
+    TestLYT,
     Validator,
 } from "../../typechain-types";
 
@@ -30,24 +30,21 @@ import fs from "fs";
 
 import * as hre from "hardhat";
 
-const network = "bosagora_devnet";
+const network = "side_chain_devnet";
 
 export const PHONE_LINK_COLLECTION_ADDRESSES: { [key: string]: string } = {
-    bosagora_mainnet: "0xaE7018CaF086EB2Ca62eAA7b91B61dDA6b046F70",
-    bosagora_testnet: "0xaE7018CaF086EB2Ca62eAA7b91B61dDA6b046F70",
-    bosagora_devnet: "0xaE7018CaF086EB2Ca62eAA7b91B61dDA6b046F70",
+    main_chain_devnet: "0xaE7018CaF086EB2Ca62eAA7b91B61dDA6b046F70",
+    side_chain_devnet: "0xaE7018CaF086EB2Ca62eAA7b91B61dDA6b046F70",
 };
 
 export const MULTI_SIG_WALLET_ADDRESSES: { [key: string]: string } = {
-    bosagora_mainnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
-    bosagora_testnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
-    bosagora_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
+    main_chain_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
+    side_chain_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
 };
 
 export const LOYALTY_TOKEN_ADDRESSES: { [key: string]: string } = {
-    bosagora_mainnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
-    bosagora_testnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
-    bosagora_devnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
+    main_chain_devnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
+    side_chain_devnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
 };
 
 interface IDeployedContract {
@@ -928,7 +925,7 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = (await deployment.getContract("LoyaltyToken")) as TestKIOS;
+        const tokenContract = (await deployment.getContract("LoyaltyToken")) as TestLYT;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(500_000_000, 18).value;

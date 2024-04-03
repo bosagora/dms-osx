@@ -21,7 +21,7 @@ import {
     LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
-    TestKIOS,
+    TestLYT,
     Validator,
 } from "../../typechain-types";
 
@@ -263,18 +263,18 @@ async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
 }
 
 async function deployToken(accounts: IAccount, deployment: Deployments) {
-    const contractName = "TestKIOS";
+    const contractName = "TestLYT";
     console.log(`Deploy ${contractName}...`);
 
     await hre.changeNetwork(deployment.config.contracts.sideChain.network);
-    const factory = await hre.ethers.getContractFactory("TestKIOS");
-    const contract = (await factory.connect(accounts.deployer).deploy(accounts.owner.address)) as TestKIOS;
+    const factory = await hre.ethers.getContractFactory("TestLYT");
+    const contract = (await factory.connect(accounts.deployer).deploy(accounts.owner.address)) as TestLYT;
     await contract.deployed();
     await contract.deployTransaction.wait();
 
     const balance = await contract.balanceOf(accounts.owner.address);
-    console.log(`TestKIOS token's owner: ${accounts.owner.address}`);
-    console.log(`TestKIOS token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
+    console.log(`TestLYT token's owner: ${accounts.owner.address}`);
+    console.log(`TestLYT token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
 
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
@@ -305,7 +305,7 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
 async function deployValidator(accounts: IAccount, deployment: Deployments) {
     const contractName = "Validator";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("TestKIOS") === undefined) {
+    if (deployment.getContract("TestLYT") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -314,7 +314,7 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     const factory = await hre.ethers.getContractFactory("Validator");
     const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [await deployment.getContractAddress("TestKIOS"), accounts.validators.map((m) => m.address)],
+        [await deployment.getContractAddress("TestLYT"), accounts.validators.map((m) => m.address)],
         {
             initializer: "initialize",
             kind: "uups",
@@ -330,13 +330,13 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
         const depositedToken = Amount.make(100_000, 18);
 
         for (const elem of accounts.validators) {
-            const tx1 = await (deployment.getContract("TestKIOS") as TestKIOS)
+            const tx1 = await (deployment.getContract("TestLYT") as TestLYT)
                 .connect(accounts.owner)
                 .transfer(elem.address, amount.value);
             console.log(`Transfer token to validator (tx: ${tx1.hash})...`);
             await tx1.wait();
 
-            const tx2 = await (deployment.getContract("TestKIOS") as TestKIOS)
+            const tx2 = await (deployment.getContract("TestLYT") as TestLYT)
                 .connect(elem)
                 .approve(contract.address, depositedToken.value);
             console.log(`Approve validator's amount (tx: ${tx2.hash})...`);
@@ -352,7 +352,7 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
 async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     const contractName = "CurrencyRate";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("Validator") === undefined || deployment.getContract("TestKIOS") === undefined) {
+    if (deployment.getContract("Validator") === undefined || deployment.getContract("TestLYT") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -363,7 +363,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
         factory.connect(accounts.deployer),
         [
             await deployment.getContractAddress("Validator"),
-            await (deployment.getContract("TestKIOS") as TestKIOS).symbol(),
+            await (deployment.getContract("TestLYT") as TestLYT).symbol(),
         ],
         {
             initializer: "initialize",
@@ -380,7 +380,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
         const height = 0;
         const rates = [
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
             {
@@ -574,11 +574,11 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = (await deployment.getContract("TestKIOS")) as TestKIOS;
+        const tokenContract = (await deployment.getContract("TestLYT")) as TestLYT;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deployment.getContract("TestKIOS") as TestKIOS).nonceOf(accounts.owner.address);
+        const nonce = await (deployment.getContract("TestLYT") as TestLYT).nonceOf(accounts.owner.address);
         const message = ContractUtils.getTransferMessage(
             accounts.owner.address,
             contract.address,
@@ -679,7 +679,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     const contractName = "Ledger";
     console.log(`Deploy ${contractName}...`);
     if (
-        deployment.getContract("TestKIOS") === undefined ||
+        deployment.getContract("TestLYT") === undefined ||
         deployment.getContract("PhoneLinkCollection") === undefined ||
         deployment.getContract("CurrencyRate") === undefined ||
         deployment.getContract("LoyaltyProvider") === undefined ||
@@ -705,7 +705,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 txFee: accounts.txFee.address,
             },
             {
-                token: await deployment.getContractAddress("TestKIOS"),
+                token: await deployment.getContractAddress("TestLYT"),
                 phoneLink: await deployment.getContractAddress("PhoneLinkCollection"),
                 currencyRate: await deployment.getContractAddress("CurrencyRate"),
                 provider: await deployment.getContractAddress("LoyaltyProvider"),
@@ -765,7 +765,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
 
     {
         const assetAmount = Amount.make(100_000_000, 18);
-        const tx11 = await (deployment.getContract("TestKIOS") as TestKIOS)
+        const tx11 = await (deployment.getContract("TestLYT") as TestLYT)
             .connect(accounts.foundation)
             .approve(contract.address, assetAmount.value);
         console.log(`Approve foundation's amount (tx: ${tx11.hash})...`);
@@ -777,10 +777,10 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     }
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = (await deployment.getContract("TestKIOS")) as TestKIOS;
+        const tokenContract = (await deployment.getContract("TestLYT")) as TestLYT;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         const assetAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deployment.getContract("TestKIOS") as TestKIOS).nonceOf(accounts.owner.address);
+        const nonce = await (deployment.getContract("TestLYT") as TestLYT).nonceOf(accounts.owner.address);
         const message = ContractUtils.getTransferMessage(
             accounts.owner.address,
             contract.address,
@@ -800,8 +800,8 @@ async function deployMainChainToken(accounts: IAccount, deployment: Deployments)
     console.log(`Deploy ${contractName}...`);
 
     await hre.changeNetwork(deployment.config.contracts.mainChain.network);
-    const factory = await hre.ethers.getContractFactory("TestKIOS");
-    const contract = (await factory.connect(accounts.deployer).deploy(accounts.owner.address)) as TestKIOS;
+    const factory = await hre.ethers.getContractFactory("TestLYT");
+    const contract = (await factory.connect(accounts.deployer).deploy(accounts.owner.address)) as TestLYT;
     await contract.deployed();
     await contract.deployTransaction.wait();
 
@@ -856,7 +856,7 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = (await deployment.getContract("MainChainKIOS")) as TestKIOS;
+        const tokenContract = (await deployment.getContract("MainChainKIOS")) as TestLYT;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(8_000_000_000, 18).value;
@@ -901,7 +901,7 @@ async function deployMainChainLoyaltyBridge(accounts: IAccount, deployment: Depl
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = (await deployment.getContract("MainChainKIOS")) as TestKIOS;
+        const tokenContract = (await deployment.getContract("MainChainKIOS")) as TestLYT;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(1_000_000_000, 18).value;

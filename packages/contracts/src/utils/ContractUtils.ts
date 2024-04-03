@@ -24,7 +24,7 @@ import { verifyMessage } from "@ethersproject/wallet";
 import * as hre from "hardhat";
 
 export enum LoyaltyNetworkID {
-    KIOS,
+    LYT,
     PNB,
 }
 

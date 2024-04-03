@@ -1,5 +1,5 @@
 {
-  "bosagora_mainnet": {
+  "loyalty_mainnet": {
     "LoyaltyToken": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
     "Validator": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
     "CurrencyRate": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
@@ -13,49 +13,7 @@
     "Shop": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
     "Ledger": "0xcAde85D03A2ABd41b608004BBB25440D28C64912"
   },
-  "bosagora_testnet": {
-    "LoyaltyToken": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
-    "Validator": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
-    "CurrencyRate": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
-    "LoyaltyBurner": "0x5B4f8F9566706D4dB7f5E3020cE0485f96415749",
-    "LoyaltyProvider": "0xDD91A65534847537c290FEbc721cf8457f860744",
-    "LoyaltyConsumer": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
-    "LoyaltyExchanger": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
-    "LoyaltyTransfer": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
-    "BridgeValidator": "0xE7D4f38Fad1C1C5EAA8A1280678B860a7A9519c1",
-    "LoyaltyBridge": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
-    "Shop": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
-    "Ledger": "0xcAde85D03A2ABd41b608004BBB25440D28C64912"
-  },
-  "bosagora_devnet": {
-    "LoyaltyToken": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
-    "Validator": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
-    "CurrencyRate": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
-    "LoyaltyBurner": "0x5B4f8F9566706D4dB7f5E3020cE0485f96415749",
-    "LoyaltyProvider": "0xDD91A65534847537c290FEbc721cf8457f860744",
-    "LoyaltyConsumer": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
-    "LoyaltyExchanger": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
-    "LoyaltyTransfer": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
-    "BridgeValidator": "0xE7D4f38Fad1C1C5EAA8A1280678B860a7A9519c1",
-    "LoyaltyBridge": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
-    "Shop": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
-    "Ledger": "0xcAde85D03A2ABd41b608004BBB25440D28C64912"
-  },
-  "kios_mainnet": {
-    "LoyaltyToken": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
-    "Validator": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
-    "CurrencyRate": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
-    "LoyaltyBurner": "0x5B4f8F9566706D4dB7f5E3020cE0485f96415749",
-    "LoyaltyProvider": "0xDD91A65534847537c290FEbc721cf8457f860744",
-    "LoyaltyConsumer": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
-    "LoyaltyExchanger": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
-    "LoyaltyTransfer": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
-    "BridgeValidator": "0xE7D4f38Fad1C1C5EAA8A1280678B860a7A9519c1",
-    "LoyaltyBridge": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
-    "Shop": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
-    "Ledger": "0xcAde85D03A2ABd41b608004BBB25440D28C64912"
-  },
-  "kios_testnet": {
+  "loyalty_testnet": {
     "LoyaltyToken": "0x3A90432BBfd5Bd87788f397F46c24685492fb30E",
     "Validator": "0x7265F4D550AEdc3Ed97a6ae6dDAf4289eDFaC0C5",
     "CurrencyRate": "0xE2EE763820443c6953B7e9c4bD3D729509524a4D",
@@ -69,7 +27,7 @@
     "Shop": "0x011BD972Ee1724a300250Bf614ACE1ddC5DEe37E",
     "Ledger": "0x2fD2Cdae46578dCa6AB208feCb247E5B25876309"
   },
-  "kios_devnet": {
+  "loyalty_devnet": {
     "LoyaltyToken": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
     "Validator": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
     "CurrencyRate": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",

@@ -25,7 +25,7 @@ describe("Test for Validator", () => {
     before(async () => {
         await deployments.doDeployToken();
 
-        tokenContract = deployments.getContract("TestKIOS") as ERC20;
+        tokenContract = deployments.getContract("TestLYT") as ERC20;
 
         for (const elem of deployments.accounts.validators) {
             await tokenContract.connect(deployments.accounts.owner).transfer(elem.address, amount.value);

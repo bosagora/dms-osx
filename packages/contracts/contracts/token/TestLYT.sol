@@ -3,8 +3,8 @@ pragma solidity ^0.8.2;
 
 import "loyalty-tokens/contracts/BIP20/BIP20DelegatedTransfer.sol";
 
-contract TestKIOS is BIP20DelegatedTransfer {
-    constructor(address owner) BIP20DelegatedTransfer("KIOS", "KIOS") {
+contract TestLYT is BIP20DelegatedTransfer {
+    constructor(address owner) BIP20DelegatedTransfer("LYT", "LYT") {
         _mint(owner, 1e10 * 1e18);
     }
 

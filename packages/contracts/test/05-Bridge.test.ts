@@ -17,7 +17,7 @@ import {
     LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
-    TestKIOS,
+    TestLYT,
     Validator,
 } from "../typechain-types";
 
@@ -71,7 +71,7 @@ describe("Test for Ledger", () => {
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
 
-        tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
+        tokenContract = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
         validatorContract = deployments.getContract("Validator") as Validator;
         currencyContract = deployments.getContract("CurrencyRate") as CurrencyRate;
 

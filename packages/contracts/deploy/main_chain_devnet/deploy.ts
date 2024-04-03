@@ -14,18 +14,16 @@ import fs from "fs";
 import * as hre from "hardhat";
 import { ethers, upgrades } from "hardhat";
 
-const network = "bosagora_devnet";
+const network = "main_chain_devnet";
 
 export const MULTI_SIG_WALLET_ADDRESSES: { [key: string]: string } = {
-    bosagora_mainnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
-    bosagora_testnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
-    bosagora_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
+    main_chain_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
+    side_chain_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
 };
 
 export const LOYALTY_TOKEN_ADDRESSES: { [key: string]: string } = {
-    bosagora_mainnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
-    bosagora_testnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
-    bosagora_devnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
+    main_chain_devnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
+    side_chain_devnet: "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
 };
 
 interface IDeployedContract {

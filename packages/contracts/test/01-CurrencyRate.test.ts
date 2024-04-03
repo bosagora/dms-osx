@@ -25,7 +25,7 @@ describe("Test for CurrencyRate", () => {
     before(async () => {
         await deployments.doDeployValidator();
 
-        tokenContract = deployments.getContract("TestKIOS") as ERC20;
+        tokenContract = deployments.getContract("TestLYT") as ERC20;
         validatorContract = deployments.getContract("Validator") as Validator;
 
         const currencyRateFactory = await ethers.getContractFactory("CurrencyRate");
@@ -58,7 +58,7 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
         ];
@@ -86,7 +86,7 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
         ];
@@ -116,7 +116,7 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
         ];
@@ -146,7 +146,7 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
         ];
@@ -176,7 +176,7 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
         ];
@@ -212,7 +212,7 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
         ];
@@ -245,7 +245,7 @@ describe("Test for CurrencyRate", () => {
                 rate: multiple.mul(1),
             },
             {
-                symbol: "KIOS",
+                symbol: "LYT",
                 rate: multiple.mul(150),
             },
         ];

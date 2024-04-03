@@ -157,7 +157,7 @@ describe("Test of Server", function () {
     context("Test point relay endpoints", () => {
         before("Set Shop ID", async () => {
             for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.KIOS);
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
             }
         });
 
@@ -166,7 +166,7 @@ describe("Test of Server", function () {
             await deployments.doDeploy();
 
             validatorContract = deployments.getContract("Validator") as Validator;
-            tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
+            tokenContract = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
             ledgerContract = deployments.getContract("Ledger") as Ledger;
             linkContract = deployments.getContract("PhoneLinkCollection") as PhoneLinkCollection;
             consumerContract = deployments.getContract("LoyaltyConsumer") as LoyaltyConsumer;
@@ -177,7 +177,7 @@ describe("Test of Server", function () {
         });
 
         before("Create Config", async () => {
-            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestLYT") || "";
             config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
             config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
             config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";

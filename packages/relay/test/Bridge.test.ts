@@ -50,7 +50,7 @@ describe("Test of Bridge", function () {
     });
 
     before("Create Config", async () => {
-        config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestKIOS") || "";
+        config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestLYT") || "";
         config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
         config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
         config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
