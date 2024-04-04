@@ -249,6 +249,7 @@ export class RelayConfig implements IRelayConfig {
 export class ContractsConfig implements IContractsConfig {
     public sideChain: {
         network: string;
+        url: string;
         tokenAddress: string;
         ledgerAddress: string;
         phoneLinkerAddress: string;
@@ -263,6 +264,7 @@ export class ContractsConfig implements IContractsConfig {
     };
     public mainChain: {
         network: string;
+        url: string;
         tokenAddress: string;
         loyaltyBridgeAddress: string;
         chainBridgeAddress: string;
@@ -273,6 +275,7 @@ export class ContractsConfig implements IContractsConfig {
 
         this.sideChain = {
             network: defaults.sideChain.network,
+            url: defaults.sideChain.url,
             tokenAddress: defaults.sideChain.tokenAddress,
             ledgerAddress: defaults.sideChain.ledgerAddress,
             phoneLinkerAddress: defaults.sideChain.phoneLinkerAddress,
@@ -287,6 +290,7 @@ export class ContractsConfig implements IContractsConfig {
         };
         this.mainChain = {
             network: defaults.mainChain.network,
+            url: defaults.mainChain.url,
             tokenAddress: defaults.mainChain.tokenAddress,
             loyaltyBridgeAddress: defaults.mainChain.loyaltyBridgeAddress,
             chainBridgeAddress: defaults.mainChain.chainBridgeAddress,
@@ -297,6 +301,7 @@ export class ContractsConfig implements IContractsConfig {
         return {
             sideChain: {
                 network: "production_side",
+                url: "",
                 tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
                 ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
                 phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
@@ -311,6 +316,7 @@ export class ContractsConfig implements IContractsConfig {
             },
             mainChain: {
                 network: "production_main",
+                url: "",
                 tokenAddress: process.env.MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS || "",
                 loyaltyBridgeAddress: process.env.MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
                 chainBridgeAddress: process.env.MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS || "",
@@ -320,6 +326,7 @@ export class ContractsConfig implements IContractsConfig {
 
     public readFromObject(config: IContractsConfig) {
         if (config.sideChain.network !== undefined) this.sideChain.network = config.sideChain.network;
+        if (config.sideChain.url !== undefined) this.sideChain.url = config.sideChain.url;
         if (config.sideChain.tokenAddress !== undefined) this.sideChain.tokenAddress = config.sideChain.tokenAddress;
         if (config.sideChain.ledgerAddress !== undefined) this.sideChain.ledgerAddress = config.sideChain.ledgerAddress;
         if (config.sideChain.phoneLinkerAddress !== undefined)
@@ -341,6 +348,7 @@ export class ContractsConfig implements IContractsConfig {
             this.sideChain.chainBridgeAddress = config.sideChain.chainBridgeAddress;
 
         if (config.mainChain.network !== undefined) this.mainChain.network = config.mainChain.network;
+        if (config.mainChain.url !== undefined) this.mainChain.url = config.mainChain.url;
         if (config.mainChain.tokenAddress !== undefined) this.mainChain.tokenAddress = config.mainChain.tokenAddress;
         if (config.mainChain.loyaltyBridgeAddress !== undefined)
             this.mainChain.loyaltyBridgeAddress = config.mainChain.loyaltyBridgeAddress;
@@ -461,6 +469,7 @@ export interface IRelayConfig {
 export interface IContractsConfig {
     sideChain: {
         network: string;
+        url: string;
         tokenAddress: string;
         ledgerAddress: string;
         loyaltyProviderAddress: string;
@@ -475,6 +484,7 @@ export interface IContractsConfig {
     };
     mainChain: {
         network: string;
+        url: string;
         tokenAddress: string;
         loyaltyBridgeAddress: string;
         chainBridgeAddress: string;

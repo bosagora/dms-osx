@@ -17,6 +17,7 @@ import { logger } from "../common/Logger";
 import { ethers } from "ethers";
 import * as hre from "hardhat";
 import { HttpNetworkConfig } from "hardhat/src/types/config";
+import { ContractUtils } from "../utils/ContractUtils";
 
 export class ContractManager {
     private readonly config: Config;
@@ -45,6 +46,9 @@ export class ContractManager {
     private _sideChainURL: string | undefined;
     private _mainChainURL: string | undefined;
 
+    private _sideTokenId: string | undefined;
+    private _mainTokenId: string | undefined;
+
     constructor(config: Config) {
         this.config = config;
     }
@@ -54,12 +58,20 @@ export class ContractManager {
         this._sideChainProvider = hre.ethers.provider;
         this._sideChainId = (await this._sideChainProvider.getNetwork()).chainId;
 
-        const hardhatConfig = hre.config.networks[this.config.contracts.sideChain.network] as HttpNetworkConfig;
-        if (hardhatConfig.url !== undefined) this._sideChainURL = hardhatConfig.url;
-        else this._sideChainURL = "";
+        this._sideChainURL = this.config.contracts.sideChain.url;
+        if (this._sideChainURL === "") {
+            const hardhatConfig = hre.config.networks[this.config.contracts.sideChain.network] as HttpNetworkConfig;
+            if (hardhatConfig.url !== undefined) this._sideChainURL = hardhatConfig.url;
+            else this._sideChainURL = "";
+        }
 
         const factory1 = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
         this._sideTokenContract = factory1.attach(this.config.contracts.sideChain.tokenAddress);
+
+        this._sideTokenId = ContractUtils.getTokenId(
+            await this._sideTokenContract.name(),
+            await this._sideTokenContract.symbol()
+        );
 
         const factory2 = await hre.ethers.getContractFactory("Ledger");
         this._sideLedgerContract = factory2.attach(this.config.contracts.sideChain.ledgerAddress);
@@ -95,12 +107,20 @@ export class ContractManager {
         this._mainChainProvider = hre.ethers.provider;
         this._mainChainId = (await this._mainChainProvider.getNetwork()).chainId;
 
-        const hardhatConfig2 = hre.config.networks[this.config.contracts.mainChain.network] as HttpNetworkConfig;
-        if (hardhatConfig2.url !== undefined) this._mainChainURL = hardhatConfig2.url;
-        else this._mainChainURL = "";
+        this._mainChainURL = this.config.contracts.mainChain.url;
+        if (this._mainChainURL === "") {
+            const hardhatConfig2 = hre.config.networks[this.config.contracts.mainChain.network] as HttpNetworkConfig;
+            if (hardhatConfig2.url !== undefined) this._mainChainURL = hardhatConfig2.url;
+            else this._mainChainURL = "";
+        }
 
         const factory11 = await hre.ethers.getContractFactory("BIP20DelegatedTransfer");
         this._mainTokenContract = factory11.attach(this.config.contracts.mainChain.tokenAddress);
+
+        this._mainTokenId = ContractUtils.getTokenId(
+            await this._mainTokenContract.name(),
+            await this._mainTokenContract.symbol()
+        );
 
         const factory12 = await hre.ethers.getContractFactory("Bridge");
         this._mainLoyaltyBridgeContract = factory12.attach(this.config.contracts.mainChain.loyaltyBridgeAddress);
@@ -129,6 +149,22 @@ export class ContractManager {
         if (this._mainChainURL !== undefined) return this._mainChainURL;
         else {
             logger.error("mainChainURL is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get mainTokenId(): string {
+        if (this._mainTokenId !== undefined) return this._mainTokenId;
+        else {
+            logger.error("mainTokenId is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get sideTokenId(): string {
+        if (this._sideTokenId !== undefined) return this._sideTokenId;
+        else {
+            logger.error("sideTokenId is not ready yet.");
             process.exit(1);
         }
     }

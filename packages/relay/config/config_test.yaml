@@ -87,6 +87,7 @@ relay:
 contracts:
   sideChain:
     network: "hardhat"
+    url: ""
     ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
     phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
     shopAddress : "${SHOP_CONTRACT_ADDRESS}"
@@ -100,6 +101,7 @@ contracts:
     chainBridgeAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
   mainChain:
     network: "hardhat"
+    url: ""
     tokenAddress : "${MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS}"
     loyaltyBridgeAddress: "${MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
     chainBridgeAddress: "${MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
