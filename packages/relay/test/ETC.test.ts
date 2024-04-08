@@ -13,9 +13,26 @@ import * as hre from "hardhat";
 import path from "path";
 import URI from "urijs";
 import { URL } from "url";
+import {
+    BIP20DelegatedTransfer,
+    CurrencyRate,
+    Ledger,
+    LoyaltyConsumer,
+    LoyaltyExchanger,
+    LoyaltyProvider,
+    PhoneLinkCollection,
+    Shop,
+    Validator,
+} from "../typechain-types";
+import { Deployments } from "./helper/Deployments";
 
 describe("Test for ETC", function () {
     this.timeout(1000 * 60 * 5);
+    const config = new Config();
+    config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+    const contractManager = new ContractManager(config);
+    const deployments = new Deployments(config);
+
     const provider = hre.waffle.provider;
     const [userWallet] = provider.getWallets();
 
@@ -23,12 +40,36 @@ describe("Test for ETC", function () {
     let server: TestServer;
     let storage: RelayStorage;
     let serverURL: URL;
-    let config: Config;
 
     context("Register Mobile", () => {
+        before("Deploy", async () => {
+            deployments.setShopData([]);
+            await deployments.doDeploy();
+        });
+
         before("Create Config", async () => {
-            config = new Config();
-            config.readFromFile(path.resolve(process.cwd(), "config", "config_test.yaml"));
+            config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestLYT") || "";
+            config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
+            config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
+            config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
+            config.contracts.sideChain.shopAddress = deployments.getContractAddress("Shop") || "";
+            config.contracts.sideChain.loyaltyProviderAddress = deployments.getContractAddress("LoyaltyProvider") || "";
+            config.contracts.sideChain.loyaltyConsumerAddress = deployments.getContractAddress("LoyaltyConsumer") || "";
+            config.contracts.sideChain.loyaltyExchangerAddress =
+                deployments.getContractAddress("LoyaltyExchanger") || "";
+            config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
+            config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
+            config.contracts.sideChain.chainBridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
+
+            config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+            config.contracts.mainChain.loyaltyBridgeAddress =
+                deployments.getContractAddress("MainChainLoyaltyBridge") || "";
+            config.contracts.mainChain.chainBridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
+
+            config.relay.managerKeys = deployments.accounts.certifiers.map((m) => m.privateKey);
+            config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+
             client = new TestClient({
                 headers: {
                     Authorization: config.relay.accessKey,

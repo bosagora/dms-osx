@@ -87,7 +87,7 @@ relay:
 contracts:
   sideChain:
     network: "production_side"
-    url: ""
+    url: "${SIDE_CHAIN_RPC_URL}"
     ledgerAddress : "${LEDGER_CONTRACT_ADDRESS}"
     phoneLinkerAddress : "${PHONE_LINKER_CONTRACT_ADDRESS}"
     shopAddress : "${SHOP_CONTRACT_ADDRESS}"
@@ -100,8 +100,8 @@ contracts:
     loyaltyBridgeAddress: "${SIDE_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
     chainBridgeAddress: "${SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
   mainChain:
-    url: ""
     network: "production_main"
+    url: "${MAIN_CHAIN_RPC_URL}"
     tokenAddress : "${MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS}"
     loyaltyBridgeAddress: "${MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
     chainBridgeAddress: "${MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
