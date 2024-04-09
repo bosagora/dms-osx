@@ -55,11 +55,11 @@ export class ContractManager {
     }
 
     public async attach() {
-        logger.info("SideChain.Network", this.config.contracts.sideChain.network);
+        logger.info(`SideChain.Network: ${this.config.contracts.sideChain.network}`);
         await hre.changeNetwork(this.config.contracts.sideChain.network);
         this._sideChainProvider = hre.ethers.provider;
         this._sideChainId = (await this._sideChainProvider.getNetwork()).chainId;
-        logger.info("SideChain.ChainId:", this._sideChainId);
+        logger.info(`SideChain.ChainId: ${this._sideChainId}`);
 
         this._sideChainURL = this.config.contracts.sideChain.url;
         if (this._sideChainURL === "") {
@@ -67,87 +67,87 @@ export class ContractManager {
             if (hardhatConfig.url !== undefined) this._sideChainURL = hardhatConfig.url;
             else this._sideChainURL = "";
         }
-        logger.info("SideChain.URL:", this._sideChainURL);
+        logger.info(`SideChain.URL: ${this._sideChainURL}`);
 
         const factory1 = await hre.ethers.getContractFactory("LoyaltyToken");
         this._sideTokenContract = factory1
             .attach(this.config.contracts.sideChain.tokenAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.Token:", this._sideTokenContract.address);
-        logger.info("SideChain.Token.Name:", await this._sideTokenContract.name());
-        logger.info("SideChain.Token.Symbol:", await this._sideTokenContract.symbol());
+        logger.info(`SideChain.Token: ${this._sideTokenContract.address}`);
+        logger.info(`SideChain.Token.Name: ${await this._sideTokenContract.name()}`);
+        logger.info(`SideChain.Token.Symbol: ${await this._sideTokenContract.symbol()}`);
 
         this._sideTokenId = ContractUtils.getTokenId(
             await this._sideTokenContract.name(),
             await this._sideTokenContract.symbol()
         );
-        logger.info("SideChain.TokenId:", this._sideTokenId);
+        logger.info(`SideChain.TokenId: ${this._sideTokenId}`);
 
         const factory2 = await hre.ethers.getContractFactory("Ledger");
         this._sideLedgerContract = factory2
             .attach(this.config.contracts.sideChain.ledgerAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.Ledger:", this._sideLedgerContract.address);
+        logger.info(`SideChain.Ledger: ${this._sideLedgerContract.address}`);
 
         const factory3 = await hre.ethers.getContractFactory("Shop");
         this._sideShopContract = factory3
             .attach(this.config.contracts.sideChain.shopAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.Shop:", this._sideShopContract.address);
+        logger.info(`SideChain.Shop: ${this._sideShopContract.address}`);
 
         const factory4 = await hre.ethers.getContractFactory("PhoneLinkCollection");
         this._sidePhoneLinkerContract = factory4
             .attach(this.config.contracts.sideChain.phoneLinkerAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.PhoneLinkCollection:", this._sidePhoneLinkerContract.address);
+        logger.info(`SideChain.PhoneLinkCollection: ${this._sidePhoneLinkerContract.address}`);
 
         const factory5 = await hre.ethers.getContractFactory("CurrencyRate");
         this._sideCurrencyRateContract = factory5
             .attach(this.config.contracts.sideChain.currencyRateAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.CurrencyRate:", this._sideCurrencyRateContract.address);
+        logger.info(`SideChain.CurrencyRate: ${this._sideCurrencyRateContract.address}`);
 
         const factory51 = await hre.ethers.getContractFactory("LoyaltyProvider");
         this._sideLoyaltyProviderContract = factory51
             .attach(this.config.contracts.sideChain.loyaltyProviderAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.LoyaltyProvider:", this._sideLoyaltyProviderContract.address);
+        logger.info(`SideChain.LoyaltyProvider: ${this._sideLoyaltyProviderContract.address}`);
 
         const factory6 = await hre.ethers.getContractFactory("LoyaltyConsumer");
         this._sideLoyaltyConsumerContract = factory6
             .attach(this.config.contracts.sideChain.loyaltyConsumerAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.LoyaltyConsumer:", this._sideLoyaltyConsumerContract.address);
+        logger.info(`SideChain.LoyaltyConsumer: ${this._sideLoyaltyConsumerContract.address}`);
 
         const factory7 = await hre.ethers.getContractFactory("LoyaltyExchanger");
         this._sideLoyaltyExchangerContract = factory7
             .attach(this.config.contracts.sideChain.loyaltyExchangerAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.LoyaltyExchanger:", this._sideLoyaltyExchangerContract.address);
+        logger.info(`SideChain.LoyaltyExchanger: ${this._sideLoyaltyExchangerContract.address}`);
 
         const factory8 = await hre.ethers.getContractFactory("LoyaltyTransfer");
         this._sideLoyaltyTransferContract = factory8
             .attach(this.config.contracts.sideChain.loyaltyTransferAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.LoyaltyTransfer:", this._sideLoyaltyTransferContract.address);
+        logger.info(`SideChain.LoyaltyTransfer: ${this._sideLoyaltyTransferContract.address}`);
 
         const factory9 = await hre.ethers.getContractFactory("LoyaltyBridge");
         this._sideLoyaltyBridgeContract = factory9
             .attach(this.config.contracts.sideChain.loyaltyBridgeAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.LoyaltyBridge:", this._sideLoyaltyBridgeContract.address);
+        logger.info(`SideChain.LoyaltyBridge: ${this._sideLoyaltyBridgeContract.address}`);
 
         const factory10 = await hre.ethers.getContractFactory("Bridge");
         this._sideChainBridgeContract = factory10
             .attach(this.config.contracts.sideChain.chainBridgeAddress)
             .connect(this._sideChainProvider);
-        logger.info("SideChain.ChainBridge:", this._sideChainBridgeContract.address);
+        logger.info(`SideChain.ChainBridge: ${this._sideChainBridgeContract.address}`);
 
-        logger.info("MainChain.Network:", this.config.contracts.mainChain.network);
+        logger.info(`MainChain.Network: ${this.config.contracts.mainChain.network}`);
         await hre.changeNetwork(this.config.contracts.mainChain.network);
         this._mainChainProvider = hre.ethers.provider;
         this._mainChainId = (await this._mainChainProvider.getNetwork()).chainId;
-        logger.info("MainChain.ChainId:", this._mainChainId);
+        logger.info(`MainChain.ChainId: ${this._mainChainId}`);
 
         this._mainChainURL = this.config.contracts.mainChain.url;
         if (this._mainChainURL === "") {
@@ -155,33 +155,33 @@ export class ContractManager {
             if (hardhatConfig2.url !== undefined) this._mainChainURL = hardhatConfig2.url;
             else this._mainChainURL = "";
         }
-        logger.info("MainChain.URL:", this._mainChainURL);
+        logger.info(`MainChain.URL: ${this._mainChainURL}`);
 
         const factory11 = await hre.ethers.getContractFactory("LoyaltyToken");
         this._mainTokenContract = factory11
             .attach(this.config.contracts.mainChain.tokenAddress)
             .connect(this._mainChainProvider);
-        logger.info("MainChain.Token:", this._mainTokenContract.address);
-        logger.info("MainChain.Token.Name:", await this._mainTokenContract.name());
-        logger.info("MainChain.Token.Symbol:", await this._mainTokenContract.symbol());
+        logger.info(`MainChain.Token: ${this._mainTokenContract.address}`);
+        logger.info(`MainChain.Token.Name: ${await this._mainTokenContract.name()}`);
+        logger.info(`MainChain.Token.Symbol: ${await this._mainTokenContract.symbol()}`);
 
         this._mainTokenId = ContractUtils.getTokenId(
             await this._mainTokenContract.name(),
             await this._mainTokenContract.symbol()
         );
-        logger.info("MainChain.TokenId:", this._mainTokenId);
+        logger.info(`MainChain.TokenId: ${this._mainTokenId}`);
 
         const factory12 = await hre.ethers.getContractFactory("Bridge");
         this._mainLoyaltyBridgeContract = factory12
             .attach(this.config.contracts.mainChain.loyaltyBridgeAddress)
             .connect(this._mainChainProvider);
-        logger.info("MainChain.LoyaltyBridge:", this._mainLoyaltyBridgeContract.address);
+        logger.info(`MainChain.LoyaltyBridge: ${this._mainLoyaltyBridgeContract.address}`);
 
         const factory13 = await hre.ethers.getContractFactory("Bridge");
         this._mainChainBridgeContract = factory13
             .attach(this.config.contracts.mainChain.chainBridgeAddress)
             .connect(this._mainChainProvider);
-        logger.info("MainChain.ChainBridge:", this._mainChainBridgeContract.address);
+        logger.info(`MainChain.ChainBridge: ${this._mainChainBridgeContract.address}`);
     }
 
     public get mainChainProvider(): ethers.providers.Provider {
