@@ -1,0 +1,21 @@
+{
+    "info": "# Do not edit subgraph.yaml,this is a generated file. \n# Instead, edit subgraph.placeholder.yaml and run: yarn manifest",
+    "network": "mainchain",
+    "dataSources": {
+        "LoyaltyToken": {
+            "name": "LoyaltyToken",
+            "address": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
+            "startBlock": 1
+        },
+        "ChainBridge": {
+            "name": "ChainBridge",
+            "address": "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a",
+            "startBlock": 1
+        },
+        "LoyaltyBridge": {
+            "name": "LoyaltyBridge",
+            "address": "0x4Ca91738C7cD24895467c6d550D96BE8dC4b33AA",
+            "startBlock": 1
+        }
+    }
+}

@@ -1,5 +1,5 @@
 specVersion: 0.0.5
-description: A template for Aragon subgraphs
+description: A template for Sub Graphs
 repository: https://github.com/bosagora/dms-osx
 schema:
   file: ./schema.graphql
@@ -219,3 +219,48 @@ dataSources:
         - event: UpdatedShop(bytes32,string,string,address,uint8)
           handler: handleUpdatedShop
       file: ./src/shop.ts
+
+  - kind: ethereum
+    name: {{dataSources.LoyaltyToken.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.LoyaltyToken.address}}'
+      abi: LoyaltyToken
+      startBlock: {{dataSources.LoyaltyToken.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: LoyaltyToken
+          file: $DMS_OSX_MODULE/artifacts/loyalty-tokens/contracts/LoyaltyToken.sol/LoyaltyToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/loyalty-token.ts
+
+  - kind: ethereum
+    name: {{dataSources.ChainBridge.name}}
+    network: {{network}}
+    source:
+      address: '{{dataSources.ChainBridge.address}}'
+      abi: ChainBridge
+      startBlock: {{dataSources.ChainBridge.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - BridgeDeposited
+        - BridgeWithdrawn
+      abis:
+        - name: ChainBridge
+          file: $DMS_OSX_MODULE/artifacts/dms-bridge-contracts/contracts/bridge/Bridge.sol/Bridge.json
+      eventHandlers:
+        - event: BridgeDeposited(bytes32,bytes32,address,uint256,uint256)
+          handler: handleBridgeDeposited
+        - event: BridgeWithdrawn(bytes32,bytes32,address,uint256,uint256)
+          handler: handleBridgeWithdrawn
+      file: ./src/chain-bridge.ts

@@ -31,8 +31,8 @@ import {
     UserTradeHistory,
     UserUnPayableTradeHistory,
     LoyaltyPaymentEvent,
-    BridgeDeposited,
-    BridgeWithdrawn,
+    LoyaltyBridgeDeposited,
+    LoyaltyBridgeWithdrawn,
     BurnedPoint,
     BurnedUnPayablePoint,
 } from "../generated/schema";
@@ -832,12 +832,12 @@ export function handleBurnedUnPayablePointForHistory(event: BurnedUnPayablePoint
 // region LoyaltyBridge
 
 export function handleBridgeDeposited(event: BridgeDepositedEvent): void {
-    let entity = new BridgeDeposited(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    let entity = new LoyaltyBridgeDeposited(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.tokenId = event.params.tokenId;
     entity.depositId = event.params.depositId;
     entity.account = event.params.account;
-    entity.amount = event.params.amount;
-    entity.balance = event.params.balance;
+    entity.amount = event.params.amount.div(AmountUnit);
+    entity.balance = event.params.balance.div(AmountUnit);
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -882,12 +882,12 @@ export function handleBridgeDepositedForHistory(event: BridgeDepositedEvent): vo
 }
 
 export function handleBridgeWithdrawn(event: BridgeWithdrawnEvent): void {
-    let entity = new BridgeWithdrawn(event.transaction.hash.concatI32(event.logIndex.toI32()));
+    let entity = new LoyaltyBridgeWithdrawn(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.tokenId = event.params.tokenId;
     entity.withdrawId = event.params.withdrawId;
     entity.account = event.params.account;
-    entity.amount = event.params.amount;
-    entity.balance = event.params.balance;
+    entity.amount = event.params.amount.div(AmountUnit);
+    entity.balance = event.params.balance.div(AmountUnit);
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;

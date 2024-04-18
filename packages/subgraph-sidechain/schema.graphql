@@ -158,7 +158,7 @@ type BurnedUnPayablePoint @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type BridgeDeposited @entity(immutable: true) {
+type LoyaltyBridgeDeposited @entity(immutable: true) {
   id: Bytes!
   tokenId: Bytes! # bytes32
   depositId: Bytes! # bytes32
@@ -170,7 +170,41 @@ type BridgeDeposited @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type BridgeWithdrawn @entity(immutable: true) {
+type LoyaltyBridgeWithdrawn @entity(immutable: true) {
+  id: Bytes!
+  tokenId: Bytes! # bytes32
+  withdrawId: Bytes! # bytes32
+  account: Bytes! # address
+  amount: BigInt! # uint256
+  balance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type LoyaltyTransfer @entity(immutable: true) {
+  id: Bytes!
+  from: Bytes! # address
+  to: Bytes! # address
+  value: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ChainBridgeDeposited @entity(immutable: true) {
+  id: Bytes!
+  tokenId: Bytes! # bytes32
+  depositId: Bytes! # bytes32
+  account: Bytes! # address
+  amount: BigInt! # uint256
+  balance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type ChainBridgeWithdrawn @entity(immutable: true) {
   id: Bytes!
   tokenId: Bytes! # bytes32
   withdrawId: Bytes! # bytes32

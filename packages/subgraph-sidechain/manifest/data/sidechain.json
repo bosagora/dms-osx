@@ -41,6 +41,16 @@
             "name": "Shop",
             "address": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
             "startBlock": 1
+        },
+        "LoyaltyToken": {
+            "name": "LoyaltyToken",
+            "address": "0xB1A90a5C6e30d64Ab6f64C30eD392F46eDBcb022",
+            "startBlock": 1
+        },
+        "ChainBridge": {
+            "name": "ChainBridge",
+            "address": "0x02aAcAC866385A86ddA9a3C1FB7923c4A0433B31",
+            "startBlock": 1
         }
     }
 }
