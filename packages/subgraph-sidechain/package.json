@@ -1,5 +1,5 @@
 {
-    "name": "dms-osx-subgraph",
+    "name": "dms-osx-subgraph-sidechain",
     "version": "1.0.0",
     "description": "The DMS OSx Subgraph",
     "homepage": "https://github.com/bosagora/dms-osx",
@@ -10,9 +10,9 @@
         "manifest": "scripts/build-manifest.sh",
         "build": "scripts/build-subgraph.sh",
         "deploy": "scripts/deploy-subgraph.sh",
-        "create:devnet": "graph create bosagora/dms-osx-devnet --node http://localhost:8020",
-        "remove:devnet": "graph remove bosagora/dms-osx-devnet --node http://localhost:8020",
-        "deploy:devnet": "LOCAL=true scripts/deploy-subgraph.sh",
+        "create:sidechain": "graph create bosagora/dms-osx-sidechain --node http://localhost:8020",
+        "remove:sidechain": "graph remove bosagora/dms-osx-sidechain --node http://localhost:8020",
+        "deploy:sidechain": "LOCAL=true scripts/deploy-subgraph.sh",
         "formatting:check": "prettier '**/*.{json,ts,js}' -c",
         "formatting:write": "prettier '**/*.{json,ts,js}' --write"
     },
