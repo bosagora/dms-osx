@@ -38,7 +38,8 @@ export class ShopRouter {
     private readonly metrics: Metrics;
     private readonly relaySigners: RelaySigners;
     private storage: RelayStorage;
-    private graph: GraphStorage;
+    private graph_sidechain: GraphStorage;
+    private graph_mainchain: GraphStorage;
 
     private readonly _sender: INotificationSender;
 
@@ -48,7 +49,8 @@ export class ShopRouter {
         contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
-        graph: GraphStorage,
+        graph_sidechain: GraphStorage,
+        graph_mainchain: GraphStorage,
         relaySigners: RelaySigners,
         sender: INotificationSender
     ) {
@@ -58,7 +60,8 @@ export class ShopRouter {
         this.metrics = metrics;
 
         this.storage = storage;
-        this.graph = graph;
+        this.graph_sidechain = graph_sidechain;
+        this.graph_mainchain = graph_mainchain;
         this.relaySigners = relaySigners;
         this._sender = sender;
     }
@@ -1231,13 +1234,13 @@ export class ShopRouter {
             let pageNumber = Number(req.query.pageNumber);
             if (pageNumber < 1) pageNumber = 1;
 
-            const shops = await this.graph.getShopList(pageNumber, pageSize);
-            const pageInfo = await this.graph.getShopPageInfo(pageSize);
+            const shops = await this.graph_sidechain.getShopList(pageNumber, pageSize);
+            const pageInfo = await this.graph_sidechain.getShopPageInfo(pageSize);
             this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     pageInfo,
-                    shops: shops.map((m) => {
+                    items: shops.map((m) => {
                         return {
                             shopId: m.shopId,
                             name: m.name,

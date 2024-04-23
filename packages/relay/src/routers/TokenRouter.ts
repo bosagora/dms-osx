@@ -17,6 +17,7 @@ import express from "express";
 
 import { BigNumber, ethers } from "ethers";
 import { Validation } from "../validation";
+import { toChecksumAddress } from "ethereumjs-util";
 
 export class TokenRouter {
     private web_service: WebService;
@@ -25,7 +26,8 @@ export class TokenRouter {
     private readonly metrics: Metrics;
     private readonly relaySigners: RelaySigners;
     private storage: RelayStorage;
-    private graph: GraphStorage;
+    private graph_sidechain: GraphStorage;
+    private graph_mainchain: GraphStorage;
 
     constructor(
         service: WebService,
@@ -33,7 +35,8 @@ export class TokenRouter {
         contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
-        graph: GraphStorage,
+        graph_sidechain: GraphStorage,
+        graph_mainchain: GraphStorage,
         relaySigners: RelaySigners
     ) {
         this.web_service = service;
@@ -42,7 +45,8 @@ export class TokenRouter {
         this.metrics = metrics;
 
         this.storage = storage;
-        this.graph = graph;
+        this.graph_sidechain = graph_sidechain;
+        this.graph_mainchain = graph_mainchain;
         this.relaySigners = relaySigners;
     }
 
@@ -324,6 +328,8 @@ export class TokenRouter {
     private async chain_main_info(req: express.Request, res: express.Response) {
         logger.http(`GET /v1/chain/main/info ${req.ip}:${JSON.stringify(req.params)}`);
         try {
+            console.log(this.contractManager.mainTokenId);
+            console.log(this.contractManager.mainLoyaltyBridgeContract.address);
             this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
@@ -353,6 +359,7 @@ export class TokenRouter {
             return res.status(200).json(msg);
         }
     }
+
     /**
      * 사이드체인의 체인 정보
      * GET /v1/chain/side/info

@@ -26,7 +26,8 @@ export class LedgerRouter {
     private readonly metrics: Metrics;
     private readonly relaySigners: RelaySigners;
     private storage: RelayStorage;
-    private graph: GraphStorage;
+    private graph_sidechain: GraphStorage;
+    private graph_mainchain: GraphStorage;
     private phoneUtil: PhoneNumberUtil;
 
     constructor(
@@ -35,7 +36,8 @@ export class LedgerRouter {
         contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
-        graph: GraphStorage,
+        graph_sidechain: GraphStorage,
+        graph_mainchain: GraphStorage,
         relaySigners: RelaySigners
     ) {
         this.phoneUtil = PhoneNumberUtil.getInstance();
@@ -45,7 +47,8 @@ export class LedgerRouter {
         this.metrics = metrics;
 
         this.storage = storage;
-        this.graph = graph;
+        this.graph_sidechain = graph_sidechain;
+        this.graph_mainchain = graph_mainchain;
         this.relaySigners = relaySigners;
     }
 

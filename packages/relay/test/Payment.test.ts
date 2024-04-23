@@ -211,9 +211,10 @@ describe("Test of Server", function () {
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
-            const graph = await GraphStorage.make(config.graph);
+            const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+            const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
             await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph, schedulers);
+            server = new TestServer(config, contractManager, storage, graph_sidechain, graph_mainchain, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -672,12 +673,13 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            const graph = await GraphStorage.make(config.graph);
+            const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+            const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
             await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph, schedulers);
+            server = new TestServer(config, contractManager, storage, graph_sidechain, graph_mainchain, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1067,12 +1069,13 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            const graph = await GraphStorage.make(config.graph);
+            const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+            const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
             await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph, schedulers);
+            server = new TestServer(config, contractManager, storage, graph_sidechain, graph_mainchain, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1426,12 +1429,13 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            const graph = await GraphStorage.make(config.graph);
+            const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+            const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
             await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph, schedulers);
+            server = new TestServer(config, contractManager, storage, graph_sidechain, graph_mainchain, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -1697,12 +1701,13 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            const graph = await GraphStorage.make(config.graph);
+            const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+            const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
             await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph, schedulers);
+            server = new TestServer(config, contractManager, storage, graph_sidechain, graph_mainchain, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -2086,12 +2091,13 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            const graph = await GraphStorage.make(config.graph);
+            const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+            const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
             await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph, schedulers);
+            server = new TestServer(config, contractManager, storage, graph_sidechain, graph_mainchain, schedulers);
         });
 
         before("Start TestServer", async () => {
@@ -2540,12 +2546,21 @@ describe("Test of Server", function () {
         before("Create TestServer", async () => {
             serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
             storage = await RelayStorage.make(config.database);
-            const graph = await GraphStorage.make(config.graph);
+            const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+            const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
 
             const schedulers: Scheduler[] = [];
             schedulers.push(new WatchScheduler(expression));
             await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph, schedulers, mobilePhone);
+            server = new TestServer(
+                config,
+                contractManager,
+                storage,
+                graph_sidechain,
+                graph_mainchain,
+                schedulers,
+                mobilePhone
+            );
         });
 
         before("Start TestServer", async () => {

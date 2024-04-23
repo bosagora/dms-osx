@@ -20,6 +20,7 @@ import { StorePurchaseRouter } from "./routers/StorePurchaseRouter";
 import { TokenRouter } from "./routers/TokenRouter";
 import { GraphStorage } from "./storage/GraphStorage";
 import { RelayStorage } from "./storage/RelayStorage";
+import { HistoryRouter } from "./routers/HistoryRouter";
 
 export class DefaultServer extends WebService {
     private readonly config: Config;
@@ -32,13 +33,15 @@ export class DefaultServer extends WebService {
     public readonly paymentRouter: PaymentRouter;
     public readonly relaySigners: RelaySigners;
     public readonly storage: RelayStorage;
-    public readonly graph: GraphStorage;
+    public readonly graph_sidechain: GraphStorage;
+    public readonly graph_mainchain: GraphStorage;
     private readonly sender: INotificationSender;
     public readonly etcRouter: ETCRouter;
     public readonly purchaseRouter: StorePurchaseRouter;
     public readonly tokenRouter: TokenRouter;
     public readonly phoneLinkRouter: PhoneLinkRouter;
     public readonly bridgeRouter: BridgeRouter;
+    public readonly historyRouter: HistoryRouter;
 
     private readonly metrics: Metrics;
 
@@ -46,7 +49,8 @@ export class DefaultServer extends WebService {
         config: Config,
         contractManager: ContractManager,
         storage: RelayStorage,
-        graph: GraphStorage,
+        graph_sidechain: GraphStorage,
+        graph_mainchain: GraphStorage,
         schedules?: Scheduler[],
         handler?: INotificationEventHandler
     ) {
@@ -77,7 +81,8 @@ export class DefaultServer extends WebService {
         this.config = config;
         this.contractManager = contractManager;
         this.storage = storage;
-        this.graph = graph;
+        this.graph_sidechain = graph_sidechain;
+        this.graph_mainchain = graph_mainchain;
         this.sender = new NotificationSender(this.config, handler);
         this.relaySigners = new RelaySigners(this.config);
         this.defaultRouter = new DefaultRouter(this, this.config, this.contractManager, this.metrics);
@@ -87,7 +92,8 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph,
+            this.graph_sidechain,
+            this.graph_mainchain,
             this.relaySigners
         );
         this.shopRouter = new ShopRouter(
@@ -96,7 +102,8 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph,
+            this.graph_sidechain,
+            this.graph_mainchain,
             this.relaySigners,
             this.sender
         );
@@ -106,7 +113,8 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph,
+            this.graph_sidechain,
+            this.graph_mainchain,
             this.relaySigners,
             this.sender
         );
@@ -116,7 +124,8 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph,
+            this.graph_sidechain,
+            this.graph_mainchain,
             this.sender
         );
         this.purchaseRouter = new StorePurchaseRouter(
@@ -125,7 +134,8 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph
+            this.graph_sidechain,
+            this.graph_mainchain
         );
         this.tokenRouter = new TokenRouter(
             this,
@@ -133,7 +143,8 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph,
+            this.graph_sidechain,
+            this.graph_mainchain,
             this.relaySigners
         );
         this.phoneLinkRouter = new PhoneLinkRouter(
@@ -142,7 +153,8 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph,
+            this.graph_sidechain,
+            this.graph_mainchain,
             this.relaySigners
         );
 
@@ -152,7 +164,19 @@ export class DefaultServer extends WebService {
             this.contractManager,
             this.metrics,
             this.storage,
-            this.graph,
+            this.graph_sidechain,
+            this.graph_mainchain,
+            this.relaySigners
+        );
+
+        this.historyRouter = new HistoryRouter(
+            this,
+            this.config,
+            this.contractManager,
+            this.metrics,
+            this.storage,
+            this.graph_sidechain,
+            this.graph_mainchain,
             this.relaySigners
         );
 
@@ -164,7 +188,7 @@ export class DefaultServer extends WebService {
                     contractManager: this.contractManager,
                     storage: this.storage,
                     metrics: this.metrics,
-                    graph: this.graph,
+                    graph: this.graph_sidechain,
                     signers: this.relaySigners,
                 })
             );
@@ -198,6 +222,7 @@ export class DefaultServer extends WebService {
         this.tokenRouter.registerRoutes();
         this.phoneLinkRouter.registerRoutes();
         this.bridgeRouter.registerRoutes();
+        this.historyRouter.registerRoutes();
 
         for (const m of this.schedules) await m.start();
 

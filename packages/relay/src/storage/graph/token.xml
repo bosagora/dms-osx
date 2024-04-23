@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="token">
+    <select id="getTokenTransferHistory">
+        WITH ranked_records AS (
+            SELECT *,
+                   ROW_NUMBER() OVER (ORDER BY block_number DESC, vid) AS row_num
+            FROM ${scheme}.loyalty_transfer
+            WHERE LOWER(concat('0x', encode("from", 'hex'))) = LOWER(#{account})
+               OR LOWER(concat('0x', encode("to", 'hex'))) = LOWER(#{account})
+        )
+        SELECT *
+        FROM ranked_records
+        WHERE row_num BETWEEN ((${pageNumber} - 1) * ${pageSize}) + 1 AND ${pageNumber} * ${pageSize};
+    </select>
+
+    <select id="getTokenTransferHistoryPageInfo">
+        SELECT
+            COUNT(*) AS "totalCount",
+            CEIL(CAST(COUNT(*) AS FLOAT) / ${pageSize}) AS "totalPages"
+        FROM
+            ${scheme}.loyalty_transfer
+        WHERE
+            LOWER(concat('0x', encode("from", 'hex'))) = LOWER(#{account})
+            OR LOWER(concat('0x', encode("to", 'hex'))) = LOWER(#{account});
+    </select>
+</mapper>

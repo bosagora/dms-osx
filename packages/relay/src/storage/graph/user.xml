@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="user">
+    <select id="getAccountLedgerHistory">
+        WITH filtered_trades AS (
+            SELECT
+                *
+            FROM
+                ${scheme}.user_trade_history
+            WHERE
+                page_type = ${pageType}
+                AND LOWER(concat('0x', encode("account", 'hex'))) = LOWER(#{account})
+        )
+        SELECT
+            id,
+            account,
+            page_type,
+            action,
+            cancel,
+            loyalty_type,
+            amount_point,
+            amount_token,
+            amount_value,
+            fee_point,
+            fee_token,
+            fee_value,
+            currency,
+            balance_point,
+            balance_token,
+            coalesce(purchase_id, '') as purchase_id,
+            CASE
+                WHEN payment_id IS NOT NULL THEN LOWER(concat('0x', encode(payment_id, 'hex')))
+                ELSE null
+            END AS payment_id,
+            CASE
+                WHEN shop_id IS NOT NULL THEN LOWER(concat('0x', encode(shop_id, 'hex')))
+                ELSE null
+            END AS shop_id,
+            block_number,
+            block_timestamp,
+            CASE
+                WHEN transaction_hash IS NOT NULL THEN LOWER(concat('0x', encode(transaction_hash, 'hex')))
+                ELSE null
+            END AS transaction_hash
+        FROM filtered_trades
+        ORDER BY block_timestamp DESC
+            LIMIT ${pageSize}
+        OFFSET (${pageNumber} - 1) * ${pageSize};
+    </select>
+
+    <select id="getAccountLedgerHistoryPageInfo">
+        WITH filtered_trades AS (
+            SELECT
+                COUNT(*) AS total_count
+            FROM
+                ${scheme}.user_trade_history
+            WHERE
+                page_type = ${pageType}
+                AND LOWER(concat('0x', encode("account", 'hex'))) = LOWER(#{account})
+        )
+        SELECT
+            total_count as "totalCount",
+            CEIL(CAST(total_count AS FLOAT) / ${pageSize}) AS "totalPages"
+        FROM
+            filtered_trades;
+    </select>
+
+    <select id="getPhoneLedgerHistory">
+
+        WITH filtered_trades AS (
+            SELECT
+                *
+            FROM
+                ${scheme}.user_un_payable_trade_history
+            WHERE
+                LOWER(concat('0x', encode("phone", 'hex'))) = LOWER(#{phone})
+        )
+        SELECT
+            CASE
+                WHEN phone IS NOT NULL THEN LOWER(concat('0x', encode(phone, 'hex')))
+                ELSE null
+            END AS phone,
+            action,
+            amount,
+            balance,
+            coalesce(purchase_id, '') as purchase_id,
+            CASE
+                WHEN shop_id IS NOT NULL THEN LOWER(concat('0x', encode(shop_id, 'hex')))
+                ELSE null
+            END AS shop_id,
+            block_number,
+            block_timestamp,
+            CASE
+                WHEN transaction_hash IS NOT NULL THEN LOWER(concat('0x', encode(transaction_hash, 'hex')))
+                ELSE null
+            END AS transaction_hash
+        FROM filtered_trades
+        ORDER BY block_timestamp DESC
+        LIMIT ${pageSize}
+        OFFSET (${pageNumber} - 1) * ${pageSize};
+    </select>
+
+    <select id="getPhoneLedgerHistoryPageInfo">
+        WITH filtered_trades AS (
+            SELECT
+                COUNT(*) AS total_count
+            FROM
+                ${scheme}.user_un_payable_trade_history
+            WHERE
+                LOWER(concat('0x', encode("phone", 'hex'))) = LOWER(#{phone})
+        )
+        SELECT
+            total_count as "totalCount",
+            CEIL(CAST(total_count AS FLOAT) / ${pageSize}) AS "totalPages"
+        FROM
+            filtered_trades;
+    </select>
+</mapper>

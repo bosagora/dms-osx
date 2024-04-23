@@ -12,7 +12,8 @@ export class Config implements IConfig {
 
     public database: DatabaseConfig;
 
-    public graph: DatabaseConfig;
+    public graph_sidechain: DatabaseConfig;
+    public graph_mainchain: DatabaseConfig;
 
     public logging: LoggingConfig;
 
@@ -27,7 +28,8 @@ export class Config implements IConfig {
     constructor() {
         this.server = new ServerConfig();
         this.database = new DatabaseConfig();
-        this.graph = new DatabaseConfig();
+        this.graph_sidechain = new DatabaseConfig();
+        this.graph_mainchain = new DatabaseConfig();
         this.logging = new LoggingConfig();
         this.scheduler = new SchedulerConfig();
         this.relay = new RelayConfig();
@@ -70,7 +72,8 @@ export class Config implements IConfig {
         }) as IConfig;
         this.server.readFromObject(cfg.server);
         this.database.readFromObject(cfg.database);
-        this.graph.readFromObject(cfg.graph);
+        this.graph_sidechain.readFromObject(cfg.graph_sidechain);
+        this.graph_mainchain.readFromObject(cfg.graph_mainchain);
         this.logging.readFromObject(cfg.logging);
         this.scheduler.readFromObject(cfg.scheduler);
         this.relay.readFromObject(cfg.relay);
@@ -515,7 +518,8 @@ export interface IMetricsConfig {
 export interface IConfig {
     server: IServerConfig;
     database: IDatabaseConfig;
-    graph: DatabaseConfig;
+    graph_sidechain: DatabaseConfig;
+    graph_mainchain: DatabaseConfig;
     logging: ILoggingConfig;
     scheduler: ISchedulerConfig;
     relay: IRelayConfig;

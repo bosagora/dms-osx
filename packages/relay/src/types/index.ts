@@ -233,6 +233,47 @@ export interface IGraphPageInfo {
     totalPages: number;
 }
 
+export interface IGraphTokenTransferHistoryData {
+    from: string;
+    to: string;
+    value: BigNumber;
+    blockTimestamp: BigNumber;
+}
+
+export interface IGraphAccountLedgerHistoryData {
+    account: string;
+    pageType: number;
+    action: string;
+    cancel: boolean;
+    loyaltyType: BigNumber;
+    amountPoint: BigNumber;
+    amountToken: BigNumber;
+    amountValue: BigNumber;
+    feePoint: BigNumber;
+    feeToken: BigNumber;
+    feeValue: BigNumber;
+    balancePoint: BigNumber;
+    balanceToken: BigNumber;
+    purchaseId: string;
+    paymentId: string;
+    shopId: string;
+    blockNumber: BigNumber;
+    blockTimestamp: BigNumber;
+    transactionHash: string;
+}
+
+export interface IGraphPhoneLedgerHistoryData {
+    phone: string;
+    action: string;
+    amount: BigNumber;
+    balance: BigNumber;
+    purchaseId: string;
+    shopId: string;
+    blockNumber: BigNumber;
+    blockTimestamp: BigNumber;
+    transactionHash: string;
+}
+
 export interface IStorePurchaseData {
     purchaseId: string;
     timestamp: bigint;

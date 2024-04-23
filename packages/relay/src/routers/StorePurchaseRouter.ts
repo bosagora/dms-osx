@@ -23,7 +23,8 @@ export class StorePurchaseRouter {
     private readonly contractManager: ContractManager;
     private readonly metrics: Metrics;
     private storage: RelayStorage;
-    private graph: GraphStorage;
+    private graph_sidechain: GraphStorage;
+    private graph_mainchain: GraphStorage;
 
     constructor(
         service: WebService,
@@ -31,7 +32,8 @@ export class StorePurchaseRouter {
         contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
-        graph: GraphStorage
+        graph_sidechain: GraphStorage,
+        graph_mainchain: GraphStorage
     ) {
         this.web_service = service;
         this.config = config;
@@ -39,7 +41,8 @@ export class StorePurchaseRouter {
         this.metrics = metrics;
 
         this.storage = storage;
-        this.graph = graph;
+        this.graph_sidechain = graph_sidechain;
+        this.graph_mainchain = graph_mainchain;
     }
 
     private get app(): express.Application {

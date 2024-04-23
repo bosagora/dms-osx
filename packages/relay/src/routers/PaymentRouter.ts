@@ -41,7 +41,8 @@ export class PaymentRouter {
     private readonly metrics: Metrics;
     private readonly relaySigners: RelaySigners;
     private storage: RelayStorage;
-    private graph: GraphStorage;
+    private graph_sidechain: GraphStorage;
+    private graph_mainchain: GraphStorage;
     private readonly _sender: INotificationSender;
 
     constructor(
@@ -50,7 +51,8 @@ export class PaymentRouter {
         contractManager: ContractManager,
         metrics: Metrics,
         storage: RelayStorage,
-        graph: GraphStorage,
+        graph_sidechain: GraphStorage,
+        graph_mainchain: GraphStorage,
         relaySigners: RelaySigners,
         sender: INotificationSender
     ) {
@@ -60,7 +62,8 @@ export class PaymentRouter {
         this.metrics = metrics;
 
         this.storage = storage;
-        this.graph = graph;
+        this.graph_sidechain = graph_sidechain;
+        this.graph_mainchain = graph_mainchain;
         this.relaySigners = relaySigners;
         this._sender = sender;
     }

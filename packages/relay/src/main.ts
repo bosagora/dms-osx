@@ -28,7 +28,8 @@ async function main() {
 
     await ContractUtils.delay(1000);
     const storage = await RelayStorage.make(config.database);
-    const graph = await GraphStorage.make(config.graph);
+    const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
+    const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
 
     const schedulers: Scheduler[] = [];
     if (config.scheduler.enable) {
@@ -60,7 +61,7 @@ async function main() {
 
     const contractManager = new ContractManager(config);
     await contractManager.attach();
-    server = new DefaultServer(config, contractManager, storage, graph, schedulers);
+    server = new DefaultServer(config, contractManager, storage, graph_sidechain, graph_mainchain, schedulers);
     return server.start().catch((error: any) => {
         // handle specific listen errors with friendly messages
         switch (error.code) {

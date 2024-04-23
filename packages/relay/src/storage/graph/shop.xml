@@ -43,7 +43,9 @@
         )
         SELECT
             RowInfo.total_count as "totalCount",
-            CEIL(RowInfo.total_count / ${pageSize}) AS "totalPages"
+            CEIL(CAST(RowInfo.total_count AS FLOAT) / ${pageSize}) AS "totalPages"
         FROM RowInfo;
     </select>
+
+
 </mapper>
