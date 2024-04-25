@@ -328,8 +328,6 @@ export class TokenRouter {
     private async chain_main_info(req: express.Request, res: express.Response) {
         logger.http(`GET /v1/chain/main/info ${req.ip}:${JSON.stringify(req.params)}`);
         try {
-            console.log(this.contractManager.mainTokenId);
-            console.log(this.contractManager.mainLoyaltyBridgeContract.address);
             this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
