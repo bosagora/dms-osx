@@ -3350,10 +3350,10 @@ discontinuous-range@1.0.0:
   resolved "https://registry.yarnpkg.com/discontinuous-range/-/discontinuous-range-1.0.0.tgz#e38331f0844bba49b9a9cb71c771585aab1bc65a"
   integrity sha512-c68LpLbO+7kP/b1Hr1qs8/BJ09F5khZGTxqxZuhzxpmwJKOgRFHJWIb9/KmqnqHhLdO55aOxFH/EGBvUQbL/RQ==
 
-dms-bridge-contracts@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/dms-bridge-contracts/-/dms-bridge-contracts-1.2.3.tgz#e46b4aec8691ffe2b8aaff5f76247d306f8b8eae"
-  integrity sha512-PNFR8tQ/C6rjPR3WNJZwJjdg9AXyxusdCEvXL2izzqGSYPMIqJu+kdwNeyAHebhlq30Wrr+AxFv+iQO/HT7+/Q==
+dms-bridge-contracts@^1.3.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/dms-bridge-contracts/-/dms-bridge-contracts-1.3.0.tgz#ba37c2171c49571aef9184cc917e5f1570162d96"
+  integrity sha512-o/s8iJwRJl+tNGYN0BddojF3LbAXZG6aKnsl+qUmpo/QO3QWwx4N4LJsxgiSwDLCrcbdEBHS5kP7GwqfwO2mOA==
 
 dns-over-http-resolver@^1.2.3:
   version "1.2.3"

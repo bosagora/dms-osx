@@ -384,6 +384,10 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
                 rate: multiple.mul(150),
             },
             {
+                symbol: "krw",
+                rate: multiple,
+            },
+            {
                 symbol: "usd",
                 rate: multiple.mul(1000),
             },

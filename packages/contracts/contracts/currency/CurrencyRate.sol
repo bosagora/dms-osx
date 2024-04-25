@@ -28,7 +28,6 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         validator = IValidator(_validator);
         tokenSymbol = _tokenSymbol;
 
-        rates["krw"] = MULTIPLE;
         rates["point"] = MULTIPLE;
 
         prevHeight = 0;
@@ -89,8 +88,6 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
             rates[_data[idx].symbol] = _data[idx].rate;
             emit SetRate(_data[idx].symbol, _data[idx].rate);
         }
-        rates["krw"] = MULTIPLE;
-        rates["KRW"] = MULTIPLE;
         rates["point"] = MULTIPLE;
         rates["POINT"] = MULTIPLE;
     }
@@ -132,7 +129,7 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
     /// @param _symbol 통화명
     function convertCurrencyToPoint(uint256 _amount, string calldata _symbol) external view override returns (uint256) {
         bytes32 byteCurrency = keccak256(abi.encodePacked(_symbol));
-        if ((byteCurrency == BASE_CURRENCY) || (byteCurrency == NULL_CURRENCY)) {
+        if (byteCurrency == NULL_CURRENCY) {
             return _amount;
         } else {
             return DMS.zeroGWEI((_amount * _get(_symbol)) / MULTIPLE);
@@ -166,8 +163,8 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         bytes32 bSymbol1 = keccak256(abi.encodePacked(_symbol1));
         bytes32 bSymbol2 = keccak256(abi.encodePacked(_symbol2));
         if (bSymbol1 == bSymbol2) return _amount;
-        uint256 rate1 = ((bSymbol1 == BASE_CURRENCY) || (bSymbol1 == NULL_CURRENCY)) ? MULTIPLE : _get(_symbol1);
-        uint256 rate2 = ((bSymbol2 == BASE_CURRENCY) || (bSymbol2 == NULL_CURRENCY)) ? MULTIPLE : _get(_symbol2);
+        uint256 rate1 = ((bSymbol1 == NULL_CURRENCY)) ? MULTIPLE : _get(_symbol1);
+        uint256 rate2 = ((bSymbol2 == NULL_CURRENCY)) ? MULTIPLE : _get(_symbol2);
         return DMS.zeroGWEI((_amount * rate1) / rate2);
     }
 
