@@ -69,6 +69,8 @@ interface IAccount {
 
 type FnDeployer = (accounts: IAccount, deployment: Deployments) => void;
 
+let BASE_CURRENCY = "KRW";
+
 class Deployments {
     public deployments: Map<string, IDeployedContract>;
     public deployers: FnDeployer[];
@@ -428,6 +430,14 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
             {
                 symbol: tokenSymbol,
                 rate: multiple.mul(100),
+            },
+            {
+                symbol: BASE_CURRENCY.toLowerCase(),
+                rate: multiple,
+            },
+            {
+                symbol: BASE_CURRENCY.toUpperCase(),
+                rate: multiple,
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
