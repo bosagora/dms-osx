@@ -6,18 +6,15 @@ import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
-import { ResponseMessage } from "../utils/Errors";
 import { ContractUtils } from "../utils/ContractUtils";
-
-import { body, param, query, validationResult } from "express-validator";
-
-import { AddressZero } from "@ethersproject/constants";
-
-import express from "express";
-
-import { BigNumber, ethers } from "ethers";
+import { ResponseMessage } from "../utils/Errors";
 import { Validation } from "../validation";
-import { toChecksumAddress } from "ethereumjs-util";
+
+// tslint:disable-next-line:no-implicit-dependencies
+import { AddressZero } from "@ethersproject/constants";
+import { BigNumber, ethers } from "ethers";
+import express from "express";
+import { body, param, validationResult } from "express-validator";
 
 export class TokenRouter {
     private web_service: WebService;

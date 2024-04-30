@@ -9,10 +9,9 @@ import { RelayStorage } from "../storage/RelayStorage";
 import { ContractUtils } from "../utils/ContractUtils";
 import { ResponseMessage } from "../utils/Errors";
 
-import { body, param, validationResult } from "express-validator";
-
 import { ethers } from "ethers";
 import express from "express";
+import { body, param, validationResult } from "express-validator";
 
 export class PhoneLinkRouter {
     private web_service: WebService;

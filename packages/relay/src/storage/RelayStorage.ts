@@ -2,7 +2,7 @@ import { IDatabaseConfig } from "../common/Config";
 import { Utils } from "../utils/Utils";
 import { Storage } from "./Storage";
 
-import { BigNumber } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import MybatisMapper from "mybatis-mapper";
 
 import path from "path";
@@ -22,8 +22,6 @@ import {
 import { ContractUtils } from "../utils/ContractUtils";
 
 import * as hre from "hardhat";
-
-import { Wallet } from "ethers";
 
 /**
  * The class that inserts and reads the ledger into the database.

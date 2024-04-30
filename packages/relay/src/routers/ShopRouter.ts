@@ -6,14 +6,6 @@ import { INotificationSender } from "../delegator/NotificationSender";
 import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
-import { ContractUtils } from "../utils/ContractUtils";
-import { Validation } from "../validation";
-
-import { body, param, query, validationResult } from "express-validator";
-import * as hre from "hardhat";
-
-import { ContractTransaction, ethers } from "ethers";
-import express from "express";
 import {
     ContractShopStatus,
     ContractShopUpdateEvent,
@@ -23,8 +15,15 @@ import {
     TaskResultCode,
     TaskResultType,
 } from "../types";
+import { ContractUtils } from "../utils/ContractUtils";
 import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
+import { Validation } from "../validation";
+
+import { ContractTransaction, ethers } from "ethers";
+import express from "express";
+import { body, param, query, validationResult } from "express-validator";
+import * as hre from "hardhat";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";

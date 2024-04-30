@@ -8,14 +8,12 @@ import { RelayStorage } from "../storage/RelayStorage";
 import { ContractLoyaltyType, GWI_UNIT, IStorePurchaseData, PHONE_NULL } from "../types";
 import { ResponseMessage } from "../utils/Errors";
 
-import { body, query, validationResult } from "express-validator";
-
-import express from "express";
-
 // tslint:disable-next-line:no-implicit-dependencies
 import { BigNumber } from "@ethersproject/bignumber";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+import express from "express";
+import { body, query, validationResult } from "express-validator";
 
 export class StorePurchaseRouter {
     private web_service: WebService;

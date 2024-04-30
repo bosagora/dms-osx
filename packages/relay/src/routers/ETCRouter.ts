@@ -9,9 +9,8 @@ import { RelayStorage } from "../storage/RelayStorage";
 import { ContractUtils } from "../utils/ContractUtils";
 import { ResponseMessage } from "../utils/Errors";
 
-import { body, validationResult } from "express-validator";
-
 import express from "express";
+import { body, validationResult } from "express-validator";
 
 export class ETCRouter {
     private web_service: WebService;

@@ -5,7 +5,6 @@ import { WebService } from "../service/WebService";
 
 import { BigNumber, Wallet } from "ethers";
 import express from "express";
-import * as hre from "hardhat";
 
 export class DefaultRouter {
     private web_service: WebService;

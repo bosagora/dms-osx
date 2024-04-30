@@ -6,7 +6,6 @@ import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
-import { ContractLoyaltyType } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { ResponseMessage } from "../utils/Errors";
 import { Validation } from "../validation";
@@ -108,58 +107,6 @@ export class BridgeRouter {
             ],
             this.bridge_deposit.bind(this)
         );
-    }
-
-    private async balance_account(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/ledger/balance/account/:account ${req.ip}:${JSON.stringify(req.params)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        try {
-            let account: string = String(req.params.account).trim();
-            if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this.storage.getRealAccount(account);
-                if (realAccount === undefined) {
-                    return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
-                } else {
-                    account = realAccount;
-                }
-            }
-            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
-            if (loyaltyType === ContractLoyaltyType.POINT) {
-                const balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
-                const value = BigNumber.from(balance);
-                this.metrics.add("success", 1);
-                return res.status(200).json(
-                    this.makeResponseData(0, {
-                        account,
-                        loyaltyType,
-                        point: { balance: balance.toString(), value: value.toString() },
-                        token: { balance: "0", value: "0" },
-                    })
-                );
-            } else {
-                const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
-                const value = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(balance);
-                this.metrics.add("success", 1);
-                return res.status(200).json(
-                    this.makeResponseData(0, {
-                        account,
-                        loyaltyType,
-                        point: { balance: "0", value: "0" },
-                        token: { balance: balance.toString(), value: value.toString() },
-                    })
-                );
-            }
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/ledger/balance/account/:account : ${msg.error.message}`);
-            this.metrics.add("failure", 1);
-            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
-        }
     }
 
     private async getDepositIdMainChain(account: string): Promise<string> {

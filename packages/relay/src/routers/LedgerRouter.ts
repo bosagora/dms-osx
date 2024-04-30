@@ -13,7 +13,6 @@ import { Validation } from "../validation";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
-
 import { BigNumber, ethers } from "ethers";
 import express from "express";
 import { body, param, query, validationResult } from "express-validator";

@@ -24,7 +24,6 @@ import { verifyMessage } from "@ethersproject/wallet";
 import * as crypto from "crypto";
 
 import * as hre from "hardhat";
-import { ethers } from "hardhat";
 
 export enum LoyaltyNetworkID {
     LYT,

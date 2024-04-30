@@ -26,13 +26,11 @@ import { ResponseMessage } from "../utils/Errors";
 import { HTTPClient } from "../utils/Utils";
 import { Validation } from "../validation";
 
-import { BigNumber, ContractTransaction, ethers } from "ethers";
-import { body, query, validationResult } from "express-validator";
-
-import express from "express";
-
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
+import { BigNumber, ContractTransaction, ethers } from "ethers";
+import express from "express";
+import { body, query, validationResult } from "express-validator";
 
 export class PaymentRouter {
     private web_service: WebService;
