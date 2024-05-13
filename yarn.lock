@@ -3275,7 +3275,7 @@ define-properties@^1.1.2, define-properties@^1.1.3, define-properties@^1.1.4, de
     has-property-descriptors "^1.0.0"
     object-keys "^1.1.1"
 
-del-osx-artifacts@^2.3.0:
+del-osx-artifacts@2.3.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/del-osx-artifacts/-/del-osx-artifacts-2.3.0.tgz#eae1293951b2e857056d5f6253485ba92c5a29f5"
   integrity sha512-W5/WSXqitJ6qT8QWFcO3JQpWlgYQTMrGdsG8BUER80SFPtzOt6AiLb0veLqqShSc9JamFZOKL+H+pApyXUfjvw==
@@ -3350,7 +3350,7 @@ discontinuous-range@1.0.0:
   resolved "https://registry.yarnpkg.com/discontinuous-range/-/discontinuous-range-1.0.0.tgz#e38331f0844bba49b9a9cb71c771585aab1bc65a"
   integrity sha512-c68LpLbO+7kP/b1Hr1qs8/BJ09F5khZGTxqxZuhzxpmwJKOgRFHJWIb9/KmqnqHhLdO55aOxFH/EGBvUQbL/RQ==
 
-dms-bridge-contracts@^1.5.0:
+dms-bridge-contracts@1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/dms-bridge-contracts/-/dms-bridge-contracts-1.5.0.tgz#b8d202599a8994ef6b9ff726fd63476ba339e116"
   integrity sha512-NPheXtZMk5gkqkUf6gt3TyfcmKeD/7vJ7fuY2Bp8JPZi2APfgwpeArU/ff/WY11ixiYKLb8WsFvx3IMX0NHvdw==
@@ -6002,7 +6002,7 @@ loupe@^2.3.1:
   dependencies:
     get-func-name "^2.0.0"
 
-loyalty-tokens@^1.1.0:
+loyalty-tokens@1.1.0, loyalty-tokens@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/loyalty-tokens/-/loyalty-tokens-1.1.0.tgz#466d5afb299699201b241674247dbbbb5087edb5"
   integrity sha512-AtWw5Jc/rBy76TF9Dqo+LGBzSBC4Qlz7Z0xnKRKqsWUxlG29YjuaJ6uoZhkBNthx2HxbDD7RCDgFdAO9G9aSKA==
@@ -6461,7 +6461,7 @@ multiformats@^9.4.13, multiformats@^9.4.2, multiformats@^9.4.5, multiformats@^9.
   resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.9.0.tgz#c68354e7d21037a8f1f8833c8ccd68618e8f1d37"
   integrity sha512-HoMUjhH9T8DDBNT+6xzkrd9ga/XiBI4xLr58LJACwK6G3HTOPeMz4nB4KJs33L2BelrIJa7P0VuNaVF3hMYfjg==
 
-multisig-wallet-contracts@^1.1.0:
+multisig-wallet-contracts@1.1.0, multisig-wallet-contracts@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/multisig-wallet-contracts/-/multisig-wallet-contracts-1.1.0.tgz#680b28bdbf9b2860bb853abdbe2b5910b1b0dfee"
   integrity sha512-dJCxmOBqZZicKjshiC9SS17XPZJWSU/FpZ8eCw1WWTH08jjMudRaKMtJ/l0pjadFRUQ/wDhCUInIixoGhHyCyg==
