@@ -131,7 +131,7 @@ export class BridgeRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        const signerItem = await this.getRelaySigner();
+        const signerItem = await this.getRelaySigner(this.contractManager.sideChainProvider);
         try {
             const account: string = String(req.body.account).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);

@@ -27,8 +27,8 @@ import * as hre from "hardhat";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
-import { Metrics } from "../metrics/Metrics";
 import { ContractManager } from "../contract/ContractManager";
+import { Metrics } from "../metrics/Metrics";
 
 export class ShopRouter {
     private web_service: WebService;
@@ -608,7 +608,9 @@ export class ShopRouter {
 
                 if (mobileData !== undefined) {
                     /// 상점주에게 메세지 발송
-                    let title, shopLabel, currencyLabel: string;
+                    let title: string;
+                    let shopLabel: string;
+                    let currencyLabel: string;
                     if (mobileData.language === "kr") {
                         title = "상점 정보 변경 요청";
                         shopLabel = "상점이름";
@@ -873,7 +875,11 @@ export class ShopRouter {
 
                 if (mobileData !== undefined) {
                     /// 사용자에게 메세지 statusLabel
-                    let title, shopLabel, statusLabel, activeLabel, inactiveLabel: string;
+                    let title: string;
+                    let shopLabel: string;
+                    let statusLabel: string;
+                    let activeLabel: string;
+                    let inactiveLabel: string;
                     if (mobileData.language === "kr") {
                         title = "상점 상태 변경 요청";
                         shopLabel = "상점이름";

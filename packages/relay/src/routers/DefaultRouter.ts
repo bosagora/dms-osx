@@ -35,7 +35,9 @@ export class DefaultRouter {
     }
 
     private async callback(req: express.Request, res: express.Response) {
+        console.log("----- CALL BACK -----");
         console.log(JSON.stringify(req.body));
+        console.log("----- CALL BACK -----");
         res.status(200).json(this.makeResponseData(0, { message: "OK" }, undefined));
     }
 

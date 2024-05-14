@@ -24,7 +24,7 @@ import { Scheduler } from "./Scheduler";
 
 // tslint:disable-next-line:no-implicit-dependencies
 import { ContractTransaction } from "@ethersproject/contracts";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
 
 /**
  * Creates blocks at regular intervals and stores them in IPFS and databases.
@@ -71,8 +71,9 @@ export class WatchScheduler extends Scheduler {
         }
     }
 
-    private async getRelaySigner(): Promise<ISignerItem> {
-        return this.signers.getSigner();
+    private async getRelaySigner(provider?: ethers.providers.Provider): Promise<ISignerItem> {
+        if (provider === undefined) provider = this.contractManager.sideChainProvider;
+        return this.signers.getSigner(provider);
     }
 
     private releaseRelaySigner(signer: ISignerItem) {
@@ -122,36 +123,34 @@ export class WatchScheduler extends Scheduler {
         const contract = this.contractManager.sideLoyaltyConsumerContract;
         const signerItem = await this.getRelaySigner();
         try {
-            if (signerItem.signer.provider) {
-                const contractTx = (await signerItem.signer.provider.getTransaction(
-                    payment.openNewTxId
-                )) as ContractTransaction;
-                const event = await this.waitPaymentLoyalty(contract, contractTx);
-                if (event !== undefined) {
-                    this.updateEvent(event, payment);
-                    const item = await this.storage.getPayment(payment.paymentId);
-                    if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX) {
-                        payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_CONFIRMED_TX;
-                        await this.storage.updatePayment(payment);
-                    }
+            const contractTx = (await this.contractManager.sideChainProvider.getTransaction(
+                payment.openNewTxId
+            )) as ContractTransaction;
+            const event = await this.waitPaymentLoyalty(contract, contractTx);
+            if (event !== undefined) {
+                this.updateEvent(event, payment);
+                const item = await this.storage.getPayment(payment.paymentId);
+                if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX) {
+                    payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_CONFIRMED_TX;
+                    await this.storage.updatePayment(payment);
+                }
 
-                    await this.sendPaymentResult(
-                        TaskResultType.NEW,
-                        TaskResultCode.SUCCESS,
-                        "Success",
-                        this.getCallBackResponse(payment)
-                    );
+                await this.sendPaymentResult(
+                    TaskResultType.NEW,
+                    TaskResultCode.SUCCESS,
+                    "Success",
+                    this.getCallBackResponse(payment)
+                );
 
-                    if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX) {
-                        payment.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW;
-                        await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
-                    }
-                } else {
-                    const item = await this.storage.getPayment(payment.paymentId);
-                    if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX) {
-                        payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX;
-                        await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
-                    }
+                if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX) {
+                    payment.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_NEW;
+                    await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
+                }
+            } else {
+                const item = await this.storage.getPayment(payment.paymentId);
+                if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_NEW_SENT_TX) {
+                    payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_NEW_REVERTED_TX;
+                    await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
                 }
             }
         } catch (error) {
@@ -167,36 +166,34 @@ export class WatchScheduler extends Scheduler {
         const contract = this.contractManager.sideLoyaltyConsumerContract;
         const signerItem = await this.getRelaySigner();
         try {
-            if (signerItem.signer.provider) {
-                const contractTx = (await signerItem.signer.provider.getTransaction(
-                    payment.openCancelTxId
-                )) as ContractTransaction;
-                const event = await this.waitPaymentLoyalty(contract, contractTx);
-                if (event !== undefined) {
-                    this.updateEvent(event, payment);
-                    const item = await this.storage.getPayment(payment.paymentId);
-                    if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX) {
-                        payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_CONFIRMED_TX;
-                        await this.storage.updatePayment(payment);
-                    }
+            const contractTx = (await this.contractManager.sideChainProvider.getTransaction(
+                payment.openCancelTxId
+            )) as ContractTransaction;
+            const event = await this.waitPaymentLoyalty(contract, contractTx);
+            if (event !== undefined) {
+                this.updateEvent(event, payment);
+                const item = await this.storage.getPayment(payment.paymentId);
+                if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX) {
+                    payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_CONFIRMED_TX;
+                    await this.storage.updatePayment(payment);
+                }
 
-                    await this.sendPaymentResult(
-                        TaskResultType.CANCEL,
-                        TaskResultCode.SUCCESS,
-                        "Success",
-                        this.getCallBackResponse(payment)
-                    );
+                await this.sendPaymentResult(
+                    TaskResultType.CANCEL,
+                    TaskResultCode.SUCCESS,
+                    "Success",
+                    this.getCallBackResponse(payment)
+                );
 
-                    if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX) {
-                        payment.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL;
-                        await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
-                    }
-                } else {
-                    const item = await this.storage.getPayment(payment.paymentId);
-                    if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX) {
-                        payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX;
-                        await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
-                    }
+                if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX) {
+                    payment.paymentStatus = LoyaltyPaymentTaskStatus.REPLY_COMPLETED_CANCEL;
+                    await this.storage.updatePaymentStatus(payment.paymentId, payment.paymentStatus);
+                }
+            } else {
+                const item = await this.storage.getPayment(payment.paymentId);
+                if (item !== undefined && item.paymentStatus === LoyaltyPaymentTaskStatus.APPROVED_CANCEL_SENT_TX) {
+                    payment.paymentStatus = LoyaltyPaymentTaskStatus.APPROVED_CANCEL_REVERTED_TX;
+                    await this.storage.forcedUpdatePaymentStatus(payment.paymentId, payment.paymentStatus);
                 }
             }
         } catch (error) {
