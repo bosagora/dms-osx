@@ -16,7 +16,6 @@ contract LedgerStorage {
     mapping(address => uint256) internal pointBalances;
     mapping(address => uint256) internal tokenBalances;
     mapping(address => uint256) internal nonce;
-    mapping(address => ILedger.LoyaltyType) internal loyaltyTypes;
     mapping(address => uint256) internal liquidity;
 
     address public foundationAccount;

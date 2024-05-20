@@ -3,11 +3,6 @@
 pragma solidity ^0.8.2;
 
 interface ILedger {
-    enum LoyaltyType {
-        POINT,
-        TOKEN
-    }
-
     function providePoint(
         address _account,
         uint256 _loyaltyPoint,
@@ -49,10 +44,6 @@ interface ILedger {
     function nonceOf(address _account) external view returns (uint256);
 
     function increaseNonce(address _account) external;
-
-    function loyaltyTypeOf(address _account) external view returns (LoyaltyType);
-
-    function changeToLoyaltyToken(address _account) external;
 
     function setFee(uint32 _fee) external;
 

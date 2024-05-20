@@ -89,7 +89,6 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
             abi.encode(_account, address(this), _amount, block.chainid, ledgerContract.nonceOf(_account))
         );
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-        require(ledgerContract.loyaltyTypeOf(_account) == ILedger.LoyaltyType.TOKEN, "1520");
         require(ledgerContract.tokenBalanceOf(_account) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
         require(_amount > fee * 2, "1031");

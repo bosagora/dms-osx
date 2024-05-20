@@ -321,12 +321,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         nonce[_account]++;
     }
 
-    /// @notice 사용자가 적립할 포인트의 종류를 리턴한다
-    /// @param _account 지갑주소
-    function loyaltyTypeOf(address _account) external view override returns (LoyaltyType) {
-        return loyaltyTypes[_account];
-    }
-
     /// @notice 포인트와 토큰의 사용수수료률을 설정합니다. 5%를 초과한 값은 설정할 수 없습니다.
     /// @param _fee % 단위 입니다.
     function setFee(uint32 _fee) external override {
@@ -345,11 +339,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         uint256 amount = unPayablePointBalances[_phone];
         unPayablePointBalances[_phone] = 0;
         pointBalances[_account] += amount;
-    }
-
-    /// @notice 사용자가 적립할 로열티를 토큰으로 변경한다.
-    function changeToLoyaltyToken(address _account) external override onlyExchanger {
-        loyaltyTypes[_account] = LoyaltyType.TOKEN;
     }
 
     function getFoundationAccount() external view override returns (address) {

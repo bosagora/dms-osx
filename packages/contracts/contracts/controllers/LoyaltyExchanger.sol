@@ -68,9 +68,6 @@ contract LoyaltyExchanger is LoyaltyExchangerStorage, Initializable, OwnableUpgr
             ledgerContract.changeToPayablePoint(_phone, _account);
             ledgerContract.increaseNonce(_account);
             emit ChangedToPayablePoint(_phone, _account, amount, amount, ledgerContract.pointBalanceOf(_account));
-            if (ledgerContract.loyaltyTypeOf(_account) == ILedger.LoyaltyType.TOKEN) {
-                _exchangePointToToken(_account);
-            }
         }
     }
 
@@ -82,11 +79,8 @@ contract LoyaltyExchanger is LoyaltyExchangerStorage, Initializable, OwnableUpgr
         bytes32 dataHash = keccak256(abi.encode(_account, block.chainid, ledgerContract.nonceOf(_account)));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
-        if (ledgerContract.loyaltyTypeOf(_account) != ILedger.LoyaltyType.TOKEN) {
-            ledgerContract.changeToLoyaltyToken(_account);
-            _exchangePointToToken(_account);
-            ledgerContract.increaseNonce(_account);
-        }
+        _exchangePointToToken(_account);
+        ledgerContract.increaseNonce(_account);
     }
 
     function _exchangePointToToken(address _account) internal {

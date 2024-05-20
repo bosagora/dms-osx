@@ -25,7 +25,6 @@ contract LoyaltyConsumerStorage {
         address account;
         bytes32 secretLock;
         uint256 timestamp;
-        ILedger.LoyaltyType loyaltyType;
         uint256 paidPoint;
         uint256 paidToken;
         uint256 paidValue;
