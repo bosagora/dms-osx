@@ -31,17 +31,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         bytes32 shopId
     );
 
-    /// @notice 토큰이 지급될 때 발생되는 이벤트
-    event ProvidedToken(
-        address account,
-        uint256 providedToken,
-        uint256 providedValue,
-        string currency,
-        uint256 balanceToken,
-        string purchaseId,
-        bytes32 shopId
-    );
-
     /// @notice 포인트가 지급될 때 발생되는 이벤트
     event ProvidedUnPayablePoint(
         bytes32 phone,
@@ -272,49 +261,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         }
         uint256 balance = pointBalances[_account];
         emit ProvidedPoint(_account, _loyaltyPoint, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
-    }
-
-    /// @notice 토큰을 지급합니다.
-    /// @dev 구매 데이터를 확인한 후 호출됩니다.
-    /// @param _account 사용자의 지갑주소
-    /// @param _loyaltyPoint 지급할 포인트(단위:포인트)
-    /// @param _loyaltyValue 지급할 포인트가치(단위:구매한 화폐의 통화)
-    /// @param _purchaseId 구매 아이디
-    /// @param _shopId 구매한 가맹점 아이디
-    function provideToken(
-        address _account,
-        uint256 _loyaltyPoint,
-        uint256 _loyaltyValue,
-        string calldata _currency,
-        string calldata _purchaseId,
-        bytes32 _shopId,
-        address _sender
-    ) external override onlyProvider {
-        _provideToken(_account, _loyaltyPoint, _loyaltyValue, _currency, _purchaseId, _shopId, _sender);
-    }
-
-    function _provideToken(
-        address _account,
-        uint256 _loyaltyPoint,
-        uint256 _loyaltyValue,
-        string calldata _currency,
-        string calldata _purchaseId,
-        bytes32 _shopId,
-        address _sender
-    ) internal {
-        uint256 amountToken = currencyRateContract.convertPointToToken(_loyaltyPoint);
-
-        if (_sender == foundationAccount) {
-            require(tokenBalances[foundationAccount] >= amountToken, "1510");
-            tokenBalances[_account] += amountToken;
-            tokenBalances[foundationAccount] -= amountToken;
-        } else {
-            require(tokenBalances[_sender] >= amountToken, "1511");
-            tokenBalances[_account] += amountToken;
-            tokenBalances[_sender] -= amountToken;
-        }
-        uint256 balance = tokenBalances[_account];
-        emit ProvidedToken(_account, amountToken, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
     }
 
     /// @notice 포인트의 잔고에 더한다. Consumer 컨트랙트만 호출할 수 있다.

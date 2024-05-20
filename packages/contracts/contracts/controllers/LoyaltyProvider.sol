@@ -156,27 +156,15 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                 IShop.ShopData memory shop = shopContract.shopOf(data.shopId);
                 if (shop.status == IShop.ShopStatus.ACTIVE) {
                     if (data.account != address(0x0)) {
-                        if (ledgerContract.loyaltyTypeOf(data.account) == ILedger.LoyaltyType.POINT) {
-                            ledgerContract.providePoint(
-                                data.account,
-                                loyaltyPoint,
-                                loyaltyValue,
-                                data.currency,
-                                data.purchaseId,
-                                data.shopId,
-                                data.sender
-                            );
-                        } else {
-                            ledgerContract.provideToken(
-                                data.account,
-                                loyaltyPoint,
-                                loyaltyValue,
-                                data.currency,
-                                data.purchaseId,
-                                data.shopId,
-                                data.sender
-                            );
-                        }
+                        ledgerContract.providePoint(
+                            data.account,
+                            loyaltyPoint,
+                            loyaltyValue,
+                            data.currency,
+                            data.purchaseId,
+                            data.shopId,
+                            data.sender
+                        );
                         shopContract.addProvidedAmount(
                             data.shopId,
                             currencyRateContract.convertCurrency(loyaltyValue, data.currency, shop.currency),
@@ -195,27 +183,15 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                                 data.sender
                             );
                         } else {
-                            if (ledgerContract.loyaltyTypeOf(account) == ILedger.LoyaltyType.POINT) {
-                                ledgerContract.providePoint(
-                                    account,
-                                    loyaltyPoint,
-                                    loyaltyValue,
-                                    data.currency,
-                                    data.purchaseId,
-                                    data.shopId,
-                                    data.sender
-                                );
-                            } else {
-                                ledgerContract.provideToken(
-                                    account,
-                                    loyaltyPoint,
-                                    loyaltyValue,
-                                    data.currency,
-                                    data.purchaseId,
-                                    data.shopId,
-                                    data.sender
-                                );
-                            }
+                            ledgerContract.providePoint(
+                                account,
+                                loyaltyPoint,
+                                loyaltyValue,
+                                data.currency,
+                                data.purchaseId,
+                                data.shopId,
+                                data.sender
+                            );
                         }
                         shopContract.addProvidedAmount(
                             data.shopId,

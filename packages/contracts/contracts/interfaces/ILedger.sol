@@ -28,16 +28,6 @@ interface ILedger {
         address _sender
     ) external;
 
-    function provideToken(
-        address _account,
-        uint256 _loyaltyPoint,
-        uint256 _loyaltyValue,
-        string calldata _currency,
-        string calldata _purchaseId,
-        bytes32 _shopId,
-        address _sender
-    ) external;
-
     function changeToPayablePoint(bytes32 _phone, address _account) external;
 
     function addPointBalance(address _account, uint256 _amount) external;
