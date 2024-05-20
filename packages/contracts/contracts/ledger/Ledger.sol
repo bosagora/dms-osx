@@ -107,11 +107,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         BIP20DelegatedTransfer token = BIP20DelegatedTransfer(contracts.token);
         tokenId = BridgeLib.getTokenId(token.name(), token.symbol());
 
-        loyaltyTypes[foundationAccount] = LoyaltyType.TOKEN;
-        loyaltyTypes[settlementAccount] = LoyaltyType.TOKEN;
-        loyaltyTypes[feeAccount] = LoyaltyType.TOKEN;
-        loyaltyTypes[txFeeAccount] = LoyaltyType.TOKEN;
-
         temporaryAddress = address(0x0);
     }
 
@@ -165,7 +160,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     /// @param _amount 금액
     function deposit(uint256 _amount) external virtual {
         require(_amount % 1 gwei == 0, "1030");
-        require(loyaltyTypes[_msgSender()] == LoyaltyType.TOKEN, "1520");
         require(_amount <= tokenContract.allowance(_msgSender(), address(this)), "1512");
         tokenContract.transferFrom(_msgSender(), address(this), _amount);
 
