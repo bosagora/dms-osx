@@ -51,8 +51,6 @@ contract LoyaltyTransfer is LoyaltyTransferStorage, Initializable, OwnableUpgrad
         require(_to != foundationAccount, "1052");
         bytes32 dataHash = keccak256(abi.encode(_from, _to, _amount, block.chainid, ledgerContract.nonceOf(_from)));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _from, "1501");
-        require(ledgerContract.loyaltyTypeOf(_from) == ILedger.LoyaltyType.TOKEN, "1520");
-        require(ledgerContract.loyaltyTypeOf(_to) == ILedger.LoyaltyType.TOKEN, "1520");
         require(ledgerContract.tokenBalanceOf(_from) >= _amount + fee, "1511");
         require(_amount % 1 gwei == 0, "1030");
 
