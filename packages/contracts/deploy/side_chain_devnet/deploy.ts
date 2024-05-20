@@ -69,7 +69,7 @@ interface IAccount {
 
 type FnDeployer = (accounts: IAccount, deployment: Deployments) => void;
 
-let BASE_CURRENCY = "KRW";
+const BASE_CURRENCY = "KRW";
 
 class Deployments {
     public deployments: Map<string, IDeployedContract>;
@@ -787,22 +787,6 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         for (const user of users) {
             if (user.loyaltyType === 1) {
                 const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
-                const nonce2 = await contract.nonceOf(user.address);
-                const signature2 = await ContractUtils.signLoyaltyType(signer, nonce2);
-                const tx10 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
-                    .connect(signer)
-                    .changeToLoyaltyToken(user.address, signature2);
-                console.log(`Change user's loyalty type (tx: ${tx10.hash})...`);
-                // await tx10.wait();
-
-                if (
-                    (await (deployment.getContract("Ledger") as Ledger).connect(signer).loyaltyTypeOf(user.address)) ===
-                    1
-                ) {
-                    console.log(`Success changeToLoyaltyToken...`);
-                } else {
-                    console.error(`Fail changeToLoyaltyToken...`);
-                }
 
                 const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
                 const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
@@ -859,22 +843,6 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         for (const user of users_mobile) {
             if (user.loyaltyType === 1) {
                 const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
-                const nonce = await (deployment.getContract("Ledger") as Ledger).nonceOf(user.address);
-                const signature = await ContractUtils.signLoyaltyType(signer, nonce);
-                const tx10 = await (deployment.getContract("LoyaltyExchanger") as LoyaltyExchanger)
-                    .connect(signer)
-                    .changeToLoyaltyToken(user.address, signature);
-                console.log(`Change user's loyalty type (tx: ${tx10.hash})...`);
-                // await tx10.wait();
-
-                if (
-                    (await (deployment.getContract("Ledger") as Ledger).connect(signer).loyaltyTypeOf(user.address)) ===
-                    1
-                ) {
-                    console.log(`Success changeToLoyaltyToken...`);
-                } else {
-                    console.error(`Fail changeToLoyaltyToken...`);
-                }
 
                 const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
                 const depositedToken = ContractUtils.zeroGWEI(balance.div(2));

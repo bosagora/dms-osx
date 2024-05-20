@@ -94,15 +94,6 @@ describe("Test for Ledger", () => {
         await deployAllContract([]);
     });
 
-    it("Change Loyalty type of user", async () => {
-        const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
-        const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
-
-        await exchangerContract
-            .connect(deployments.accounts.certifiers[0])
-            .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
-    });
-
     it("Deposit to Main Bridge", async () => {
         const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
         const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);

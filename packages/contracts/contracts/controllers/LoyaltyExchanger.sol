@@ -27,7 +27,13 @@ contract LoyaltyExchanger is LoyaltyExchangerStorage, Initializable, OwnableUpgr
     );
 
     /// @notice 구매 후 적립되는 로열티를 토큰으로 변경했을 때 발생하는 이벤트
-    event ChangedToLoyaltyToken(address account, uint256 amountToken, uint256 amountPoint, uint256 balanceToken);
+    event ChangedPointToToken(
+        address account,
+        uint256 amountPoint,
+        uint256 amountToken,
+        uint256 balancePoint,
+        uint256 balanceToken
+    );
 
     function initialize(address _linkAddress, address _currencyRateAddress) external initializer {
         __UUPSUpgradeable_init();
@@ -73,29 +79,25 @@ contract LoyaltyExchanger is LoyaltyExchangerStorage, Initializable, OwnableUpgr
 
     /// @notice 사용자가 적립할 로열티를 토큰으로 변경한다.
     /// @param _account 지갑주소
+    /// @param _amount 변경할 포인트량
     /// @param _signature 서명
     /// @dev 중계서버를 통해서 호출됩니다.
-    function changeToLoyaltyToken(address _account, bytes calldata _signature) external virtual {
-        bytes32 dataHash = keccak256(abi.encode(_account, block.chainid, ledgerContract.nonceOf(_account)));
+    function exchangePointToToken(address _account, uint256 _amount, bytes calldata _signature) external virtual {
+        bytes32 dataHash = keccak256(abi.encode(_account, _amount, block.chainid, ledgerContract.nonceOf(_account)));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
 
-        _exchangePointToToken(_account);
+        require(ledgerContract.pointBalanceOf(_account) >= _amount, "1511");
+        uint256 amountToken = currencyRateContract.convertPointToToken(_amount);
+        require(ledgerContract.tokenBalanceOf(foundationAccount) >= amountToken, "1510");
+        ledgerContract.transferToken(foundationAccount, _account, amountToken);
+        ledgerContract.subPointBalance(_account, _amount);
         ledgerContract.increaseNonce(_account);
-    }
-
-    function _exchangePointToToken(address _account) internal {
-        uint256 amountPoint;
-        uint256 amountToken;
-        if (ledgerContract.pointBalanceOf(_account) > 0) {
-            amountPoint = ledgerContract.pointBalanceOf(_account);
-            amountToken = currencyRateContract.convertPointToToken(amountPoint);
-            require(ledgerContract.tokenBalanceOf(foundationAccount) >= amountToken, "1510");
-            ledgerContract.transferToken(foundationAccount, _account, amountToken);
-            ledgerContract.subPointBalance(_account, amountPoint);
-        } else {
-            amountPoint = 0;
-            amountToken = 0;
-        }
-        emit ChangedToLoyaltyToken(_account, amountToken, amountPoint, ledgerContract.tokenBalanceOf(_account));
+        emit ChangedPointToToken(
+            _account,
+            _amount,
+            amountToken,
+            ledgerContract.pointBalanceOf(_account),
+            ledgerContract.tokenBalanceOf(_account)
+        );
     }
 }

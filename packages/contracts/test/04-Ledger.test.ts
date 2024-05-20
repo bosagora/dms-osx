@@ -1110,6 +1110,42 @@ describe("Test for Ledger", () => {
                 expect(newFeeBalance).to.deep.equal(oldFeeBalance.add(feeToken));
             });
         });
+
+        context("Change to LoyaltyToken", () => {
+            it("Check Balance", async () => {
+                expect(await ledgerContract.pointBalanceOf(userData[1].address)).to.deep.equal(
+                    Amount.make(1100, 18).value
+                );
+            });
+
+            it("Change to LoyaltyToken", async () => {
+                const oldBalance = await ledgerContract.pointBalanceOf(deployments.accounts.users[1].address);
+                const pointAmount = Amount.make(500, 18).value;
+                const tokenAmount = ContractUtils.zeroGWEI(pointAmount.mul(multiple).div(price));
+
+                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[1].address);
+                const message = await ContractUtils.getChangePointToTokenMessage(
+                    deployments.accounts.users[1].address,
+                    pointAmount,
+                    nonce
+                );
+                const signature = await ContractUtils.signMessage(deployments.accounts.users[1], message);
+                await expect(
+                    exchangerContract
+                        .connect(deployments.accounts.certifiers[0])
+                        .exchangePointToToken(deployments.accounts.users[1].address, pointAmount, signature)
+                )
+                    .to.emit(exchangerContract, "ChangedPointToToken")
+                    .withNamedArgs({
+                        account: deployments.accounts.users[1].address,
+                        amountPoint: pointAmount,
+                        amountToken: tokenAmount,
+                    });
+
+                const newBalance = await ledgerContract.pointBalanceOf(deployments.accounts.users[1].address);
+                expect(newBalance).to.deep.equal(oldBalance.sub(pointAmount));
+            });
+        });
     });
 
     context("Many Save Purchase Data", () => {
@@ -2338,14 +2374,6 @@ describe("Test for Ledger", () => {
 
         before("Deploy", async () => {
             await deployAllContract(shopData);
-        });
-
-        it("Change Loyalty type of user 0", async () => {
-            const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
-            const signature = await ContractUtils.signLoyaltyType(deployments.accounts.users[0], nonce);
-            await exchangerContract
-                .connect(deployments.accounts.certifiers[0])
-                .changeToLoyaltyToken(deployments.accounts.users[0].address, signature);
         });
 
         it("Deposit token - Success", async () => {
