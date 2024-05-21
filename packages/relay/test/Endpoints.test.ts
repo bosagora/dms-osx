@@ -206,40 +206,6 @@ describe("Test of Server", function () {
             await storage.dropTestDB();
         });
 
-        context("Change loyalty type", () => {
-            it("Check loyalty type - before", async () => {
-                const userIndex = 0;
-                const loyaltyType = await ledgerContract.loyaltyTypeOf(deployments.accounts.users[userIndex].address);
-                expect(loyaltyType).to.equal(0);
-            });
-
-            it("Send loyalty type", async () => {
-                const userIndex = 0;
-                const nonce = await ledgerContract.nonceOf(deployments.accounts.users[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(
-                    deployments.accounts.users[userIndex],
-                    nonce,
-                    contractManager.sideChainId
-                );
-                const uri = URI(serverURL).directory("/v1/ledger/changeToLoyaltyToken");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    account: deployments.accounts.users[userIndex].address,
-                    signature,
-                });
-
-                expect(response.data.code).to.equal(0);
-                expect(response.data.data).to.not.equal(undefined);
-                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-            });
-
-            it("Check point type - after", async () => {
-                const userIndex = 0;
-                const loyaltyType = await ledgerContract.loyaltyTypeOf(deployments.accounts.users[userIndex].address);
-                expect(loyaltyType).to.equal(1);
-            });
-        });
-
         context("Nonce", () => {
             it("Get Nonce of Ledger", async () => {
                 const userIndex = 0;

@@ -95,29 +95,6 @@ describe("Test of LoyaltyTransfer", function () {
         await storage.dropTestDB();
     });
 
-    it("Change loyalty type to 1", async () => {
-        for (const userIndex of [0, 1]) {
-            const nonce = await contractManager.sideLedgerContract.nonceOf(
-                deployments.accounts.users[userIndex].address
-            );
-            const signature = await ContractUtils.signLoyaltyType(
-                deployments.accounts.users[userIndex],
-                nonce,
-                contractManager.sideChainId
-            );
-            const uri = URI(serverURL).directory("/v1/ledger/changeToLoyaltyToken");
-            const url = uri.toString();
-            const response = await client.post(url, {
-                account: deployments.accounts.users[userIndex].address,
-                signature,
-            });
-
-            expect(response.data.code).to.equal(0);
-            expect(response.data.data).to.not.equal(undefined);
-            expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-        }
-    });
-
     it("Deposit token", async () => {
         for (const userIndex of [0, 1]) {
             const amount = Amount.make(1000, 18).value;

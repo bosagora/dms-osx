@@ -8,7 +8,7 @@ import { Scheduler } from "../src/scheduler/Scheduler";
 import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
-import { ContractLoyaltyType, LoyaltyPaymentTaskStatus } from "../src/types";
+import { LoyaltyPaymentTaskStatus } from "../src/types";
 import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
 import {
     BIP20DelegatedTransfer,
@@ -352,16 +352,14 @@ describe("Test of Server", function () {
 
             it("Get user's balance", async () => {
                 const url = URI(serverURL)
-                    .directory("/v1/payment/user")
-                    .filename("balance")
-                    .addQuery("account", temporaryAccount)
+                    .directory("/v1/ledger/balance/account")
+                    .filename(temporaryAccount)
                     .toString();
                 const response = await client.get(url);
 
                 assert.deepStrictEqual(response.data.code, 0);
                 assert.ok(response.data.data !== undefined);
-                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
+                assert.deepStrictEqual(response.data.data.point.balance, pointAmount.toString());
             });
 
             it("Endpoint POST /v1/payment/info", async () => {
@@ -378,8 +376,6 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
-                assert.deepStrictEqual(response.data.data.balance, pointAmount.toString());
                 assert.deepStrictEqual(response.data.data.paidPoint, Amount.make(1000).toString());
                 assert.deepStrictEqual(response.data.data.feePoint, Amount.make(50).toString());
                 assert.deepStrictEqual(response.data.data.totalPoint, Amount.make(1050).toString());
@@ -405,7 +401,6 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
 
                 paymentId = response.data.data.paymentId;
             });
@@ -419,7 +414,6 @@ describe("Test of Server", function () {
 
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
                 assert.deepStrictEqual(response.data.data.amount, amountOfLoyalty.toString());
             });
 
@@ -507,7 +501,6 @@ describe("Test of Server", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, users[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.POINT);
 
                 paymentId = response.data.data.paymentId;
             });

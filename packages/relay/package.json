@@ -25,6 +25,7 @@
         "test:DelegatorApproval": "TESTING=true hardhat test test/DelegatorApproval.test.ts",
         "test:LoyaltyTransfer": "TESTING=true hardhat test test/LoyaltyTransfer.test.ts",
         "test:LoyaltyBridge": "TESTING=true hardhat test test/LoyaltyBridge.test.ts",
+        "test:LoyaltyExchanger": "TESTING=true hardhat test test/LoyaltyExchanger.test.ts",
         "test:Bridge": "TESTING=true hardhat test test/Bridge.test.ts",
         "test:DelegatedTransfer": "TESTING=true hardhat test test/DelegatedTransfer.test.ts"
     },

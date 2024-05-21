@@ -8,13 +8,7 @@ import { Scheduler } from "../src/scheduler/Scheduler";
 import { WatchScheduler } from "../src/scheduler/WatchScheduler";
 import { GraphStorage } from "../src/storage/GraphStorage";
 import { RelayStorage } from "../src/storage/RelayStorage";
-import {
-    ContractLoyaltyType,
-    ContractShopStatus,
-    LoyaltyPaymentTaskStatus,
-    ShopTaskStatus,
-    TaskResultType,
-} from "../src/types";
+import { ContractShopStatus, LoyaltyPaymentTaskStatus, ShopTaskStatus, TaskResultType } from "../src/types";
 import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
 import {
     BIP20DelegatedTransfer,
@@ -202,32 +196,32 @@ describe("Test of Delegator", function () {
             await fakerCallbackServer.stop();
         });
 
-        it("Change loyalty type", async () => {
-            for (const user of userData) {
-                const nonce = await ledgerContract.nonceOf(user.address);
-                const signature = await ContractUtils.signLoyaltyType(
-                    new Wallet(user.privateKey),
-                    nonce,
-                    contractManager.sideChainId
-                );
-                const url = URI(serverURL).directory("v1/ledger").filename("changeToLoyaltyToken").toString();
-                const response = await client.post(url, {
-                    account: user.address,
-                    signature,
-                });
+        it("Provide Loyalty Point - Save Purchase Data", async () => {
+            const phoneHash = ContractUtils.getPhoneHash("");
+            const purchaseAmount = Amount.make(100_000_000, 18).value;
+            const loyaltyAmount = purchaseAmount.mul(10).div(100);
+            const purchaseParam = userData.map((m) => {
+                return {
+                    purchaseId: getPurchaseId(),
+                    amount: purchaseAmount,
+                    loyalty: loyaltyAmount,
+                    currency: "krw",
+                    shopId: shopData[0].shopId,
+                    account: m.address,
+                    phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
+                };
+            });
+            const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchaseParam, contractManager.sideChainId);
+            const signatures = deployments.accounts.validators.map((m) =>
+                ContractUtils.signMessage(m, purchaseMessage)
+            );
+            await providerContract
+                .connect(deployments.accounts.validators[0])
+                .savePurchase(0, purchaseParam, signatures);
 
-                expect(response.data.code).to.equal(0);
-                expect(response.data.data).to.not.equal(undefined);
-                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-            }
-        });
-
-        it("Deposit token", async () => {
-            const depositAmount = ContractUtils.zeroGWEI(amount.value.div(2));
             for (const user of userData) {
-                const sender = new Wallet(user.privateKey, ethers.provider);
-                await tokenContract.connect(sender).approve(ledgerContract.address, depositAmount);
-                await ledgerContract.connect(sender).deposit(depositAmount);
+                expect(await ledgerContract.pointBalanceOf(user.address)).to.equal(loyaltyAmount);
             }
         });
 
@@ -308,7 +302,6 @@ describe("Test of Delegator", function () {
                 assert.ok(response.data.data !== undefined);
 
                 assert.deepStrictEqual(response.data.data.account, userData[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_NEW);
 
                 paymentId = response.data.data.paymentId;
@@ -398,7 +391,6 @@ describe("Test of Delegator", function () {
                 assert.deepStrictEqual(response.data.data.paymentId, paymentId);
                 assert.deepStrictEqual(response.data.data.purchaseId, purchase.purchaseId);
                 assert.deepStrictEqual(response.data.data.account, userData[purchase.userIndex].address);
-                assert.deepStrictEqual(response.data.data.loyaltyType, ContractLoyaltyType.TOKEN);
                 assert.deepStrictEqual(response.data.data.paymentStatus, LoyaltyPaymentTaskStatus.OPENED_CANCEL);
             });
 

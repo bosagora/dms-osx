@@ -377,7 +377,6 @@ describe("Test for Shop", () => {
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
                 expect(paymentData.shopId).to.deep.equal(shop.shopId);
                 expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
-                expect(paymentData.loyaltyType).to.deep.equal(0);
                 expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
@@ -401,59 +400,37 @@ describe("Test for Shop", () => {
             });
         });
 
-        context("Change loyalty type", () => {
-            it("Check loyalty type - before", async () => {
-                const userIndex = 0;
-                const loyaltyType = await ledgerContract.loyaltyTypeOf(userWallets[userIndex].address);
-                expect(loyaltyType).to.equal(0);
+        it("Provide Loyalty Point - Save Purchase Data", async () => {
+            const phoneHash = ContractUtils.getPhoneHash("");
+            const purchaseAmount = Amount.make(100_000_000, 18).value;
+            const loyaltyAmount = purchaseAmount.mul(10).div(100);
+            const purchaseParam = userData.map((m) => {
+                return {
+                    purchaseId: getPurchaseId(),
+                    amount: purchaseAmount,
+                    loyalty: loyaltyAmount,
+                    currency: "krw",
+                    shopId: shopData[5].shopId,
+                    account: m.address,
+                    phone: phoneHash,
+                    sender: deployments.accounts.foundation.address,
+                };
             });
+            const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchaseParam, contractManager.sideChainId);
+            const signatures = deployments.accounts.validators.map((m) =>
+                ContractUtils.signMessage(m, purchaseMessage)
+            );
+            await providerContract
+                .connect(deployments.accounts.validators[0])
+                .savePurchase(0, purchaseParam, signatures);
 
-            it("Send loyalty type", async () => {
-                const userIndex = 0;
-                const nonce = await ledgerContract.nonceOf(userWallets[userIndex].address);
-                const signature = await ContractUtils.signLoyaltyType(
-                    userWallets[userIndex],
-                    nonce,
-                    contractManager.sideChainId
-                );
-                const uri = URI(serverURL).directory("/v1/ledger/changeToLoyaltyToken");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    account: userWallets[userIndex].address,
-                    signature,
-                });
-
-                expect(response.data.code).to.equal(0);
-                expect(response.data.data).to.not.equal(undefined);
-                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-            });
-
-            it("Check point type - after", async () => {
-                const userIndex = 0;
-                const loyaltyType = await ledgerContract.loyaltyTypeOf(userWallets[userIndex].address);
-                expect(loyaltyType).to.equal(1);
-            });
+            for (const user of userData) {
+                expect(await ledgerContract.pointBalanceOf(user.address)).to.equal(loyaltyAmount);
+            }
         });
 
-        context("Deposit token", () => {
-            it("Deposit token - Success", async () => {
-                const oldTokenBalance = await ledgerContract.tokenBalanceOf(userWallets[0].address);
-                await tokenContract.connect(userWallets[0]).approve(ledgerContract.address, amount.value);
-                await expect(ledgerContract.connect(userWallets[0]).deposit(amount.value))
-                    .to.emit(ledgerContract, "Deposited")
-                    .withNamedArgs({
-                        account: userWallets[0].address,
-                        depositedToken: amount.value,
-                        balanceToken: oldTokenBalance.add(amount.value),
-                    });
-                expect(await ledgerContract.tokenBalanceOf(userWallets[0].address)).to.deep.equal(
-                    oldTokenBalance.add(amount.value)
-                );
-            });
-        });
-
-        context("Pay token", () => {
-            it("Pay token - Success", async () => {
+        context("Pay", () => {
+            it("Pay - Success", async () => {
                 const purchase: IPurchaseData = {
                     purchaseId: getPurchaseId(),
                     amount: 500,
@@ -466,10 +443,6 @@ describe("Test for Shop", () => {
                 const nonce = await ledgerContract.nonceOf(userWallets[purchase.userIndex].address);
                 const paymentId = ContractUtils.getPaymentId(userWallets[purchase.userIndex].address, nonce);
                 const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                const tokenAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(multiple).div(price));
-                const oldFoundationTokenBalance = await ledgerContract.tokenBalanceOf(
-                    deployments.accounts.foundation.address
-                );
                 const shop = shopData[purchase.shopIndex];
                 const signature = await ContractUtils.signLoyaltyNewPayment(
                     userWallets[purchase.userIndex],
@@ -502,8 +475,7 @@ describe("Test for Shop", () => {
                 expect(paymentData.currency).to.deep.equal(purchase.currency);
                 expect(paymentData.shopId).to.deep.equal(shop.shopId);
                 expect(paymentData.account).to.deep.equal(userWallets[purchase.userIndex].address);
-                expect(paymentData.loyaltyType).to.deep.equal(1);
-                expect(paymentData.paidToken).to.deep.equal(tokenAmount);
+                expect(paymentData.paidPoint).to.deep.equal(purchaseAmount);
                 expect(paymentData.paidValue).to.deep.equal(purchaseAmount);
 
                 await expect(
@@ -516,11 +488,6 @@ describe("Test for Shop", () => {
                 expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value);
                 expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
-
-                const settledToken = ContractUtils.zeroGWEI(shopInfo2.settledAmount.mul(multiple).div(price));
-                expect(
-                    (await ledgerContract.tokenBalanceOf(deployments.accounts.foundation.address)).toString()
-                ).to.deep.equal(oldFoundationTokenBalance.add(tokenAmount).sub(settledToken).toString());
             });
         });
 
@@ -535,11 +502,7 @@ describe("Test for Shop", () => {
             });
 
             it("Get info of shop", async () => {
-                const url = URI(serverURL)
-                    .directory("/v1/payment/shop")
-                    .filename("info")
-                    .addQuery("shopId", shopData[shopIndex].shopId)
-                    .toString();
+                const url = URI(serverURL).directory("/v1/shop/info").filename(shopData[shopIndex].shopId).toString();
                 const response = await client.get(url);
                 expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
@@ -585,9 +548,8 @@ describe("Test for Shop", () => {
 
             it("Get withdrawal of shop", async () => {
                 const url = URI(serverURL)
-                    .directory("/v1/payment/shop")
-                    .filename("withdrawal")
-                    .addQuery("shopId", shopData[shopIndex].shopId)
+                    .directory("/v1/shop/withdrawal")
+                    .filename(shopData[shopIndex].shopId)
                     .toString();
                 const response = await client.get(url);
                 expect(response.data.code).to.equal(0);
@@ -625,11 +587,7 @@ describe("Test for Shop", () => {
             });
 
             it("Get info of shop", async () => {
-                const url = URI(serverURL)
-                    .directory("/v1/payment/shop")
-                    .filename("info")
-                    .addQuery("shopId", shopData[shopIndex].shopId)
-                    .toString();
+                const url = URI(serverURL).directory("/v1/shop/info").filename(shopData[shopIndex].shopId).toString();
                 const response = await client.get(url);
                 expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
@@ -648,9 +606,8 @@ describe("Test for Shop", () => {
 
             it("Get withdrawal of shop", async () => {
                 const url = URI(serverURL)
-                    .directory("/v1/payment/shop")
-                    .filename("withdrawal")
-                    .addQuery("shopId", shopData[shopIndex].shopId)
+                    .directory("/v1/shop/withdrawal")
+                    .filename(shopData[shopIndex].shopId)
                     .toString();
                 const response = await client.get(url);
                 expect(response.data.code).to.equal(0);

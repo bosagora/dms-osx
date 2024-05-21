@@ -83,9 +83,9 @@ describe("Test for ETC", function () {
             storage = await RelayStorage.make(config.database);
             const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
             const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
-            const contractManager = new ContractManager(config);
-            await contractManager.attach();
-            server = new TestServer(config, contractManager, storage, graph_sidechain, graph_mainchain);
+            const contractManager2 = new ContractManager(config);
+            await contractManager2.attach();
+            server = new TestServer(config, contractManager2, storage, graph_sidechain, graph_mainchain);
         });
 
         before("Start TestServer", async () => {
