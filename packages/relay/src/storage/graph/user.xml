@@ -17,7 +17,6 @@
             page_type,
             action,
             cancel,
-            loyalty_type,
             amount_point,
             amount_token,
             amount_value,

@@ -35,15 +35,11 @@ export interface ContractLoyaltyPaymentEvent {
     shopId: string;
     account: string;
     timestamp: BigNumber;
-    loyaltyType: number;
     paidPoint: BigNumber;
-    paidToken: BigNumber;
     paidValue: BigNumber;
     feePoint: BigNumber;
-    feeToken: BigNumber;
     feeValue: BigNumber;
     totalPoint: BigNumber;
-    totalToken: BigNumber;
     totalValue: BigNumber;
     status: number;
     balance: BigNumber;
@@ -91,18 +87,14 @@ export interface LoyaltyPaymentTaskData {
     currency: string;
     shopId: string;
     account: string;
-    loyaltyType: ContractLoyaltyType;
     secret: string;
     secretLock: string;
 
     paidPoint: BigNumber;
-    paidToken: BigNumber;
     paidValue: BigNumber;
     feePoint: BigNumber;
-    feeToken: BigNumber;
     feeValue: BigNumber;
     totalPoint: BigNumber;
-    totalToken: BigNumber;
     totalValue: BigNumber;
 
     paymentStatus: LoyaltyPaymentTaskStatus;
@@ -142,15 +134,11 @@ export interface PaymentResultData {
     currency: string;
     account: string;
     shopId: string;
-    loyaltyType: number;
     paidPoint: string;
-    paidToken: string;
     paidValue: string;
     feePoint: string;
-    feeToken: string;
     feeValue: string;
     totalPoint: string;
-    totalToken: string;
     totalValue: string;
     balance?: string;
     paymentStatus?: LoyaltyPaymentTaskStatus;
@@ -245,7 +233,6 @@ export interface IGraphAccountLedgerHistoryData {
     pageType: number;
     action: string;
     cancel: boolean;
-    loyaltyType: BigNumber;
     amountPoint: BigNumber;
     amountToken: BigNumber;
     amountValue: BigNumber;

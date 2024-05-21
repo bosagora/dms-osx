@@ -12,8 +12,6 @@ import { RelayStorage } from "../storage/RelayStorage";
 import {
     ContractLoyaltyPaymentEvent,
     ContractLoyaltyPaymentStatus,
-    ContractLoyaltyType,
-    ContractWithdrawStatus,
     LoyaltyPaymentTaskData,
     LoyaltyPaymentTaskStatus,
     MobileType,
@@ -71,51 +69,6 @@ export class PaymentRouter {
     }
 
     public registerRoutes() {
-        this.app.get(
-            "/v1/payment/user/balance",
-            [query("account").exists().trim().isEthereumAddress()],
-            this.user_balance.bind(this)
-        );
-
-        this.app.get(
-            "/v1/payment/phone/balance",
-            [
-                query("phone")
-                    .exists()
-                    .trim()
-                    .matches(/^(0x)[0-9a-f]{64}$/i),
-            ],
-            this.phone_balance.bind(this)
-        );
-
-        this.app.get(
-            "/v1/payment/convert/currency",
-            [query("amount").exists().custom(Validation.isAmount), query("from").exists(), query("to").exists()],
-            this.convert_currency.bind(this)
-        );
-
-        this.app.get(
-            "/v1/payment/shop/info",
-            [
-                query("shopId")
-                    .exists()
-                    .trim()
-                    .matches(/^(0x)[0-9a-f]{64}$/i),
-            ],
-            this.shop_info.bind(this)
-        );
-
-        this.app.get(
-            "/v1/payment/shop/withdrawal",
-            [
-                query("shopId")
-                    .exists()
-                    .trim()
-                    .matches(/^(0x)[0-9a-f]{64}$/i),
-            ],
-            this.shop_withdrawal.bind(this)
-        );
-
         this.app.post(
             "/v1/payment/account/temporary",
             [
@@ -235,190 +188,6 @@ export class PaymentRouter {
     }
 
     /**
-     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
-     * GET /v1/payment/user/balance
-     * @private
-     */
-    private async user_balance(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/user/balance ${req.ip}:${JSON.stringify(req.query)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        try {
-            let account: string = String(req.query.account).trim();
-            if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this.storage.getRealAccount(account);
-                if (realAccount === undefined) {
-                    return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
-                } else {
-                    account = realAccount;
-                }
-            }
-            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
-            const balance =
-                loyaltyType === ContractLoyaltyType.POINT
-                    ? await this.contractManager.sideLedgerContract.pointBalanceOf(account)
-                    : await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
-            this.metrics.add("success", 1);
-            return res
-                .status(200)
-                .json(this.makeResponseData(0, { account, loyaltyType, balance: balance.toString() }));
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/user/balance : ${msg.error.message}`);
-            this.metrics.add("failure", 1);
-            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
-        }
-    }
-
-    /**
-     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
-     * GET /v1/payment/phone/balance
-     * @private
-     */
-    private async phone_balance(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/phone/balance ${req.ip}:${JSON.stringify(req.query)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        try {
-            const phone: string = String(req.query.phone).trim();
-            const account: string = await this.contractManager.sidePhoneLinkerContract.toAddress(phone);
-            if (account !== AddressZero) {
-                const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
-                const balance =
-                    loyaltyType === ContractLoyaltyType.POINT
-                        ? await this.contractManager.sideLedgerContract.pointBalanceOf(account)
-                        : await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
-                this.metrics.add("success", 1);
-                return res
-                    .status(200)
-                    .json(this.makeResponseData(0, { phone, account, loyaltyType, balance: balance.toString() }));
-            } else {
-                const loyaltyType = ContractLoyaltyType.POINT;
-                const balance = await this.contractManager.sideLedgerContract.unPayablePointBalanceOf(phone);
-                this.metrics.add("success", 1);
-                return res
-                    .status(200)
-                    .json(this.makeResponseData(0, { phone, loyaltyType, balance: balance.toString() }));
-            }
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/phone/balance : ${msg.error.message}`);
-            this.metrics.add("failure", 1);
-            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
-        }
-    }
-
-    /**
-     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
-     * GET /v1/payment/convert/currency
-     * @private
-     */
-    private async convert_currency(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/convert/currency ${req.ip}:${JSON.stringify(req.query)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        try {
-            const amount: BigNumber = BigNumber.from(req.query.amount);
-            const from: string = String(req.query.from).trim();
-            const to: string = String(req.query.to).trim();
-
-            const result = await this.contractManager.sideCurrencyRateContract.convertCurrency(amount, from, to);
-            this.metrics.add("success", 1);
-            return res.status(200).json(this.makeResponseData(0, { amount: result.toString() }));
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/convert/currency : ${msg.error.message}`);
-            this.metrics.add("failure", 1);
-            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
-        }
-    }
-
-    /**
-     * 상점 정보 / 상점의 기본적인 정보를 제공하는 엔드포인트
-     * GET /v1/payment/shop/info
-     * @private
-     */
-    private async shop_info(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/shop/info ${req.ip}:${JSON.stringify(req.query)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        try {
-            const shopId: string = String(req.query.shopId).trim();
-            const info = await this.contractManager.sideShopContract.shopOf(shopId);
-
-            const shopInfo = {
-                shopId: info.shopId,
-                name: info.name,
-                currency: info.currency,
-                status: info.status,
-                account: info.account,
-                delegator: info.delegator,
-                providedAmount: info.providedAmount.toString(),
-                usedAmount: info.usedAmount.toString(),
-                settledAmount: info.settledAmount.toString(),
-                withdrawnAmount: info.withdrawnAmount.toString(),
-            };
-            this.metrics.add("success", 1);
-            return res.status(200).json(this.makeResponseData(0, shopInfo));
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/shop/info : ${msg.error.message}`);
-            this.metrics.add("failure", 1);
-            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
-        }
-    }
-
-    /**
-     * 상점 정보 / 상점의 기봊적인 정보를 제공하는 엔드포인트
-     * GET /v1/payment/shop/withdrawal
-     * @private
-     */
-    private async shop_withdrawal(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/payment/shop/withdrawal ${req.ip}:${JSON.stringify(req.query)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        try {
-            const shopId: string = String(req.query.shopId).trim();
-            const info = await this.contractManager.sideShopContract.shopOf(shopId);
-
-            const status = info.withdrawData.status === ContractWithdrawStatus.CLOSE ? "Closed" : "Opened";
-            const shopWithdrawalInfo = {
-                shopId: info.shopId,
-                withdrawAmount: info.withdrawData.amount.toString(),
-                withdrawStatus: status,
-            };
-
-            this.metrics.add("success", 1);
-            return res.status(200).json(this.makeResponseData(0, shopWithdrawalInfo));
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/payment/shop/withdrawal : ${msg.error.message}`);
-            this.metrics.add("failure", 1);
-            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
-        }
-    }
-
-    /**
      * POST /v1/payment/account/temporary
      * @private
      */
@@ -484,8 +253,6 @@ export class PaymentRouter {
             const amount: BigNumber = BigNumber.from(req.query.amount);
             const currency: string = String(req.query.currency).trim().toLowerCase();
 
-            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
-
             const feeRate = await this.contractManager.sideLedgerContract.getFee();
             const rate = await this.contractManager.sideCurrencyRateContract.get(currency.toLowerCase());
             const multiple = await this.contractManager.sideCurrencyRateContract.multiple();
@@ -493,36 +260,17 @@ export class PaymentRouter {
             let balance: BigNumber;
             let balanceValue: BigNumber;
             let paidPoint: BigNumber;
-            let paidToken: BigNumber;
             let paidValue: BigNumber;
             let feePoint: BigNumber;
-            let feeToken: BigNumber;
             let feeValue: BigNumber;
             let totalPoint: BigNumber;
-            let totalToken: BigNumber;
             let totalValue: BigNumber;
 
-            if (loyaltyType === ContractLoyaltyType.POINT) {
-                balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
-                balanceValue = ContractUtils.zeroGWEI(balance.mul(multiple).div(rate));
-                paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
-                feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
-                totalPoint = paidPoint.add(feePoint);
-                paidToken = BigNumber.from(0);
-                feeToken = BigNumber.from(0);
-                totalToken = BigNumber.from(0);
-            } else {
-                balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
-                const symbol = await this.contractManager.sideTokenContract.symbol();
-                const tokenRate = await this.contractManager.sideCurrencyRateContract.get(symbol);
-                balanceValue = ContractUtils.zeroGWEI(balance.mul(tokenRate).div(rate));
-                paidToken = ContractUtils.zeroGWEI(amount.mul(rate).div(tokenRate));
-                feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(10000));
-                totalToken = paidToken.add(feeToken);
-                paidPoint = BigNumber.from(0);
-                feePoint = BigNumber.from(0);
-                totalPoint = BigNumber.from(0);
-            }
+            balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
+            balanceValue = ContractUtils.zeroGWEI(balance.mul(multiple).div(rate));
+            paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
+            feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
+            totalPoint = paidPoint.add(feePoint);
             paidValue = BigNumber.from(amount);
             feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(10000));
             totalValue = paidValue.add(feeValue);
@@ -531,19 +279,15 @@ export class PaymentRouter {
             return res.status(200).json(
                 this.makeResponseData(0, {
                     account,
-                    loyaltyType,
                     amount: amount.toString(),
                     currency,
                     balance: balance.toString(),
                     balanceValue: balanceValue.toString(),
                     paidPoint: paidPoint.toString(),
-                    paidToken: paidToken.toString(),
                     paidValue: paidValue.toString(),
                     feePoint: feePoint.toString(),
-                    feeToken: feeToken.toString(),
                     feeValue: feeValue.toString(),
                     totalPoint: totalPoint.toString(),
-                    totalToken: totalToken.toString(),
                     totalValue: totalValue.toString(),
                     feeRate: feeRate / 10000,
                 })
@@ -606,32 +350,16 @@ export class PaymentRouter {
             let totalValue: BigNumber;
 
             const contract = this.contractManager.sideLedgerContract;
-            const loyaltyType = await contract.loyaltyTypeOf(account);
-            if (loyaltyType === ContractLoyaltyType.POINT) {
-                balance = await contract.pointBalanceOf(account);
-                paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
-                feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
-                totalPoint = paidPoint.add(feePoint);
-                if (totalPoint.gt(balance)) {
-                    return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
-                }
-                paidToken = BigNumber.from(0);
-                feeToken = BigNumber.from(0);
-                totalToken = BigNumber.from(0);
-            } else {
-                balance = await contract.tokenBalanceOf(account);
-                const symbol = await this.contractManager.sideTokenContract.symbol();
-                const tokenRate = await this.contractManager.sideCurrencyRateContract.get(symbol);
-                paidToken = ContractUtils.zeroGWEI(amount.mul(rate).div(tokenRate));
-                feeToken = ContractUtils.zeroGWEI(paidToken.mul(feeRate).div(10000));
-                totalToken = paidToken.add(feeToken);
-                if (totalToken.gt(balance)) {
-                    return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
-                }
-                paidPoint = BigNumber.from(0);
-                feePoint = BigNumber.from(0);
-                totalPoint = BigNumber.from(0);
+            balance = await contract.pointBalanceOf(account);
+            paidPoint = ContractUtils.zeroGWEI(amount.mul(rate).div(multiple));
+            feePoint = ContractUtils.zeroGWEI(paidPoint.mul(feeRate).div(10000));
+            totalPoint = paidPoint.add(feePoint);
+            if (totalPoint.gt(balance)) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
             }
+            paidToken = BigNumber.from(0);
+            feeToken = BigNumber.from(0);
+            totalToken = BigNumber.from(0);
             paidValue = BigNumber.from(amount);
             feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(10000));
             totalValue = paidValue.add(feeValue);
@@ -647,15 +375,11 @@ export class PaymentRouter {
                 account,
                 secret,
                 secretLock,
-                loyaltyType,
                 paidPoint,
-                paidToken,
                 paidValue,
                 feePoint,
-                feeToken,
                 feeValue,
                 totalPoint,
-                totalToken,
                 totalValue,
                 paymentStatus: LoyaltyPaymentTaskStatus.OPENED_NEW,
                 contractStatus: ContractLoyaltyPaymentStatus.INVALID,
@@ -681,19 +405,17 @@ export class PaymentRouter {
 
             if (mobileData !== undefined) {
                 // tslint:disable-next-line:one-variable-per-declaration
-                let title, shopLabel, amountLabel, pointLabel, tokenLabel: string;
+                let title, shopLabel, amountLabel, pointLabel: string;
                 if (mobileData.language === "kr") {
-                    title = "마일리지 사용 알림";
+                    title = "포인트 사용 알림";
                     shopLabel = "구매처";
                     amountLabel = "구매 금액";
                     pointLabel = "포인트 사용";
-                    tokenLabel = "토큰 사용";
                 } else {
                     title = "Loyalty usage notification";
                     shopLabel = "Place of purchase";
                     amountLabel = "Amount";
                     pointLabel = "Points used";
-                    tokenLabel = "Token used";
                 }
                 /// 사용자에게 메세지 발송
                 const to = mobileData.token;
@@ -711,9 +433,7 @@ export class PaymentRouter {
                         0
                     )} ${item.currency.toUpperCase()}`
                 );
-                if (item.loyaltyType === ContractLoyaltyType.POINT)
-                    contents.push(`${pointLabel} : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
-                else contents.push(`${tokenLabel} : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`);
+                contents.push(`${pointLabel} : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
 
                 await this._sender.send(to, title, contents.join(", "), data);
             }
@@ -727,15 +447,11 @@ export class PaymentRouter {
                     currency: item.currency,
                     shopId: item.shopId,
                     account: item.account,
-                    loyaltyType: item.loyaltyType,
                     paidPoint: item.paidPoint.toString(),
-                    paidToken: item.paidToken.toString(),
                     paidValue: item.paidValue.toString(),
                     feePoint: item.feePoint.toString(),
-                    feeToken: item.feeToken.toString(),
                     feeValue: item.feeValue.toString(),
                     totalPoint: item.totalPoint.toString(),
-                    totalToken: item.totalToken.toString(),
                     totalValue: item.totalValue.toString(),
                     paymentStatus: item.paymentStatus,
                     openNewTimestamp: item.openNewTimestamp,
@@ -957,15 +673,11 @@ export class PaymentRouter {
                                 currency: item.currency,
                                 shopId: item.shopId,
                                 account: item.account,
-                                loyaltyType: item.loyaltyType,
                                 paidPoint: item.paidPoint.toString(),
-                                paidToken: item.paidToken.toString(),
                                 paidValue: item.paidValue.toString(),
                                 feePoint: item.feePoint.toString(),
-                                feeToken: item.feeToken.toString(),
                                 feeValue: item.feeValue.toString(),
                                 totalPoint: item.totalPoint.toString(),
-                                totalToken: item.totalToken.toString(),
                                 totalValue: item.totalValue.toString(),
                                 paymentStatus: item.paymentStatus,
                                 openNewTimestamp: item.openNewTimestamp,
@@ -999,15 +711,11 @@ export class PaymentRouter {
                                     currency: item.currency,
                                     shopId: item.shopId,
                                     account: item.account,
-                                    loyaltyType: item.loyaltyType,
                                     paidPoint: item.paidPoint.toString(),
-                                    paidToken: item.paidToken.toString(),
                                     paidValue: item.paidValue.toString(),
                                     feePoint: item.feePoint.toString(),
-                                    feeToken: item.feeToken.toString(),
                                     feeValue: item.feeValue.toString(),
                                     totalPoint: item.totalPoint.toString(),
-                                    totalToken: item.totalToken.toString(),
                                     totalValue: item.totalValue.toString(),
                                     paymentStatus: item.paymentStatus,
                                     openNewTimestamp: item.openNewTimestamp,
@@ -1058,15 +766,11 @@ export class PaymentRouter {
                                     currency: item.currency,
                                     shopId: item.shopId,
                                     account: item.account,
-                                    loyaltyType: item.loyaltyType,
                                     paidPoint: item.paidPoint.toString(),
-                                    paidToken: item.paidToken.toString(),
                                     paidValue: item.paidValue.toString(),
                                     feePoint: item.feePoint.toString(),
-                                    feeToken: item.feeToken.toString(),
                                     feeValue: item.feeValue.toString(),
                                     totalPoint: item.totalPoint.toString(),
-                                    totalToken: item.totalToken.toString(),
                                     totalValue: item.totalValue.toString(),
                                     paymentStatus: item.paymentStatus,
                                     openNewTimestamp: item.openNewTimestamp,
@@ -1157,15 +861,11 @@ export class PaymentRouter {
                     currency: item.currency,
                     shopId: item.shopId,
                     account: item.account,
-                    loyaltyType: item.loyaltyType,
                     paidPoint: item.paidPoint.toString(),
-                    paidToken: item.paidToken.toString(),
                     paidValue: item.paidValue.toString(),
                     feePoint: item.feePoint.toString(),
-                    feeToken: item.feeToken.toString(),
                     feeValue: item.feeValue.toString(),
                     totalPoint: item.totalPoint.toString(),
-                    totalToken: item.totalToken.toString(),
                     totalValue: item.totalValue.toString(),
                     paymentStatus: item.paymentStatus,
                     openNewTimestamp: item.openNewTimestamp,
@@ -1242,15 +942,11 @@ export class PaymentRouter {
                             currency: item.currency,
                             shopId: item.shopId,
                             account: item.account,
-                            loyaltyType: item.loyaltyType,
                             paidPoint: item.paidPoint.toString(),
-                            paidToken: item.paidToken.toString(),
                             paidValue: item.paidValue.toString(),
                             feePoint: item.feePoint.toString(),
-                            feeToken: item.feeToken.toString(),
                             feeValue: item.feeValue.toString(),
                             totalPoint: item.totalPoint.toString(),
-                            totalToken: item.totalToken.toString(),
                             totalValue: item.totalValue.toString(),
                             paymentStatus: item.paymentStatus,
                             openNewTimestamp: item.openNewTimestamp,
@@ -1270,19 +966,17 @@ export class PaymentRouter {
                 if (mobileData !== undefined) {
                     /// 상점주에게 메세지 발송
                     // tslint:disable-next-line:one-variable-per-declaration
-                    let title, shopLabel, amountLabel, pointLabel, tokenLabel: string;
+                    let title, shopLabel, amountLabel, pointLabel: string;
                     if (mobileData.language === "kr") {
                         title = "마일리지 사용 취소 알림";
                         shopLabel = "구매처";
                         amountLabel = "구매 금액";
                         pointLabel = "포인트 사용";
-                        tokenLabel = "토큰 사용";
                     } else {
                         title = "Loyalty cancellation notification";
                         shopLabel = "Place of purchase";
                         amountLabel = "Amount";
                         pointLabel = "Points used";
-                        tokenLabel = "Token used";
                     }
                     const to = mobileData.token;
                     const contents: string[] = [];
@@ -1299,14 +993,7 @@ export class PaymentRouter {
                             0
                         )} ${item.currency.toUpperCase()}`
                     );
-                    if (item.loyaltyType === ContractLoyaltyType.POINT)
-                        contents.push(
-                            `${pointLabel} : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`
-                        );
-                    else
-                        contents.push(
-                            `${tokenLabel} : ${new Amount(item.paidToken, 18).toDisplayString(true, 4)} TOKEN`
-                        );
+                    contents.push(`${pointLabel} : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
 
                     await this._sender.send(to, title, contents.join(", "), data);
                 }
@@ -1320,15 +1007,11 @@ export class PaymentRouter {
                         currency: item.currency,
                         shopId: item.shopId,
                         account: item.account,
-                        loyaltyType: item.loyaltyType,
                         paidPoint: item.paidPoint.toString(),
-                        paidToken: item.paidToken.toString(),
                         paidValue: item.paidValue.toString(),
                         feePoint: item.feePoint.toString(),
-                        feeToken: item.feeToken.toString(),
                         feeValue: item.feeValue.toString(),
                         totalPoint: item.totalPoint.toString(),
-                        totalToken: item.totalToken.toString(),
                         totalValue: item.totalValue.toString(),
                         paymentStatus: item.paymentStatus,
                         openNewTimestamp: item.openNewTimestamp,
@@ -1570,15 +1253,11 @@ export class PaymentRouter {
                                 currency: item.currency,
                                 shopId: item.shopId,
                                 account: item.account,
-                                loyaltyType: item.loyaltyType,
                                 paidPoint: item.paidPoint.toString(),
-                                paidToken: item.paidToken.toString(),
                                 paidValue: item.paidValue.toString(),
                                 feePoint: item.feePoint.toString(),
-                                feeToken: item.feeToken.toString(),
                                 feeValue: item.feeValue.toString(),
                                 totalPoint: item.totalPoint.toString(),
-                                totalToken: item.totalToken.toString(),
                                 totalValue: item.totalValue.toString(),
                                 paymentStatus: item.paymentStatus,
                                 openNewTimestamp: item.openNewTimestamp,
@@ -1612,15 +1291,11 @@ export class PaymentRouter {
                                     currency: item.currency,
                                     shopId: item.shopId,
                                     account: item.account,
-                                    loyaltyType: item.loyaltyType,
                                     paidPoint: item.paidPoint.toString(),
-                                    paidToken: item.paidToken.toString(),
                                     paidValue: item.paidValue.toString(),
                                     feePoint: item.feePoint.toString(),
-                                    feeToken: item.feeToken.toString(),
                                     feeValue: item.feeValue.toString(),
                                     totalPoint: item.totalPoint.toString(),
-                                    totalToken: item.totalToken.toString(),
                                     totalValue: item.totalValue.toString(),
                                     paymentStatus: item.paymentStatus,
                                     openNewTimestamp: item.openNewTimestamp,
@@ -1671,15 +1346,11 @@ export class PaymentRouter {
                                     currency: item.currency,
                                     shopId: item.shopId,
                                     account: item.account,
-                                    loyaltyType: item.loyaltyType,
                                     paidPoint: item.paidPoint.toString(),
-                                    paidToken: item.paidToken.toString(),
                                     paidValue: item.paidValue.toString(),
                                     feePoint: item.feePoint.toString(),
-                                    feeToken: item.feeToken.toString(),
                                     feeValue: item.feeValue.toString(),
                                     totalPoint: item.totalPoint.toString(),
-                                    totalToken: item.totalToken.toString(),
                                     totalValue: item.totalValue.toString(),
                                     paymentStatus: item.paymentStatus,
                                     openNewTimestamp: item.openNewTimestamp,
@@ -1751,15 +1422,11 @@ export class PaymentRouter {
             currency: item.currency,
             shopId: item.shopId,
             account: item.account,
-            loyaltyType: item.loyaltyType,
             paidPoint: item.paidPoint.toString(),
-            paidToken: item.paidToken.toString(),
             paidValue: item.paidValue.toString(),
             feePoint: item.feePoint.toString(),
-            feeToken: item.feeToken.toString(),
             feeValue: item.feeValue.toString(),
             totalPoint: item.totalPoint.toString(),
-            totalToken: item.totalToken.toString(),
             totalValue: item.totalValue.toString(),
             paymentStatus: item.paymentStatus,
         };
@@ -1771,15 +1438,11 @@ export class PaymentRouter {
         item.currency = event.currency;
         item.shopId = event.shopId;
         item.account = event.account;
-        item.loyaltyType = event.loyaltyType;
         item.paidPoint = event.paidPoint;
-        item.paidToken = event.paidToken;
         item.paidValue = event.paidValue;
         item.feePoint = event.feePoint;
-        item.feeToken = event.feeToken;
         item.feeValue = event.feeValue;
         item.totalPoint = event.totalPoint;
-        item.totalToken = event.totalToken;
         item.totalValue = event.totalValue;
         item.contractStatus = event.status;
     }
@@ -1801,32 +1464,13 @@ export class PaymentRouter {
             res.shopId = parsedLog.args.payment.shopId;
             res.account = parsedLog.args.payment.account;
             res.timestamp = parsedLog.args.payment.timestamp;
-            res.loyaltyType = parsedLog.args.payment.loyaltyType;
-            res.paidPoint =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.POINT
-                    ? BigNumber.from(parsedLog.args.payment.paidPoint)
-                    : BigNumber.from(0);
-            res.paidToken =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.TOKEN
-                    ? BigNumber.from(parsedLog.args.payment.paidToken)
-                    : BigNumber.from(0);
+            res.paidPoint = BigNumber.from(parsedLog.args.payment.paidPoint);
             res.paidValue = BigNumber.from(parsedLog.args.payment.paidValue);
-
-            res.feePoint =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.POINT
-                    ? BigNumber.from(parsedLog.args.payment.feePoint)
-                    : BigNumber.from(0);
-            res.feeToken =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.TOKEN
-                    ? BigNumber.from(parsedLog.args.payment.feeToken)
-                    : BigNumber.from(0);
+            res.feePoint = BigNumber.from(parsedLog.args.payment.feePoint);
             res.feeValue = BigNumber.from(parsedLog.args.payment.feeValue);
-
             res.status = BigNumber.from(parsedLog.args.payment.status);
             res.balance = BigNumber.from(parsedLog.args.balance);
-
             res.totalPoint = res.paidPoint.add(res.feePoint);
-            res.totalToken = res.paidToken.add(res.feeToken);
             res.totalValue = res.paidValue.add(res.feeValue);
 
             return res;

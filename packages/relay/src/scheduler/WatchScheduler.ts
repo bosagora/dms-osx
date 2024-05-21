@@ -7,7 +7,6 @@ import { ISignerItem, RelaySigners } from "../contract/Signers";
 import { RelayStorage } from "../storage/RelayStorage";
 import {
     ContractLoyaltyPaymentEvent,
-    ContractLoyaltyType,
     ContractShopStatusEvent,
     ContractShopUpdateEvent,
     LoyaltyPaymentTaskData,
@@ -212,15 +211,11 @@ export class WatchScheduler extends Scheduler {
             currency: item.currency,
             shopId: item.shopId,
             account: item.account,
-            loyaltyType: item.loyaltyType,
             paidPoint: item.paidPoint.toString(),
-            paidToken: item.paidToken.toString(),
             paidValue: item.paidValue.toString(),
             feePoint: item.feePoint.toString(),
-            feeToken: item.feeToken.toString(),
             feeValue: item.feeValue.toString(),
             totalPoint: item.totalPoint.toString(),
-            totalToken: item.totalToken.toString(),
             totalValue: item.totalValue.toString(),
             paymentStatus: item.paymentStatus,
         };
@@ -232,15 +227,11 @@ export class WatchScheduler extends Scheduler {
         item.currency = event.currency;
         item.shopId = event.shopId;
         item.account = event.account;
-        item.loyaltyType = event.loyaltyType;
         item.paidPoint = event.paidPoint;
-        item.paidToken = event.paidToken;
         item.paidValue = event.paidValue;
         item.feePoint = event.feePoint;
-        item.feeToken = event.feeToken;
         item.feeValue = event.feeValue;
         item.totalPoint = event.totalPoint;
-        item.totalToken = event.totalToken;
         item.totalValue = event.totalValue;
         item.contractStatus = event.status;
     }
@@ -262,32 +253,13 @@ export class WatchScheduler extends Scheduler {
             res.shopId = parsedLog.args.payment.shopId;
             res.account = parsedLog.args.payment.account;
             res.timestamp = parsedLog.args.payment.timestamp;
-            res.loyaltyType = parsedLog.args.payment.loyaltyType;
-            res.paidPoint =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.POINT
-                    ? BigNumber.from(parsedLog.args.payment.paidPoint)
-                    : BigNumber.from(0);
-            res.paidToken =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.TOKEN
-                    ? BigNumber.from(parsedLog.args.payment.paidToken)
-                    : BigNumber.from(0);
+            res.paidPoint = BigNumber.from(parsedLog.args.payment.paidPoint);
             res.paidValue = BigNumber.from(parsedLog.args.payment.paidValue);
-
-            res.feePoint =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.POINT
-                    ? BigNumber.from(parsedLog.args.payment.feePoint)
-                    : BigNumber.from(0);
-            res.feeToken =
-                parsedLog.args.payment.loyaltyType === ContractLoyaltyType.TOKEN
-                    ? BigNumber.from(parsedLog.args.payment.feeToken)
-                    : BigNumber.from(0);
+            res.feePoint = BigNumber.from(parsedLog.args.payment.feePoint);
             res.feeValue = BigNumber.from(parsedLog.args.payment.feeValue);
-
             res.status = BigNumber.from(parsedLog.args.payment.status);
             res.balance = BigNumber.from(parsedLog.args.balance);
-
             res.totalPoint = res.paidPoint.add(res.feePoint);
-            res.totalToken = res.paidToken.add(res.feeToken);
             res.totalValue = res.paidValue.add(res.feeValue);
 
             return res;

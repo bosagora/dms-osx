@@ -273,7 +273,6 @@ export class GraphStorage extends Storage {
                                 pageType: m.page_type,
                                 action: m.action,
                                 cancel: m.cancel,
-                                loyaltyType: m.loyalty_type,
                                 amountPoint: BigNumber.from(m.amount_point).mul(GraphStorage.AmountUnit),
                                 amountToken: BigNumber.from(m.amount_token).mul(GraphStorage.AmountUnit),
                                 amountValue: BigNumber.from(m.amount_value).mul(GraphStorage.AmountUnit),
