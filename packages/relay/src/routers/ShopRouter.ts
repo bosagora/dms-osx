@@ -9,6 +9,7 @@ import { RelayStorage } from "../storage/RelayStorage";
 import {
     ContractShopStatus,
     ContractShopUpdateEvent,
+    ContractWithdrawStatus,
     MobileType,
     ShopTaskData,
     ShopTaskStatus,
@@ -249,6 +250,26 @@ export class ShopRouter {
             "/v1/shop/list",
             [query("pageNumber").exists().trim().isNumeric(), query("pageSize").exists().trim().isNumeric()],
             this.shop_list.bind(this)
+        );
+        this.app.get(
+            "/v1/shop/info/:shopId",
+            [
+                param("shopId")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.shop_info.bind(this)
+        );
+        this.app.get(
+            "/v1/shop/withdrawal/:shopId",
+            [
+                param("shopId")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.shop_withdrawal.bind(this)
         );
     }
 
@@ -1266,6 +1287,78 @@ export class ShopRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/shop/list : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+    /**
+     * 상점 정보 / 상점의 기본적인 정보를 제공하는 엔드포인트
+     * GET /v1/shop/info/:shopId
+     * @private
+     */
+    private async shop_info(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/shop/info/:shopId ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const shopId: string = String(req.params.shopId).trim();
+            const info = await this.contractManager.sideShopContract.shopOf(shopId);
+
+            const shopInfo = {
+                shopId: info.shopId,
+                name: info.name,
+                currency: info.currency,
+                status: info.status,
+                account: info.account,
+                delegator: info.delegator,
+                providedAmount: info.providedAmount.toString(),
+                usedAmount: info.usedAmount.toString(),
+                settledAmount: info.settledAmount.toString(),
+                withdrawnAmount: info.withdrawnAmount.toString(),
+            };
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, shopInfo));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/shop/info/:shopId : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    /**
+     * 상점 정보 / 상점의 기본적인 정보를 제공하는 엔드포인트
+     * GET /v1/shop/withdrawal/:shopId
+     * @private
+     */
+    private async shop_withdrawal(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/shop/withdrawal/:shopId ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const shopId: string = String(req.params.shopId).trim();
+            const info = await this.contractManager.sideShopContract.shopOf(shopId);
+
+            const status = info.withdrawData.status === ContractWithdrawStatus.CLOSE ? "Closed" : "Opened";
+            const shopWithdrawalInfo = {
+                shopId: info.shopId,
+                withdrawAmount: info.withdrawData.amount.toString(),
+                withdrawStatus: status,
+            };
+
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, shopWithdrawalInfo));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/shop/withdrawal/:shopId : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
