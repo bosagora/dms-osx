@@ -342,30 +342,17 @@ export class ContractUtils {
         return res.toLowerCase() === account.toLowerCase();
     }
 
-    public static getLoyaltyTypeMessage(address: string, nonce: BigNumberish, chainId: BigNumberish): Uint8Array {
-        const encodedResult = defaultAbiCoder.encode(["address", "uint256", "uint256"], [address, chainId, nonce]);
-        return arrayify(keccak256(encodedResult));
-    }
-
-    public static async signLoyaltyType(signer: Signer, nonce: BigNumberish, chainId: BigNumberish): Promise<string> {
-        const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce, chainId);
-        return signer.signMessage(message);
-    }
-
-    public static verifyLoyaltyType(
-        account: string,
+    public static getChangePointToTokenMessage(
+        address: string,
+        amount: BigNumberish,
         nonce: BigNumberish,
-        signature: string,
         chainId: BigNumberish
-    ): boolean {
-        const message = ContractUtils.getLoyaltyTypeMessage(account, nonce, chainId);
-        let res: string;
-        try {
-            res = verifyMessage(message, signature);
-        } catch (error) {
-            return false;
-        }
-        return res.toLowerCase() === account.toLowerCase();
+    ): Uint8Array {
+        const encodedResult = defaultAbiCoder.encode(
+            ["address", "uint256", "uint256", "uint256"],
+            [address, amount, chainId, nonce]
+        );
+        return arrayify(keccak256(encodedResult));
     }
 
     // endregion

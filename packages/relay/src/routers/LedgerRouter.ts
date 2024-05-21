@@ -6,7 +6,6 @@ import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
-import { ContractLoyaltyType } from "../types";
 import { ContractUtils } from "../utils/ContractUtils";
 import { ResponseMessage } from "../utils/Errors";
 import { Validation } from "../validation";
@@ -96,15 +95,16 @@ export class LedgerRouter {
 
         // 포인트의 종류를 선택하는 기능
         this.app.post(
-            "/v1/ledger/changeToLoyaltyToken",
+            "/v1/ledger/exchangePointToToken",
             [
                 body("account").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
                 body("signature")
                     .exists()
                     .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.changeToLoyaltyToken.bind(this)
+            this.exchangePointToToken.bind(this)
         );
 
         // 사용가능한 포인트로 전환
@@ -213,12 +213,12 @@ export class LedgerRouter {
     }
 
     /**
-     * 포인트의 종류를 선택한다.
-     * POST /v1/ledger/changeToLoyaltyToken
+     * 포인트를 토큰으로 변환한다.
+     * POST /v1/ledger/exchangePointToToken
      * @private
      */
-    private async changeToLoyaltyToken(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/ledger/changeToLoyaltyToken ${req.ip}:${JSON.stringify(req.body)}`);
+    private async exchangePointToToken(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/ledger/exchangePointToToken ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -228,23 +228,31 @@ export class LedgerRouter {
         const signerItem = await this.getRelaySigner();
         try {
             const account: string = String(req.body.account).trim(); // 구매자의 주소
+            const amount: BigNumber = BigNumber.from(req.body.amount);
             const signature: string = String(req.body.signature).trim(); // 서명
 
             // 서명검증
-            const userNonce = await this.contractManager.sideLedgerContract.nonceOf(account);
-            if (!ContractUtils.verifyLoyaltyType(account, userNonce, signature, this.contractManager.sideChainId))
+            const nonce = await this.contractManager.sideLedgerContract.nonceOf(account);
+            const message = ContractUtils.getChangePointToTokenMessage(
+                account,
+                amount,
+                nonce,
+                this.contractManager.sideChainId
+            );
+
+            if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
 
             const tx = await this.contractManager.sideLoyaltyExchangerContract
                 .connect(signerItem.signer)
-                .changeToLoyaltyToken(account, signature);
+                .exchangePointToToken(account, amount, signature);
 
-            logger.http(`TxHash(changeToLoyaltyToken): ${tx.hash}`);
+            logger.http(`TxHash(exchangePointToToken): ${tx.hash}`);
             this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/ledger/changeToLoyaltyToken : ${msg.error.message}`);
+            logger.error(`POST /v1/ledger/exchangePointToToken : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
@@ -360,32 +368,18 @@ export class LedgerRouter {
                     account = realAccount;
                 }
             }
-            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
-            if (loyaltyType === ContractLoyaltyType.POINT) {
-                const balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
-                const value = BigNumber.from(balance);
-                this.metrics.add("success", 1);
-                return res.status(200).json(
-                    this.makeResponseData(0, {
-                        account,
-                        loyaltyType,
-                        point: { balance: balance.toString(), value: value.toString() },
-                        token: { balance: "0", value: "0" },
-                    })
-                );
-            } else {
-                const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
-                const value = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(balance);
-                this.metrics.add("success", 1);
-                return res.status(200).json(
-                    this.makeResponseData(0, {
-                        account,
-                        loyaltyType,
-                        point: { balance: "0", value: "0" },
-                        token: { balance: balance.toString(), value: value.toString() },
-                    })
-                );
-            }
+            const pointBalance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
+            const pointValue = BigNumber.from(pointBalance);
+            const tokenBalance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
+            const tokenValue = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(tokenBalance);
+            this.metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    account,
+                    point: { balance: pointBalance.toString(), value: pointValue.toString() },
+                    token: { balance: tokenBalance.toString(), value: tokenValue.toString() },
+                })
+            );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/ledger/balance/account/:account : ${msg.error.message}`);
@@ -417,38 +411,23 @@ export class LedgerRouter {
         try {
             const account: string = await this.contractManager.sidePhoneLinkerContract.toAddress(phoneHash);
             if (account !== AddressZero) {
-                const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
-                if (loyaltyType === ContractLoyaltyType.POINT) {
-                    const balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
-                    const value = BigNumber.from(balance);
-                    this.metrics.add("success", 1);
-                    return res.status(200).json(
-                        this.makeResponseData(0, {
-                            phone,
-                            phoneHash,
-                            account,
-                            loyaltyType,
-                            point: { balance: balance.toString(), value: value.toString() },
-                            token: { balance: "0", value: "0" },
-                        })
-                    );
-                } else {
-                    const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
-                    const value = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(balance);
-                    this.metrics.add("success", 1);
-                    return res.status(200).json(
-                        this.makeResponseData(0, {
-                            phone,
-                            phoneHash,
-                            account,
-                            loyaltyType,
-                            point: { balance: "0", value: "0" },
-                            token: { balance: balance.toString(), value: value.toString() },
-                        })
-                    );
-                }
+                const pointBalance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
+                const pointValue = BigNumber.from(pointBalance);
+                const tokenBalance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
+                const tokenValue = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
+                    tokenBalance
+                );
+                this.metrics.add("success", 1);
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        phone,
+                        phoneHash,
+                        account,
+                        point: { balance: pointBalance.toString(), value: pointValue.toString() },
+                        token: { balance: tokenBalance.toString(), value: tokenValue.toString() },
+                    })
+                );
             } else {
-                const loyaltyType = ContractLoyaltyType.POINT;
                 const balance = await this.contractManager.sideLedgerContract.unPayablePointBalanceOf(phoneHash);
                 const value = BigNumber.from(balance);
                 this.metrics.add("success", 1);
@@ -457,7 +436,6 @@ export class LedgerRouter {
                         phone,
                         phoneHash,
                         account,
-                        loyaltyType,
                         point: { balance: balance.toString(), value: value.toString() },
                         token: { balance: "0", value: "0" },
                     })
@@ -483,35 +461,22 @@ export class LedgerRouter {
         try {
             const account: string = await this.contractManager.sidePhoneLinkerContract.toAddress(phoneHash);
             if (account !== AddressZero) {
-                const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
-                if (loyaltyType === ContractLoyaltyType.POINT) {
-                    const balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
-                    const value = BigNumber.from(balance);
-                    this.metrics.add("success", 1);
-                    return res.status(200).json(
-                        this.makeResponseData(0, {
-                            account,
-                            loyaltyType,
-                            point: { balance: balance.toString(), value: value.toString() },
-                            token: { balance: "0", value: "0" },
-                        })
-                    );
-                } else {
-                    const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
-                    const value = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(balance);
-                    this.metrics.add("success", 1);
-                    return res.status(200).json(
-                        this.makeResponseData(0, {
-                            phoneHash,
-                            account,
-                            loyaltyType,
-                            point: { balance: "0", value: "0" },
-                            token: { balance: balance.toString(), value: value.toString() },
-                        })
-                    );
-                }
+                const pointBalance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
+                const pointValue = BigNumber.from(pointBalance);
+                const tokenBalance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
+                const tokenValue = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
+                    tokenBalance
+                );
+                this.metrics.add("success", 1);
+                return res.status(200).json(
+                    this.makeResponseData(0, {
+                        phoneHash,
+                        account,
+                        point: { balance: pointBalance.toString(), value: pointValue.toString() },
+                        token: { balance: tokenBalance.toString(), value: tokenValue.toString() },
+                    })
+                );
             } else {
-                const loyaltyType = ContractLoyaltyType.POINT;
                 const balance = await this.contractManager.sideLedgerContract.unPayablePointBalanceOf(phoneHash);
                 const value = BigNumber.from(balance);
                 this.metrics.add("success", 1);
@@ -519,7 +484,6 @@ export class LedgerRouter {
                     this.makeResponseData(0, {
                         phoneHash,
                         account,
-                        loyaltyType,
                         point: { balance: balance.toString(), value: value.toString() },
                         token: { balance: "0", value: "0" },
                     })
