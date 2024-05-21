@@ -287,7 +287,7 @@
 
 #### - HTTP Request
 
-`GET /v1/payment/shop/info`
+`GET /v1/shop/info/:shopId`
 
 #### - 입력 파라메타들
 
@@ -317,7 +317,7 @@
 
 #### - HTTP Request
 
-`GET /v1/payment/shop/withdrawal`
+`GET /v1/shop/withdrawal/:shopId`
 
 #### - 입력 파라메타들
 
@@ -385,7 +385,7 @@
 
 #### - HTTP Request
 
-`GET /v1/payment/convert/currency`
+`GET /v1/currency/convert`
 
 #### - 입력 파라메타들
 
