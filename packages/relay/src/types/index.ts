@@ -279,10 +279,8 @@ export interface IStorePurchaseData {
     timestamp: bigint;
     waiting: bigint;
     account: string;
-    loyaltyType: number;
     currency: string;
     providePoint: BigNumber;
-    provideToken: BigNumber;
     provideValue: BigNumber;
     shopId: string;
     shopCurrency: string;
@@ -292,10 +290,8 @@ export interface IStorePurchaseData {
 export interface IToBeProvideOfUser {
     account: string;
     timestamp: bigint;
-    loyaltyType: number;
     currency: string;
     providePoint: BigNumber;
-    provideToken: BigNumber;
     provideValue: BigNumber;
     purchaseId: string;
     shopId: string;

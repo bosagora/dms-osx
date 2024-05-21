@@ -705,10 +705,8 @@ export class RelayStorage extends Storage {
                 timestamp: data.timestamp.toString(),
                 waiting: data.waiting.toString(),
                 account: data.account.toLowerCase(),
-                loyaltyType: data.loyaltyType,
                 currency: data.currency,
                 providePoint: data.providePoint.div(GWI_UNIT).toString(),
-                provideToken: data.provideToken.div(GWI_UNIT).toString(),
                 provideValue: data.provideValue.div(GWI_UNIT).toString(),
                 shopId: data.shopId.toLowerCase(),
                 shopCurrency: data.shopCurrency,
@@ -735,10 +733,8 @@ export class RelayStorage extends Storage {
                                 timestamp: BigInt(m.timestamp.toString()),
                                 waiting: BigInt(m.waiting.toString()),
                                 account: m.account,
-                                loyaltyType: m.loyaltyType,
                                 currency: m.currency,
                                 providePoint: BigNumber.from(m.providePoint.toString()).mul(GWI_UNIT),
-                                provideToken: BigNumber.from(m.provideToken.toString()).mul(GWI_UNIT),
                                 provideValue: BigNumber.from(m.provideValue.toString()).mul(GWI_UNIT),
                                 shopId: m.shopId,
                                 shopCurrency: m.shopCurrency,
@@ -790,10 +786,8 @@ export class RelayStorage extends Storage {
                                 account: m.account,
                                 timestamp: BigInt(m.timestamp.toString()),
                                 waiting: BigInt(m.waiting.toString()),
-                                loyaltyType: m.loyaltyType,
                                 currency: m.currency,
                                 providePoint: BigNumber.from(m.providePoint.toString()).mul(GWI_UNIT),
-                                provideToken: BigNumber.from(m.provideToken.toString()).mul(GWI_UNIT),
                                 provideValue: BigNumber.from(m.provideValue.toString()).mul(GWI_UNIT),
                                 purchaseId: m.purchaseId,
                                 shopId: m.shopId,
@@ -815,7 +809,6 @@ export class RelayStorage extends Storage {
                     const m = result.rows[0];
                     resolve({
                         providePoint: BigNumber.from(m.providePoint.toString()).mul(GWI_UNIT),
-                        provideToken: BigNumber.from(m.provideToken.toString()).mul(GWI_UNIT),
                         provideValue: BigNumber.from(m.provideValue.toString()).mul(GWI_UNIT),
                     });
                 })

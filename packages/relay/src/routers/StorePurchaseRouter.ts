@@ -5,7 +5,7 @@ import { Metrics } from "../metrics/Metrics";
 import { WebService } from "../service/WebService";
 import { GraphStorage } from "../storage/GraphStorage";
 import { RelayStorage } from "../storage/RelayStorage";
-import { ContractLoyaltyType, GWI_UNIT, IStorePurchaseData, PHONE_NULL } from "../types";
+import { IStorePurchaseData, PHONE_NULL } from "../types";
 import { ResponseMessage } from "../utils/Errors";
 
 // tslint:disable-next-line:no-implicit-dependencies
@@ -152,10 +152,8 @@ export class StorePurchaseRouter {
                     timestamp: BigInt(String(req.body.timestamp).trim()),
                     waiting: BigInt(String(req.body.waiting).trim()),
                     account: String(req.body.account).trim(),
-                    loyaltyType: ContractLoyaltyType.POINT,
                     currency: String(req.body.currency).trim(),
                     providePoint: BigNumber.from(0),
-                    provideToken: BigNumber.from(0),
                     provideValue: BigNumber.from(loyaltyValue),
                     shopId: String(req.body.shopId).trim(),
                     shopCurrency: "",
@@ -177,19 +175,8 @@ export class StorePurchaseRouter {
                 }
 
                 if (purchaseData.account !== AddressZero) {
-                    purchaseData.loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(
-                        purchaseData.account
-                    );
-                    if (purchaseData.loyaltyType === ContractLoyaltyType.POINT) {
-                        purchaseData.providePoint = BigNumber.from(loyaltyPoint);
-                        purchaseData.provideToken = BigNumber.from(0);
-                        purchaseData.provideValue = BigNumber.from(loyaltyValue);
-                    } else {
-                        purchaseData.providePoint = BigNumber.from(0);
-                        purchaseData.provideToken =
-                            await this.contractManager.sideCurrencyRateContract.convertPointToToken(loyaltyPoint);
-                        purchaseData.provideValue = BigNumber.from(loyaltyValue);
-                    }
+                    purchaseData.providePoint = BigNumber.from(loyaltyPoint);
+                    purchaseData.provideValue = BigNumber.from(loyaltyValue);
                     const shopInfo = await this.contractManager.sideShopContract.shopOf(purchaseData.shopId);
                     purchaseData.shopCurrency = shopInfo.currency;
                     purchaseData.shopProvidedAmount =
@@ -264,10 +251,8 @@ export class StorePurchaseRouter {
                         return {
                             account: m.account,
                             timestamp: m.timestamp.toString(),
-                            loyaltyType: m.loyaltyType,
                             currency: m.currency,
                             providePoint: m.providePoint.toString(),
-                            provideToken: m.provideToken.toString(),
                             provideValue: m.provideValue.toString(),
                             purchaseId: m.purchaseId,
                             shopId: m.shopId,
@@ -298,14 +283,11 @@ export class StorePurchaseRouter {
         try {
             const account: string = String(req.query.account).trim();
             const data = await this.storage.getTotalToBeProvideOfUser(account);
-            const loyaltyType = await this.contractManager.sideLedgerContract.loyaltyTypeOf(account);
             this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
                     account,
-                    loyaltyType,
                     providePoint: data.providePoint.toString(),
-                    provideToken: data.provideToken.toString(),
                     provideValue: data.provideValue.toString(),
                 })
             );

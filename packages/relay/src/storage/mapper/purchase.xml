@@ -9,10 +9,8 @@
                 "timestamp"                 ,
                 "waiting"                   ,
                 "account"                   ,
-                "loyaltyType"               ,
                 "currency"                  ,
                 "providePoint"              ,
-                "provideToken"              ,
                 "provideValue"              ,
                 "shopId"                    ,
                 "shopCurrency"              ,
@@ -24,10 +22,8 @@
                 #{timestamp}                ,
                 #{waiting}                  ,
                 #{account}                  ,
-                #{loyaltyType}              ,
                 #{currency}                 ,
                 #{providePoint}             ,
-                #{provideToken}             ,
                 #{provideValue}             ,
                 #{shopId}                   ,
                 #{shopCurrency}             ,
@@ -61,9 +57,7 @@
             "waiting",
             "account",
             "currency",
-            "loyaltyType",
             "providePoint",
-            "provideToken",
             "provideValue",
             "shopId"
         FROM purchases
@@ -75,7 +69,6 @@
     <select id="getTotalToBeProvideOfUser">
         SELECT
             COALESCE(SUM("providePoint"), 0) as "providePoint",
-            COALESCE(SUM("provideToken"), 0) as "provideToken",
             COALESCE(SUM("provideValue"), 0) as "provideValue"
         FROM purchases
         WHERE
