@@ -111,17 +111,21 @@ describe("Test of LoyaltyBridge", function () {
         const balance2 = await contractManager.sideLedgerContract.tokenBalanceOf(account.address);
 
         const nonce = await contractManager.mainTokenContract.nonceOf(account.address);
+        const expiry = ContractUtils.getTimeStamp() * 600;
         const message = await ContractUtils.getTransferMessage(
+            contractManager.mainChainId,
+            contractManager.mainTokenContract.address,
             account.address,
             contractManager.mainLoyaltyBridgeContract.address,
             amount,
             nonce,
-            contractManager.mainChainId
+            expiry
         );
         const signature = await ContractUtils.signMessage(account, message);
         const response = await client.post(URI(serverURL).directory("/v1/ledger/deposit_via_bridge").toString(), {
             account: account.address,
             amount: amount.toString(),
+            expiry,
             signature,
         });
 
@@ -172,17 +176,21 @@ describe("Test of LoyaltyBridge", function () {
         const balance2 = await contractManager.sideLedgerContract.tokenBalanceOf(account.address);
 
         const nonce = await contractManager.sideLedgerContract.nonceOf(account.address);
+        const expiry = ContractUtils.getTimeStamp() * 600;
         const message = await ContractUtils.getTransferMessage(
+            contractManager.sideChainId,
+            contractManager.sideTokenContract.address,
             account.address,
             contractManager.sideLoyaltyBridgeContract.address,
             amount,
             nonce,
-            contractManager.sideChainId
+            expiry
         );
         const signature = await ContractUtils.signMessage(account, message);
         const response = await client.post(URI(serverURL).directory("/v1/ledger/withdraw_via_bridge").toString(), {
             account: account.address,
             amount: amount.toString(),
+            expiry,
             signature,
         });
 

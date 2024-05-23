@@ -169,6 +169,7 @@ export class LedgerRouter {
                 body("amount").exists().custom(Validation.isAmount),
                 body("from").exists().trim().isEthereumAddress(),
                 body("to").exists().trim().isEthereumAddress(),
+                body("expiry").exists().isNumeric(),
                 body("signature")
                     .exists()
                     .trim()
@@ -182,6 +183,7 @@ export class LedgerRouter {
             [
                 body("account").exists().trim().isEthereumAddress(),
                 body("amount").exists().custom(Validation.isAmount),
+                body("expiry").exists().isNumeric(),
                 body("signature")
                     .exists()
                     .trim()
@@ -195,6 +197,7 @@ export class LedgerRouter {
             [
                 body("account").exists().trim().isEthereumAddress(),
                 body("amount").exists().custom(Validation.isAmount),
+                body("expiry").exists().isNumeric(),
                 body("signature")
                     .exists()
                     .trim()
@@ -566,18 +569,27 @@ export class LedgerRouter {
             const from: string = String(req.body.from).trim();
             const to: string = String(req.body.to).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
             const signature: string = String(req.body.signature).trim();
 
             const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(from);
             if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
 
             const nonce = await this.contractManager.sideLedgerContract.nonceOf(from);
-            const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.sideChainId);
+            const message = ContractUtils.getTransferMessage(
+                this.contractManager.sideChainId,
+                this.contractManager.sideLoyaltyTransferContract.address,
+                from,
+                to,
+                amount,
+                nonce,
+                expiry
+            );
             if (!ContractUtils.verifyMessage(from, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
             const tx = await this.contractManager.sideLoyaltyTransferContract
                 .connect(signerItem.signer)
-                .transferToken(from, to, amount, signature);
+                .transferToken(from, to, amount, expiry, signature);
             this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { from, to, amount, txHash: tx.hash }));
         } catch (error: any) {
@@ -616,6 +628,7 @@ export class LedgerRouter {
         try {
             const account: string = String(req.body.account).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
             const signature: string = String(req.body.signature).trim();
 
             const balance = await this.contractManager.sideLedgerContract.tokenBalanceOf(account);
@@ -623,11 +636,13 @@ export class LedgerRouter {
 
             const nonce = await this.contractManager.sideLedgerContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
+                this.contractManager.sideChainId,
+                this.contractManager.sideTokenContract.address,
                 account,
                 this.contractManager.sideLoyaltyBridgeContract.address,
                 amount,
                 nonce,
-                this.contractManager.sideChainId
+                expiry
             );
             if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
@@ -639,7 +654,7 @@ export class LedgerRouter {
             const depositId = await this.getDepositIdSideChain(account);
             const tx = await this.contractManager.sideLoyaltyBridgeContract
                 .connect(signerItem.signer)
-                .depositToBridge(tokenId, depositId, account, amount, signature);
+                .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
 
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {
@@ -664,6 +679,7 @@ export class LedgerRouter {
         try {
             const account: string = String(req.body.account).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
             const signature: string = String(req.body.signature).trim();
 
             const balance = await this.contractManager.mainTokenContract.balanceOf(account);
@@ -671,11 +687,13 @@ export class LedgerRouter {
 
             const nonce = await this.contractManager.mainTokenContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
+                this.contractManager.mainChainId,
+                this.contractManager.mainTokenContract.address,
                 account,
                 this.contractManager.mainLoyaltyBridgeContract.address,
                 amount,
                 nonce,
-                this.contractManager.mainChainId
+                expiry
             );
             if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
@@ -687,7 +705,7 @@ export class LedgerRouter {
             const depositId = await this.getDepositIdMainChain(account);
             const tx = await this.contractManager.mainLoyaltyBridgeContract
                 .connect(signerItem.signer)
-                .depositToBridge(tokenId, depositId, account, amount, signature);
+                .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
 
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {

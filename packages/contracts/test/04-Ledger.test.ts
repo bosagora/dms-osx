@@ -1,7 +1,5 @@
 import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
 import "@openzeppelin/hardhat-upgrades";
-import { waffle } from "hardhat";
 
 import { Amount } from "../src/utils/Amount";
 import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
@@ -26,6 +24,8 @@ import { BigNumber, Wallet } from "ethers";
 
 import { AddressZero } from "@ethersproject/constants";
 import { Deployments } from "./helper/Deployments";
+
+import * as hre from "hardhat";
 
 chai.use(solidity);
 
@@ -469,7 +469,10 @@ describe("Test for Ledger", () => {
                     .to.emit(linkContract, "AddedRequestItem")
                     .withArgs(requestId, hash, deployments.accounts.users[3].address);
                 await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+                await linkContract.connect(deployments.accounts.linkValidators[1]).voteRequest(requestId);
                 await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
+                expect(await linkContract.toAddress(hash)).to.be.equal(deployments.accounts.users[3].address);
+                expect(await linkContract.toPhone(deployments.accounts.users[3].address)).to.be.equal(hash);
             });
 
             it("Save Purchase Data (user: 3, point type : 0) - phone and address are registered (user: 3, point type : 0)", async () => {
@@ -740,6 +743,7 @@ describe("Test for Ledger", () => {
                     .to.emit(linkContract, "AddedRequestItem")
                     .withArgs(requestId, hash, deployments.accounts.users[4].address);
                 await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+                await linkContract.connect(deployments.accounts.linkValidators[1]).voteRequest(requestId);
                 await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
             });
 
@@ -837,7 +841,7 @@ describe("Test for Ledger", () => {
                 const unPayableAmount = await ledgerContract.unPayablePointBalanceOf(phoneHash);
                 await expect(
                     exchangerContract
-                        .connect(deployments.accounts.users[userIndex].connect(waffle.provider))
+                        .connect(deployments.accounts.users[userIndex].connect(hre.ethers.provider))
                         .changeToPayablePoint(phoneHash, deployments.accounts.users[userIndex].address, signature)
                 )
                     .to.emit(exchangerContract, "ChangedToPayablePoint")
@@ -931,6 +935,7 @@ describe("Test for Ledger", () => {
                     .to.emit(linkContract, "AddedRequestItem")
                     .withArgs(requestId, hash, deployments.accounts.users[userIndex].address);
                 await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+                await linkContract.connect(deployments.accounts.linkValidators[1]).voteRequest(requestId);
                 await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
             });
 
@@ -1699,7 +1704,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
-                        .connect(shopData[shopIndex].wallet.connect(waffle.provider))
+                        .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
                         .openWithdrawal(shop.shopId, amount2, shopData[shopIndex].wallet.address, signature)
                 )
                     .to.emit(shopContract, "OpenedWithdrawal")
@@ -1722,7 +1727,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
-                        .connect(shopData[shopIndex].wallet.connect(waffle.provider))
+                        .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
                         .closeWithdrawal(shop.shopId, shopData[shopIndex].wallet.address, signature)
                 )
                     .to.emit(shopContract, "ClosedWithdrawal")
@@ -2286,7 +2291,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
-                        .connect(shopData[shopIndex].wallet.connect(waffle.provider))
+                        .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
                         .openWithdrawal(shop.shopId, amount2, shopData[shopIndex].wallet.address, signature)
                 )
                     .to.emit(shopContract, "OpenedWithdrawal")
@@ -2310,7 +2315,7 @@ describe("Test for Ledger", () => {
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
-                        .connect(shopData[shopIndex].wallet.connect(waffle.provider))
+                        .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
                         .closeWithdrawal(shop.shopId, shopData[shopIndex].wallet.address, signature)
                 )
                     .to.emit(shopContract, "ClosedWithdrawal")
@@ -2394,11 +2399,15 @@ describe("Test for Ledger", () => {
         it("Transfer token - foundation account ", async () => {
             const transferAmount = amount.value;
             const nonce = await ledgerContract.nonceOf(deployments.accounts.foundation.address);
+            const expiry = ContractUtils.getTimeStamp() + 3600;
             const message = await ContractUtils.getTransferMessage(
+                hre.ethers.provider.network.chainId,
+                transferContract.address,
                 deployments.accounts.foundation.address,
                 deployments.accounts.users[1].address,
                 transferAmount,
-                nonce
+                nonce,
+                expiry
             );
             const signature = ContractUtils.signMessage(deployments.accounts.foundation, message);
             await expect(
@@ -2406,6 +2415,7 @@ describe("Test for Ledger", () => {
                     deployments.accounts.foundation.address,
                     deployments.accounts.users[1].address,
                     transferAmount,
+                    expiry,
                     signature
                 )
             ).to.revertedWith("1051");
@@ -2414,11 +2424,15 @@ describe("Test for Ledger", () => {
         it("Transfer token - foundation account ", async () => {
             const transferAmount = amount.value;
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+            const expiry = ContractUtils.getTimeStamp() + 3600;
             const message = await ContractUtils.getTransferMessage(
+                hre.ethers.provider.network.chainId,
+                transferContract.address,
                 deployments.accounts.users[0].address,
                 deployments.accounts.foundation.address,
                 transferAmount,
-                nonce
+                nonce,
+                expiry
             );
             const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
@@ -2426,19 +2440,25 @@ describe("Test for Ledger", () => {
                     deployments.accounts.users[0].address,
                     deployments.accounts.foundation.address,
                     transferAmount,
+                    expiry,
                     signature
                 )
             ).to.revertedWith("1052");
         });
 
         it("Transfer token - Insufficient balance", async () => {
-            const transferAmount = amount.value.mul(2);
+            const fromBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
+            const transferAmount = fromBalance.mul(2);
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+            const expiry = ContractUtils.getTimeStamp() + 3600;
             const message = await ContractUtils.getTransferMessage(
+                hre.ethers.provider.network.chainId,
+                transferContract.address,
                 deployments.accounts.users[0].address,
                 deployments.accounts.users[1].address,
                 transferAmount,
-                nonce
+                nonce,
+                expiry
             );
             const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
@@ -2446,6 +2466,7 @@ describe("Test for Ledger", () => {
                     deployments.accounts.users[0].address,
                     deployments.accounts.users[1].address,
                     transferAmount,
+                    expiry,
                     signature
                 )
             ).to.revertedWith("1511");
@@ -2457,11 +2478,15 @@ describe("Test for Ledger", () => {
             const oldTokenBalance1 = await ledgerContract.tokenBalanceOf(deployments.accounts.users[1].address);
             const transferAmount = oldTokenBalance0.sub(fee);
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+            const expiry = ContractUtils.getTimeStamp() + 3600;
             const message = await ContractUtils.getTransferMessage(
+                hre.ethers.provider.network.chainId,
+                transferContract.address,
                 deployments.accounts.users[0].address,
                 deployments.accounts.users[1].address,
                 transferAmount,
-                nonce
+                nonce,
+                expiry
             );
             const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
@@ -2469,6 +2494,7 @@ describe("Test for Ledger", () => {
                     deployments.accounts.users[0].address,
                     deployments.accounts.users[1].address,
                     transferAmount,
+                    expiry,
                     signature
                 )
             )
@@ -2646,6 +2672,7 @@ describe("Test for Ledger", () => {
                 .to.emit(linkContract, "AddedRequestItem")
                 .withArgs(requestId, hash, deployments.accounts.users[userIndex].address);
             await linkContract.connect(deployments.accounts.linkValidators[0]).voteRequest(requestId);
+            await linkContract.connect(deployments.accounts.linkValidators[1]).voteRequest(requestId);
             await linkContract.connect(deployments.accounts.linkValidators[0]).countVote(requestId);
         });
 

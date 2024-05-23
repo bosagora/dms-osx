@@ -26,6 +26,9 @@ import {
     Validator,
 } from "../../typechain-types";
 
+// tslint:disable-next-line:no-duplicate-imports
+import * as hre from "hardhat";
+
 interface IShopData {
     shopId: string;
     name: string;
@@ -141,8 +144,8 @@ export class Deployments {
             fee,
             txFee,
             validators: [validator01, validator02, validator03],
-            linkValidators: [bridgeValidator1],
-            bridgeValidators: [validator04, validator05, validator06],
+            linkValidators: [linkValidator1, linkValidator2, linkValidator3],
+            bridgeValidators: [bridgeValidator1, bridgeValidator2, bridgeValidator3],
             certifiers: [
                 certifier01,
                 certifier02,
@@ -627,9 +630,18 @@ async function deployBridge(accounts: IAccount, deployment: Deployments) {
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(1_000_000_000, 18).value;
         const nonce = await tokenContract.nonceOf(accounts.owner.address);
-        const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount, nonce);
+        const expiry = ContractUtils.getTimeStamp() + 3600;
+        const message = ContractUtils.getTransferMessage(
+            hre.ethers.provider.network.chainId,
+            tokenContract.address,
+            accounts.owner.address,
+            contract.address,
+            assetAmount,
+            nonce,
+            expiry
+        );
         const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, signature);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, expiry, signature);
         console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
         await tx1.wait();
     }
@@ -820,9 +832,18 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         const assetAmount = Amount.make(1_000_000_000, 18).value;
         const nonce = await tokenContract.nonceOf(accounts.owner.address);
-        const message = ContractUtils.getTransferMessage(accounts.owner.address, contract.address, assetAmount, nonce);
+        const expiry = ContractUtils.getTimeStamp() + 3600;
+        const message = ContractUtils.getTransferMessage(
+            hre.ethers.provider.network.chainId,
+            tokenContract.address,
+            accounts.owner.address,
+            contract.address,
+            assetAmount,
+            nonce,
+            expiry
+        );
         const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx22 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, signature);
+        const tx22 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, expiry, signature);
         console.log(`Deposit liquidity token (tx: ${tx22.hash})...`);
         await tx22.wait();
     }

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.2;
 
 import "loyalty-tokens/contracts/BIP20/IBIP20DelegatedTransfer.sol";
-import "del-osx-artifacts/contracts/interfaces/IPhoneLinkCollection.sol";
+import "../interfaces/IPhoneLinkCollection.sol";
 
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/ILedger.sol";

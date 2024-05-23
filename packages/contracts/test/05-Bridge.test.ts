@@ -20,13 +20,14 @@ import {
     TestLYT,
     Validator,
 } from "../typechain-types";
+import { Deployments } from "./helper/Deployments";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";
 
 import { Wallet } from "ethers";
 
-import { Deployments } from "./helper/Deployments";
+import * as hre from "hardhat";
 
 chai.use(solidity);
 
@@ -98,18 +99,22 @@ describe("Test for Ledger", () => {
         const oldLiquidity = await tokenContract.balanceOf(bridgeContract.address);
         const oldTokenBalance = await tokenContract.balanceOf(deployments.accounts.users[0].address);
         const nonce = await tokenContract.nonceOf(deployments.accounts.users[0].address);
+        const expiry = ContractUtils.getTimeStamp() + 3600;
         const message = ContractUtils.getTransferMessage(
+            hre.ethers.provider.network.chainId,
+            tokenContract.address,
             deployments.accounts.users[0].address,
             bridgeContract.address,
             amount,
-            nonce
+            nonce,
+            expiry
         );
         depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
         await expect(
             bridgeContract
                 .connect(deployments.accounts.certifiers[0])
-                .depositToBridge(tokenId, depositId, deployments.accounts.users[0].address, amount, signature)
+                .depositToBridge(tokenId, depositId, deployments.accounts.users[0].address, amount, expiry, signature)
         )
             .to.emit(bridgeContract, "BridgeDeposited")
             .withNamedArgs({
@@ -160,18 +165,22 @@ describe("Test for Ledger", () => {
         const oldTokenBalance = await ledgerContract.tokenBalanceOf(deployments.accounts.users[0].address);
 
         const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
+        const expiry = ContractUtils.getTimeStamp() + 3600;
         const message = ContractUtils.getTransferMessage(
+            hre.ethers.provider.network.chainId,
+            tokenContract.address,
             deployments.accounts.users[0].address,
             loyaltyBridgeContract.address,
             amount,
-            nonce
+            nonce,
+            expiry
         );
         depositId = ContractUtils.getRandomId(deployments.accounts.users[0].address);
         const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
         await expect(
             loyaltyBridgeContract
                 .connect(deployments.accounts.certifiers[0])
-                .depositToBridge(tokenId, depositId, deployments.accounts.users[0].address, amount, signature)
+                .depositToBridge(tokenId, depositId, deployments.accounts.users[0].address, amount, expiry, signature)
         )
             .to.emit(loyaltyBridgeContract, "BridgeDeposited")
             .withNamedArgs({

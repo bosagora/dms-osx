@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import "del-osx-artifacts/contracts/interfaces/IPhoneLinkCollection.sol";
+import "../interfaces/IPhoneLinkCollection.sol";
 
 import "../interfaces/IValidator.sol";
 import "../interfaces/ILedger.sol";

@@ -612,15 +612,17 @@ export class ContractUtils {
     }
 
     public static getTransferMessage(
+        chainId: BigNumberish,
+        tokenAddress: string,
         from: string,
         to: string,
         amount: BigNumberish,
         nonce: BigNumberish,
-        chainId: BigNumberish
+        expiry: number
     ): Uint8Array {
         const encodedResult = defaultAbiCoder.encode(
-            ["address", "address", "uint256", "uint256", "uint256"],
-            [from, to, amount, chainId, nonce]
+            ["uint256", "address", "address", "address", "uint256", "uint256", "uint256"],
+            [chainId, tokenAddress, from, to, amount, nonce, expiry]
         );
         return arrayify(keccak256(encodedResult));
     }

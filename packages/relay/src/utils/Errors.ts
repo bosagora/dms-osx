@@ -36,6 +36,7 @@ export class ResponseMessage {
         ["1502", "Unregistered phone number"],
         ["1503", "Does not match registered wallet address"],
         ["1505", "Invalid secret key"],
+        ["1506", "Expired signature"],
         ["1510", "Insufficient foundation balance"],
         ["1511", "Insufficient balance"],
         ["1512", "Not allowed deposit"],

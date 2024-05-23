@@ -127,18 +127,22 @@ describe("Test of LoyaltyTransfer", function () {
         const fee = await contractManager.sideLoyaltyTransferContract.getFee();
         const amount = Amount.make(500, 18).value;
         const nonce = await contractManager.sideLedgerContract.nonceOf(source.address);
+        const expiry = ContractUtils.getTimeStamp() * 600;
         const message = await ContractUtils.getTransferMessage(
+            contractManager.sideChainId,
+            contractManager.sideLoyaltyTransferContract.address,
             source.address,
             target.address,
             amount,
             nonce,
-            contractManager.sideChainId
+            expiry
         );
         const signature = await ContractUtils.signMessage(source, message);
         const response = await client.post(URI(serverURL).directory("/v1/ledger/transfer").toString(), {
             from: source.address,
             to: target.address,
             amount: amount.toString(),
+            expiry,
             signature,
         });
 

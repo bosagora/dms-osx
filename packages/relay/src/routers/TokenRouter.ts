@@ -114,6 +114,7 @@ export class TokenRouter {
                 body("amount").exists().custom(Validation.isAmount),
                 body("from").exists().trim().isEthereumAddress(),
                 body("to").exists().trim().isEthereumAddress(),
+                body("expiry").exists().isNumeric(),
                 body("signature")
                     .exists()
                     .trim()
@@ -127,6 +128,7 @@ export class TokenRouter {
             [
                 body("amount").exists().custom(Validation.isAmount),
                 body("from").exists().trim().isEthereumAddress(),
+                body("expiry").exists().isNumeric(),
                 body("to").exists().trim().isEthereumAddress(),
                 body("signature")
                     .exists()
@@ -222,17 +224,26 @@ export class TokenRouter {
             const from: string = String(req.body.from).trim();
             const to: string = String(req.body.to).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
             const signature: string = String(req.body.signature).trim();
             const balance = await this.contractManager.mainTokenContract.balanceOf(from);
             if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
 
             const nonce = await this.contractManager.mainTokenContract.nonceOf(from);
-            const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.mainChainId);
+            const message = ContractUtils.getTransferMessage(
+                this.contractManager.mainChainId,
+                this.contractManager.mainTokenContract.address,
+                from,
+                to,
+                amount,
+                nonce,
+                expiry
+            );
             if (!ContractUtils.verifyMessage(from, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
             const tx = await this.contractManager.mainTokenContract
                 .connect(signerItem.signer)
-                .delegatedTransfer(from, to, amount, signature);
+                .delegatedTransfer(from, to, amount, expiry, signature);
             this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { from, to, amount, txHash: tx.hash }));
         } catch (error: any) {
@@ -258,17 +269,26 @@ export class TokenRouter {
             const from: string = String(req.body.from).trim();
             const to: string = String(req.body.to).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
             const signature: string = String(req.body.signature).trim();
             const balance = await this.contractManager.sideTokenContract.balanceOf(from);
             if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
 
             const nonce = await this.contractManager.sideTokenContract.nonceOf(from);
-            const message = ContractUtils.getTransferMessage(from, to, amount, nonce, this.contractManager.sideChainId);
+            const message = ContractUtils.getTransferMessage(
+                this.contractManager.sideChainId,
+                this.contractManager.sideTokenContract.address,
+                from,
+                to,
+                amount,
+                nonce,
+                expiry
+            );
             if (!ContractUtils.verifyMessage(from, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
             const tx = await this.contractManager.sideTokenContract
                 .connect(signerItem.signer)
-                .delegatedTransfer(from, to, amount, signature);
+                .delegatedTransfer(from, to, amount, expiry, signature);
             this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { from, to, amount, txHash: tx.hash }));
         } catch (error: any) {

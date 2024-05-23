@@ -10,9 +10,9 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import "loyalty-tokens/contracts/BIP20/BIP20DelegatedTransfer.sol";
 
-import "dms-bridge-contracts/contracts/interfaces/IBridge.sol";
-import "dms-bridge-contracts/contracts/interfaces/IBridgeValidator.sol";
-import "dms-bridge-contracts/contracts/lib/BridgeLib.sol";
+import "dms-bridge-contracts-v2/contracts/interfaces/IBridge.sol";
+import "dms-bridge-contracts-v2/contracts/interfaces/IBridgeValidator.sol";
+import "dms-bridge-contracts-v2/contracts/lib/BridgeLib.sol";
 
 import "../interfaces/ILedger.sol";
 import "./LoyaltyBridgeStorage.sol";
@@ -81,14 +81,25 @@ contract LoyaltyBridge is LoyaltyBridgeStorage, Initializable, OwnableUpgradeabl
         bytes32 _depositId,
         address _account,
         uint256 _amount,
+        uint256 _expiry,
         bytes calldata _signature
     ) external payable override notExistDeposit(_depositId) {
         require(_tokenId == tokenId, "1713");
         require(_account != foundationAccount, "1052");
+
         bytes32 dataHash = keccak256(
-            abi.encode(_account, address(this), _amount, block.chainid, ledgerContract.nonceOf(_account))
+            abi.encode(
+                block.chainid,
+                address(tokenContract),
+                _account,
+                address(this),
+                _amount,
+                ledgerContract.nonceOf(_account),
+                _expiry
+            )
         );
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
+        require(_expiry > block.timestamp, "1506");
         require(ledgerContract.tokenBalanceOf(_account) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
         require(_amount > fee * 2, "1031");

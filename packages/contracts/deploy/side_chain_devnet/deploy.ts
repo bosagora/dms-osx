@@ -32,14 +32,9 @@ import * as hre from "hardhat";
 
 const network = "side_chain_devnet";
 
-export const PHONE_LINK_COLLECTION_ADDRESSES: { [key: string]: string } = {
-    main_chain_devnet: "0xaE7018CaF086EB2Ca62eAA7b91B61dDA6b046F70",
-    side_chain_devnet: "0xaE7018CaF086EB2Ca62eAA7b91B61dDA6b046F70",
-};
-
 export const MULTI_SIG_WALLET_ADDRESSES: { [key: string]: string } = {
-    main_chain_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
-    side_chain_devnet: "0x6d9493FB6D8c8bD3534a3E1F4163921161BEf187",
+    main_chain_devnet: "0x580f0F058D1eD4A317FF4Ce2668Ae25fbF21A2d9",
+    side_chain_devnet: "0x580f0F058D1eD4A317FF4Ce2668Ae25fbF21A2d9",
 };
 
 export const LOYALTY_TOKEN_ADDRESSES: { [key: string]: string } = {
@@ -176,9 +171,6 @@ class Deployments {
     }
 
     public async attachPreviousContracts() {
-        this.PHONE_LINK_COLLECTION_CONTRACT = (await hre.ethers.getContractFactory("PhoneLinkCollection")).attach(
-            PHONE_LINK_COLLECTION_ADDRESSES[network]
-        ) as PhoneLinkCollection;
         this.MULTI_SIG_WALLET_CONTRACT = (await hre.ethers.getContractFactory("MultiSigWallet")).attach(
             MULTI_SIG_WALLET_ADDRESSES[network]
         ) as MultiSigWallet;
@@ -196,9 +188,7 @@ class Deployments {
     }
 
     public getContract(name: string): BaseContract | undefined {
-        if (name === "PhoneLinkCollection") {
-            return this.PHONE_LINK_COLLECTION_CONTRACT;
-        } else if (name === "MultiSigWallet") {
+        if (name === "MultiSigWallet") {
             return this.MULTI_SIG_WALLET_CONTRACT;
         } else if (name === "LoyaltyToken") {
             return this.LOYALTY_TOKEN_CONTRACT;
@@ -212,9 +202,7 @@ class Deployments {
     }
 
     public getContractAddress(name: string): string | undefined {
-        if (name === "PhoneLinkCollection") {
-            return PHONE_LINK_COLLECTION_ADDRESSES[network];
-        } else if (name === "MultiSigWallet") {
+        if (name === "MultiSigWallet") {
             return MULTI_SIG_WALLET_ADDRESSES[network];
         } else if (name === "LoyaltyToken") {
             return LOYALTY_TOKEN_ADDRESSES[network];
@@ -289,7 +277,43 @@ async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployToken(accounts: IAccount, deployment: Deployments) {
+async function mintInitialSupplyToken(accounts: IAccount, deployment: Deployments) {
+    const contractName = "LoyaltyToken";
+
+    const contract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
+
+    const amount = BOACoin.make(10_000_000_000);
+
+    const encodedData = contract.interface.encodeFunctionData("mint", [amount.value]);
+    const wallet = deployment.getContract("MultiSigWallet") as MultiSigWallet;
+    const transactionId = await ContractUtils.getEventValueBigNumber(
+        await wallet
+            .connect(accounts.tokenOwners[0])
+            .submitTransaction("Mint", `Mint ${amount.toDisplayString()}`, contract.address, 0, encodedData),
+        wallet.interface,
+        "Submission",
+        "transactionId"
+    );
+
+    if (transactionId === undefined) {
+        console.error(`Failed to submit transaction for token mint`);
+    } else {
+        const executedTransactionId = await ContractUtils.getEventValueBigNumber(
+            await wallet.connect(accounts.tokenOwners[1]).confirmTransaction(transactionId),
+            wallet.interface,
+            "Execution",
+            "transactionId"
+        );
+
+        if (executedTransactionId === undefined || !transactionId.eq(executedTransactionId)) {
+            console.error(`Failed to confirm transaction for token mint`);
+        }
+    }
+
+    console.log(`Mint ${contractName} to ${wallet.address}`);
+}
+
+async function distributeToken(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyToken";
 
     const contract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
@@ -351,7 +375,7 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
             // await tx.wait();
         }
     }
-    console.log(`Deployed ${contractName} to ${contract.address}`);
+    console.log(`Distribute ${contractName}`);
 }
 
 async function deployValidator(accounts: IAccount, deployment: Deployments) {
@@ -864,15 +888,20 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
             const tokenContract = (await deployment.getContract("LoyaltyToken")) as LoyaltyToken;
             const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
             const nonce = await tokenContract.nonceOf(accounts.owner.address);
+            const expiry = ContractUtils.getTimeStamp() + 3600;
             const message = ContractUtils.getTransferMessage(
+                chainId,
+                tokenContract.address,
                 accounts.owner.address,
                 contract.address,
                 assetAmount2,
                 nonce,
-                chainId
+                expiry
             );
             const signature = await ContractUtils.signMessage(accounts.owner, message);
-            const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount2, signature);
+            const tx1 = await contract
+                .connect(accounts.owner)
+                .depositLiquidity(tokenId, assetAmount2, expiry, signature);
             console.log(`Deposit liquidity token (tx: ${tx1.hash})...`);
             // await tx1.wait();
         }
@@ -908,15 +937,18 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(500_000_000, 18).value;
         const nonce = await tokenContract.nonceOf(accounts.owner.address);
+        const expiry = ContractUtils.getTimeStamp() + 3600;
         const message = ContractUtils.getTransferMessage(
+            chainId,
+            tokenContract.address,
             accounts.owner.address,
             contract.address,
             assetAmount,
             nonce,
-            chainId
+            expiry
         );
         const signature = await ContractUtils.signMessage(accounts.owner, message);
-        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, signature);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, expiry, signature);
         console.log(`Deposit liquidity token to SideChainBridge (tx: ${tx1.hash})...`);
         // await tx1.wait();
     }
@@ -927,8 +959,9 @@ async function main() {
 
     await deployments.attachPreviousContracts();
 
-    // deployments.addDeployer(deployPhoneLink);
-    deployments.addDeployer(deployToken);
+    deployments.addDeployer(deployPhoneLink);
+    deployments.addDeployer(mintInitialSupplyToken);
+    deployments.addDeployer(distributeToken);
     deployments.addDeployer(deployValidator);
     deployments.addDeployer(deployCurrencyRate);
     deployments.addDeployer(deployLoyaltyBurner);

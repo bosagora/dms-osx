@@ -1,6 +1,6 @@
 {
-    "name": "dms-osx-artifacts",
-    "version": "2.14.0",
+    "name": "dms-contracts-v2",
+    "version": "2.0.0",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"
@@ -21,7 +21,8 @@
         "test:Shop": "hardhat test test/03-Shop.test.ts",
         "test:Ledger": "hardhat test test/04-Ledger.test.ts",
         "test:Bridge": "hardhat test test/05-Bridge.test.ts",
-        "test:ShopId": "hardhat test test/06-ShopId.test.ts"
+        "test:ShopId": "hardhat test test/06-ShopId.test.ts",
+        "test:PhoneLink": "hardhat test test/07-PhoneLink.test.ts"
     },
     "repository": {
         "type": "git",
@@ -37,9 +38,6 @@
         "@ethersproject/constants": "^5.7.0",
         "@nomiclabs/hardhat-ethers": "^2.2.3",
         "@nomiclabs/hardhat-waffle": "^2.0.2",
-        "@openzeppelin/contracts": "^4.9.5",
-        "@openzeppelin/contracts-upgradeable": "^4.9.5",
-        "@openzeppelin/hardhat-upgrades": "^1.28.0",
         "@typechain/ethers-v5": "^10.1.0",
         "@typechain/hardhat": "^6.1.2",
         "@types/chai": "^4.3.5",
@@ -50,10 +48,10 @@
         "chai-http": "^4.3.7",
         "dotenv": "^10.0.0",
         "ethereum-waffle": "^4.0.10",
-        "ethers": "5.7.0",
+        "ethers": "^5.7.0",
         "hardhat": "^2.12.7",
         "hardhat-gas-reporter": "^1.0.7",
-        "mocha": "10.1.0",
+        "mocha": "^10.1.0",
         "prettier": "^2.5.1",
         "prettier-plugin-solidity": "^1.1.1",
         "solhint": "^3.3.6",
@@ -66,9 +64,11 @@
         "typescript": "^4.5.5"
     },
     "dependencies": {
-        "del-osx-artifacts": "2.3.0",
-        "dms-bridge-contracts": "1.5.0",
-        "multisig-wallet-contracts": "1.1.0",
-        "loyalty-tokens": "1.1.0"
+        "@openzeppelin/contracts": "^4.9.5",
+        "@openzeppelin/contracts-upgradeable": "^4.9.5",
+        "@openzeppelin/hardhat-upgrades": "^1.28.0",
+        "dms-bridge-contracts-v2": "~2.0.0",
+        "loyalty-tokens": "~2.0.0",
+        "multisig-wallet-contracts": "~2.0.0"
     }
 }

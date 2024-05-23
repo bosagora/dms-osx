@@ -9,8 +9,8 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import "loyalty-tokens/contracts/BIP20/BIP20DelegatedTransfer.sol";
-import "dms-bridge-contracts/contracts/interfaces/IBridgeLiquidity.sol";
-import "dms-bridge-contracts/contracts/lib/BridgeLib.sol";
+import "dms-bridge-contracts-v2/contracts/interfaces/IBridgeLiquidity.sol";
+import "dms-bridge-contracts-v2/contracts/lib/BridgeLib.sol";
 
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/ILedger.sol";
@@ -383,12 +383,17 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
     }
 
     /// @notice 브리지를 위한 유동성 자금을 예치합니다.
-    function depositLiquidity(bytes32 _tokenId, uint256 _amount, bytes calldata _signature) external payable override {
+    function depositLiquidity(
+        bytes32 _tokenId,
+        uint256 _amount,
+        uint256 _expiry,
+        bytes calldata _signature
+    ) external payable override {
         require(_tokenId == tokenId, "1713");
         require(tokenContract.balanceOf(_msgSender()) >= _amount, "1511");
         require(_amount % 1 gwei == 0, "1030");
 
-        if (tokenContract.delegatedTransfer(_msgSender(), address(this), _amount, _signature)) {
+        if (tokenContract.delegatedTransfer(_msgSender(), address(this), _amount, _expiry, _signature)) {
             tokenBalances[bridgeAddress] += _amount;
             liquidity[_msgSender()] += _amount;
             emit DepositedLiquidity(_tokenId, _msgSender(), _amount, liquidity[_msgSender()]);

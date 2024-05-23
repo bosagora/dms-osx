@@ -2,22 +2,22 @@
 
 pragma solidity ^0.8.2;
 
-import "dms-osx-artifacts/contracts/controllers/LoyaltyBurner.sol";
-import "dms-osx-artifacts/contracts/controllers/LoyaltyConsumer.sol";
-import "dms-osx-artifacts/contracts/controllers/LoyaltyProvider.sol";
-import "dms-osx-artifacts/contracts/controllers/LoyaltyExchanger.sol";
-import "dms-osx-artifacts/contracts/controllers/LoyaltyTransfer.sol";
-import "dms-osx-artifacts/contracts/controllers/LoyaltyBridge.sol";
-import "dms-osx-artifacts/contracts/currency/CurrencyRate.sol";
-import "del-osx-artifacts/contracts/PhoneLinkCollection.sol";
-import "dms-osx-artifacts/contracts/ledger/Ledger.sol";
-import "dms-osx-artifacts/contracts/shop/Shop.sol";
-import "dms-osx-artifacts/contracts/validator/Validator.sol";
-import "dms-osx-artifacts/contracts/token/TestLYT.sol";
+import "dms-contracts-v2/contracts/controllers/LoyaltyBurner.sol";
+import "dms-contracts-v2/contracts/controllers/LoyaltyConsumer.sol";
+import "dms-contracts-v2/contracts/controllers/LoyaltyProvider.sol";
+import "dms-contracts-v2/contracts/controllers/LoyaltyExchanger.sol";
+import "dms-contracts-v2/contracts/controllers/LoyaltyTransfer.sol";
+import "dms-contracts-v2/contracts/controllers/LoyaltyBridge.sol";
+import "dms-contracts-v2/contracts/currency/CurrencyRate.sol";
+import "dms-contracts-v2/contracts/phone/PhoneLinkCollection.sol";
+import "dms-contracts-v2/contracts/ledger/Ledger.sol";
+import "dms-contracts-v2/contracts/shop/Shop.sol";
+import "dms-contracts-v2/contracts/validator/Validator.sol";
+import "dms-contracts-v2/contracts/token/TestLYT.sol";
 
 import "multisig-wallet-contracts/contracts/MultiSigWalletFactory.sol";
 import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
 import "loyalty-tokens/contracts/LYT.sol";
 
-import "dms-bridge-contracts/contracts/bridge/Bridge.sol";
-import "dms-bridge-contracts/contracts/bridge/BridgeValidator.sol";
+import "dms-bridge-contracts-v2/contracts/bridge/Bridge.sol";
+import "dms-bridge-contracts-v2/contracts/bridge/BridgeValidator.sol";

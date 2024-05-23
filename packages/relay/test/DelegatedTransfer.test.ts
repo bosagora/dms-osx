@@ -102,18 +102,22 @@ describe("Test of delegated transfer", function () {
         const balance1 = await contractManager.mainTokenContract.balanceOf(target.address);
         const amount = Amount.make(500, 18).value;
         const nonce = await contractManager.mainTokenContract.nonceOf(source.address);
+        const expiry = ContractUtils.getTimeStamp() * 600;
         const message = await ContractUtils.getTransferMessage(
+            contractManager.mainChainId,
+            contractManager.mainTokenContract.address,
             source.address,
             target.address,
             amount,
             nonce,
-            contractManager.sideChainId
+            expiry
         );
         const signature = await ContractUtils.signMessage(source, message);
         const response = await client.post(URI(serverURL).directory("/v1/token/main/transfer").toString(), {
             from: source.address,
             to: target.address,
             amount: amount.toString(),
+            expiry,
             signature,
         });
 
@@ -132,18 +136,22 @@ describe("Test of delegated transfer", function () {
         const balance1 = await contractManager.sideTokenContract.balanceOf(target.address);
         const amount = Amount.make(500, 18).value;
         const nonce = await contractManager.sideTokenContract.nonceOf(source.address);
+        const expiry = ContractUtils.getTimeStamp() * 600;
         const message = await ContractUtils.getTransferMessage(
+            contractManager.sideChainId,
+            contractManager.sideTokenContract.address,
             source.address,
             target.address,
             amount,
             nonce,
-            contractManager.sideChainId
+            expiry
         );
         const signature = await ContractUtils.signMessage(source, message);
         const response = await client.post(URI(serverURL).directory("/v1/token/side/transfer").toString(), {
             from: source.address,
             to: target.address,
             amount: amount.toString(),
+            expiry,
             signature,
         });
 

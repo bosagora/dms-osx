@@ -46,11 +46,20 @@ contract LoyaltyTransfer is LoyaltyTransferStorage, Initializable, OwnableUpgrad
         require(_msgSender() == owner(), "Unauthorized access");
     }
 
-    function transferToken(address _from, address _to, uint256 _amount, bytes calldata _signature) external {
+    function transferToken(
+        address _from,
+        address _to,
+        uint256 _amount,
+        uint256 _expiry,
+        bytes calldata _signature
+    ) external {
         require(_from != foundationAccount, "1051");
         require(_to != foundationAccount, "1052");
-        bytes32 dataHash = keccak256(abi.encode(_from, _to, _amount, block.chainid, ledgerContract.nonceOf(_from)));
+        bytes32 dataHash = keccak256(
+            abi.encode(block.chainid, address(this), _from, _to, _amount, ledgerContract.nonceOf(_from), _expiry)
+        );
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _from, "1501");
+        require(_expiry > block.timestamp, "1506");
         require(ledgerContract.tokenBalanceOf(_from) >= _amount + fee, "1511");
         require(_amount % 1 gwei == 0, "1030");
 

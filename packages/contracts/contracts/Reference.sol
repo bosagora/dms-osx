@@ -8,8 +8,8 @@ import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
 import "loyalty-tokens/contracts/LoyaltyToken.sol";
 import "loyalty-tokens/contracts/LYT.sol";
 
-import "dms-bridge-contracts/contracts/interfaces/IBridge.sol";
-import "dms-bridge-contracts/contracts/interfaces/IBridgeLiquidity.sol";
-import "dms-bridge-contracts/contracts/interfaces/IBridgeValidator.sol";
-import "dms-bridge-contracts/contracts/bridge/Bridge.sol";
-import "dms-bridge-contracts/contracts/bridge/BridgeValidator.sol";
+import "dms-bridge-contracts-v2/contracts/interfaces/IBridge.sol";
+import "dms-bridge-contracts-v2/contracts/interfaces/IBridgeLiquidity.sol";
+import "dms-bridge-contracts-v2/contracts/interfaces/IBridgeValidator.sol";
+import "dms-bridge-contracts-v2/contracts/bridge/Bridge.sol";
+import "dms-bridge-contracts-v2/contracts/bridge/BridgeValidator.sol";

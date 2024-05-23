@@ -87,6 +87,7 @@ export class BridgeRouter {
             [
                 body("account").exists().trim().isEthereumAddress(),
                 body("amount").exists().custom(Validation.isAmount),
+                body("expiry").exists().isNumeric(),
                 body("signature")
                     .exists()
                     .trim()
@@ -100,6 +101,7 @@ export class BridgeRouter {
             [
                 body("account").exists().trim().isEthereumAddress(),
                 body("amount").exists().custom(Validation.isAmount),
+                body("expiry").exists().isNumeric(),
                 body("signature")
                     .exists()
                     .trim()
@@ -135,6 +137,7 @@ export class BridgeRouter {
         try {
             const account: string = String(req.body.account).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
             const signature: string = String(req.body.signature).trim();
 
             const balance = await this.contractManager.sideTokenContract.balanceOf(account);
@@ -142,11 +145,13 @@ export class BridgeRouter {
 
             const nonce = await this.contractManager.sideTokenContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
+                this.contractManager.sideChainId,
+                this.contractManager.sideTokenContract.address,
                 account,
                 this.contractManager.sideChainBridgeContract.address,
                 amount,
                 nonce,
-                this.contractManager.sideChainId
+                expiry
             );
             if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
@@ -158,7 +163,7 @@ export class BridgeRouter {
             const depositId = await this.getDepositIdSideChain(account);
             const tx = await this.contractManager.sideChainBridgeContract
                 .connect(signerItem.signer)
-                .depositToBridge(tokenId, depositId, account, amount, signature);
+                .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
 
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {
@@ -183,6 +188,7 @@ export class BridgeRouter {
         try {
             const account: string = String(req.body.account).trim();
             const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
             const signature: string = String(req.body.signature).trim();
 
             const balance = await this.contractManager.mainTokenContract.balanceOf(account);
@@ -190,11 +196,13 @@ export class BridgeRouter {
 
             const nonce = await this.contractManager.mainTokenContract.nonceOf(account);
             const message = ContractUtils.getTransferMessage(
+                this.contractManager.mainChainId,
+                this.contractManager.mainTokenContract.address,
                 account,
                 this.contractManager.mainChainBridgeContract.address,
                 amount,
                 nonce,
-                this.contractManager.mainChainId
+                expiry
             );
             if (!ContractUtils.verifyMessage(account, message, signature))
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
@@ -206,7 +214,7 @@ export class BridgeRouter {
             const depositId = await this.getDepositIdMainChain(account);
             const tx = await this.contractManager.mainChainBridgeContract
                 .connect(signerItem.signer)
-                .depositToBridge(tokenId, depositId, account, amount, signature);
+                .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
 
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {
