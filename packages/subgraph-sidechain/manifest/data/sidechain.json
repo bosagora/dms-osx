@@ -2,44 +2,49 @@
     "info": "# Do not edit subgraph.yaml,this is a generated file. \n# Instead, edit subgraph.placeholder.yaml and run: yarn manifest",
     "network": "sidechain",
     "dataSources": {
+        "PhoneLinkCollection": {
+            "name": "PhoneLinkCollection",
+            "address": "0x3bAB9e04b609dE0d51Aa74261fFD5fcE555b4b0B",
+            "startBlock": 1
+        },
         "Ledger": {
             "name": "Ledger",
-            "address": "0xcAde85D03A2ABd41b608004BBB25440D28C64912",
+            "address": "0xb72784db105f0E588300827D72359B371bd557df",
             "startBlock": 1
         },
         "LoyaltyProvider": {
             "name": "LoyaltyProvider",
-            "address": "0xDD91A65534847537c290FEbc721cf8457f860744",
+            "address": "0x8fCccEE0628CBe6e8B050f6d521Bc14606394533",
             "startBlock": 1
         },
         "LoyaltyConsumer": {
             "name": "LoyaltyConsumer",
-            "address": "0xb9CE93eeb00a74Deeec319cBCD37938b5aAE6314",
+            "address": "0xAa157671D68614e105eefB0b7cC86C084C362521",
             "startBlock": 1
         },
         "LoyaltyExchanger": {
             "name": "LoyaltyExchanger",
-            "address": "0x1ae7b2564Ae7a7Fb1E7976F3F71cAF43ef49ac6F",
+            "address": "0x7E0349Cf23287c7Cb39728458cccAaE7d7aEF27D",
             "startBlock": 1
         },
         "LoyaltyTransfer": {
             "name": "LoyaltyTransfer",
-            "address": "0xcAE5A9f266991dcEdc62bb9291f15E112f212820",
+            "address": "0x2Fd9fD805Ec370E5eBe464B92795a58F3EF13af2",
             "startBlock": 1
         },
         "LoyaltyBurner": {
             "name": "LoyaltyBurner",
-            "address": "0x5B4f8F9566706D4dB7f5E3020cE0485f96415749",
+            "address": "0x3477EC879e9599be01a704877627208530665CC2",
             "startBlock": 1
         },
         "LoyaltyBridge": {
             "name": "LoyaltyBridge",
-            "address": "0xd73e6a2f2e47236F1Ff737E72497f598652122F9",
+            "address": "0xC8Ba10D2272f1a7126c517D6f33A718483DFDaA1",
             "startBlock": 1
         },
         "Shop": {
             "name": "Shop",
-            "address": "0xB4B0d4D6aAd2f963CC2FaeCBb4B8C94C3eeE6DB8",
+            "address": "0x232ADA1694C3Bc10e22bEAd9Ed132785Ad954aeC",
             "startBlock": 1
         },
         "LoyaltyToken": {
@@ -49,7 +54,7 @@
         },
         "ChainBridge": {
             "name": "ChainBridge",
-            "address": "0x02aAcAC866385A86ddA9a3C1FB7923c4A0433B31",
+            "address": "0xFFe5c725b0cFF95e0Fa50eD3902211005731bd28",
             "startBlock": 1
         }
     }

@@ -41,7 +41,7 @@ dataSources:
         - BridgeWithdrawn
       abis:
         - name: ChainBridge
-          file: $DMS_OSX_MODULE/artifacts/dms-bridge-contracts/contracts/bridge/Bridge.sol/Bridge.json
+          file: $DMS_OSX_MODULE/artifacts/dms-bridge-contracts-v2/contracts/bridge/Bridge.sol/Bridge.json
       eventHandlers:
         - event: BridgeDeposited(bytes32,bytes32,address,uint256,uint256)
           handler: handleBridgeDeposited
@@ -65,7 +65,7 @@ dataSources:
         - BridgeWithdrawn
       abis:
         - name: LoyaltyBridge
-          file: $DMS_OSX_MODULE/artifacts/dms-bridge-contracts/contracts/bridge/Bridge.sol/Bridge.json
+          file: $DMS_OSX_MODULE/artifacts/dms-bridge-contracts-v2/contracts/bridge/Bridge.sol/Bridge.json
       eventHandlers:
         - event: BridgeDeposited(bytes32,bytes32,address,uint256,uint256)
           handler: handleBridgeDeposited

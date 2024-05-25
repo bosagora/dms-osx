@@ -3,7 +3,6 @@ import { AmountUnit, NullBytes32 } from "./utils";
 import {
     Deposited as DepositedEvent,
     ProvidedPoint as ProvidedPointEvent,
-    ProvidedToken as ProvidedTokenEvent,
     ProvidedUnPayablePoint as ProvidedUnPayablePointEvent,
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
@@ -13,8 +12,8 @@ import {
     ProvidedTokenForSettlement as ProvidedTokenForSettlementEvent,
 } from "../generated/LoyaltyConsumer/LoyaltyConsumer";
 import {
-    ChangedToLoyaltyToken as ChangedToLoyaltyTokenEvent,
     ChangedToPayablePoint as ChangedToPayablePointEvent,
+    ChangedPointToToken as ChangedPointToTokenEvent,
 } from "../generated/LoyaltyExchanger/LoyaltyExchanger";
 import { TransferredLoyaltyToken as TransferredLoyaltyTokenEvent } from "../generated/LoyaltyTransfer/LoyaltyTransfer";
 import {
@@ -44,11 +43,6 @@ enum PageType {
     TRANSFER = 3,
 }
 
-enum LoyaltyType {
-    POINT = 0,
-    TOKEN = 1,
-}
-
 enum LoyaltyPaymentStatus {
     INVALID = 0,
     OPENED_PAYMENT = 1,
@@ -66,7 +60,9 @@ enum UserAction {
     BURNED,
     DEPOSITED = 11,
     WITHDRAWN = 12,
-    CHANGED = 21,
+    CHANGED_PAYABLE_POINT = 21,
+    CHANGED_TOKEN = 22,
+    CHANGED_POINT = 23,
     SETTLEMENT = 31,
     IN = 41,
     OUT = 42,
@@ -89,7 +85,6 @@ export function handleChangedBalancePoint(
         entity.save();
     } else {
         entity = new UserBalance(account.toHex());
-        entity.loyaltyType = 0;
         entity.point = balance.div(AmountUnit);
         entity.token = BigInt.fromI32(0);
         entity.blockNumber = blockNumber;
@@ -116,34 +111,8 @@ export function handleChangedBalanceToken(
         entity.save();
     } else {
         entity = new UserBalance(account.toHex());
-        entity.loyaltyType = 1;
         entity.token = balance.div(AmountUnit);
         entity.point = BigInt.fromI32(0);
-        entity.blockNumber = blockNumber;
-        entity.blockTimestamp = blockTimestamp;
-        entity.transactionHash = transactionHash;
-        entity.save();
-    }
-    return entity;
-}
-
-export function handleChangedLoyaltyType(
-    account: Bytes,
-    loyaltyType: i32,
-    blockNumber: BigInt,
-    blockTimestamp: BigInt,
-    transactionHash: Bytes
-): UserBalance {
-    let entity = UserBalance.load(account.toHex());
-    if (entity !== null) {
-        entity.loyaltyType = loyaltyType;
-        entity.blockNumber = blockNumber;
-        entity.blockTimestamp = blockTimestamp;
-        entity.transactionHash = transactionHash;
-        entity.save();
-    } else {
-        entity = new UserBalance(account.toHex());
-        entity.loyaltyType = loyaltyType;
         entity.blockNumber = blockNumber;
         entity.blockTimestamp = blockTimestamp;
         entity.transactionHash = transactionHash;
@@ -177,7 +146,6 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.DEPOSITED;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.depositedToken.div(AmountUnit);
     entity.amountValue = event.params.depositedValue.div(AmountUnit);
@@ -206,7 +174,6 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.WITHDRAWN;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.withdrawnToken.div(AmountUnit);
     entity.amountValue = event.params.withdrawnValue.div(AmountUnit);
@@ -233,7 +200,7 @@ export function handleChangedToPayablePoint(event: ChangedToPayablePointEvent): 
 export function handleChangedPointForUnPayablePointForHistory(event: ChangedToPayablePointEvent): void {
     let entity = new UserUnPayableTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.phone = event.params.phone;
-    entity.action = UserAction.CHANGED;
+    entity.action = UserAction.CHANGED_PAYABLE_POINT;
     entity.amount = event.params.changedPoint.div(AmountUnit);
     entity.balance = BigInt.fromI32(0);
 
@@ -254,9 +221,8 @@ export function handleChangedPointForHistory(event: ChangedToPayablePointEvent):
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.pageType = PageType.SAVE_USE;
-    entity.action = UserAction.CHANGED;
+    entity.action = UserAction.CHANGED_PAYABLE_POINT;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.POINT;
     entity.amountPoint = event.params.changedPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.changedValue.div(AmountUnit);
@@ -272,13 +238,21 @@ export function handleChangedPointForHistory(event: ChangedToPayablePointEvent):
     entity.save();
 }
 
-export function handleChangedToLoyaltyToken(event: ChangedToLoyaltyTokenEvent): void {
-    handleChangedToLoyaltyTokenForHistory(event);
+export function handleChangedPointToToken(event: ChangedPointToTokenEvent): void {
+    handleChangedPointToTokenForHistory(event);
 }
-export function handleChangedToLoyaltyTokenForHistory(event: ChangedToLoyaltyTokenEvent): void {
-    let balanceEntity = handleChangedBalancePoint(
+export function handleChangedPointToTokenForHistory(event: ChangedPointToTokenEvent): void {
+    handleChangedBalancePoint(
         event.params.account,
-        BigInt.fromI32(0),
+        event.params.balancePoint,
+        event.block.number,
+        event.block.timestamp,
+        event.transaction.hash
+    );
+
+    handleChangedBalanceToken(
+        event.params.account,
+        event.params.balanceToken,
         event.block.number,
         event.block.timestamp,
         event.transaction.hash
@@ -287,56 +261,19 @@ export function handleChangedToLoyaltyTokenForHistory(event: ChangedToLoyaltyTok
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.pageType = PageType.SAVE_USE;
-    entity.action = UserAction.CHANGED;
+    entity.action = UserAction.CHANGED_TOKEN;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.POINT;
     entity.amountPoint = event.params.amountPoint.div(AmountUnit);
-    entity.amountToken = BigInt.fromI32(0);
-    entity.amountValue = event.params.amountPoint.div(AmountUnit);
-    entity.feePoint = BigInt.fromI32(0);
-    entity.feeToken = BigInt.fromI32(0);
-    entity.feeValue = BigInt.fromI32(0);
-    entity.balancePoint = BigInt.fromI32(0);
-    entity.balanceToken = balanceEntity.token;
-    entity.purchaseId = "";
-    entity.paymentId = NullBytes32;
-    entity.shopId = NullBytes32;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-    entity.save();
-
-    handleChangedLoyaltyType(
-        event.params.account,
-        1,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-
-    handleChangedBalanceToken(
-        event.params.account,
-        event.params.amountToken,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-
-    entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.account = event.params.account;
-    entity.pageType = PageType.SAVE_USE;
-    entity.action = UserAction.CHANGED;
-    entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
-    entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amountToken.div(AmountUnit);
     entity.amountValue = event.params.amountPoint.div(AmountUnit);
     entity.feePoint = BigInt.fromI32(0);
     entity.feeToken = BigInt.fromI32(0);
     entity.feeValue = BigInt.fromI32(0);
-    entity.balancePoint = BigInt.fromI32(0);
+    entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
+    entity.purchaseId = "";
+    entity.paymentId = NullBytes32;
+    entity.shopId = NullBytes32;
 
     entity.blockNumber = event.block.number;
     entity.blockTimestamp = event.block.timestamp;
@@ -373,10 +310,6 @@ export function handleProvidedPoint(event: ProvidedPointEvent): void {
     handleProvidedPointForHistory(event);
 }
 
-export function handleProvidedToken(event: ProvidedTokenEvent): void {
-    handleProvidedTokenForHistory(event);
-}
-
 export function handleProvidedTokenForSettlement(event: ProvidedTokenForSettlementEvent): void {
     handleSettlementForHistory(event);
 }
@@ -409,7 +342,6 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.SAVED;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.POINT;
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.providedValue.div(AmountUnit);
@@ -419,39 +351,6 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     entity.currency = event.params.currency;
     entity.balancePoint = event.params.balancePoint.div(AmountUnit);
     entity.balanceToken = balanceEntity.token;
-    entity.purchaseId = event.params.purchaseId;
-    entity.paymentId = NullBytes32;
-    entity.shopId = event.params.shopId;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-    entity.save();
-}
-
-export function handleProvidedTokenForHistory(event: ProvidedTokenEvent): void {
-    const balanceEntity = handleChangedBalanceToken(
-        event.params.account,
-        event.params.balanceToken,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-    let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.account = event.params.account;
-    entity.pageType = PageType.SAVE_USE;
-    entity.action = UserAction.SAVED;
-    entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
-    entity.amountPoint = BigInt.fromI32(0);
-    entity.amountToken = event.params.providedToken.div(AmountUnit);
-    entity.amountValue = event.params.providedValue.div(AmountUnit);
-    entity.feePoint = BigInt.fromI32(0);
-    entity.feeToken = BigInt.fromI32(0);
-    entity.feeValue = BigInt.fromI32(0);
-    entity.currency = event.params.currency;
-    entity.balanceToken = event.params.balanceToken.div(AmountUnit);
-    entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.purchaseId;
     entity.paymentId = NullBytes32;
     entity.shopId = event.params.shopId;
@@ -475,7 +374,6 @@ export function handleSettlementForHistory(event: ProvidedTokenForSettlementEven
     entity.pageType = PageType.NONE;
     entity.action = UserAction.SETTLEMENT;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
     entity.amountToken = event.params.providedToken.div(AmountUnit);
     entity.amountValue = event.params.providedPoint.div(AmountUnit);
@@ -517,7 +415,6 @@ export function handleTransferredLoyaltyTokenForHistory(event: TransferredLoyalt
         entity.pageType = PageType.TRANSFER;
         entity.action = UserAction.OUT;
         entity.cancel = false;
-        entity.loyaltyType = LoyaltyType.TOKEN;
         entity.amountPoint = BigInt.fromI32(0);
         entity.amountToken = event.params.amount.div(AmountUnit);
         entity.amountValue = BigInt.fromI32(0);
@@ -551,7 +448,6 @@ export function handleTransferredLoyaltyTokenForHistory(event: TransferredLoyalt
         entity.pageType = PageType.TRANSFER;
         entity.action = UserAction.IN;
         entity.cancel = false;
-        entity.loyaltyType = LoyaltyType.TOKEN;
         entity.amountPoint = BigInt.fromI32(0);
         entity.amountToken = event.params.amount.div(AmountUnit);
         entity.amountValue = BigInt.fromI32(0);
@@ -582,7 +478,6 @@ export function handleLoyaltyPaymentEvent(event: LoyaltyPaymentEventEvent): void
     entity.shopId = event.params.payment.shopId;
     entity.account = event.params.payment.account;
     entity.timestamp = event.params.payment.timestamp;
-    entity.loyaltyType = event.params.payment.loyaltyType;
     entity.paidPoint = event.params.payment.paidPoint;
     entity.paidToken = event.params.payment.paidToken;
     entity.paidValue = event.params.payment.paidValue;
@@ -603,17 +498,9 @@ export function handleLoyaltyPaymentEvent(event: LoyaltyPaymentEventEvent): void
 
 export function handleLoyaltyPaymentEventForHistory(event: LoyaltyPaymentEventEvent): void {
     if (event.params.payment.status == LoyaltyPaymentStatus.CLOSED_PAYMENT) {
-        if (event.params.payment.loyaltyType === 0) {
-            handlePaidPointForHistory(event);
-        } else {
-            handlePaidTokenForHistory(event);
-        }
+        handlePaidPointForHistory(event);
     } else if (event.params.payment.status == LoyaltyPaymentStatus.CLOSED_CANCEL) {
-        if (event.params.payment.loyaltyType === 0) {
-            handleCanceledPointForHistory(event);
-        } else {
-            handleCanceledTokenForHistory(event);
-        }
+        handleCanceledPointForHistory(event);
     }
 }
 
@@ -630,7 +517,6 @@ export function handlePaidPointForHistory(event: LoyaltyPaymentEventEvent): void
     entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.USED;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.POINT;
     entity.amountPoint = event.params.payment.paidPoint.plus(event.params.payment.feePoint).div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
@@ -640,39 +526,6 @@ export function handlePaidPointForHistory(event: LoyaltyPaymentEventEvent): void
     entity.currency = event.params.payment.currency;
     entity.balancePoint = balanceEntity.point;
     entity.balanceToken = balanceEntity.token;
-    entity.purchaseId = event.params.payment.purchaseId;
-    entity.paymentId = event.params.payment.paymentId;
-    entity.shopId = event.params.payment.shopId;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-    entity.save();
-}
-
-export function handlePaidTokenForHistory(event: LoyaltyPaymentEventEvent): void {
-    const balanceEntity = handleChangedBalanceToken(
-        event.params.payment.account,
-        event.params.balance,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-    let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.account = event.params.payment.account;
-    entity.pageType = PageType.SAVE_USE;
-    entity.action = UserAction.USED;
-    entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
-    entity.amountPoint = BigInt.fromI32(0);
-    entity.amountToken = event.params.payment.paidToken.plus(event.params.payment.feeToken).div(AmountUnit);
-    entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
-    entity.feePoint = event.params.payment.feePoint.div(AmountUnit);
-    entity.feeToken = event.params.payment.feeToken.div(AmountUnit);
-    entity.feeValue = event.params.payment.feeValue.div(AmountUnit);
-    entity.currency = event.params.payment.currency;
-    entity.balanceToken = balanceEntity.token;
-    entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.payment.purchaseId;
     entity.paymentId = event.params.payment.paymentId;
     entity.shopId = event.params.payment.shopId;
@@ -696,7 +549,6 @@ export function handleCanceledPointForHistory(event: LoyaltyPaymentEventEvent): 
     entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.USED;
     entity.cancel = true;
-    entity.loyaltyType = LoyaltyType.POINT;
     entity.amountPoint = event.params.payment.paidPoint.plus(event.params.payment.feePoint).div(AmountUnit);
     entity.amountToken = BigInt.fromI32(0);
     entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
@@ -706,39 +558,6 @@ export function handleCanceledPointForHistory(event: LoyaltyPaymentEventEvent): 
     entity.currency = event.params.payment.currency;
     entity.balancePoint = balanceEntity.point;
     entity.balanceToken = balanceEntity.token;
-    entity.purchaseId = event.params.payment.purchaseId;
-    entity.paymentId = event.params.payment.paymentId;
-    entity.shopId = event.params.payment.shopId;
-
-    entity.blockNumber = event.block.number;
-    entity.blockTimestamp = event.block.timestamp;
-    entity.transactionHash = event.transaction.hash;
-    entity.save();
-}
-
-export function handleCanceledTokenForHistory(event: LoyaltyPaymentEventEvent): void {
-    const balanceEntity = handleChangedBalanceToken(
-        event.params.payment.account,
-        event.params.balance,
-        event.block.number,
-        event.block.timestamp,
-        event.transaction.hash
-    );
-    let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
-    entity.account = event.params.payment.account;
-    entity.pageType = PageType.SAVE_USE;
-    entity.action = UserAction.USED;
-    entity.cancel = true;
-    entity.loyaltyType = LoyaltyType.TOKEN;
-    entity.amountPoint = BigInt.fromI32(0);
-    entity.amountToken = event.params.payment.paidToken.plus(event.params.payment.feeToken).div(AmountUnit);
-    entity.amountValue = event.params.payment.paidValue.plus(event.params.payment.feeValue).div(AmountUnit);
-    entity.feePoint = event.params.payment.feePoint.div(AmountUnit);
-    entity.feeToken = event.params.payment.feeToken.div(AmountUnit);
-    entity.feeValue = event.params.payment.feeValue.div(AmountUnit);
-    entity.currency = event.params.payment.currency;
-    entity.balanceToken = balanceEntity.token;
-    entity.balancePoint = balanceEntity.point;
     entity.purchaseId = event.params.payment.purchaseId;
     entity.paymentId = event.params.payment.paymentId;
     entity.shopId = event.params.payment.shopId;
@@ -780,7 +599,6 @@ export function handleBurnedPointForHistory(event: BurnedPointEvent): void {
     entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.BURNED;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.POINT;
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amount.div(AmountUnit);
     entity.amountValue = BigInt.fromI32(0);
@@ -862,7 +680,6 @@ export function handleBridgeDepositedForHistory(event: BridgeDepositedEvent): vo
     entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.WITHDRAWN;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amount.div(AmountUnit);
     entity.amountValue = BigInt.fromI32(0);
@@ -912,7 +729,6 @@ export function handleBridgeWithdrawnForHistory(event: BridgeWithdrawnEvent): vo
     entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.DEPOSITED;
     entity.cancel = false;
-    entity.loyaltyType = LoyaltyType.TOKEN;
     entity.amountPoint = BigInt.fromI32(0);
     entity.amountToken = event.params.amount.div(AmountUnit);
     entity.amountValue = BigInt.fromI32(0);

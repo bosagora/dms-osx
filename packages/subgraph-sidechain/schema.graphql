@@ -1,4 +1,29 @@
 
+enum PhoneRequestStatus {
+  INVALID,
+  REQUESTED,
+  ACCEPTED,
+  REJECTED
+}
+
+type PhoneRequestItems @entity {
+  id: Bytes! # id
+  phone: Bytes! # bytes32
+  wallet: Bytes! # address
+  status: PhoneRequestStatus!
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type PhoneLinkItems @entity {
+  id: Bytes! # phone
+  wallet: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
 type SavedPurchase @entity(immutable: true) {
   id: Bytes!
   purchaseId: String! # string
@@ -21,7 +46,6 @@ type LoyaltyPaymentEvent @entity(immutable: true) {
   shopId: Bytes! # bytes32
   account: Bytes! # address
   timestamp: BigInt! # uint256
-  loyaltyType: Int! # uint8
   paidPoint: BigInt! # uint256
   paidToken: BigInt! # uint256
   paidValue: BigInt! # uint256
@@ -41,7 +65,6 @@ type UserTradeHistory @entity(immutable: true) {
   pageType: Int!
   action: Int!
   cancel: Boolean!
-  loyaltyType: Int!
   amountPoint: BigInt!
   amountToken: BigInt!
   amountValue: BigInt!
@@ -75,7 +98,6 @@ type UserUnPayableTradeHistory @entity(immutable: true) {
 type UserBalance @entity {
   id: ID! # account
 
-  loyaltyType: Int!
   point: BigInt!
   token: BigInt!
 

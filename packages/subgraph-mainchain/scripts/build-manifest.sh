@@ -17,7 +17,7 @@ fi
 FILE=$NETWORK_NAME'.json'
 DATA=manifest/data/$FILE
 
-DMS_OSX_MODULE=$(node -e 'console.log(require("path").dirname(require.resolve("dms-osx-artifacts/package.json")))')
+DMS_OSX_MODULE=$(node -e 'console.log(require("path").dirname(require.resolve("dms-contracts-v2/package.json")))')
 
 echo 'Generating manifest from data file: '$DATA
 cat $DATA
