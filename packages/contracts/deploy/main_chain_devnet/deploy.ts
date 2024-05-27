@@ -62,7 +62,8 @@ class Deployments {
 
         const raws = HardhatAccount.keys.map((m) => new Wallet(m, hre.ethers.provider));
         const [
-            deployer,
+            deployer_side_chain,
+            deployer_main_chain,
             owner,
             foundation,
             settlement,
@@ -108,7 +109,7 @@ class Deployments {
         ] = raws;
 
         this.accounts = {
-            deployer,
+            deployer: deployer_main_chain,
             owner,
             foundation,
             settlement,

@@ -71,7 +71,6 @@ class Deployments {
     public deployers: FnDeployer[];
     public accounts: IAccount;
 
-    private PHONE_LINK_COLLECTION_CONTRACT: Contract | undefined;
     private MULTI_SIG_WALLET_CONTRACT: Contract | undefined;
     private LOYALTY_TOKEN_CONTRACT: Contract | undefined;
 
@@ -81,7 +80,8 @@ class Deployments {
 
         const raws = HardhatAccount.keys.map((m) => new Wallet(m, hre.ethers.provider));
         const [
-            deployer,
+            deployer_side_chain,
+            deployer_main_chain,
             owner,
             foundation,
             settlement,
@@ -127,7 +127,7 @@ class Deployments {
         ] = raws;
 
         this.accounts = {
-            deployer,
+            deployer: deployer_side_chain,
             owner,
             foundation,
             settlement,

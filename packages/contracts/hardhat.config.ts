@@ -17,14 +17,25 @@ function getAccounts() {
     const accounts: string[] = [];
     const reg_bytes64: RegExp = /^(0x)[0-9a-f]{64}$/i;
     if (
-        process.env.DEPLOYER !== undefined &&
-        process.env.DEPLOYER.trim() !== "" &&
-        reg_bytes64.test(process.env.DEPLOYER)
+        process.env.DEPLOYER_SIDE_CHAIN !== undefined &&
+        process.env.DEPLOYER_SIDE_CHAIN.trim() !== "" &&
+        reg_bytes64.test(process.env.DEPLOYER_SIDE_CHAIN)
     ) {
-        accounts.push(process.env.DEPLOYER);
+        accounts.push(process.env.DEPLOYER_SIDE_CHAIN);
     } else {
-        process.env.DEPLOYER = Wallet.createRandom().privateKey;
-        accounts.push(process.env.DEPLOYER);
+        process.env.DEPLOYER_SIDE_CHAIN = Wallet.createRandom().privateKey;
+        accounts.push(process.env.DEPLOYER_SIDE_CHAIN);
+    }
+
+    if (
+        process.env.DEPLOYER_MAIN_CHAIN !== undefined &&
+        process.env.DEPLOYER_MAIN_CHAIN.trim() !== "" &&
+        reg_bytes64.test(process.env.DEPLOYER_MAIN_CHAIN)
+    ) {
+        accounts.push(process.env.DEPLOYER_MAIN_CHAIN);
+    } else {
+        process.env.DEPLOYER_MAIN_CHAIN = Wallet.createRandom().privateKey;
+        accounts.push(process.env.DEPLOYER_MAIN_CHAIN);
     }
 
     if (process.env.OWNER !== undefined && process.env.OWNER.trim() !== "" && reg_bytes64.test(process.env.OWNER)) {

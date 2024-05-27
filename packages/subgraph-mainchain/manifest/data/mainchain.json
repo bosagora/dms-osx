@@ -9,12 +9,12 @@
         },
         "ChainBridge": {
             "name": "ChainBridge",
-            "address": "0x01dfc87EC0f8B199cF841079EC1fF394d7f59455",
+            "address": "0x0F31212e5C9b698cf6BDbF5e5f1F5917b5e002cc",
             "startBlock": 1
         },
         "LoyaltyBridge": {
             "name": "LoyaltyBridge",
-            "address": "0x3bAB9e04b609dE0d51Aa74261fFD5fcE555b4b0B",
+            "address": "0x6Cc73CF62cF489973B41EAA94B857f36918Adee3",
             "startBlock": 1
         }
     }
