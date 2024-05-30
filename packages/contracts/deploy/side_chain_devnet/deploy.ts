@@ -20,7 +20,6 @@ import {
     MultiSigWallet,
     PhoneLinkCollection,
     Shop,
-    TestLYT,
     Validator,
 } from "../../typechain-types";
 
@@ -932,7 +931,7 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = (await deployment.getContract("LoyaltyToken")) as TestLYT;
+        const tokenContract = (await deployment.getContract("LoyaltyToken")) as LoyaltyToken;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(500_000_000, 18).value;
