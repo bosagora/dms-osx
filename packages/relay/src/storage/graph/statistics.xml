@@ -17,7 +17,6 @@
         WITH accounts AS (
             SELECT DISTINCT ON (id) *
             FROM ${scheme}.user_balance
-            WHERE loyalty_type = 0
             ORDER BY id, vid DESC
         )
         SELECT
@@ -34,7 +33,7 @@
         WITH accounts AS (
             SELECT DISTINCT ON (id) *
             FROM ${scheme}.user_balance
-            WHERE loyalty_type = 1
+            WHERE token > 0
             ORDER BY id, vid DESC
         )
         SELECT
