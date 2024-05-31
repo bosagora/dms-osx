@@ -61,6 +61,7 @@ export class ResponseMessage {
         ["2005", "Mobile notification not allowed"],
         ["2006", "Can not found delegator"],
         ["2007", "The phone number format is invalid."],
+        ["2008", "Mobile information not found."],
         ["2020", "The status code for this payment cannot be approved"],
         ["2022", "The status code for this payment cannot be cancel"],
         ["2024", "The status code for this payment cannot process closing"],

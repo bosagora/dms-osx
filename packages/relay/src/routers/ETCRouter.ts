@@ -10,7 +10,7 @@ import { ContractUtils } from "../utils/ContractUtils";
 import { ResponseMessage } from "../utils/Errors";
 
 import express from "express";
-import { body, validationResult } from "express-validator";
+import { body, param, query, validationResult } from "express-validator";
 
 export class ETCRouter {
     private web_service: WebService;
@@ -89,6 +89,13 @@ export class ETCRouter {
                 body("contentType").exists(),
             ],
             this.mobile_send.bind(this)
+        );
+
+        // 포인트의 종류를 선택하는 기능
+        this.app.get(
+            "/v1/mobile/info/:account",
+            [param("account").exists().trim().isEthereumAddress(), query("type").exists()],
+            this.mobile_info.bind(this)
         );
     }
 
@@ -169,6 +176,49 @@ export class ETCRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`POST /v1/mobile/send : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * POST /v1/mobile/info
+     * @private
+     */
+    private async mobile_info(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/mobile/info`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        if (req.get("Authorization") !== this.config.relay.accessKey) {
+            return res.json(ResponseMessage.getErrorMessage("2002"));
+        }
+
+        try {
+            const account: string = String(req.params.account).trim();
+            const type: number = Number(req.query.type);
+
+            const mobileData = await this.storage.getMobile(account, type);
+            if (mobileData === undefined) {
+                return res.status(200).json(ResponseMessage.getErrorMessage("2008"));
+            }
+
+            this.metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    account: mobileData.account,
+                    type: mobileData.type,
+                    token: mobileData.token,
+                    language: mobileData.language,
+                    os: mobileData.os,
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/mobile/info : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }

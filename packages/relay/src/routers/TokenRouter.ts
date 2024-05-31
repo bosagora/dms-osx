@@ -141,6 +141,7 @@ export class TokenRouter {
         this.app.get("/v1/chain/side/id", [], this.chain_side_id.bind(this));
         this.app.get("/v1/chain/main/info", [], this.chain_main_info.bind(this));
         this.app.get("/v1/chain/side/info", [], this.chain_side_info.bind(this));
+        this.app.get("/v1/system/info", [], this.system_info.bind(this));
     }
 
     private async token_main_nonce(req: express.Request, res: express.Response) {
@@ -408,6 +409,39 @@ export class TokenRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/chain/side/info : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
+    }
+
+    /**
+     * 사이드체인의 체인 정보
+     * GET /v1/system/info
+     * @private
+     */
+    private async system_info(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/system/info ${req.ip}:${JSON.stringify(req.query)}`);
+        try {
+            const tokenSymbol = await this.contractManager.sideTokenContract.symbol();
+            const precision = tokenSymbol === "ACC" ? 2 : 0;
+            const equivalentCurrency = tokenSymbol === "ACC" ? "PHP" : "KRW";
+            const language = tokenSymbol === "ACC" ? "en" : "kr";
+            this.metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    token: {
+                        symbol: tokenSymbol,
+                    },
+                    point: {
+                        precision,
+                        equivalentCurrency,
+                    },
+                    language,
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/system/info : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
