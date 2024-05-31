@@ -3,351 +3,301 @@
         "idx": 0,
         "phone": "+82 10-1000-2000",
         "address": "0x64D111eA9763c93a003cef491941A011B8df5a49",
-        "privateKey": "0x70438bc3ed02b5e4b76d496625cb7c06d6b7bf4362295b16fdfe91a046d4586c",
-        "loyaltyType": 0
+        "privateKey": "0x70438bc3ed02b5e4b76d496625cb7c06d6b7bf4362295b16fdfe91a046d4586c"
     },
     {
         "idx": 1,
         "phone": "+82 10-1000-2001",
         "address": "0x3FE8D00143bd0eAd2397D48ba0E31E5E1268dBfb",
-        "privateKey": "0x44868157d6d3524beb64c6ae41ee6c879d03c19a357dadb038fefea30e23cbab",
-        "loyaltyType": 0
+        "privateKey": "0x44868157d6d3524beb64c6ae41ee6c879d03c19a357dadb038fefea30e23cbab"
     },
     {
         "idx": 2,
         "phone": "+82 10-1000-2002",
         "address": "0xCf44157e9df307c90FC7762933Ac1e2921e8b39E",
-        "privateKey": "0x11855bdc610b27e6b98de50715c947dc7acd95166d70d66b773f06b328ee8b5c",
-        "loyaltyType": 0
+        "privateKey": "0x11855bdc610b27e6b98de50715c947dc7acd95166d70d66b773f06b328ee8b5c"
     },
     {
         "idx": 3,
         "phone": "+82 10-1000-2003",
         "address": "0xf26f7844f5B4770c47f34ea35a03B2b3534d08FE",
-        "privateKey": "0x2e981a3691ff15706d808b457699ddd46fb9ebf8d824295fb585e71e1db3c4c1",
-        "loyaltyType": 0
+        "privateKey": "0x2e981a3691ff15706d808b457699ddd46fb9ebf8d824295fb585e71e1db3c4c1"
     },
     {
         "idx": 4,
         "phone": "+82 10-1000-2004",
         "address": "0x7Bac9e662E2C1Cf9f6f97F8CaF9c7aDE8F146bd1",
-        "privateKey": "0xb93f43bdafc9efee5b223735a0dd4efef9522f2db5b9f70889d6fa6fcead50c4",
-        "loyaltyType": 0
+        "privateKey": "0xb93f43bdafc9efee5b223735a0dd4efef9522f2db5b9f70889d6fa6fcead50c4"
     },
     {
         "idx": 5,
         "phone": "+82 10-1000-2005",
         "address": "0x852DB1c83e17BE9fba782c97436F47cE4ad2Af83",
-        "privateKey": "0xcd0050e45b8ed7cf14055a640a129c81c805128a3711dbe5af1c5b434ba2d4cc",
-        "loyaltyType": 0
+        "privateKey": "0xcd0050e45b8ed7cf14055a640a129c81c805128a3711dbe5af1c5b434ba2d4cc"
     },
     {
         "idx": 6,
         "phone": "+82 10-1000-2006",
         "address": "0x5857f28FDFE295bde60967c749199cAfB89C720F",
-        "privateKey": "0x1df07300f5c65983b16d0b28e4fce3def7141cb573df00d077c8a8b12de47be0",
-        "loyaltyType": 0
+        "privateKey": "0x1df07300f5c65983b16d0b28e4fce3def7141cb573df00d077c8a8b12de47be0"
     },
     {
         "idx": 7,
         "phone": "+82 10-1000-2007",
         "address": "0x98b0fdb6C23C7C80B4728579e76F4aD95fe7014A",
-        "privateKey": "0xd96b986c2d61fa843f856ad621d4343705b296d88e3c96a17c726d130e95118e",
-        "loyaltyType": 0
+        "privateKey": "0xd96b986c2d61fa843f856ad621d4343705b296d88e3c96a17c726d130e95118e"
     },
     {
         "idx": 8,
         "phone": "+82 10-1000-2008",
         "address": "0xF51A41cD49ff9B280Acea3768f8624003C69F3ea",
-        "privateKey": "0x115094e272f33caa245e5458eb0debd7864eb5f71980d508a27612845540ad99",
-        "loyaltyType": 0
+        "privateKey": "0x115094e272f33caa245e5458eb0debd7864eb5f71980d508a27612845540ad99"
     },
     {
         "idx": 9,
         "phone": "+82 10-1000-2009",
         "address": "0x8340Bb9Cd5C3827c213beB23b05E1815c4bE9AFA",
-        "privateKey": "0x5c7744beb5c2a2369f22879eeab289ae6fd2d46c2ff348fcdd5d3c70d846a1a1",
-        "loyaltyType": 0
+        "privateKey": "0x5c7744beb5c2a2369f22879eeab289ae6fd2d46c2ff348fcdd5d3c70d846a1a1"
     },
     {
         "idx": 10,
         "phone": "+82 10-1000-2010",
         "address": "0xf3802b4c177aE5ca5ED022Ced2643dAE79E3b824",
-        "privateKey": "0x46ba360778a00c5bf9322a702bbbd38c7a56f20f9360a14686f5b71834922569",
-        "loyaltyType": 0
+        "privateKey": "0x46ba360778a00c5bf9322a702bbbd38c7a56f20f9360a14686f5b71834922569"
     },
     {
         "idx": 11,
         "phone": "+82 10-1000-2011",
         "address": "0x35004290E2890782DE456A8C0787f0747E93089B",
-        "privateKey": "0x6111ebbc274bd07fb2fd53d66652766686e85f21cfdf615f3236e687c7aabfa2",
-        "loyaltyType": 0
+        "privateKey": "0x6111ebbc274bd07fb2fd53d66652766686e85f21cfdf615f3236e687c7aabfa2"
     },
     {
         "idx": 12,
         "phone": "+82 10-1000-2012",
         "address": "0xB0ddD72EEB6b692505b99C912c30a5509f4D9062",
-        "privateKey": "0x1642cadf4dc8fc81dfe0c148227836a1c22230846701de1f12db59f031b8067c",
-        "loyaltyType": 0
+        "privateKey": "0x1642cadf4dc8fc81dfe0c148227836a1c22230846701de1f12db59f031b8067c"
     },
     {
         "idx": 13,
         "phone": "+82 10-1000-2013",
         "address": "0xAc09cdb210e7F5528e3b045F6726A145d08E25be",
-        "privateKey": "0x86e806c4d2e1224ed91c78af00c3ef328d023db20027d892b05d551bff8ad910",
-        "loyaltyType": 0
+        "privateKey": "0x86e806c4d2e1224ed91c78af00c3ef328d023db20027d892b05d551bff8ad910"
     },
     {
         "idx": 14,
         "phone": "+82 10-1000-2014",
         "address": "0xdD30Ef7eefC7ec283d9B573D86e11a77E9b3F722",
-        "privateKey": "0xe7b52d74383c5e1a576b84eb96384627dbb50469fbb91bfa227ddfe250e20a0e",
-        "loyaltyType": 0
+        "privateKey": "0xe7b52d74383c5e1a576b84eb96384627dbb50469fbb91bfa227ddfe250e20a0e"
     },
     {
         "idx": 15,
         "phone": "+82 10-1000-2015",
         "address": "0xA579D3De3fb6613017A03C5C66d4f1Cf3d37b427",
-        "privateKey": "0xba5ee30d9313800952d3d3f6d367039c22bb09f94ec57e4bccc506f0da1fa552",
-        "loyaltyType": 0
+        "privateKey": "0xba5ee30d9313800952d3d3f6d367039c22bb09f94ec57e4bccc506f0da1fa552"
     },
     {
         "idx": 16,
         "phone": "+82 10-1000-2016",
         "address": "0x49760921d14C3343f04Bf46371aD782C1478F5BC",
-        "privateKey": "0xbbadbc87a1dc7cd6f71fbc374bc5ec77b3680dbb3f59074c7c3682fec24c322f",
-        "loyaltyType": 0
+        "privateKey": "0xbbadbc87a1dc7cd6f71fbc374bc5ec77b3680dbb3f59074c7c3682fec24c322f"
     },
     {
         "idx": 17,
         "phone": "+82 10-1000-2017",
         "address": "0x7B7B7Fb2613Dd7286DcAe541bF2391c9754eA3cd",
-        "privateKey": "0xfefd0cb39ecbaebb7b4c19a7288458809a906aed6f001202a3e2cb01a6d4ec23",
-        "loyaltyType": 0
+        "privateKey": "0xfefd0cb39ecbaebb7b4c19a7288458809a906aed6f001202a3e2cb01a6d4ec23"
     },
     {
         "idx": 18,
         "phone": "+82 10-1000-2018",
         "address": "0xB4008dDce19b0061317726c5fC3413d8C8C828Eb",
-        "privateKey": "0xc5cfabd6975b0f83bb367df4679da25450be793839d0bbefdc4989f3e2376eec",
-        "loyaltyType": 0
+        "privateKey": "0xc5cfabd6975b0f83bb367df4679da25450be793839d0bbefdc4989f3e2376eec"
     },
     {
         "idx": 19,
         "phone": "+82 10-1000-2019",
         "address": "0xd1D879664617032Da2Da21CF3DA9e58a487673A9",
-        "privateKey": "0x3d53fea04641879be6a3a8a8d61d4d441eb401d7b3fe352eff9f7ac8ba1a4ec9",
-        "loyaltyType": 0
+        "privateKey": "0x3d53fea04641879be6a3a8a8d61d4d441eb401d7b3fe352eff9f7ac8ba1a4ec9"
     },
     {
         "idx": 20,
         "phone": "+82 10-1000-2020",
         "address": "0x71770F1Ed060051ebb6f3f2350418ea339268505",
-        "privateKey": "0x3dc149190a33487e968beaaa4f0cab869e02534b8d9d4c999d306c49ad4696e8",
-        "loyaltyType": 0
+        "privateKey": "0x3dc149190a33487e968beaaa4f0cab869e02534b8d9d4c999d306c49ad4696e8"
     },
     {
         "idx": 21,
         "phone": "+82 10-1000-2021",
         "address": "0x903063cE4dBF5C61bB2f4d697C082Ac3F26c9e03",
-        "privateKey": "0x95c6a667040a653ccd200885b6e67670cc115c29b13b1c2022993d13635a0b31",
-        "loyaltyType": 0
+        "privateKey": "0x95c6a667040a653ccd200885b6e67670cc115c29b13b1c2022993d13635a0b31"
     },
     {
         "idx": 22,
         "phone": "+82 10-1000-2022",
         "address": "0x74B936f54fDbDa9324a871226835944D6468CdBb",
-        "privateKey": "0xae5817e4a2ea1371cfd4d35ec5ba155585d3cebe18e6197bc4e030bc0e3dd9f8",
-        "loyaltyType": 0
+        "privateKey": "0xae5817e4a2ea1371cfd4d35ec5ba155585d3cebe18e6197bc4e030bc0e3dd9f8"
     },
     {
         "idx": 23,
         "phone": "+82 10-1000-2023",
         "address": "0xA6543b00acde8F61475B089474EDdE92223103A5",
-        "privateKey": "0x32990d3f18c3625901d5254f517daa5ef1c43383027a3b98902f5ebf9cb5a692",
-        "loyaltyType": 0
+        "privateKey": "0x32990d3f18c3625901d5254f517daa5ef1c43383027a3b98902f5ebf9cb5a692"
     },
     {
         "idx": 24,
         "phone": "+82 10-1000-2024",
         "address": "0xa8201943223834BaB8e4C877971568e8daf4963F",
-        "privateKey": "0x6b4d24d4809dad462f6ca8ff1fb71b64091d0ff11c3ebc548c6cddd01dfc8c0f",
-        "loyaltyType": 0
+        "privateKey": "0x6b4d24d4809dad462f6ca8ff1fb71b64091d0ff11c3ebc548c6cddd01dfc8c0f"
     },
     {
         "idx": 25,
         "phone": "+82 10-1000-2025",
         "address": "0xBE43a4598aB331D60054726037F942a432E2b0FA",
-        "privateKey": "0x98b748b35f47c3498271e1b5f8da35b40670214a775ca0f07b27780ab8135ab1",
-        "loyaltyType": 0
+        "privateKey": "0x98b748b35f47c3498271e1b5f8da35b40670214a775ca0f07b27780ab8135ab1"
     },
     {
         "idx": 26,
         "phone": "+82 10-1000-2026",
         "address": "0x096710E3B5ccAb0a35501226f7D00B57b41901F3",
-        "privateKey": "0x9cfb97b7abe04557a83cf19611b5ec6e674ca3fe5dffe37ed047a0fe9892fb9c",
-        "loyaltyType": 0
+        "privateKey": "0x9cfb97b7abe04557a83cf19611b5ec6e674ca3fe5dffe37ed047a0fe9892fb9c"
     },
     {
         "idx": 27,
         "phone": "+82 10-1000-2027",
         "address": "0x06796CE510010e90F519e9cBE28E5075c7e80Ba8",
-        "privateKey": "0x3085e5b217e027e094822aa171445f971fbd5aec14b1ae1cdc8ac759af24472d",
-        "loyaltyType": 0
+        "privateKey": "0x3085e5b217e027e094822aa171445f971fbd5aec14b1ae1cdc8ac759af24472d"
     },
     {
         "idx": 28,
         "phone": "+82 10-1000-2028",
         "address": "0x4aCB655Ec9cb9b7bA53059D2754Da628F97E5520",
-        "privateKey": "0x63015d622dac9ea25bca0749eca67698d78ee22c29bd4536e000d65325600cec",
-        "loyaltyType": 0
+        "privateKey": "0x63015d622dac9ea25bca0749eca67698d78ee22c29bd4536e000d65325600cec"
     },
     {
         "idx": 29,
         "phone": "+82 10-1000-2029",
         "address": "0x58cd45F5461DFa1c03e44459f700Aa530488Fe7f",
-        "privateKey": "0xe9edb4354287e55d123672088c9c6b55ead2859b3b577d02f6fd33c7a99e3164",
-        "loyaltyType": 0
+        "privateKey": "0xe9edb4354287e55d123672088c9c6b55ead2859b3b577d02f6fd33c7a99e3164"
     },
     {
         "idx": 30,
         "phone": "+82 10-1000-2030",
         "address": "0xcD2803008856100264F17140d4d977768C36B546",
-        "privateKey": "0x678daaa72339201608534313be62c7d3835c7baa1dc588ebcb1eb865385ca54e",
-        "loyaltyType": 0
+        "privateKey": "0x678daaa72339201608534313be62c7d3835c7baa1dc588ebcb1eb865385ca54e"
     },
     {
         "idx": 31,
         "phone": "+82 10-1000-2031",
         "address": "0x8f05bddf379d89c827bAEFE43a5eca3aBE2CAf49",
-        "privateKey": "0xf02e9bf477c21e05b60de4e8a65824d9aae194eccd193245a6296c13dc675227",
-        "loyaltyType": 0
+        "privateKey": "0xf02e9bf477c21e05b60de4e8a65824d9aae194eccd193245a6296c13dc675227"
     },
     {
         "idx": 32,
         "phone": "+82 10-1000-2032",
         "address": "0x7c86E333501Ac8BfA7b5a4A9a166922d1872FeBa",
-        "privateKey": "0xb30667148df49d3ffe8e62e72df69358e286f4db5f487c5699dd3ca545a495cf",
-        "loyaltyType": 0
+        "privateKey": "0xb30667148df49d3ffe8e62e72df69358e286f4db5f487c5699dd3ca545a495cf"
     },
     {
         "idx": 33,
         "phone": "+82 10-1000-2033",
         "address": "0x809d7F5B2AC27Fc3aBc8441EC31386a80EdA1592",
-        "privateKey": "0x9f09e74e517af6f604b4cf5d7061fe2736638b7b81809e06fb1cb1e10b23a58b",
-        "loyaltyType": 0
+        "privateKey": "0x9f09e74e517af6f604b4cf5d7061fe2736638b7b81809e06fb1cb1e10b23a58b"
     },
     {
         "idx": 34,
         "phone": "+82 10-1000-2034",
         "address": "0x7642b1EC5175CC389a62632E0AF253Cf78bb07b9",
-        "privateKey": "0x843bc9928bc75cbd1296264813b5e125f32497eae208a2c1d4ea6532a9e52490",
-        "loyaltyType": 0
+        "privateKey": "0x843bc9928bc75cbd1296264813b5e125f32497eae208a2c1d4ea6532a9e52490"
     },
     {
         "idx": 35,
         "phone": "+82 10-1000-2035",
         "address": "0x2Fe00A97b2e578bF7381CFA0379d3756372fF644",
-        "privateKey": "0x756d1ba4c61888a602cbfb75ee54ebeb9af22d75834522779bc24c0661242185",
-        "loyaltyType": 0
+        "privateKey": "0x756d1ba4c61888a602cbfb75ee54ebeb9af22d75834522779bc24c0661242185"
     },
     {
         "idx": 36,
         "phone": "+82 10-1000-2036",
         "address": "0x265A22e880fD793e277625ea8e4f7D58D40C419F",
-        "privateKey": "0xee5731e8b4ce2464e41990b6a4ce826cc61a9813d0ce4d7e1ec553f4961502e1",
-        "loyaltyType": 0
+        "privateKey": "0xee5731e8b4ce2464e41990b6a4ce826cc61a9813d0ce4d7e1ec553f4961502e1"
     },
     {
         "idx": 37,
         "phone": "+82 10-1000-2037",
         "address": "0x89e3b2D91ecaf08016eEDb966c1fecA1e326714e",
-        "privateKey": "0x329357385b1a8ee0425ec907e52916a384cb991d76d1e595a619c9b6957d080c",
-        "loyaltyType": 0
+        "privateKey": "0x329357385b1a8ee0425ec907e52916a384cb991d76d1e595a619c9b6957d080c"
     },
     {
         "idx": 38,
         "phone": "+82 10-1000-2038",
         "address": "0x2c620BdACb2ef5f7AE80Ca323f81158845A1605e",
-        "privateKey": "0x3432e4b1caec0d0733307e427e10b2732b1c1a70af331a3c08ae47a47312d6be",
-        "loyaltyType": 0
+        "privateKey": "0x3432e4b1caec0d0733307e427e10b2732b1c1a70af331a3c08ae47a47312d6be"
     },
     {
         "idx": 39,
         "phone": "+82 10-1000-2039",
         "address": "0x7CDaDf72FDbE02641027ACD0Aa517D3cA76996eF",
-        "privateKey": "0x91388010aa90bf0200a6e39dee390fd5a2f5db12a50571c83a0ef16f91a40b7e",
-        "loyaltyType": 0
+        "privateKey": "0x91388010aa90bf0200a6e39dee390fd5a2f5db12a50571c83a0ef16f91a40b7e"
     },
     {
         "idx": 40,
         "phone": "+82 10-1000-2040",
         "address": "0xb92E3679F3DA94003063FCf72E525bC7Df99bA3C",
-        "privateKey": "0xb55231ba7970293f5a8ee4452ebf937d1f3d5f64885bd713f228786f87708de3",
-        "loyaltyType": 0
+        "privateKey": "0xb55231ba7970293f5a8ee4452ebf937d1f3d5f64885bd713f228786f87708de3"
     },
     {
         "idx": 41,
         "phone": "+82 10-1000-2041",
         "address": "0x8cD7f4FD8ADd776B28D6A6A61625a89b1738c8d1",
-        "privateKey": "0xb25642f78c06f5b6cb145f00724e8ee7ee4f6f7a36d801b2605ce73ca88833e0",
-        "loyaltyType": 0
+        "privateKey": "0xb25642f78c06f5b6cb145f00724e8ee7ee4f6f7a36d801b2605ce73ca88833e0"
     },
     {
         "idx": 42,
         "phone": "+82 10-1000-2042",
         "address": "0xdCdb0368728F93c3a7aAef38980B5f0933cCcF31",
-        "privateKey": "0x4f8835465e067ecb63035db49651ec195708761ff751815dbed1c232fb4235d4",
-        "loyaltyType": 0
+        "privateKey": "0x4f8835465e067ecb63035db49651ec195708761ff751815dbed1c232fb4235d4"
     },
     {
         "idx": 43,
         "phone": "+82 10-1000-2043",
         "address": "0x58F2660975Ac5a747e2D3944AA4649EE460fB26D",
-        "privateKey": "0x8ecdc67a86bfb5be8e2fdd789977df32b0a8c70eefa7406a9701141232533f66",
-        "loyaltyType": 0
+        "privateKey": "0x8ecdc67a86bfb5be8e2fdd789977df32b0a8c70eefa7406a9701141232533f66"
     },
     {
         "idx": 44,
         "phone": "+82 10-1000-2044",
         "address": "0xA432821b87110a36f4163E1c5f66185efCB69117",
-        "privateKey": "0xe82958390a9e9706370f550cbda28f6a273faf835be363ec45ab99ed68039797",
-        "loyaltyType": 0
+        "privateKey": "0xe82958390a9e9706370f550cbda28f6a273faf835be363ec45ab99ed68039797"
     },
     {
         "idx": 45,
         "phone": "+82 10-1000-2045",
         "address": "0x2122bf35f2D64E64483A4289cD0Bcd613b1bcAFa",
-        "privateKey": "0x5757a560ba6caabe98b77c04b77ad61eae34776b9613f698d15edef1e30ce95c",
-        "loyaltyType": 0
+        "privateKey": "0x5757a560ba6caabe98b77c04b77ad61eae34776b9613f698d15edef1e30ce95c"
     },
     {
         "idx": 46,
         "phone": "+82 10-1000-2046",
         "address": "0xD303166E007f601cfAB726C8d078BE75e7fE809a",
-        "privateKey": "0xbb97770147c281103a36b1ce9720307e98ed74dd69eb7a87eceb25df9b1f42ea",
-        "loyaltyType": 0
+        "privateKey": "0xbb97770147c281103a36b1ce9720307e98ed74dd69eb7a87eceb25df9b1f42ea"
     },
     {
         "idx": 47,
         "phone": "+82 10-1000-2047",
         "address": "0x94c0Cd28e2988f58388E709eB2010c721e5c32E2",
-        "privateKey": "0x1b8eb15d5010a6673963207683fba7d5875a8aeb9d8c265351bb3934ca99bfcb",
-        "loyaltyType": 0
+        "privateKey": "0x1b8eb15d5010a6673963207683fba7d5875a8aeb9d8c265351bb3934ca99bfcb"
     },
     {
         "idx": 48,
         "phone": "+82 10-1000-2048",
         "address": "0xDF32A6dD8993528135C2e13B18dDAD3f78c581cF",
-        "privateKey": "0xeb50af73ef5b4cf3fc30dbd2334bd10ca285e266eb160990a21811087b144c4a",
-        "loyaltyType": 0
+        "privateKey": "0xeb50af73ef5b4cf3fc30dbd2334bd10ca285e266eb160990a21811087b144c4a"
     },
     {
         "idx": 49,
         "phone": "+82 10-1000-2049",
         "address": "0xFF94F0D95F4130A7212C5D91850373D5Fe9eeAF7",
-        "privateKey": "0xa158fa18c8109cc560fa76d8fbc29017a312924de0eea58db085e5f241afce5a",
-        "loyaltyType": 0
+        "privateKey": "0xa158fa18c8109cc560fa76d8fbc29017a312924de0eea58db085e5f241afce5a"
     },
     {
         "idx": 50,

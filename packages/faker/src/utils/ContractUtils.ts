@@ -306,35 +306,6 @@ export class ContractUtils {
         return res.toLowerCase() === account.toLowerCase();
     }
 
-    public static getLoyaltyTypeMessage(address: string, nonce: BigNumberish, chainId?: BigNumberish): Uint8Array {
-        const encodedResult = defaultAbiCoder.encode(
-            ["address", "uint256", "uint256"],
-            [address, chainId ? chainId : hre.ethers.provider.network.chainId, nonce]
-        );
-        return arrayify(keccak256(encodedResult));
-    }
-
-    public static async signLoyaltyType(signer: Signer, nonce: BigNumberish, chainId?: BigNumberish): Promise<string> {
-        const message = ContractUtils.getLoyaltyTypeMessage(await signer.getAddress(), nonce, chainId);
-        return signer.signMessage(message);
-    }
-
-    public static verifyLoyaltyType(
-        account: string,
-        nonce: BigNumberish,
-        signature: string,
-        chainId?: BigNumberish
-    ): boolean {
-        const message = ContractUtils.getLoyaltyTypeMessage(account, nonce, chainId);
-        let res: string;
-        try {
-            res = verifyMessage(message, signature);
-        } catch (error) {
-            return false;
-        }
-        return res.toLowerCase() === account.toLowerCase();
-    }
-
     // endregion
 
     public static getLoyaltyNewPaymentMessage(

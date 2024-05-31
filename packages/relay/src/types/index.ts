@@ -3,10 +3,6 @@ import { BigNumber } from "ethers";
 export const GWI_UNIT = 1000000000;
 export const PHONE_NULL = "0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c";
 
-export enum ContractLoyaltyType {
-    POINT,
-    TOKEN,
-}
 export enum ContractWithdrawStatus {
     CLOSE,
     OPEN,
@@ -186,7 +182,6 @@ export interface IUserData {
     phone: string;
     address: string;
     privateKey: string;
-    loyaltyType: number;
 }
 
 export enum MobileType {

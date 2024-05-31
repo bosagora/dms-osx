@@ -808,21 +808,19 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         console.log(`Deposit users.json`);
         const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
         for (const user of users) {
-            if (user.loyaltyType === 1) {
-                const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
+            const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
 
-                const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
-                const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
-                const tx8 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
-                    .connect(signer)
-                    .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
-                console.log(`Approve user's amount (tx: ${tx8.hash})...`);
-                // await tx8.wait();
+            const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
+            const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
+            const tx8 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
+                .connect(signer)
+                .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
+            console.log(`Approve user's amount (tx: ${tx8.hash})...`);
+            // await tx8.wait();
 
-                const tx9 = await (deployment.getContract("Ledger") as Ledger).connect(signer).deposit(depositedToken);
-                console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
-                // await tx9.wait();
-            }
+            const tx9 = await (deployment.getContract("Ledger") as Ledger).connect(signer).deposit(depositedToken);
+            console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
+            // await tx9.wait();
         }
 
         const linkContract = deployment.getContract("PhoneLinkCollection") as PhoneLinkCollection;
@@ -864,21 +862,19 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
 
         console.log(`Deposit users_mobile.json`);
         for (const user of users_mobile) {
-            if (user.loyaltyType === 1) {
-                const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
+            const signer = new Wallet(user.privateKey).connect(hre.ethers.provider);
 
-                const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
-                const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
-                const tx8 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
-                    .connect(signer)
-                    .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
-                console.log(`Approve user's amount (tx: ${tx8.hash})...`);
-                // await tx8.wait();
+            const balance = await (deployment.getContract("LoyaltyToken") as LoyaltyToken).balanceOf(user.address);
+            const depositedToken = ContractUtils.zeroGWEI(balance.div(2));
+            const tx8 = await (deployment.getContract("LoyaltyToken") as LoyaltyToken)
+                .connect(signer)
+                .approve((deployment.getContract("Ledger") as Ledger).address, depositedToken);
+            console.log(`Approve user's amount (tx: ${tx8.hash})...`);
+            // await tx8.wait();
 
-                const tx9 = await (deployment.getContract("Ledger") as Ledger).connect(signer).deposit(depositedToken);
-                console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
-                // await tx9.wait();
-            }
+            const tx9 = await (deployment.getContract("Ledger") as Ledger).connect(signer).deposit(depositedToken);
+            console.log(`Deposit user's amount (tx: ${tx9.hash})...`);
+            // await tx9.wait();
         }
 
         const chainId = (await hre.ethers.provider.getNetwork()).chainId;

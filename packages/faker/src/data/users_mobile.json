@@ -3,36 +3,31 @@
         "idx": 0,
         "phone": "+82 10-1000-5000",
         "address": "0x5650Cd3E6e8963B43d21fAe60ee7a03bCefCe766",
-        "privateKey": "0xb16f44bf95ff8d38f247fda10d0169f0b01aeb621eb0b84a50c4bd675362fbb8",
-        "loyaltyType": 0
+        "privateKey": "0xb16f44bf95ff8d38f247fda10d0169f0b01aeb621eb0b84a50c4bd675362fbb8"
     },
     {
         "idx": 1,
         "phone": "+82 10-1000-5001",
         "address": "0xB0FBfeceA23f95C2E34507EF1749aA979834BfAB",
-        "privateKey": "0x3ce10f1e575f6288d9a330a52efba9eadde2b3ca95d512324aa0adf2f12a6eee",
-        "loyaltyType": 0
+        "privateKey": "0x3ce10f1e575f6288d9a330a52efba9eadde2b3ca95d512324aa0adf2f12a6eee"
     },
     {
         "idx": 2,
         "phone": "+82 10-1000-5002",
         "address": "0xf5eFcEd6dEaF09afb1fbe1E66ac86d370Bab0bf5",
-        "privateKey": "0xedb16b2820f0f3d48fdaf2b08a041509c9f978e7e0c98aeb292a8b126a794b6c",
-        "loyaltyType": 0
+        "privateKey": "0xedb16b2820f0f3d48fdaf2b08a041509c9f978e7e0c98aeb292a8b126a794b6c"
     },
     {
         "idx": 3,
         "phone": "+82 10-1000-5003",
         "address": "0x79ef881A6D74Adf584fBa246B3fdd5Fc8Ef2Faa6",
-        "privateKey": "0xac8bd49233c4a2c144394798d6ed0eddbb90e52a929a632cdbdd5da8213899e7",
-        "loyaltyType": 0
+        "privateKey": "0xac8bd49233c4a2c144394798d6ed0eddbb90e52a929a632cdbdd5da8213899e7"
     },
     {
         "idx": 4,
         "phone": "+82 10-1000-5004",
         "address": "0xe06B52067c7bD475d98774e89Ff2a49dD0481677",
-        "privateKey": "0x3312c63106691e930cdd6c055655dc647f522230b5145ee30b156316f6081860",
-        "loyaltyType": 0
+        "privateKey": "0x3312c63106691e930cdd6c055655dc647f522230b5145ee30b156316f6081860"
     },
     {
         "idx": 5,
