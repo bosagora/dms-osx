@@ -120,9 +120,9 @@ export class MetricsScheduler extends Scheduler {
                     elem.total_used_amount
                 );
                 this.metrics.gaugeLabels(
-                    "shop_total_withdrawable_amount_clear",
+                    "shop_total_refunded_amount_clear",
                     { currency: elem.currency },
-                    elem.total_withdrawable_amount
+                    elem.total_refunded_amount
                 );
             }
         } catch (error) {

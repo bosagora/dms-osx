@@ -216,7 +216,7 @@ export class ShopRouter {
             this.shop_status_approval.bind(this)
         );
         this.app.post(
-            "/v1/shop/withdrawal/open",
+            "/v1/shop/refund",
             [
                 body("shopId")
                     .exists()
@@ -229,22 +229,7 @@ export class ShopRouter {
                     .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.shop_withdrawal_open.bind(this)
-        );
-        this.app.post(
-            "/v1/shop/withdrawal/close",
-            [
-                body("shopId")
-                    .exists()
-                    .trim()
-                    .matches(/^(0x)[0-9a-f]{64}$/i),
-                body("account").exists().trim().isEthereumAddress(),
-                body("signature")
-                    .exists()
-                    .trim()
-                    .matches(/^(0x)[0-9a-f]{130}$/i),
-            ],
-            this.shop_withdrawal_close.bind(this)
+            this.shop_refund.bind(this)
         );
         this.app.get(
             "/v1/shop/list",
@@ -262,14 +247,14 @@ export class ShopRouter {
             this.shop_info.bind(this)
         );
         this.app.get(
-            "/v1/shop/withdrawal/:shopId",
+            "/v1/shop/refundable/:shopId",
             [
                 param("shopId")
                     .exists()
                     .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
             ],
-            this.shop_withdrawal.bind(this)
+            this.shop_refundable.bind(this)
         );
     }
 
@@ -1093,11 +1078,11 @@ export class ShopRouter {
 
     /**
      * 상점 정산금을 인출 신청한다.
-     * POST /v1/shop/withdrawal/open
+     * POST /v1/shop/refund
      * @private
      */
-    private async shop_withdrawal_open(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/withdrawal/open ${req.ip}:${JSON.stringify(req.body)}`);
+    private async shop_refund(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/shop/refund ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1113,9 +1098,10 @@ export class ShopRouter {
 
             // 서명검증
             const nonce = await this.contractManager.sideShopContract.nonceOf(account);
-            const message = ContractUtils.getShopAccountMessage(
+            const message = ContractUtils.getShopRefundMessage(
                 shopId,
                 account,
+                amount,
                 nonce,
                 this.contractManager.sideChainId
             );
@@ -1124,61 +1110,14 @@ export class ShopRouter {
 
             const tx = await this.contractManager.sideShopContract
                 .connect(signerItem.signer)
-                .openWithdrawal(shopId, amount, account, signature);
+                .refund(shopId, account, amount, signature);
 
-            logger.http(`TxHash(/v1/shop/withdrawal/open): ${tx.hash}`);
+            logger.http(`TxHash(/v1/shop/refund): ${tx.hash}`);
             this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/shop/withdrawal/open : ${msg.error.message}`);
-            this.metrics.add("failure", 1);
-            return res.status(200).json(msg);
-        } finally {
-            this.releaseRelaySigner(signerItem);
-        }
-    }
-
-    /**
-     * 상점 정산금을 인출을 받은것을 확인한다.
-     * POST /v1/shop/withdrawal/close
-     * @private
-     */
-    private async shop_withdrawal_close(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/shop/withdrawal/close ${req.ip}:${JSON.stringify(req.body)}`);
-
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
-        }
-
-        const signerItem = await this.getRelaySigner();
-        try {
-            const shopId: string = String(req.body.shopId).trim();
-            const account: string = String(req.body.account).trim();
-            const signature: string = String(req.body.signature).trim(); // 서명
-
-            // 서명검증
-            const nonce = await this.contractManager.sideShopContract.nonceOf(account);
-            const message = ContractUtils.getShopAccountMessage(
-                shopId,
-                account,
-                nonce,
-                this.contractManager.sideChainId
-            );
-            if (!ContractUtils.verifyMessage(account, message, signature))
-                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
-
-            const tx = await this.contractManager.sideShopContract
-                .connect(signerItem.signer)
-                .closeWithdrawal(shopId, account, signature);
-
-            logger.http(`TxHash(/v1/shop/withdrawal/close): ${tx.hash}`);
-            this.metrics.add("success", 1);
-            return res.status(200).json(this.makeResponseData(0, { txHash: tx.hash }));
-        } catch (error: any) {
-            const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/shop/withdrawal/close : ${msg.error.message}`);
+            logger.error(`POST /v1/shop/refund : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         } finally {
@@ -1275,11 +1214,7 @@ export class ShopRouter {
                             account: m.account,
                             providedAmount: m.providedAmount.toString(),
                             usedAmount: m.usedAmount.toString(),
-                            settledAmount: m.settledAmount.toString(),
-                            withdrawnAmount: m.withdrawnAmount.toString(),
-                            withdrawReqId: m.withdrawReqId.toString(),
-                            withdrawReqAmount: m.withdrawReqAmount.toString(),
-                            withdrawReqStatus: m.withdrawReqStatus,
+                            refundedAmount: m.refundedAmount.toString(),
                         };
                     }),
                 })
@@ -1291,6 +1226,7 @@ export class ShopRouter {
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
+
     /**
      * 상점 정보 / 상점의 기본적인 정보를 제공하는 엔드포인트
      * GET /v1/shop/info/:shopId
@@ -1317,8 +1253,7 @@ export class ShopRouter {
                 delegator: info.delegator,
                 providedAmount: info.providedAmount.toString(),
                 usedAmount: info.usedAmount.toString(),
-                settledAmount: info.settledAmount.toString(),
-                withdrawnAmount: info.withdrawnAmount.toString(),
+                refundedAmount: info.refundedAmount.toString(),
             };
             this.metrics.add("success", 1);
             return res.status(200).json(this.makeResponseData(0, shopInfo));
@@ -1331,12 +1266,12 @@ export class ShopRouter {
     }
 
     /**
-     * 상점 정보 / 상점의 기본적인 정보를 제공하는 엔드포인트
-     * GET /v1/shop/withdrawal/:shopId
+     * 상점의 반환가능한 정산금을 제공하는 엔드포인트
+     * GET /v1/shop/info/:shopId
      * @private
      */
-    private async shop_withdrawal(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/shop/withdrawal/:shopId ${req.ip}:${JSON.stringify(req.params)}`);
+    private async shop_refundable(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/shop/refundable/:shopId ${req.ip}:${JSON.stringify(req.params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -1345,20 +1280,17 @@ export class ShopRouter {
 
         try {
             const shopId: string = String(req.params.shopId).trim();
-            const info = await this.contractManager.sideShopContract.shopOf(shopId);
+            const info = await this.contractManager.sideShopContract.refundableOf(shopId);
 
-            const status = info.withdrawData.status === ContractWithdrawStatus.CLOSE ? "Closed" : "Opened";
-            const shopWithdrawalInfo = {
-                shopId: info.shopId,
-                withdrawAmount: info.withdrawData.amount.toString(),
-                withdrawStatus: status,
+            const shopInfo = {
+                refundableAmount: info.refundableAmount.toString(),
+                refundableToken: info.refundableToken.toString(),
             };
-
             this.metrics.add("success", 1);
-            return res.status(200).json(this.makeResponseData(0, shopWithdrawalInfo));
+            return res.status(200).json(this.makeResponseData(0, shopInfo));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/shop/withdrawal/:shopId : ${msg.error.message}`);
+            logger.error(`GET /v1/shop/refundable/:shopId : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }

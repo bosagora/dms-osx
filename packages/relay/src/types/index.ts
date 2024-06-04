@@ -204,11 +204,7 @@ export interface IGraphShopData {
     account: string;
     providedAmount: BigNumber;
     usedAmount: BigNumber;
-    settledAmount: BigNumber;
-    withdrawnAmount: BigNumber;
-    withdrawReqId: BigNumber;
-    withdrawReqAmount: BigNumber;
-    withdrawReqStatus: ContractWithdrawStatus;
+    refundedAmount: BigNumber;
 }
 
 export interface IGraphPageInfo {
@@ -302,5 +298,5 @@ export interface IStatisticsShopInfo {
     shop_count: number;
     total_provided_amount: number;
     total_used_amount: number;
-    total_withdrawable_amount: number;
+    total_refunded_amount: number;
 }

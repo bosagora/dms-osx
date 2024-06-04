@@ -59,11 +59,7 @@ export class GraphStorage extends Storage {
                                 account: toChecksumAddress("0x" + m.account.toString("hex")),
                                 providedAmount: BigNumber.from(m.providedAmount).mul(GraphStorage.AmountUnit),
                                 usedAmount: BigNumber.from(m.usedAmount).mul(GraphStorage.AmountUnit),
-                                settledAmount: BigNumber.from(m.settledAmount).mul(GraphStorage.AmountUnit),
-                                withdrawnAmount: BigNumber.from(m.withdrawnAmount).mul(GraphStorage.AmountUnit),
-                                withdrawReqId: BigNumber.from(m.withdrawReqId),
-                                withdrawReqAmount: BigNumber.from(m.withdrawReqAmount).mul(GraphStorage.AmountUnit),
-                                withdrawReqStatus: m.withdrawReqStatus,
+                                refundedAmount: BigNumber.from(m.refundedAmount).mul(GraphStorage.AmountUnit),
                             };
                         })
                     );
@@ -239,7 +235,7 @@ export class GraphStorage extends Storage {
                                 shop_count: Number(m.shop_count),
                                 total_provided_amount: Number(m.total_provided_amount),
                                 total_used_amount: Number(m.total_used_amount),
-                                total_withdrawable_amount: Number(m.total_withdrawable_amount),
+                                total_refunded_amount: Number(m.total_refunded_amount),
                             };
                         })
                     );
