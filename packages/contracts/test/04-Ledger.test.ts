@@ -1390,6 +1390,275 @@ describe("Test for Ledger", () => {
         });
     });
 
+    context("Multi Currency", () => {
+        const userData: IUserData[] = [
+            {
+                phone: "08201012341001",
+                address: deployments.accounts.users[0].address,
+                privateKey: deployments.accounts.users[0].privateKey,
+            },
+            {
+                phone: "08201012341002",
+                address: deployments.accounts.users[1].address,
+                privateKey: deployments.accounts.users[1].privateKey,
+            },
+            {
+                phone: "08201012341003",
+                address: deployments.accounts.users[2].address,
+                privateKey: deployments.accounts.users[2].privateKey,
+            },
+            {
+                phone: "08201012341004",
+                address: "",
+                privateKey: "",
+            },
+            {
+                phone: "08201012341005",
+                address: "",
+                privateKey: "",
+            },
+        ];
+
+        const purchaseData: IPurchaseData[] = [
+            {
+                purchaseId: getPurchaseId(),
+                amount: 10000,
+                providePercent: 1,
+                currency: "KRW",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: getPurchaseId(),
+                amount: 10000,
+                providePercent: 1,
+                currency: "USD",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: getPurchaseId(),
+                amount: 10000,
+                providePercent: 1,
+                currency: "JPY",
+                shopIndex: 0,
+                userIndex: 0,
+            },
+            {
+                purchaseId: getPurchaseId(),
+                amount: 10000,
+                providePercent: 1,
+                currency: "CNY",
+                shopIndex: 1,
+                userIndex: 1,
+            },
+            {
+                purchaseId: getPurchaseId(),
+                amount: 10000,
+                providePercent: 1,
+                currency: "KRW",
+                shopIndex: 2,
+                userIndex: 1,
+            },
+            {
+                purchaseId: getPurchaseId(),
+                amount: 10000,
+                providePercent: 1,
+                currency: "KRW",
+                shopIndex: 3,
+                userIndex: 2,
+            },
+        ];
+
+        const shopData: IShopData[] = [
+            {
+                shopId: "F000100",
+                name: "Shop1",
+                currency: "krw",
+                wallet: deployments.accounts.shops[0],
+            },
+            {
+                shopId: "F000200",
+                name: "Shop2",
+                currency: "krw",
+                wallet: deployments.accounts.shops[1],
+            },
+            {
+                shopId: "F000300",
+                name: "Shop3",
+                currency: "krw",
+                wallet: deployments.accounts.shops[2],
+            },
+            {
+                shopId: "F000400",
+                name: "Shop4",
+                currency: "krw",
+                wallet: deployments.accounts.shops[3],
+            },
+            {
+                shopId: "F000500",
+                name: "Shop5",
+                currency: "krw",
+                wallet: deployments.accounts.shops[4],
+            },
+            {
+                shopId: "F000600",
+                name: "Shop6",
+                currency: "krw",
+                wallet: deployments.accounts.shops[5],
+            },
+        ];
+
+        before("Set Shop ID", async () => {
+            for (const elem of shopData) {
+                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
+            }
+        });
+
+        before("Deploy", async () => {
+            await deployAllContract(shopData);
+        });
+
+        before("Set Other Currency", async () => {
+            const height = 0;
+            const rates = [
+                {
+                    symbol: "usd",
+                    rate: multiple.mul(3),
+                },
+                {
+                    symbol: "jpy",
+                    rate: multiple.mul(2),
+                },
+                {
+                    symbol: "cny",
+                    rate: multiple.mul(1),
+                },
+                {
+                    symbol: "krw",
+                    rate: multiple.mul(1),
+                },
+            ];
+            const message = ContractUtils.getCurrencyMessage(height, rates);
+            const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+            await currencyContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures);
+        });
+
+        context("Save Purchase Data", () => {
+            it("Save Purchase Data", async () => {
+                for (const purchase of purchaseData) {
+                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const loyaltyAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
+                    const userAccount =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : AddressZero;
+                    const currency = purchase.currency.toLowerCase();
+                    const rate = await currencyContract.get(currency);
+                    const loyaltyPoint = ContractUtils.zeroGWEI(
+                        purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100)
+                    );
+                    const loyaltyValue = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
+                    const purchaseParam = {
+                        purchaseId: purchase.purchaseId,
+                        amount: purchaseAmount,
+                        loyalty: loyaltyAmount,
+                        currency: purchase.currency.toLowerCase(),
+                        shopId: shopData[purchase.shopIndex].shopId,
+                        account: userAccount,
+                        phone: phoneHash,
+                        sender: deployments.accounts.foundation.address,
+                    };
+                    const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
+                    const signatures = deployments.accounts.validators.map((m) =>
+                        ContractUtils.signMessage(m, purchaseMessage)
+                    );
+
+                    await expect(
+                        providerContract
+                            .connect(deployments.accounts.validators[0])
+                            .savePurchase(0, [purchaseParam], signatures)
+                    )
+                        .to.emit(providerContract, "SavedPurchase")
+                        .withArgs(
+                            purchaseParam.purchaseId,
+                            purchaseParam.amount,
+                            purchaseParam.loyalty,
+                            purchaseParam.currency,
+                            purchaseParam.shopId,
+                            purchaseParam.account,
+                            purchaseParam.phone,
+                            purchaseParam.sender
+                        )
+                        .emit(ledgerContract, "ProvidedPoint")
+                        .withNamedArgs({
+                            account: userAccount,
+                            providedPoint: loyaltyPoint,
+                            providedValue: loyaltyValue,
+                            purchaseId: purchaseParam.purchaseId,
+                        });
+                }
+            });
+
+            it("Check balances", async () => {
+                const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
+                for (const purchase of purchaseData) {
+                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
+                    const key =
+                        userData[purchase.userIndex].address.trim() !== ""
+                            ? userData[purchase.userIndex].address.trim()
+                            : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
+                    const oldValue = expected.get(key);
+
+                    const rate = await currencyContract.get(purchase.currency.toLowerCase());
+                    const shop = shopData[purchase.shopIndex];
+                    const point = ContractUtils.zeroGWEI(
+                        purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100)
+                    );
+
+                    if (oldValue !== undefined) expected.set(key, oldValue.add(point));
+                    else expected.set(key, point);
+                }
+                for (const key of expected.keys()) {
+                    if (key.match(/^0x[A-Fa-f0-9]{64}$/i)) {
+                        expect(await ledgerContract.unPayablePointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    } else {
+                        expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
+                    }
+                }
+            });
+
+            it("Check shop data", async () => {
+                const shopInfo1 = await shopContract.shopOf(shopData[0].shopId);
+                expect(shopInfo1.providedAmount).to.equal(
+                    Amount.make(10000 * 6, 18)
+                        .value.mul(1)
+                        .div(100)
+                );
+
+                const shopInfo2 = await shopContract.shopOf(shopData[1].shopId);
+                expect(shopInfo2.providedAmount).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(1)
+                        .div(100)
+                );
+                const shopInfo3 = await shopContract.shopOf(shopData[2].shopId);
+                expect(shopInfo3.providedAmount).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(1)
+                        .div(100)
+                );
+                const shopInfo4 = await shopContract.shopOf(shopData[3].shopId);
+                expect(shopInfo4.providedAmount).to.equal(
+                    Amount.make(10000 * 1, 18)
+                        .value.mul(1)
+                        .div(100)
+                );
+            });
+        });
+    });
+
     context("Clearing for shops", () => {
         const userData: IUserData[] = [
             {
@@ -1669,344 +1938,57 @@ describe("Test for Ledger", () => {
                     consumerContract
                         .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
-                )
-                    .to.emit(consumerContract, "LoyaltyPaymentEvent")
-                    .to.emit(consumerContract, "ProvidedTokenForSettlement")
-                    .withNamedArgs({
-                        account: deployments.accounts.settlement.address,
-                        shopId: shop.shopId,
-                        providedPoint: Amount.make(200, 18).value,
-                    });
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo = await shopContract.shopOf(shop.shopId);
                 expect(shopInfo.providedAmount).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo.usedAmount).to.equal(Amount.make(300, 18).value);
-                expect(shopInfo.settledAmount).to.equal(Amount.make(200, 18).value);
             });
         });
 
-        context("Withdrawal of settlement", () => {
+        context("refund of settlement", () => {
             const shopIndex = 1;
             const shop = shopData[shopIndex];
             const amount2 = Amount.make(200, 18).value;
-            it("Check Settlement", async () => {
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(amount2);
+            let amountToken: BigNumber;
+
+            it("Check refundable amount", async () => {
+                const { refundableAmount, refundableToken } = await shopContract.refundableOf(shop.shopId);
+                expect(refundableAmount).to.equal(amount2);
+                amountToken = refundableToken;
             });
 
-            it("Open Withdrawal", async () => {
+            it("refund", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const message = ContractUtils.getShopAccountMessage(
+                const message = ContractUtils.getShopRefundMessage(
                     shopData[shopIndex].shopId,
                     shopData[shopIndex].wallet.address,
+                    amount2,
                     nonce
                 );
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
                         .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
-                        .openWithdrawal(shop.shopId, amount2, shopData[shopIndex].wallet.address, signature)
+                        .refund(shop.shopId, shopData[shopIndex].wallet.address, amount2, signature)
                 )
-                    .to.emit(shopContract, "OpenedWithdrawal")
+                    .to.emit(shopContract, "Refunded")
                     .withNamedArgs({
                         shopId: shop.shopId,
-                        amount: amount2,
                         account: deployments.accounts.shops[shopIndex].address,
+                        refundAmount: amount2,
+                        amountToken,
                     });
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(amount2);
             });
 
-            it("Close Withdrawal", async () => {
-                const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const message = ContractUtils.getShopAccountMessage(
-                    shopData[shopIndex].shopId,
-                    shopData[shopIndex].wallet.address,
-                    nonce
-                );
-                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
-                await expect(
-                    shopContract
-                        .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
-                        .closeWithdrawal(shop.shopId, shopData[shopIndex].wallet.address, signature)
-                )
-                    .to.emit(shopContract, "ClosedWithdrawal")
-                    .withNamedArgs({
-                        shopId: shop.shopId,
-                        amount: amount2,
-                        account: deployments.accounts.shops[shopIndex].address,
-                    });
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(0);
-            });
-        });
-    });
-
-    context("Multi Currency", () => {
-        const userData: IUserData[] = [
-            {
-                phone: "08201012341001",
-                address: deployments.accounts.users[0].address,
-                privateKey: deployments.accounts.users[0].privateKey,
-            },
-            {
-                phone: "08201012341002",
-                address: deployments.accounts.users[1].address,
-                privateKey: deployments.accounts.users[1].privateKey,
-            },
-            {
-                phone: "08201012341003",
-                address: deployments.accounts.users[2].address,
-                privateKey: deployments.accounts.users[2].privateKey,
-            },
-            {
-                phone: "08201012341004",
-                address: "",
-                privateKey: "",
-            },
-            {
-                phone: "08201012341005",
-                address: "",
-                privateKey: "",
-            },
-        ];
-
-        const purchaseData: IPurchaseData[] = [
-            {
-                purchaseId: getPurchaseId(),
-                amount: 10000,
-                providePercent: 1,
-                currency: "KRW",
-                shopIndex: 0,
-                userIndex: 0,
-            },
-            {
-                purchaseId: getPurchaseId(),
-                amount: 10000,
-                providePercent: 1,
-                currency: "USD",
-                shopIndex: 0,
-                userIndex: 0,
-            },
-            {
-                purchaseId: getPurchaseId(),
-                amount: 10000,
-                providePercent: 1,
-                currency: "JPY",
-                shopIndex: 0,
-                userIndex: 0,
-            },
-            {
-                purchaseId: getPurchaseId(),
-                amount: 10000,
-                providePercent: 1,
-                currency: "CNY",
-                shopIndex: 1,
-                userIndex: 1,
-            },
-            {
-                purchaseId: getPurchaseId(),
-                amount: 10000,
-                providePercent: 1,
-                currency: "KRW",
-                shopIndex: 2,
-                userIndex: 1,
-            },
-            {
-                purchaseId: getPurchaseId(),
-                amount: 10000,
-                providePercent: 1,
-                currency: "KRW",
-                shopIndex: 3,
-                userIndex: 2,
-            },
-        ];
-
-        const shopData: IShopData[] = [
-            {
-                shopId: "F000100",
-                name: "Shop1",
-                currency: "krw",
-                wallet: deployments.accounts.shops[0],
-            },
-            {
-                shopId: "F000200",
-                name: "Shop2",
-                currency: "krw",
-                wallet: deployments.accounts.shops[1],
-            },
-            {
-                shopId: "F000300",
-                name: "Shop3",
-                currency: "krw",
-                wallet: deployments.accounts.shops[2],
-            },
-            {
-                shopId: "F000400",
-                name: "Shop4",
-                currency: "krw",
-                wallet: deployments.accounts.shops[3],
-            },
-            {
-                shopId: "F000500",
-                name: "Shop5",
-                currency: "krw",
-                wallet: deployments.accounts.shops[4],
-            },
-            {
-                shopId: "F000600",
-                name: "Shop6",
-                currency: "krw",
-                wallet: deployments.accounts.shops[5],
-            },
-        ];
-
-        before("Set Shop ID", async () => {
-            for (const elem of shopData) {
-                elem.shopId = ContractUtils.getShopId(elem.wallet.address, LoyaltyNetworkID.LYT);
-            }
-        });
-
-        before("Deploy", async () => {
-            await deployAllContract(shopData);
-        });
-
-        before("Set Other Currency", async () => {
-            const height = 0;
-            const rates = [
-                {
-                    symbol: "usd",
-                    rate: multiple.mul(3),
-                },
-                {
-                    symbol: "jpy",
-                    rate: multiple.mul(2),
-                },
-                {
-                    symbol: "cny",
-                    rate: multiple.mul(1),
-                },
-                {
-                    symbol: "krw",
-                    rate: multiple.mul(1),
-                },
-            ];
-            const message = ContractUtils.getCurrencyMessage(height, rates);
-            const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures);
-        });
-
-        context("Save Purchase Data", () => {
-            it("Save Purchase Data", async () => {
-                for (const purchase of purchaseData) {
-                    const phoneHash = ContractUtils.getPhoneHash(userData[purchase.userIndex].phone);
-                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const loyaltyAmount = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
-                    const userAccount =
-                        userData[purchase.userIndex].address.trim() !== ""
-                            ? userData[purchase.userIndex].address.trim()
-                            : AddressZero;
-                    const currency = purchase.currency.toLowerCase();
-                    const rate = await currencyContract.get(currency);
-                    const loyaltyPoint = ContractUtils.zeroGWEI(
-                        purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100)
-                    );
-                    const loyaltyValue = ContractUtils.zeroGWEI(purchaseAmount.mul(purchase.providePercent).div(100));
-                    const purchaseParam = {
-                        purchaseId: purchase.purchaseId,
-                        amount: purchaseAmount,
-                        loyalty: loyaltyAmount,
-                        currency: purchase.currency.toLowerCase(),
-                        shopId: shopData[purchase.shopIndex].shopId,
-                        account: userAccount,
-                        phone: phoneHash,
-                        sender: deployments.accounts.foundation.address,
-                    };
-                    const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = deployments.accounts.validators.map((m) =>
-                        ContractUtils.signMessage(m, purchaseMessage)
-                    );
-
-                    await expect(
-                        providerContract
-                            .connect(deployments.accounts.validators[0])
-                            .savePurchase(0, [purchaseParam], signatures)
-                    )
-                        .to.emit(providerContract, "SavedPurchase")
-                        .withArgs(
-                            purchaseParam.purchaseId,
-                            purchaseParam.amount,
-                            purchaseParam.loyalty,
-                            purchaseParam.currency,
-                            purchaseParam.shopId,
-                            purchaseParam.account,
-                            purchaseParam.phone,
-                            purchaseParam.sender
-                        )
-                        .emit(ledgerContract, "ProvidedPoint")
-                        .withNamedArgs({
-                            account: userAccount,
-                            providedPoint: loyaltyPoint,
-                            providedValue: loyaltyValue,
-                            purchaseId: purchaseParam.purchaseId,
-                        });
-                }
+            it("Check refundable amount", async () => {
+                const { refundableAmount } = await shopContract.refundableOf(shop.shopId);
+                expect(refundableAmount).to.equal(0);
             });
 
-            it("Check balances", async () => {
-                const expected: Map<string, BigNumber> = new Map<string, BigNumber>();
-                for (const purchase of purchaseData) {
-                    const purchaseAmount = Amount.make(purchase.amount, 18).value;
-                    const key =
-                        userData[purchase.userIndex].address.trim() !== ""
-                            ? userData[purchase.userIndex].address.trim()
-                            : ContractUtils.getPhoneHash(userData[purchase.userIndex].phone.trim());
-                    const oldValue = expected.get(key);
-
-                    const rate = await currencyContract.get(purchase.currency.toLowerCase());
-                    const shop = shopData[purchase.shopIndex];
-                    const point = ContractUtils.zeroGWEI(
-                        purchaseAmount.mul(rate).div(multiple).mul(purchase.providePercent).div(100)
-                    );
-
-                    if (oldValue !== undefined) expected.set(key, oldValue.add(point));
-                    else expected.set(key, point);
-                }
-                for (const key of expected.keys()) {
-                    if (key.match(/^0x[A-Fa-f0-9]{64}$/i)) {
-                        expect(await ledgerContract.unPayablePointBalanceOf(key)).to.deep.equal(expected.get(key));
-                    } else {
-                        expect(await ledgerContract.pointBalanceOf(key)).to.deep.equal(expected.get(key));
-                    }
-                }
-            });
-
-            it("Check shop data", async () => {
-                const shopInfo1 = await shopContract.shopOf(shopData[0].shopId);
-                expect(shopInfo1.providedAmount).to.equal(
-                    Amount.make(10000 * 6, 18)
-                        .value.mul(1)
-                        .div(100)
-                );
-
-                const shopInfo2 = await shopContract.shopOf(shopData[1].shopId);
-                expect(shopInfo2.providedAmount).to.equal(
-                    Amount.make(10000 * 1, 18)
-                        .value.mul(1)
-                        .div(100)
-                );
-                const shopInfo3 = await shopContract.shopOf(shopData[2].shopId);
-                expect(shopInfo3.providedAmount).to.equal(
-                    Amount.make(10000 * 1, 18)
-                        .value.mul(1)
-                        .div(100)
-                );
-                const shopInfo4 = await shopContract.shopOf(shopData[3].shopId);
-                expect(shopInfo4.providedAmount).to.equal(
-                    Amount.make(10000 * 1, 18)
-                        .value.mul(1)
-                        .div(100)
-                );
+            it("Check balance of ledger", async () => {
+                const balance = await ledgerContract.tokenBalanceOf(shopData[shopIndex].wallet.address);
+                expect(balance).to.equal(amountToken);
             });
         });
     });
@@ -2248,14 +2230,7 @@ describe("Test for Ledger", () => {
                     consumerContract
                         .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
-                )
-                    .to.emit(consumerContract, "LoyaltyPaymentEvent")
-                    .to.emit(consumerContract, "ProvidedTokenForSettlement")
-                    .withNamedArgs({
-                        account: deployments.accounts.settlement.address,
-                        shopId: shop.shopId,
-                        providedPoint: Amount.make(100, 18).value,
-                    });
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const rate = await currencyContract.get(shop.currency);
                 const shopInfo = await shopContract.shopOf(shop.shopId);
@@ -2263,70 +2238,54 @@ describe("Test for Ledger", () => {
                 expect(shopInfo.usedAmount).to.equal(
                     ContractUtils.zeroGWEI(Amount.make(100, 18).value.mul(multiple).div(rate))
                 );
-                expect(shopInfo.settledAmount).to.equal(
-                    ContractUtils.zeroGWEI(Amount.make(100, 18).value.mul(multiple).div(rate))
-                );
             });
         });
 
-        context("Withdrawal of settlement", () => {
+        context("refund of settlement", () => {
             const shopIndex = 3;
             const shop = shopData[shopIndex];
             let rate: BigNumber;
             let amount2: BigNumber;
+            let amountToken: BigNumber;
             it("Check Settlement", async () => {
                 rate = await currencyContract.get(shop.currency);
                 amount2 = ContractUtils.zeroGWEI(Amount.make(100, 18).value.mul(multiple).div(rate));
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(amount2);
+                const { refundableAmount, refundableToken } = await shopContract.refundableOf(shop.shopId);
+                expect(refundableAmount).to.equal(amount2);
+                amountToken = refundableToken;
             });
 
             it("Open Withdrawal", async () => {
                 const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const message = ContractUtils.getShopAccountMessage(
+                const message = ContractUtils.getShopRefundMessage(
                     shopData[shopIndex].shopId,
                     shopData[shopIndex].wallet.address,
+                    amount2,
                     nonce
                 );
                 const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
                 await expect(
                     shopContract
                         .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
-                        .openWithdrawal(shop.shopId, amount2, shopData[shopIndex].wallet.address, signature)
+                        .refund(shop.shopId, shopData[shopIndex].wallet.address, amount2, signature)
                 )
-                    .to.emit(shopContract, "OpenedWithdrawal")
+                    .to.emit(shopContract, "Refunded")
                     .withNamedArgs({
                         shopId: shop.shopId,
-                        amount: amount2,
                         account: deployments.accounts.shops[shopIndex].address,
-                        withdrawId: 1,
+                        refundAmount: amount2,
+                        amountToken,
                     });
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(amount2);
             });
 
-            it("Close Withdrawal", async () => {
-                const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const message = ContractUtils.getShopAccountMessage(
-                    shopData[shopIndex].shopId,
-                    shopData[shopIndex].wallet.address,
-                    nonce
-                );
-                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
-                await expect(
-                    shopContract
-                        .connect(shopData[shopIndex].wallet.connect(hre.ethers.provider))
-                        .closeWithdrawal(shop.shopId, shopData[shopIndex].wallet.address, signature)
-                )
-                    .to.emit(shopContract, "ClosedWithdrawal")
-                    .withNamedArgs({
-                        shopId: shop.shopId,
-                        amount: amount2,
-                        account: deployments.accounts.shops[shopIndex].address,
-                        withdrawId: 1,
-                    });
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(0);
+            it("Check refundable amount", async () => {
+                const { refundableAmount } = await shopContract.refundableOf(shop.shopId);
+                expect(refundableAmount).to.equal(0);
+            });
+
+            it("Check balance of ledger", async () => {
+                const balance = await ledgerContract.tokenBalanceOf(shopData[shopIndex].wallet.address);
+                expect(balance).to.equal(amountToken);
             });
         });
     });

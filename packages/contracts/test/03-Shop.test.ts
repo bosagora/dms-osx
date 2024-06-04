@@ -20,16 +20,12 @@ chai.use(solidity);
 describe("Test for Shop", () => {
     const deployments = new Deployments();
 
-    let validatorContract: Validator;
-    let tokenContract: ERC20;
     let currencyContract: CurrencyRate;
     let shopContract: Shop;
 
     const deployAllContract = async () => {
         await deployments.doDeployCurrencyRate();
 
-        tokenContract = deployments.getContract("TestLYT") as ERC20;
-        validatorContract = deployments.getContract("Validator") as Validator;
         currencyContract = deployments.getContract("CurrencyRate") as CurrencyRate;
     };
 

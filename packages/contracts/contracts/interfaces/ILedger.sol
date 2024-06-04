@@ -23,6 +23,14 @@ interface ILedger {
         address _sender
     ) external;
 
+    function refund(
+        address _account,
+        uint256 _amountValue,
+        string calldata _currency,
+        uint256 amountToken,
+        bytes32 _shopId
+    ) external;
+
     function changeToPayablePoint(bytes32 _phone, address _account) external;
 
     function addPointBalance(address _account, uint256 _amount) external;

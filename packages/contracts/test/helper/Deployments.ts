@@ -739,7 +739,8 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         deployment.getContract("LoyaltyExchanger") === undefined ||
         deployment.getContract("LoyaltyBurner") === undefined ||
         deployment.getContract("LoyaltyTransfer") === undefined ||
-        deployment.getContract("LoyaltyBridge") === undefined
+        deployment.getContract("LoyaltyBridge") === undefined ||
+        deployment.getContract("Shop") === undefined
     ) {
         console.error("Contract is not deployed!");
         return;
@@ -766,6 +767,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 burner: await deployment.getContractAddress("LoyaltyBurner"),
                 transfer: await deployment.getContractAddress("LoyaltyTransfer"),
                 bridge: await deployment.getContractAddress("LoyaltyBridge"),
+                shop: await deployment.getContractAddress("Shop"),
             },
         ],
         {
@@ -812,6 +814,10 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         .setLedger(contract.address);
     console.log(`Set address of LoyaltyBridge (tx: ${tx6.hash})...`);
     await tx6.wait();
+
+    const tx7 = await (deployment.getContract("Shop") as Shop).connect(accounts.deployer).setLedger(contract.address);
+    console.log(`Set address of Shop (tx: ${tx7.hash})...`);
+    await tx7.wait();
 
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
