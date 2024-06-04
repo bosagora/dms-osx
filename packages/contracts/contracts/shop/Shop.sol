@@ -44,17 +44,15 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         string purchaseId,
         bytes32 paymentId
     );
-    /// @notice 정산된 마일리지가 증가할 때 발생되는 이벤트
-    event IncreasedSettledAmount(bytes32 shopId, uint256 increase, uint256 total, string currency, string purchaseId);
 
-    event OpenedWithdrawal(bytes32 shopId, uint256 amount, string currency, address account, uint256 withdrawId);
-    event ClosedWithdrawal(
+    event Refunded(
         bytes32 shopId,
-        uint256 amount,
-        uint256 total,
-        string currency,
         address account,
-        uint256 withdrawId
+        uint256 refundAmount,
+        uint256 refundedTotal,
+        string currency,
+        uint256 amountToken,
+        uint256 balanceToken
     );
 
     /// @notice 생성자
@@ -86,9 +84,18 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         _;
     }
 
+    /// @notice 원장 컨트랙트를 등록한다.
+    function setLedger(address _contractAddress) external override {
+        require(_msgSender() == owner(), "1050");
+        if (!isSetLedger) {
+            ledgerContract = ILedger(_contractAddress);
+            isSetLedger = true;
+        }
+    }
+
     /// @notice 이용할 수 있는 아이디 인지 알려준다.
     /// @param _shopId 상점 아이디
-    function isAvailableId(bytes32 _shopId) public view override returns (bool) {
+    function isAvailableId(bytes32 _shopId) external view override returns (bool) {
         if (shops[_shopId].status == ShopStatus.INVALID) return true;
         else return false;
     }
@@ -117,10 +124,8 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
             delegator: address(0x0),
             providedAmount: 0,
             usedAmount: 0,
-            settledAmount: 0,
-            withdrawnAmount: 0,
+            refundedAmount: 0,
             status: ShopStatus.ACTIVE,
-            withdrawData: WithdrawData({ id: 0, amount: 0, status: WithdrawStatus.CLOSE }),
             itemIndex: items.length,
             accountIndex: shopIdByAddress[_account].length
         });
@@ -164,13 +169,8 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
                 _currency
             );
             shops[id].usedAmount = currencyRate.convertCurrency(shops[id].usedAmount, shops[id].currency, _currency);
-            shops[id].settledAmount = currencyRate.convertCurrency(
-                shops[id].settledAmount,
-                shops[id].currency,
-                _currency
-            );
-            shops[id].withdrawnAmount = currencyRate.convertCurrency(
-                shops[id].withdrawnAmount,
+            shops[id].refundedAmount = currencyRate.convertCurrency(
+                shops[id].refundedAmount,
                 shops[id].currency,
                 _currency
             );
@@ -314,38 +314,6 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         }
     }
 
-    /// @notice 정산된 총 마일지리를 누적한다
-    function addSettledAmount(
-        bytes32 _shopId,
-        uint256 _value,
-        string calldata _purchaseId
-    ) external override onlyConsumer {
-        if (shops[_shopId].status == ShopStatus.ACTIVE) {
-            shops[_shopId].settledAmount += _value;
-            emit IncreasedSettledAmount(
-                _shopId,
-                _value,
-                shops[_shopId].settledAmount,
-                shops[_shopId].currency,
-                _purchaseId
-            );
-        }
-    }
-
-    /// @notice 정산되어야 할 마일지리의 량을 리턴합니다.
-    function getSettlementAmount(bytes32 _shopId) external view override returns (uint256) {
-        if (shops[_shopId].status == ShopStatus.ACTIVE) {
-            ShopData memory data = shops[_shopId];
-            if (data.providedAmount + data.settledAmount < data.usedAmount) {
-                return DMS.zeroGWEI(data.usedAmount - data.providedAmount - data.settledAmount);
-            } else {
-                return 0;
-            }
-        } else {
-            return 0;
-        }
-    }
-
     /// @notice 상점 데이터를 리턴한다
     /// @param _shopId 상점의 아이디
     function shopOf(bytes32 _shopId) external view override returns (ShopData memory) {
@@ -363,71 +331,46 @@ contract Shop is ShopStorage, Initializable, OwnableUpgradeable, UUPSUpgradeable
         return items.length;
     }
 
-    /// @notice 인출가능한 정산금액을 리턴한다.
+    /// @notice 반환가능한 정산금액을 리턴한다.
     /// @param _shopId 상점의 아이디
-    function withdrawableOf(bytes32 _shopId) external view override returns (uint256) {
+    function refundableOf(
+        bytes32 _shopId
+    ) external view override returns (uint256 refundableAmount, uint256 refundableToken) {
         ShopData memory shop = shops[_shopId];
-        return shop.settledAmount - shop.withdrawnAmount;
+        uint256 settlementAmount = (shop.usedAmount > shop.providedAmount) ? shop.usedAmount - shop.providedAmount : 0;
+        refundableAmount = (settlementAmount > shop.refundedAmount) ? settlementAmount - shop.refundedAmount : 0;
+        refundableToken = currencyRate.convertCurrencyToToken(refundableAmount, shops[_shopId].currency);
     }
 
-    /// @notice 정산금의 인출을 요청한다.
+    /// @notice 정산금의 반환한다.
     /// @param _shopId 상점아이디
     /// @param _amount 인출금
     /// @dev 중계서버를 통해서 상점주의 서명을 가지고 호출됩니다.
-    function openWithdrawal(
-        bytes32 _shopId,
-        uint256 _amount,
-        address _account,
-        bytes calldata _signature
-    ) external virtual {
+    function refund(bytes32 _shopId, address _account, uint256 _amount, bytes calldata _signature) external virtual {
         require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
-        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, block.chainid, nonce[_account]));
+        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, _amount, block.chainid, nonce[_account]));
         require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-
+        require(shops[_shopId].account == _account, "1050");
         require(_amount % 1 gwei == 0, "1030");
 
         ShopData memory shop = shops[_shopId];
+        uint256 settlementAmount = (shop.usedAmount > shop.providedAmount) ? shop.usedAmount - shop.providedAmount : 0;
+        uint256 refundableAmount = (settlementAmount > shop.refundedAmount)
+            ? settlementAmount - shop.refundedAmount
+            : 0;
 
-        require(shop.account == _account, "1050");
+        require(_amount <= refundableAmount, "1220");
 
-        require(_amount <= shop.settledAmount - shop.withdrawnAmount, "1220");
-        require(shop.withdrawData.status == WithdrawStatus.CLOSE, "1221");
+        uint256 amountToken = currencyRate.convertCurrencyToToken(_amount, shops[_shopId].currency);
+        ledgerContract.refund(_account, _amount, shops[_shopId].currency, amountToken, _shopId);
 
-        shops[_shopId].withdrawData.id++;
-        shops[_shopId].withdrawData.amount = _amount;
-        shops[_shopId].withdrawData.status = WithdrawStatus.OPEN;
-
+        shops[_shopId].refundedAmount += _amount;
         nonce[_account]++;
 
-        emit OpenedWithdrawal(_shopId, _amount, shops[_shopId].currency, _account, shops[_shopId].withdrawData.id);
-    }
-
-    /// @notice 정산금의 인출을 마감한다. 상점주인만이 실행가능
-    /// @param _shopId 상점아이디
-    function closeWithdrawal(bytes32 _shopId, address _account, bytes calldata _signature) external virtual {
-        require(shops[_shopId].status == ShopStatus.ACTIVE, "1202");
-        bytes32 dataHash = keccak256(abi.encode(_shopId, _account, block.chainid, nonce[_account]));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signature) == _account, "1501");
-
-        ShopData memory shop = shops[_shopId];
-
-        require(shop.account == _account, "1050");
-
-        require(shop.withdrawData.status == WithdrawStatus.OPEN, "1222");
-
-        shops[_shopId].withdrawData.status = WithdrawStatus.CLOSE;
-        shops[_shopId].withdrawnAmount += shop.withdrawData.amount;
-
-        nonce[_account]++;
-
-        emit ClosedWithdrawal(
-            _shopId,
-            shops[_shopId].withdrawData.amount,
-            shops[_shopId].withdrawnAmount,
-            shops[_shopId].currency,
-            _account,
-            shops[_shopId].withdrawData.id
-        );
+        uint256 balanceToken = ledgerContract.tokenBalanceOf(_account);
+        uint256 refundedTotal = shops[_shopId].refundedAmount;
+        string memory currency = shops[_shopId].currency;
+        emit Refunded(_shopId, _account, _amount, refundedTotal, currency, amountToken, balanceToken);
     }
 
     /// @notice nonce를  리턴한다

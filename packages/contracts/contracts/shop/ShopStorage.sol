@@ -4,6 +4,7 @@ pragma solidity ^0.8.2;
 
 import "../interfaces/ICurrencyRate.sol";
 import "../interfaces/IShop.sol";
+import "../interfaces/ILedger.sol";
 
 /// @notice 상점컬랙션
 contract ShopStorage {
@@ -17,4 +18,7 @@ contract ShopStorage {
     mapping(address => uint256) internal nonce;
 
     ICurrencyRate internal currencyRate;
+    ILedger internal ledgerContract;
+
+    bool internal isSetLedger;
 }

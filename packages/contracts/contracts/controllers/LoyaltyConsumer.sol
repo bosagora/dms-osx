@@ -34,18 +34,6 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
     /// @notice 토큰/포인트로 지불을 완료했을 때 발생하는 이벤트
     event LoyaltyPaymentEvent(LoyaltyPaymentData payment, uint256 balance);
 
-    /// @notice 포인트가 정산될 때 발생되는 이벤트
-    event ProvidedTokenForSettlement(
-        address account,
-        bytes32 shopId,
-        uint256 providedPoint,
-        uint256 providedToken,
-        uint256 providedValue,
-        string currency,
-        uint256 balanceToken,
-        string purchaseId
-    );
-
     function initialize(address _currencyRateAddress) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained();
@@ -145,11 +133,6 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
         require(loyaltyPayments[_paymentId].status == LoyaltyPaymentStatus.OPENED_PAYMENT, "1531");
         require(loyaltyPayments[_paymentId].secretLock == keccak256(abi.encode(_secret)), "1505");
 
-        _closeNewLoyaltyPaymentPoint(_paymentId, _confirm);
-    }
-
-    /// @notice 포인트를 사용한 구매요청을 종료하는 함수
-    function _closeNewLoyaltyPaymentPoint(bytes32 _paymentId, bool _confirm) internal {
         uint256 totalPoint = loyaltyPayments[_paymentId].paidPoint + loyaltyPayments[_paymentId].feePoint;
         if (_confirm) {
             // 임시저장 포인트를 소각한다.
@@ -160,7 +143,20 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
                 ledgerContract.subTokenBalance(foundationAccount, loyaltyPayments[_paymentId].feeToken);
                 ledgerContract.addTokenBalance(feeAccount, loyaltyPayments[_paymentId].feeToken);
             }
-            _settleShop(_paymentId);
+            IShop.ShopData memory shop = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
+            if (shop.status == IShop.ShopStatus.ACTIVE) {
+                loyaltyPayments[_paymentId].usedValueShop = currencyRateContract.convertCurrency(
+                    loyaltyPayments[_paymentId].paidValue,
+                    loyaltyPayments[_paymentId].currency,
+                    shop.currency
+                );
+                shopContract.addUsedAmount(
+                    loyaltyPayments[_paymentId].shopId,
+                    loyaltyPayments[_paymentId].usedValueShop,
+                    loyaltyPayments[_paymentId].purchaseId,
+                    _paymentId
+                );
+            }
             loyaltyPayments[_paymentId].status = LoyaltyPaymentStatus.CLOSED_PAYMENT;
         } else {
             // 임시저장 포인트를 소각한다.
@@ -173,48 +169,6 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
             loyaltyPayments[_paymentId],
             ledgerContract.pointBalanceOf(loyaltyPayments[_paymentId].account)
         );
-    }
-
-    function _settleShop(bytes32 _paymentId) internal {
-        IShop.ShopData memory shop = shopContract.shopOf(loyaltyPayments[_paymentId].shopId);
-        if (shop.status == IShop.ShopStatus.ACTIVE) {
-            loyaltyPayments[_paymentId].usedValueShop = currencyRateContract.convertCurrency(
-                loyaltyPayments[_paymentId].paidValue,
-                loyaltyPayments[_paymentId].currency,
-                shop.currency
-            );
-            shopContract.addUsedAmount(
-                loyaltyPayments[_paymentId].shopId,
-                loyaltyPayments[_paymentId].usedValueShop,
-                loyaltyPayments[_paymentId].purchaseId,
-                _paymentId
-            );
-
-            uint256 settlementValue = shopContract.getSettlementAmount(loyaltyPayments[_paymentId].shopId);
-            if (settlementValue > 0) {
-                uint256 settlementPoint = currencyRateContract.convertCurrencyToPoint(settlementValue, shop.currency);
-                uint256 settlementToken = currencyRateContract.convertCurrencyToToken(settlementValue, shop.currency);
-                if (ledgerContract.tokenBalanceOf(foundationAccount) >= settlementToken) {
-                    ledgerContract.transferToken(foundationAccount, settlementAccount, settlementToken);
-                    shopContract.addSettledAmount(
-                        loyaltyPayments[_paymentId].shopId,
-                        settlementValue,
-                        loyaltyPayments[_paymentId].purchaseId
-                    );
-                    uint256 balance = ledgerContract.tokenBalanceOf(settlementAccount);
-                    emit ProvidedTokenForSettlement(
-                        settlementAccount,
-                        loyaltyPayments[_paymentId].shopId,
-                        settlementPoint,
-                        settlementToken,
-                        settlementValue,
-                        shop.currency,
-                        balance,
-                        loyaltyPayments[_paymentId].purchaseId
-                    );
-                }
-            }
-        }
     }
 
     /// @notice 로얄티(포인트/토큰)을 사용한 구매에 대하여 취소를 시작하는 함수

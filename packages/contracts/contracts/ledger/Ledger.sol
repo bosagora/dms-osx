@@ -42,6 +42,15 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         bytes32 shopId
     );
 
+    event Refunded(
+        address account,
+        uint256 amountValue,
+        string currency,
+        uint256 amountToken,
+        uint256 balanceToken,
+        bytes32 shopId
+    );
+
     /// @notice 토큰을 예치했을 때 발생하는 이벤트
     event Deposited(address account, uint256 depositedToken, uint256 depositedValue, uint256 balanceToken);
     /// @notice 토큰을 인출했을 때 발생하는 이벤트
@@ -66,6 +75,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         address burner;
         address transfer;
         address bridge;
+        address shop;
     }
 
     /// @notice 생성자
@@ -88,6 +98,7 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         transferAddress = contracts.transfer;
         tokenAddress = contracts.token;
         bridgeAddress = contracts.bridge;
+        shopAddress = contracts.shop;
 
         tokenContract = IBIP20DelegatedTransfer(contracts.token);
         linkContract = IPhoneLinkCollection(contracts.phoneLink);
@@ -137,6 +148,11 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
                 _msgSender() == bridgeAddress,
             "1007"
         );
+        _;
+    }
+
+    modifier onlyShop() {
+        require(_msgSender() == shopAddress, "1007");
         _;
     }
 
@@ -261,6 +277,21 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         }
         uint256 balance = pointBalances[_account];
         emit ProvidedPoint(_account, _loyaltyPoint, _loyaltyValue, _currency, balance, _purchaseId, _shopId);
+    }
+
+    function refund(
+        address _account,
+        uint256 _amountValue,
+        string calldata _currency,
+        uint256 amountToken,
+        bytes32 _shopId
+    ) external override onlyShop {
+        require(tokenBalances[foundationAccount] >= amountToken, "1511");
+
+        tokenBalances[_account] += amountToken;
+        tokenBalances[foundationAccount] -= amountToken;
+        uint256 balanceToken = tokenBalances[_account];
+        emit Refunded(_account, _amountValue, _currency, amountToken, balanceToken, _shopId);
     }
 
     /// @notice 포인트의 잔고에 더한다. Consumer 컨트랙트만 호출할 수 있다.
