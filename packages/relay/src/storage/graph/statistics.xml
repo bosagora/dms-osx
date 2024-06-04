@@ -69,7 +69,7 @@
             COUNT(shops.id) as shop_count,
             COALESCE(SUM(shops.provided_amount), 0) as total_provided_amount,
             COALESCE(SUM(shops.used_amount), 0) as total_used_amount,
-            COALESCE(SUM(shops.settled_amount - shops.withdrawn_amount), 0) as total_withdrawable_amount
+            COALESCE(SUM(shops.refunded_amount), 0) as total_refunded_amount
         FROM shops
         WHERE status = 1
         GROUP BY currency;

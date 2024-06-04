@@ -384,19 +384,11 @@ describe("Test for Shop", () => {
                     consumerContract
                         .connect(deployments.accounts.certifiers[0])
                         .closeNewLoyaltyPayment(paymentId, secret, true)
-                )
-                    .to.emit(consumerContract, "ProvidedTokenForSettlement")
-                    .withNamedArgs({
-                        account: deployments.accounts.settlement.address,
-                        shopId: shop.shopId,
-                        providedPoint: Amount.make(200, 18).value,
-                    })
-                    .to.emit(consumerContract, "LoyaltyPaymentEvent");
+                ).to.emit(consumerContract, "LoyaltyPaymentEvent");
 
                 const shopInfo = await shopContract.shopOf(shop.shopId);
                 expect(shopInfo.providedAmount).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo.usedAmount).to.equal(Amount.make(300, 18).value);
-                expect(shopInfo.settledAmount).to.equal(Amount.make(200, 18).value);
             });
         });
 
@@ -487,134 +479,96 @@ describe("Test for Shop", () => {
                 const shopInfo2 = await shopContract.shopOf(shop.shopId);
                 expect(shopInfo2.providedAmount).to.equal(Amount.make(100, 18).value);
                 expect(shopInfo2.usedAmount).to.equal(Amount.make(500, 18).value);
-                expect(shopInfo2.settledAmount).to.equal(Amount.make(400, 18).value);
             });
         });
 
-        context("Withdrawal of settlement", () => {
+        context("refund of settlement", () => {
             const shopIndex = 2;
             const shop = shopData[shopIndex];
             const amount2 = Amount.make(400, 18).value;
+            let amountToken: BigNumber;
 
-            it("Check Settlement", async () => {
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(amount2);
+            it("Check refundable amount", async () => {
+                const url = URI(serverURL).directory("/v1/shop/refundable/").filename(shop.shopId).toString();
+                const response = await client.get(url);
+                const refundableAmount = BigNumber.from(response.data.data.refundableAmount);
+                expect(refundableAmount).to.equal(amount2);
+                amountToken = BigNumber.from(response.data.data.refundableToken);
             });
 
             it("Get info of shop", async () => {
-                const url = URI(serverURL).directory("/v1/shop/info").filename(shopData[shopIndex].shopId).toString();
+                const url = URI(serverURL).directory("/v1/shop/info").filename(shop.shopId).toString();
                 const response = await client.get(url);
                 expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
-                    shopId: shopData[shopIndex].shopId,
+                    shopId: shop.shopId,
                     name: "Shop3",
                     currency: "krw",
                     status: 1,
                     delegator: "0x0000000000000000000000000000000000000000",
-                    account: shopData[shopIndex].wallet.address,
+                    account: shop.wallet.address,
                     providedAmount: "100000000000000000000",
                     usedAmount: "500000000000000000000",
-                    settledAmount: "400000000000000000000",
-                    withdrawnAmount: "0",
+                    refundedAmount: "0",
                 });
             });
 
-            it("Open Withdrawal", async () => {
-                const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const message = ContractUtils.getShopAccountMessage(
-                    shopData[shopIndex].shopId,
-                    shopData[shopIndex].wallet.address,
+            it("refund", async () => {
+                const nonce = await shopContract.nonceOf(shop.wallet.address);
+                const message = ContractUtils.getShopRefundMessage(
+                    shop.shopId,
+                    shop.wallet.address,
+                    amount2,
                     nonce,
                     contractManager.sideChainId
                 );
-                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
+                const signature = await ContractUtils.signMessage(shop.wallet, message);
 
-                const uri = URI(serverURL).directory("/v1/shop/withdrawal").filename("open");
+                const uri = URI(serverURL).directory("/v1/shop").filename("refund");
                 const url = uri.toString();
                 const response = await client.post(url, {
-                    shopId: shopData[shopIndex].shopId,
+                    shopId: shop.shopId,
                     amount: amount2.toString(),
-                    account: shopData[shopIndex].wallet.address,
+                    account: shop.wallet.address,
                     signature,
                 });
 
                 expect(response.data.code).to.equal(0);
                 expect(response.data.data).to.not.equal(undefined);
                 expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(amount2);
             });
 
-            it("Get withdrawal of shop", async () => {
+            it("Check refundable amount", async () => {
+                const url = URI(serverURL).directory("/v1/shop/refundable/").filename(shop.shopId).toString();
+                const response = await client.get(url);
+                const refundableAmount = BigNumber.from(response.data.data.refundableAmount);
+                expect(refundableAmount).to.equal(0);
+            });
+
+            it("Check balance of ledger", async () => {
                 const url = URI(serverURL)
-                    .directory("/v1/shop/withdrawal")
-                    .filename(shopData[shopIndex].shopId)
+                    .directory("/v1/ledger/balance/account/")
+                    .filename(shop.wallet.address)
                     .toString();
                 const response = await client.get(url);
-                expect(response.data.code).to.equal(0);
-                assert.deepStrictEqual(response.data.data, {
-                    shopId: shopData[shopIndex].shopId,
-                    withdrawAmount: "400000000000000000000",
-                    withdrawStatus: "Opened",
-                });
-            });
-
-            it("Close Withdrawal", async () => {
-                const nonce = await shopContract.nonceOf(shopData[shopIndex].wallet.address);
-                const message = ContractUtils.getShopAccountMessage(
-                    shopData[shopIndex].shopId,
-                    shopData[shopIndex].wallet.address,
-                    nonce,
-                    contractManager.sideChainId
-                );
-                const signature = await ContractUtils.signMessage(shopData[shopIndex].wallet, message);
-
-                const uri = URI(serverURL).directory("/v1/shop/withdrawal").filename("close");
-                const url = uri.toString();
-                const response = await client.post(url, {
-                    shopId: shopData[shopIndex].shopId,
-                    account: shopData[shopIndex].wallet.address,
-                    signature,
-                });
-
-                expect(response.data.code).to.equal(0);
-                expect(response.data.data).to.not.equal(undefined);
-                expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
-
-                const withdrawalAmount = await shopContract.withdrawableOf(shop.shopId);
-                expect(withdrawalAmount).to.equal(0);
+                const balance = BigNumber.from(response.data.data.token.balance);
+                expect(balance).to.equal(amountToken);
             });
 
             it("Get info of shop", async () => {
-                const url = URI(serverURL).directory("/v1/shop/info").filename(shopData[shopIndex].shopId).toString();
+                const url = URI(serverURL).directory("/v1/shop/info").filename(shop.shopId).toString();
                 const response = await client.get(url);
                 expect(response.data.code).to.equal(0);
                 assert.deepStrictEqual(response.data.data, {
-                    shopId: shopData[shopIndex].shopId,
+                    shopId: shop.shopId,
                     name: "Shop3",
                     currency: "krw",
                     status: 1,
-                    account: shopData[shopIndex].wallet.address,
+                    account: shop.wallet.address,
                     delegator: "0x0000000000000000000000000000000000000000",
                     providedAmount: "100000000000000000000",
                     usedAmount: "500000000000000000000",
-                    settledAmount: "400000000000000000000",
-                    withdrawnAmount: "400000000000000000000",
-                });
-            });
-
-            it("Get withdrawal of shop", async () => {
-                const url = URI(serverURL)
-                    .directory("/v1/shop/withdrawal")
-                    .filename(shopData[shopIndex].shopId)
-                    .toString();
-                const response = await client.get(url);
-                expect(response.data.code).to.equal(0);
-                assert.deepStrictEqual(response.data.data, {
-                    shopId: shopData[shopIndex].shopId,
-                    withdrawAmount: "400000000000000000000",
-                    withdrawStatus: "Closed",
+                    refundedAmount: "400000000000000000000",
                 });
             });
         });
