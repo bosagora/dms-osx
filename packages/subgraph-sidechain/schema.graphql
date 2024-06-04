@@ -116,8 +116,7 @@ type ShopTradeHistory @entity(immutable: true) {
   currency: String!
   providedAmount: BigInt!
   usedAmount: BigInt!
-  settledAmount: BigInt!
-  withdrawnAmount: BigInt!
+  refundedAmount: BigInt!
   purchaseId: String
   paymentId: Bytes
 
@@ -137,23 +136,7 @@ type Shop @entity {
 
   providedAmount: BigInt!
   usedAmount: BigInt!
-  settledAmount: BigInt!
-  withdrawnAmount: BigInt!
-
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-
-type ShopWithdraw @entity {
-  id: Bytes! # shopId
-
-  amount: BigInt! # uint256
-  currency: String! # string
-  account: Bytes! # address
-  withdrawId: BigInt! # uint256
-  status: Int!
+  refundedAmount: BigInt!
 
   blockNumber: BigInt!
   blockTimestamp: BigInt!

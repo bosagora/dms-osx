@@ -3,14 +3,12 @@ import { AmountUnit, NullBytes32 } from "./utils";
 import {
     Deposited as DepositedEvent,
     ProvidedPoint as ProvidedPointEvent,
+    Refunded as RefundedEvent,
     ProvidedUnPayablePoint as ProvidedUnPayablePointEvent,
     Withdrawn as WithdrawnEvent,
 } from "../generated/Ledger/Ledger";
 import { SavedPurchase as SavedPurchaseEvent } from "../generated/LoyaltyProvider/LoyaltyProvider";
-import {
-    LoyaltyPaymentEvent as LoyaltyPaymentEventEvent,
-    ProvidedTokenForSettlement as ProvidedTokenForSettlementEvent,
-} from "../generated/LoyaltyConsumer/LoyaltyConsumer";
+import { LoyaltyPaymentEvent as LoyaltyPaymentEventEvent } from "../generated/LoyaltyConsumer/LoyaltyConsumer";
 import {
     ChangedToPayablePoint as ChangedToPayablePointEvent,
     ChangedPointToToken as ChangedPointToTokenEvent,
@@ -63,7 +61,7 @@ enum UserAction {
     CHANGED_PAYABLE_POINT = 21,
     CHANGED_TOKEN = 22,
     CHANGED_POINT = 23,
-    SETTLEMENT = 31,
+    REFUND = 31,
     IN = 41,
     OUT = 42,
 }
@@ -310,8 +308,8 @@ export function handleProvidedPoint(event: ProvidedPointEvent): void {
     handleProvidedPointForHistory(event);
 }
 
-export function handleProvidedTokenForSettlement(event: ProvidedTokenForSettlementEvent): void {
-    handleSettlementForHistory(event);
+export function handleRefunded(event: RefundedEvent): void {
+    handleRefundedForHistory(event);
 }
 
 export function handleProvidedForUnPayablePointForHistory(event: ProvidedUnPayablePointEvent): void {
@@ -361,7 +359,7 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     entity.save();
 }
 
-export function handleSettlementForHistory(event: ProvidedTokenForSettlementEvent): void {
+export function handleRefundedForHistory(event: RefundedEvent): void {
     const balanceEntity = handleChangedBalanceToken(
         event.params.account,
         event.params.balanceToken,
@@ -372,18 +370,18 @@ export function handleSettlementForHistory(event: ProvidedTokenForSettlementEven
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
     entity.pageType = PageType.NONE;
-    entity.action = UserAction.SETTLEMENT;
+    entity.action = UserAction.REFUND;
     entity.cancel = false;
-    entity.amountPoint = event.params.providedPoint.div(AmountUnit);
-    entity.amountToken = event.params.providedToken.div(AmountUnit);
-    entity.amountValue = event.params.providedPoint.div(AmountUnit);
+    entity.amountPoint = BigInt.fromI32(0);
+    entity.amountToken = event.params.amountToken.div(AmountUnit);
+    entity.amountValue = event.params.amountValue.div(AmountUnit);
     entity.feePoint = BigInt.fromI32(0);
     entity.feeToken = BigInt.fromI32(0);
     entity.feeValue = BigInt.fromI32(0);
     entity.currency = event.params.currency;
     entity.balanceToken = event.params.balanceToken.div(AmountUnit);
     entity.balancePoint = balanceEntity.point;
-    entity.purchaseId = event.params.purchaseId;
+    entity.purchaseId = "";
     entity.paymentId = NullBytes32;
     entity.shopId = event.params.shopId;
 
@@ -392,7 +390,6 @@ export function handleSettlementForHistory(event: ProvidedTokenForSettlementEven
     entity.transactionHash = event.transaction.hash;
     entity.save();
 }
-
 // endregion
 
 // region LoyaltyTransfer
