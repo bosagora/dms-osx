@@ -47,6 +47,7 @@ dataSources:
         - ProvidedPoint
         - ProvidedUnPayablePoint
         - Withdrawn
+        - Refunded
       abis:
         - name: Ledger
           file: $DMS_OSX_MODULE/artifacts/contracts/ledger/Ledger.sol/Ledger.json
@@ -59,6 +60,8 @@ dataSources:
           handler: handleProvidedUnPayablePoint
         - event: Withdrawn(address,uint256,uint256,uint256)
           handler: handleWithdrawn
+        - event: Refunded(address,uint256,string,uint256,uint256,bytes32)
+          handler: handleRefunded
       file: ./src/ledger.ts
 
   - kind: ethereum
@@ -95,15 +98,12 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - LoyaltyPaymentEvent
-        - ProvidedTokenForSettlement
       abis:
         - name: LoyaltyConsumer
           file: $DMS_OSX_MODULE/artifacts/contracts/controllers/LoyaltyConsumer.sol/LoyaltyConsumer.json
       eventHandlers:
         - event: LoyaltyPaymentEvent((bytes32,string,string,bytes32,address,bytes32,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint8),uint256)
           handler: handleLoyaltyPaymentEvent
-        - event: ProvidedTokenForSettlement(address,bytes32,uint256,uint256,uint256,string,uint256,string)
-          handler: handleProvidedTokenForSettlement
       file: ./src/ledger.ts
 
   - kind: ethereum
@@ -216,10 +216,8 @@ dataSources:
         - ClosedWithdrawal
         - DecreasedUsedAmount
         - IncreasedProvidedAmount
-        - IncreasedSettledAmount
         - IncreasedUsedAmount
-        - OpenedWithdrawal
-        - UpdatedShop
+        - Refunded
       abis:
         - name: Shop
           file: $DMS_OSX_MODULE/artifacts/contracts/shop/Shop.sol/Shop.json
@@ -228,18 +226,14 @@ dataSources:
           handler: handleAddedShop
         - event: ChangedShopStatus(bytes32,uint8)
           handler: handleChangedShopStatus
-        - event: ClosedWithdrawal(bytes32,uint256,uint256,string,address,uint256)
-          handler: handleClosedWithdrawal
         - event: DecreasedUsedAmount(bytes32,uint256,uint256,string,string,bytes32)
           handler: handleDecreasedUsedAmount
         - event: IncreasedProvidedAmount(bytes32,uint256,uint256,string,string)
           handler: handleIncreasedProvidedAmount
-        - event: IncreasedSettledAmount(bytes32,uint256,uint256,string,string)
-          handler: handleIncreasedSettledAmount
         - event: IncreasedUsedAmount(bytes32,uint256,uint256,string,string,bytes32)
           handler: handleIncreasedUsedAmount
-        - event: OpenedWithdrawal(bytes32,uint256,string,address,uint256)
-          handler: handleOpenedWithdrawal
+        - event: Refunded(bytes32,address,uint256,uint256,string,uint256,uint256)
+          handler: handleRefunded
         - event: UpdatedShop(bytes32,string,string,address,uint8)
           handler: handleUpdatedShop
       file: ./src/shop.ts
