@@ -46,7 +46,6 @@ export interface IAccount {
     deployer: Wallet;
     owner: Wallet;
     foundation: Wallet;
-    settlement: Wallet;
     fee: Wallet;
     txFee: Wallet;
     validators: Wallet[];
@@ -76,7 +75,6 @@ export class Deployments {
             deployer,
             owner,
             foundation,
-            settlement,
             fee,
             txFee,
             certifier01,
@@ -140,7 +138,6 @@ export class Deployments {
             deployer,
             owner,
             foundation,
-            settlement,
             fee,
             txFee,
             validators: [validator01, validator02, validator03],
@@ -753,7 +750,6 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
         [
             {
                 foundation: accounts.foundation.address,
-                settlement: accounts.settlement.address,
                 fee: accounts.fee.address,
                 txFee: accounts.txFee.address,
             },

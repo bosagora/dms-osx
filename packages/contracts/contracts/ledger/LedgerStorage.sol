@@ -19,7 +19,6 @@ contract LedgerStorage {
     mapping(address => uint256) internal liquidity;
 
     address public foundationAccount;
-    address public settlementAccount;
     address public feeAccount;
     address public txFeeAccount;
     address public providerAddress;
