@@ -60,7 +60,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     struct ManagementAddresses {
         address foundation;
-        address settlement;
         address fee;
         address txFee;
     }
@@ -87,7 +86,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
         __Ownable_init_unchained();
 
         foundationAccount = managements.foundation;
-        settlementAccount = managements.settlement;
         feeAccount = managements.fee;
         txFeeAccount = managements.txFee;
 
@@ -374,10 +372,6 @@ contract Ledger is LedgerStorage, Initializable, OwnableUpgradeable, UUPSUpgrade
 
     function getFoundationAccount() external view override returns (address) {
         return foundationAccount;
-    }
-
-    function getSettlementAccount() external view override returns (address) {
-        return settlementAccount;
     }
 
     function getFeeAccount() external view override returns (address) {

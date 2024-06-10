@@ -1946,7 +1946,7 @@ describe("Test for Ledger", () => {
             });
         });
 
-        context("refund of settlement", () => {
+        context("refund", () => {
             const shopIndex = 1;
             const shop = shopData[shopIndex];
             const amount2 = Amount.make(200, 18).value;
@@ -2241,13 +2241,13 @@ describe("Test for Ledger", () => {
             });
         });
 
-        context("refund of settlement", () => {
+        context("refund", () => {
             const shopIndex = 3;
             const shop = shopData[shopIndex];
             let rate: BigNumber;
             let amount2: BigNumber;
             let amountToken: BigNumber;
-            it("Check Settlement", async () => {
+            it("Check", async () => {
                 rate = await currencyContract.get(shop.currency);
                 amount2 = ContractUtils.zeroGWEI(Amount.make(100, 18).value.mul(multiple).div(rate));
                 const { refundableAmount, refundableToken } = await shopContract.refundableOf(shop.shopId);

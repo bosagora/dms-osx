@@ -87,7 +87,7 @@ describe("Test for Shop", () => {
     let storage: RelayStorage;
     let serverURL: URL;
 
-    context("Settlement of shops", () => {
+    context("Refunds of shops", () => {
         const userData: IUserData[] = [
             {
                 phone: "08201012341001",
@@ -482,7 +482,7 @@ describe("Test for Shop", () => {
             });
         });
 
-        context("refund of settlement", () => {
+        context("refund", () => {
             const shopIndex = 2;
             const shop = shopData[shopIndex];
             const amount2 = Amount.make(400, 18).value;

@@ -45,17 +45,6 @@ function getAccounts() {
         accounts.push(process.env.FOUNDATION);
     }
 
-    if (
-        process.env.SETTLEMENTS !== undefined &&
-        process.env.SETTLEMENTS.trim() !== "" &&
-        reg_bytes64.test(process.env.SETTLEMENTS)
-    ) {
-        accounts.push(process.env.SETTLEMENTS);
-    } else {
-        process.env.SETTLEMENTS = Wallet.createRandom().privateKey;
-        accounts.push(process.env.SETTLEMENTS);
-    }
-
     if (process.env.FEE !== undefined && process.env.FEE.trim() !== "" && reg_bytes64.test(process.env.FEE)) {
         accounts.push(process.env.FEE);
     } else {

@@ -59,8 +59,6 @@ interface ILedger {
 
     function getFoundationAccount() external view returns (address);
 
-    function getSettlementAccount() external view returns (address);
-
     function getFeeAccount() external view returns (address);
 
     function getTxFeeAccount() external view returns (address);

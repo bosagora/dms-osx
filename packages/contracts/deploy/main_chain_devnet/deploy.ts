@@ -12,7 +12,6 @@ import { BaseContract, Contract, Wallet } from "ethers";
 import fs from "fs";
 
 import * as hre from "hardhat";
-import { ethers, upgrades } from "hardhat";
 
 const network = "main_chain_devnet";
 
@@ -36,7 +35,6 @@ interface IAccount {
     deployer: Wallet;
     owner: Wallet;
     foundation: Wallet;
-    settlement: Wallet;
     fee: Wallet;
     txFee: Wallet;
     validators: Wallet[];
@@ -66,7 +64,6 @@ class Deployments {
             deployer_main_chain,
             owner,
             foundation,
-            settlement,
             fee,
             txFee,
             certifier01,
@@ -112,7 +109,6 @@ class Deployments {
             deployer: deployer_main_chain,
             owner,
             foundation,
-            settlement,
             fee,
             txFee,
             validators: [
@@ -380,8 +376,8 @@ async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) 
         return;
     }
 
-    const factory = await ethers.getContractFactory("Bridge");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("Bridge");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("BridgeValidator"), accounts.txFee.address],
         {
@@ -395,7 +391,7 @@ async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) 
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
-    const chainId = (await ethers.provider.getNetwork()).chainId;
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
         const tokenContract = (await deployment.getContract("LoyaltyToken")) as LoyaltyToken;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
@@ -430,8 +426,8 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
         return;
     }
 
-    const factory = await ethers.getContractFactory("Bridge");
-    const contract = (await upgrades.deployProxy(
+    const factory = await hre.ethers.getContractFactory("Bridge");
+    const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
         [await deployment.getContractAddress("BridgeValidator"), accounts.txFee.address],
         {
@@ -445,7 +441,7 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
 
-    const chainId = (await ethers.provider.getNetwork()).chainId;
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
         const tokenContract = (await deployment.getContract("LoyaltyToken")) as LoyaltyToken;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());

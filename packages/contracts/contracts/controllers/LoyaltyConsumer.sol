@@ -50,7 +50,6 @@ contract LoyaltyConsumer is LoyaltyConsumerStorage, Initializable, OwnableUpgrad
         if (!isSetLedger) {
             ledgerContract = ILedger(_contractAddress);
             foundationAccount = ledgerContract.getFoundationAccount();
-            settlementAccount = ledgerContract.getSettlementAccount();
             feeAccount = ledgerContract.getFeeAccount();
             isSetLedger = true;
         }

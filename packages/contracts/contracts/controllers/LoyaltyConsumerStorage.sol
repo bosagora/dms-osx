@@ -36,7 +36,6 @@ contract LoyaltyConsumerStorage {
     }
 
     address internal foundationAccount;
-    address internal settlementAccount;
     address internal feeAccount;
     address internal temporaryAddress;
 
