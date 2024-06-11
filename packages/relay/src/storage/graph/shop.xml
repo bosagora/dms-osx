@@ -37,5 +37,63 @@
         FROM RowInfo;
     </select>
 
+    <select id="getHistoryOfShop">
+        WITH filtered_trades AS (
+            SELECT
+            *
+            FROM
+                ${scheme}.shop_trade_history
+            WHERE
+                "action" in
+                <foreach collection="actions" item="item" index="index" open="(" close=")" separator=",">
+                    ${item}
+                </foreach>
+                AND LOWER(CONCAT('0x', ENCODE(shop_id, 'hex'))) = LOWER(#{shopId})
+        )
+        SELECT
+            id,
+            LOWER(CONCAT('0x', ENCODE(shop_id, 'hex'))) as "shopId",
+            currency,
+            action,
+            cancel,
+            increase,
+            provided_amount as "providedAmount",
+            used_amount as "usedAmount",
+            refunded_amount as "refundedAmount",
+            coalesce(purchase_id, '') as "purchaseId",
+            CASE
+                WHEN payment_id IS NOT NULL THEN LOWER(concat('0x', encode(payment_id, 'hex')))
+                ELSE null
+            END AS "paymentId",
+            block_number as "blockNumber",
+            block_timestamp as "blockTimestamp",
+            CASE
+                WHEN transaction_hash IS NOT NULL THEN LOWER(concat('0x', encode(transaction_hash, 'hex')))
+                ELSE null
+            END AS "transactionHash"
+        FROM filtered_trades
+        ORDER BY block_timestamp DESC
+        LIMIT ${pageSize}
+        OFFSET (${pageNumber} - 1) * ${pageSize};
+    </select>
 
+    <select id="getHistoryPageInfoOfShop">
+        WITH filtered_trades AS (
+            SELECT
+                COUNT(*) AS total_count
+            FROM
+                ${scheme}.shop_trade_history
+            WHERE
+                "action" in
+                <foreach collection="actions" item="item" index="index" open="(" close=")" separator=",">
+                    ${item}
+                </foreach>
+                AND LOWER(concat('0x', encode("shop_id", 'hex'))) = LOWER(#{shopId})
+        )
+        SELECT
+            total_count as "totalCount",
+            CEIL(CAST(total_count AS FLOAT) / ${pageSize}) AS "totalPages"
+        FROM
+            filtered_trades;
+    </select>
 </mapper>

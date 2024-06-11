@@ -11,12 +11,6 @@ import { Shop, ShopTradeHistory } from "../generated/schema";
 import { BigInt } from "@graphprotocol/graph-ts";
 import { AmountUnit } from "./utils";
 
-enum PageType {
-    NONE = 0,
-    PROVIDE_USE = 1,
-    REFUND = 2,
-}
-
 enum ShopAction {
     NONE = 0,
     PROVIDED = 1,
@@ -81,7 +75,6 @@ export function handleIncreasedProvidedAmount(event: IncreasedProvidedAmountEven
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
 
     entity.shopId = event.params.shopId;
-    entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.PROVIDED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
@@ -113,7 +106,6 @@ export function handleIncreasedProvidedAmount(event: IncreasedProvidedAmountEven
 export function handleIncreasedUsedAmount(event: IncreasedUsedAmountEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
-    entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.USED;
     entity.cancel = false;
     entity.increase = event.params.increase.div(AmountUnit);
@@ -146,7 +138,6 @@ export function handleIncreasedUsedAmount(event: IncreasedUsedAmountEvent): void
 export function handleDecreasedUsedAmount(event: DecreasedUsedAmountEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
-    entity.pageType = PageType.PROVIDE_USE;
     entity.action = ShopAction.USED;
     entity.cancel = true;
     entity.increase = event.params.increase.div(AmountUnit);
@@ -179,7 +170,6 @@ export function handleDecreasedUsedAmount(event: DecreasedUsedAmountEvent): void
 export function handleRefunded(event: RefundedEvent): void {
     let entity = new ShopTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.shopId = event.params.shopId;
-    entity.pageType = PageType.REFUND;
     entity.action = ShopAction.REFUNDED;
     entity.cancel = false;
     entity.increase = event.params.refundAmount.div(AmountUnit);

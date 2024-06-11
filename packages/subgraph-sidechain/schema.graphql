@@ -62,7 +62,6 @@ type LoyaltyPaymentEvent @entity(immutable: true) {
 type UserTradeHistory @entity(immutable: true) {
   id: Bytes!
   account: Bytes!
-  pageType: Int!
   action: Int!
   cancel: Boolean!
   amountPoint: BigInt!
@@ -109,7 +108,6 @@ type UserBalance @entity {
 type ShopTradeHistory @entity(immutable: true) {
   id: Bytes!
   shopId: Bytes! # bytes32
-  pageType: Int!
   action: Int!
   cancel: Boolean!
   increase: BigInt! # uint256

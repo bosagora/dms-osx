@@ -9,7 +9,6 @@ import { RelayStorage } from "../storage/RelayStorage";
 import {
     ContractShopStatus,
     ContractShopUpdateEvent,
-    ContractWithdrawStatus,
     MobileType,
     ShopTaskData,
     ShopTaskStatus,

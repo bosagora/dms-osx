@@ -4,6 +4,7 @@ import {
     IGraphPageInfo,
     IGraphPhoneLedgerHistoryData,
     IGraphShopData,
+    IGraphShopHistoryData,
     IGraphTokenTransferHistoryData,
     IStatisticsAccountInfo,
     IStatisticsShopInfo,
@@ -247,16 +248,16 @@ export class GraphStorage extends Storage {
         });
     }
 
-    public getAccountLedgerHistory(
+    public getHistoryOfAccountLedger(
         account: string,
-        pageType: number,
+        actions: number[],
         pageNumber: number,
         pageSize: number
     ): Promise<IGraphAccountLedgerHistoryData[]> {
         return new Promise<IGraphAccountLedgerHistoryData[]>(async (resolve, reject) => {
-            this.queryForMapper("user", "getAccountLedgerHistory", {
+            this.queryForMapper("user", "getHistoryOfAccountLedger", {
                 scheme: this.scheme,
-                pageType,
+                actions,
                 pageNumber,
                 pageSize,
                 account,
@@ -266,23 +267,22 @@ export class GraphStorage extends Storage {
                         result.rows.map((m) => {
                             return {
                                 account: toChecksumAddress("0x" + m.account.toString("hex")),
-                                pageType: m.page_type,
                                 action: m.action,
                                 cancel: m.cancel,
-                                amountPoint: BigNumber.from(m.amount_point).mul(GraphStorage.AmountUnit),
-                                amountToken: BigNumber.from(m.amount_token).mul(GraphStorage.AmountUnit),
-                                amountValue: BigNumber.from(m.amount_value).mul(GraphStorage.AmountUnit),
-                                feePoint: BigNumber.from(m.fee_point).mul(GraphStorage.AmountUnit),
-                                feeToken: BigNumber.from(m.fee_token).mul(GraphStorage.AmountUnit),
-                                feeValue: BigNumber.from(m.fee_value).mul(GraphStorage.AmountUnit),
-                                balancePoint: BigNumber.from(m.balance_point).mul(GraphStorage.AmountUnit),
-                                balanceToken: BigNumber.from(m.balance_token).mul(GraphStorage.AmountUnit),
-                                purchaseId: m.purchase_id,
-                                paymentId: m.payment_id,
-                                shopId: m.shop_id,
-                                blockNumber: BigNumber.from(m.block_number),
-                                blockTimestamp: BigNumber.from(m.block_timestamp),
-                                transactionHash: m.transaction_hash,
+                                amountPoint: BigNumber.from(m.amountPoint).mul(GraphStorage.AmountUnit),
+                                amountToken: BigNumber.from(m.amountToken).mul(GraphStorage.AmountUnit),
+                                amountValue: BigNumber.from(m.amountValue).mul(GraphStorage.AmountUnit),
+                                feePoint: BigNumber.from(m.feePoint).mul(GraphStorage.AmountUnit),
+                                feeToken: BigNumber.from(m.feeToken).mul(GraphStorage.AmountUnit),
+                                feeValue: BigNumber.from(m.feeValue).mul(GraphStorage.AmountUnit),
+                                balancePoint: BigNumber.from(m.balancePoint).mul(GraphStorage.AmountUnit),
+                                balanceToken: BigNumber.from(m.balanceToken).mul(GraphStorage.AmountUnit),
+                                purchaseId: m.purchaseId,
+                                paymentId: m.paymentId,
+                                shopId: m.shopId,
+                                blockNumber: BigNumber.from(m.blockNumber),
+                                blockTimestamp: BigNumber.from(m.blockTimestamp),
+                                transactionHash: m.transactionHash,
                             };
                         })
                     );
@@ -294,17 +294,17 @@ export class GraphStorage extends Storage {
         });
     }
 
-    public getAccountLedgerHistoryPageInfo(
+    public getHistoryPageInfoOfAccountLedger(
         account: string,
-        pageType: number,
+        actions: number[],
         pageSize: number
     ): Promise<IGraphPageInfo> {
         return new Promise<IGraphPageInfo>(async (resolve, reject) => {
-            this.queryForMapper("user", "getAccountLedgerHistoryPageInfo", {
+            this.queryForMapper("user", "getHistoryPageInfoOfAccountLedger", {
                 scheme: this.scheme,
                 pageSize,
                 account,
-                pageType,
+                actions,
             })
                 .then((result) => {
                     if (result.rows.length > 0) {
@@ -324,13 +324,13 @@ export class GraphStorage extends Storage {
         });
     }
 
-    public getPhoneLedgerHistory(
+    public getHistoryOfPhoneLedger(
         phone: string,
         pageNumber: number,
         pageSize: number
     ): Promise<IGraphPhoneLedgerHistoryData[]> {
         return new Promise<IGraphPhoneLedgerHistoryData[]>(async (resolve, reject) => {
-            this.queryForMapper("user", "getPhoneLedgerHistory", {
+            this.queryForMapper("user", "getHistoryOfPhoneLedger", {
                 scheme: this.scheme,
                 pageNumber,
                 pageSize,
@@ -344,11 +344,11 @@ export class GraphStorage extends Storage {
                                 action: m.action,
                                 amount: BigNumber.from(m.amount).mul(GraphStorage.AmountUnit),
                                 balance: BigNumber.from(m.balance).mul(GraphStorage.AmountUnit),
-                                purchaseId: m.purchase_id,
-                                shopId: m.shop_id,
-                                blockNumber: BigNumber.from(m.block_number),
-                                blockTimestamp: BigNumber.from(m.block_timestamp),
-                                transactionHash: m.transaction_hash,
+                                purchaseId: m.purchaseId,
+                                shopId: m.shopId,
+                                blockNumber: BigNumber.from(m.blockNumber),
+                                blockTimestamp: BigNumber.from(m.blockTimestamp),
+                                transactionHash: m.transactionHash,
                             };
                         })
                     );
@@ -360,12 +360,80 @@ export class GraphStorage extends Storage {
         });
     }
 
-    public getPhoneLedgerHistoryPageInfo(phone: string, pageSize: number): Promise<IGraphPageInfo> {
+    public getHistoryPageInfoOfPhoneLedger(phone: string, pageSize: number): Promise<IGraphPageInfo> {
         return new Promise<IGraphPageInfo>(async (resolve, reject) => {
-            this.queryForMapper("user", "getPhoneLedgerHistoryPageInfo", {
+            this.queryForMapper("user", "getHistoryPageInfoOfPhoneLedger", {
                 scheme: this.scheme,
                 pageSize,
                 phone,
+            })
+                .then((result) => {
+                    if (result.rows.length > 0) {
+                        const m = result.rows[0];
+                        return resolve({
+                            totalCount: Number(m.totalCount),
+                            totalPages: Number(m.totalPages),
+                        });
+                    } else {
+                        return reject(new Error(""));
+                    }
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getHistoryOfShop(
+        shopId: string,
+        actions: number[],
+        pageNumber: number,
+        pageSize: number
+    ): Promise<IGraphShopHistoryData[]> {
+        return new Promise<IGraphShopHistoryData[]>(async (resolve, reject) => {
+            this.queryForMapper("shop", "getHistoryOfShop", {
+                scheme: this.scheme,
+                actions,
+                pageNumber,
+                pageSize,
+                shopId,
+            })
+                .then((result) => {
+                    return resolve(
+                        result.rows.map((m) => {
+                            return {
+                                shopId: m.shopId,
+                                currency: m.currency,
+                                action: m.action,
+                                cancel: m.cancel,
+                                increase: BigNumber.from(m.increase).mul(GraphStorage.AmountUnit),
+                                providedAmount: BigNumber.from(m.providedAmount).mul(GraphStorage.AmountUnit),
+                                usedAmount: BigNumber.from(m.usedAmount).mul(GraphStorage.AmountUnit),
+                                refundedAmount: BigNumber.from(m.refundedAmount).mul(GraphStorage.AmountUnit),
+                                purchaseId: m.purchaseId,
+                                paymentId: m.paymentId,
+                                blockNumber: BigNumber.from(m.blockNumber),
+                                blockTimestamp: BigNumber.from(m.blockTimestamp),
+                                transactionHash: m.transactionHash,
+                            };
+                        })
+                    );
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public getHistoryPageInfoOfShop(shopId: string, actions: number[], pageSize: number): Promise<IGraphPageInfo> {
+        return new Promise<IGraphPageInfo>(async (resolve, reject) => {
+            this.queryForMapper("shop", "getHistoryPageInfoOfShop", {
+                scheme: this.scheme,
+                pageSize,
+                shopId,
+                actions,
             })
                 .then((result) => {
                     if (result.rows.length > 0) {

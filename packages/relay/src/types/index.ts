@@ -3,11 +3,6 @@ import { BigNumber } from "ethers";
 export const GWI_UNIT = 1000000000;
 export const PHONE_NULL = "0x32105b1d0b88ada155176b58ee08b45c31e4f2f7337475831982c313533b880c";
 
-export enum ContractWithdrawStatus {
-    CLOSE,
-    OPEN,
-}
-
 export enum ContractShopStatus {
     INVALID,
     ACTIVE,
@@ -221,7 +216,6 @@ export interface IGraphTokenTransferHistoryData {
 
 export interface IGraphAccountLedgerHistoryData {
     account: string;
-    pageType: number;
     action: string;
     cancel: boolean;
     amountPoint: BigNumber;
@@ -247,6 +241,22 @@ export interface IGraphPhoneLedgerHistoryData {
     balance: BigNumber;
     purchaseId: string;
     shopId: string;
+    blockNumber: BigNumber;
+    blockTimestamp: BigNumber;
+    transactionHash: string;
+}
+
+export interface IGraphShopHistoryData {
+    shopId: string;
+    currency: string;
+    action: string;
+    cancel: boolean;
+    increase: BigNumber;
+    providedAmount: BigNumber;
+    usedAmount: BigNumber;
+    refundedAmount: BigNumber;
+    purchaseId: string;
+    paymentId: string;
     blockNumber: BigNumber;
     blockTimestamp: BigNumber;
     transactionHash: string;
@@ -299,4 +309,26 @@ export interface IStatisticsShopInfo {
     total_provided_amount: number;
     total_used_amount: number;
     total_refunded_amount: number;
+}
+
+export enum ActionInLedger {
+    NONE = 0,
+    SAVED = 1,
+    USED = 2,
+    BURNED,
+    DEPOSITED = 11,
+    WITHDRAWN = 12,
+    CHANGED_TO_PAYABLE_POINT = 21,
+    CHANGED_TO_TOKEN = 22,
+    CHANGED_TO_POINT = 23,
+    REFUND = 31,
+    TRANSFER_IN = 41,
+    TRANSFER_OUT = 42,
+}
+
+export enum ActionInShop {
+    NONE = 0,
+    PROVIDED = 1,
+    USED = 2,
+    REFUNDED = 3,
 }
