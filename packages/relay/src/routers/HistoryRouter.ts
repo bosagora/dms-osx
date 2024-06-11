@@ -15,6 +15,7 @@ import { ethers } from "ethers";
 import express from "express";
 import { param, query, validationResult } from "express-validator";
 import { PhoneNumberFormat, PhoneNumberUtil } from "google-libphonenumber";
+import { ActionInLedger, ActionInShop } from "../types";
 
 export class HistoryRouter {
     private web_service: WebService;
@@ -110,7 +111,10 @@ export class HistoryRouter {
                 param("account").exists().trim().isEthereumAddress(),
                 query("pageNumber").exists().trim().isNumeric(),
                 query("pageSize").exists().trim().isNumeric(),
-                query("pageType").exists().trim().isNumeric(),
+                query("actions")
+                    .exists()
+                    .trim()
+                    .matches(/^[0-9,]*$/),
             ],
             this.ledger_history_account.bind(this)
         );
@@ -120,13 +124,32 @@ export class HistoryRouter {
                 param("phone").exists(),
                 query("pageNumber").exists().trim().isNumeric(),
                 query("pageSize").exists().trim().isNumeric(),
+                query("actions")
+                    .exists()
+                    .trim()
+                    .matches(/^[0-9,]*$/),
             ],
             this.ledger_history_phone.bind(this)
+        );
+        this.app.get(
+            "/v1/shop/history/:shopId",
+            [
+                param("shopId")
+                    .exists()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+                query("pageNumber").exists().trim().isNumeric(),
+                query("pageSize").exists().trim().isNumeric(),
+                query("actions")
+                    .exists()
+                    .trim()
+                    .matches(/^[0-9,]*$/),
+            ],
+            this.shop_history.bind(this)
         );
     }
 
     private async token_main_history(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/token/main/history ${req.ip}:${JSON.stringify(req.params)}`);
+        logger.http(`GET /v1/token/main/history ${req.ip}:${JSON.stringify(req.params)}:${JSON.stringify(req.query)}`);
         const account: string = String(req.params.account).trim();
 
         let pageSize = Number(req.query.pageSize);
@@ -161,7 +184,7 @@ export class HistoryRouter {
     }
 
     private async token_side_history(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/token/side/history ${req.ip}:${JSON.stringify(req.params)}`);
+        logger.http(`GET /v1/token/side/history ${req.ip}:${JSON.stringify(req.params)}:${JSON.stringify(req.query)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -202,7 +225,9 @@ export class HistoryRouter {
     }
 
     private async ledger_history_account(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/ledger/history/account ${req.ip}:${JSON.stringify(req.params)}`);
+        logger.http(
+            `GET /v1/ledger/history/account ${req.ip}:${JSON.stringify(req.params)}:${JSON.stringify(req.query)}`
+        );
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -215,16 +240,21 @@ export class HistoryRouter {
         if (pageSize > 50) pageSize = 50;
         let pageNumber = Number(req.query.pageNumber);
         if (pageNumber < 1) pageNumber = 1;
-        const pageType = Number(req.query.pageType);
+        const actions = String(req.query.actions)
+            .trim()
+            .split(",")
+            .filter((m) => m.trim() !== "")
+            .map((m) => Number(m));
+        if (actions.length === 0) actions.push(...[ActionInLedger.SAVED, ActionInLedger.USED, ActionInLedger.BURNED]);
 
         try {
-            const histories = await this.graph_sidechain.getAccountLedgerHistory(
+            const histories = await this.graph_sidechain.getHistoryOfAccountLedger(
                 account,
-                pageType,
+                actions,
                 pageNumber,
                 pageSize
             );
-            const pageInfo = await this.graph_sidechain.getAccountLedgerHistoryPageInfo(account, pageType, pageSize);
+            const pageInfo = await this.graph_sidechain.getHistoryPageInfoOfAccountLedger(account, actions, pageSize);
 
             this.metrics.add("success", 1);
             return res.status(200).json(
@@ -233,7 +263,6 @@ export class HistoryRouter {
                     items: histories.map((m) => {
                         return {
                             account: m.account,
-                            pageType: m.pageType,
                             action: m.action,
                             cancel: m.cancel,
                             amountPoint: m.amountPoint.toString(),
@@ -263,7 +292,9 @@ export class HistoryRouter {
     }
 
     private async ledger_history_phone(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/ledger/history/phone ${req.ip}:${JSON.stringify(req.params)}`);
+        logger.http(
+            `GET /v1/ledger/history/phone ${req.ip}:${JSON.stringify(req.params)}:${JSON.stringify(req.query)}`
+        );
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -286,12 +317,27 @@ export class HistoryRouter {
         if (pageSize > 50) pageSize = 50;
         let pageNumber = Number(req.query.pageNumber);
         if (pageNumber < 1) pageNumber = 1;
+        const actions = String(req.query.actions)
+            .trim()
+            .split(",")
+            .filter((m) => m.trim() !== "")
+            .map((m) => Number(m));
+        if (actions.length === 0) actions.push(...[ActionInLedger.SAVED, ActionInLedger.USED, ActionInLedger.BURNED]);
 
         try {
             const account: string = await this.contractManager.sidePhoneLinkerContract.toAddress(phoneHash);
             if (account !== AddressZero) {
-                const histories = await this.graph_sidechain.getAccountLedgerHistory(account, 1, pageNumber, pageSize);
-                const pageInfo = await this.graph_sidechain.getAccountLedgerHistoryPageInfo(account, 1, pageSize);
+                const histories = await this.graph_sidechain.getHistoryOfAccountLedger(
+                    account,
+                    actions,
+                    pageNumber,
+                    pageSize
+                );
+                const pageInfo = await this.graph_sidechain.getHistoryPageInfoOfAccountLedger(
+                    account,
+                    actions,
+                    pageSize
+                );
 
                 this.metrics.add("success", 1);
                 return res.status(200).json(
@@ -301,7 +347,6 @@ export class HistoryRouter {
                         items: histories.map((m) => {
                             return {
                                 account: m.account,
-                                pageType: m.pageType,
                                 action: m.action,
                                 cancel: m.cancel,
                                 amountPoint: m.amountPoint.toString(),
@@ -323,8 +368,8 @@ export class HistoryRouter {
                     })
                 );
             } else {
-                const histories = await this.graph_sidechain.getPhoneLedgerHistory(phoneHash, pageNumber, pageSize);
-                const pageInfo = await this.graph_sidechain.getPhoneLedgerHistoryPageInfo(phoneHash, pageSize);
+                const histories = await this.graph_sidechain.getHistoryOfPhoneLedger(phoneHash, pageNumber, pageSize);
+                const pageInfo = await this.graph_sidechain.getHistoryPageInfoOfPhoneLedger(phoneHash, pageSize);
 
                 this.metrics.add("success", 1);
                 return res.status(200).json(
@@ -350,6 +395,62 @@ export class HistoryRouter {
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
             logger.error(`GET /v1/ledger/history/phone : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    private async shop_history(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/shop/history ${req.ip}:${JSON.stringify(req.params)}:${JSON.stringify(req.query)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const shopId: string = String(req.params.shopId).trim();
+
+        let pageSize = Number(req.query.pageSize);
+        if (pageSize > 50) pageSize = 50;
+        let pageNumber = Number(req.query.pageNumber);
+        if (pageNumber < 1) pageNumber = 1;
+        const actions = String(req.query.actions)
+            .trim()
+            .split(",")
+            .filter((m) => m.trim() !== "")
+            .map((m) => Number(m));
+        if (actions.length === 0) actions.push(...[ActionInShop.PROVIDED, ActionInShop.USED, ActionInShop.REFUNDED]);
+
+        try {
+            const histories = await this.graph_sidechain.getHistoryOfShop(shopId, actions, pageNumber, pageSize);
+            const pageInfo = await this.graph_sidechain.getHistoryPageInfoOfShop(shopId, actions, pageSize);
+
+            this.metrics.add("success", 1);
+            return res.status(200).json(
+                this.makeResponseData(0, {
+                    pageInfo,
+                    items: histories.map((m) => {
+                        return {
+                            shopId: m.shopId,
+                            currency: m.currency,
+                            action: m.action,
+                            cancel: m.cancel,
+                            increase: m.increase.toString(),
+                            providedAmount: m.providedAmount.toString(),
+                            usedAmount: m.usedAmount.toString(),
+                            refundedAmount: m.refundedAmount.toString(),
+                            purchaseId: m.purchaseId,
+                            paymentId: m.paymentId,
+                            blockNumber: m.blockNumber.toString(),
+                            blockTimestamp: m.blockTimestamp.toString(),
+                            transactionHash: m.transactionHash,
+                        };
+                    }),
+                })
+            );
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/shop/history : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }

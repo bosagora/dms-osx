@@ -1,60 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="user">
-    <select id="getAccountLedgerHistory">
+    <select id="getHistoryOfAccountLedger">
         WITH filtered_trades AS (
             SELECT
                 *
             FROM
                 ${scheme}.user_trade_history
             WHERE
-                page_type = ${pageType}
+                "action" in
+                <foreach collection="actions" item="item" index="index" open="(" close=")" separator=",">
+                    ${item}
+                </foreach>
                 AND LOWER(concat('0x', encode("account", 'hex'))) = LOWER(#{account})
         )
         SELECT
             id,
             account,
-            page_type,
             action,
             cancel,
-            amount_point,
-            amount_token,
-            amount_value,
-            fee_point,
-            fee_token,
-            fee_value,
+            amount_point AS "amountPoint",
+            amount_token AS "amountToken",
+            amount_value AS "amountValue",
+            fee_point AS "feePoint",
+            fee_token AS "feeToken",
+            fee_value AS "feeValue",
             currency,
-            balance_point,
-            balance_token,
-            coalesce(purchase_id, '') as purchase_id,
+            balance_point AS "balancePoint",
+            balance_token AS "balanceToken",
+            coalesce(purchase_id, '') AS "purchaseId",
             CASE
                 WHEN payment_id IS NOT NULL THEN LOWER(concat('0x', encode(payment_id, 'hex')))
                 ELSE null
-            END AS payment_id,
+            END AS "paymentId",
             CASE
                 WHEN shop_id IS NOT NULL THEN LOWER(concat('0x', encode(shop_id, 'hex')))
                 ELSE null
-            END AS shop_id,
-            block_number,
-            block_timestamp,
+            END AS "shopId",
+            block_number AS "blockNumber",
+            block_timestamp AS "blockTimestamp",
             CASE
                 WHEN transaction_hash IS NOT NULL THEN LOWER(concat('0x', encode(transaction_hash, 'hex')))
                 ELSE null
-            END AS transaction_hash
+            END AS "transactionHash"
         FROM filtered_trades
         ORDER BY block_timestamp DESC
-            LIMIT ${pageSize}
+        LIMIT ${pageSize}
         OFFSET (${pageNumber} - 1) * ${pageSize};
     </select>
 
-    <select id="getAccountLedgerHistoryPageInfo">
+    <select id="getHistoryPageInfoOfAccountLedger">
         WITH filtered_trades AS (
             SELECT
                 COUNT(*) AS total_count
             FROM
                 ${scheme}.user_trade_history
             WHERE
-                page_type = ${pageType}
+                "action" in
+                <foreach collection="actions" item="item" index="index" open="(" close=")" separator=",">
+                    ${item}
+                </foreach>
                 AND LOWER(concat('0x', encode("account", 'hex'))) = LOWER(#{account})
         )
         SELECT
@@ -64,7 +69,7 @@
             filtered_trades;
     </select>
 
-    <select id="getPhoneLedgerHistory">
+    <select id="getHistoryOfPhoneLedger">
 
         WITH filtered_trades AS (
             SELECT
@@ -78,28 +83,28 @@
             CASE
                 WHEN phone IS NOT NULL THEN LOWER(concat('0x', encode(phone, 'hex')))
                 ELSE null
-            END AS phone,
+                END AS phone,
             action,
             amount,
             balance,
-            coalesce(purchase_id, '') as purchase_id,
+            coalesce(purchase_id, '') AS "purchaseId",
             CASE
                 WHEN shop_id IS NOT NULL THEN LOWER(concat('0x', encode(shop_id, 'hex')))
                 ELSE null
-            END AS shop_id,
-            block_number,
-            block_timestamp,
+            END AS "shopId",
+            block_number AS "blockNumber",
+            block_timestamp AS "blockTimestamp",
             CASE
                 WHEN transaction_hash IS NOT NULL THEN LOWER(concat('0x', encode(transaction_hash, 'hex')))
                 ELSE null
-            END AS transaction_hash
+            END AS "transactionHash"
         FROM filtered_trades
         ORDER BY block_timestamp DESC
         LIMIT ${pageSize}
         OFFSET (${pageNumber} - 1) * ${pageSize};
     </select>
 
-    <select id="getPhoneLedgerHistoryPageInfo">
+    <select id="getHistoryPageInfoOfPhoneLedger">
         WITH filtered_trades AS (
             SELECT
                 COUNT(*) AS total_count

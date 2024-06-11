@@ -34,13 +34,6 @@ import {
     BurnedUnPayablePoint,
 } from "../generated/schema";
 
-enum PageType {
-    NONE = 0,
-    SAVE_USE = 1,
-    DEPOSIT_WITHDRAW = 2,
-    TRANSFER = 3,
-}
-
 enum LoyaltyPaymentStatus {
     INVALID = 0,
     OPENED_PAYMENT = 1,
@@ -62,8 +55,8 @@ enum UserAction {
     CHANGED_TOKEN = 22,
     CHANGED_POINT = 23,
     REFUND = 31,
-    IN = 41,
-    OUT = 42,
+    TRANSFER_IN = 41,
+    TRANSFER_OUT = 42,
 }
 
 // region UserBalance
@@ -141,7 +134,6 @@ export function handleDepositedForHistory(event: DepositedEvent): void {
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.DEPOSITED;
     entity.cancel = false;
     entity.amountPoint = BigInt.fromI32(0);
@@ -169,7 +161,6 @@ export function handleWithdrawnForHistory(event: WithdrawnEvent): void {
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.WITHDRAWN;
     entity.cancel = false;
     entity.amountPoint = BigInt.fromI32(0);
@@ -218,7 +209,6 @@ export function handleChangedPointForHistory(event: ChangedToPayablePointEvent):
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.CHANGED_PAYABLE_POINT;
     entity.cancel = false;
     entity.amountPoint = event.params.changedPoint.div(AmountUnit);
@@ -258,7 +248,6 @@ export function handleChangedPointToTokenForHistory(event: ChangedPointToTokenEv
 
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.CHANGED_TOKEN;
     entity.cancel = false;
     entity.amountPoint = event.params.amountPoint.div(AmountUnit);
@@ -337,7 +326,6 @@ export function handleProvidedPointForHistory(event: ProvidedPointEvent): void {
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.SAVED;
     entity.cancel = false;
     entity.amountPoint = event.params.providedPoint.div(AmountUnit);
@@ -369,7 +357,6 @@ export function handleRefundedForHistory(event: RefundedEvent): void {
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.NONE;
     entity.action = UserAction.REFUND;
     entity.cancel = false;
     entity.amountPoint = BigInt.fromI32(0);
@@ -409,8 +396,7 @@ export function handleTransferredLoyaltyTokenForHistory(event: TransferredLoyalt
 
         let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
         entity.account = event.params.from;
-        entity.pageType = PageType.TRANSFER;
-        entity.action = UserAction.OUT;
+        entity.action = UserAction.TRANSFER_OUT;
         entity.cancel = false;
         entity.amountPoint = BigInt.fromI32(0);
         entity.amountToken = event.params.amount.div(AmountUnit);
@@ -442,8 +428,7 @@ export function handleTransferredLoyaltyTokenForHistory(event: TransferredLoyalt
 
         let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32() + 1));
         entity.account = event.params.to;
-        entity.pageType = PageType.TRANSFER;
-        entity.action = UserAction.IN;
+        entity.action = UserAction.TRANSFER_IN;
         entity.cancel = false;
         entity.amountPoint = BigInt.fromI32(0);
         entity.amountToken = event.params.amount.div(AmountUnit);
@@ -511,7 +496,6 @@ export function handlePaidPointForHistory(event: LoyaltyPaymentEventEvent): void
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.payment.account;
-    entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.USED;
     entity.cancel = false;
     entity.amountPoint = event.params.payment.paidPoint.plus(event.params.payment.feePoint).div(AmountUnit);
@@ -543,7 +527,6 @@ export function handleCanceledPointForHistory(event: LoyaltyPaymentEventEvent): 
     );
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.payment.account;
-    entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.USED;
     entity.cancel = true;
     entity.amountPoint = event.params.payment.paidPoint.plus(event.params.payment.feePoint).div(AmountUnit);
@@ -593,7 +576,6 @@ export function handleBurnedPointForHistory(event: BurnedPointEvent): void {
 
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.SAVE_USE;
     entity.action = UserAction.BURNED;
     entity.cancel = false;
     entity.amountPoint = BigInt.fromI32(0);
@@ -674,7 +656,6 @@ export function handleBridgeDepositedForHistory(event: BridgeDepositedEvent): vo
 
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.WITHDRAWN;
     entity.cancel = false;
     entity.amountPoint = BigInt.fromI32(0);
@@ -723,7 +704,6 @@ export function handleBridgeWithdrawnForHistory(event: BridgeWithdrawnEvent): vo
 
     let entity = new UserTradeHistory(event.transaction.hash.concatI32(event.logIndex.toI32()));
     entity.account = event.params.account;
-    entity.pageType = PageType.DEPOSIT_WITHDRAW;
     entity.action = UserAction.DEPOSITED;
     entity.cancel = false;
     entity.amountPoint = BigInt.fromI32(0);
