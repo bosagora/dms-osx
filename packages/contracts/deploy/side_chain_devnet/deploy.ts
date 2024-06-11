@@ -23,7 +23,8 @@ import {
     Validator,
 } from "../../typechain-types";
 
-import { BaseContract, Contract, Wallet } from "ethers";
+import { AddressZero } from "@ethersproject/constants";
+import { BaseContract, BigNumber, Contract, Wallet } from "ethers";
 
 import fs from "fs";
 
@@ -62,7 +63,7 @@ interface IAccount {
 
 type FnDeployer = (accounts: IAccount, deployment: Deployments) => void;
 
-const BASE_CURRENCY = "KRW";
+const BASE_CURRENCY = "PHP";
 
 class Deployments {
     public deployments: Map<string, IDeployedContract>;
@@ -951,6 +952,202 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
     }
 }
 
+async function storeSampleExchangeRate(accounts: IAccount, deployment: Deployments) {
+    const contract = deployment.getContract("CurrencyRate") as CurrencyRate;
+    if (contract === undefined) {
+        console.error("CurrencyRate is not deployed!");
+        return;
+    }
+    console.log(`Store Sample Exchange Rate...`);
+    const multiple = await contract.multiple();
+    const height = 0;
+    const rates = [
+        {
+            symbol: "ACC",
+            rate: BigNumber.from(1761925042),
+        },
+        {
+            symbol: "LYT",
+            rate: BigNumber.from(1761925042),
+        },
+        {
+            symbol: "KRW",
+            rate: BigNumber.from(42553191),
+        },
+        {
+            symbol: "USD",
+            rate: BigNumber.from(58730834752),
+        },
+        {
+            symbol: "PHP",
+            rate: BigNumber.from(1000000000),
+        },
+        {
+            symbol: "krw",
+            rate: BigNumber.from(42553191),
+        },
+        {
+            symbol: "usd",
+            rate: BigNumber.from(58730834752),
+        },
+        {
+            symbol: "php",
+            rate: BigNumber.from(1000000000),
+        },
+    ];
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    const message = ContractUtils.getCurrencyMessage(height, rates, chainId);
+    const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+    const tx1 = await contract.connect(accounts.validators[0]).set(height, rates, signatures);
+    await tx1.wait();
+}
+
+let purchaseId = 0;
+function getPurchaseId(): string {
+    const randomIdx = Math.floor(Math.random() * 1000);
+    const res = "P" + purchaseId.toString().padStart(10, "0") + randomIdx.toString().padStart(4, "0");
+    purchaseId++;
+    return res;
+}
+
+async function storeSamplePurchase1(accounts: IAccount, deployment: Deployments) {
+    const contract = deployment.getContract("LoyaltyProvider") as LoyaltyProvider;
+    if (contract === undefined) {
+        console.error("LoyaltyProvider is not deployed!");
+        return;
+    }
+
+    console.log(`Store Sample Purchase 1 - 1/4 ...`);
+    const users = JSON.parse(fs.readFileSync("deploy/data/users.json", "utf8"));
+    const shops = JSON.parse(fs.readFileSync("deploy/data/shops.json", "utf8"));
+
+    const purchaseAmount = Amount.make(100_000_000, 18).value;
+    const loyaltyAmount = purchaseAmount.mul(5).div(100);
+    const phoneHash = ContractUtils.getPhoneHash("");
+    const purchaseParams = users.slice(0, 50).map((m: any) => {
+        return {
+            purchaseId: getPurchaseId(),
+            amount: purchaseAmount,
+            loyalty: loyaltyAmount,
+            currency: "php",
+            shopId: shops[shops.length - 1].shopId,
+            account: m.address,
+            phone: phoneHash,
+            sender: accounts.foundation.address,
+        };
+    });
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchaseParams, chainId);
+    const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+    const tx1 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams, signatures);
+    await tx1.wait();
+
+    console.log(`Store Sample Purchase 1 - 2/4 ...`);
+    const purchaseParams2 = users.slice(50, 100).map((m: any) => {
+        return {
+            purchaseId: getPurchaseId(),
+            amount: purchaseAmount,
+            loyalty: loyaltyAmount,
+            currency: "php",
+            shopId: shops[shops.length - 1].shopId,
+            account: m.address,
+            phone: ContractUtils.getPhoneHash(""),
+            sender: accounts.foundation.address,
+        };
+    });
+    const purchaseMessage2 = ContractUtils.getPurchasesMessage(0, purchaseParams2, chainId);
+    const signatures2 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage2));
+    const tx2 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams2, signatures2);
+    await tx2.wait();
+
+    console.log(`Store Sample Purchase 1 - 3/4 ...`);
+    const purchaseParams3 = users.slice(0, 50).map((m: any) => {
+        return {
+            purchaseId: getPurchaseId(),
+            amount: purchaseAmount,
+            loyalty: loyaltyAmount,
+            currency: "php",
+            shopId: shops[shops.length - 1].shopId,
+            account: AddressZero,
+            phone: ContractUtils.getPhoneHash(m.phone),
+            sender: accounts.foundation.address,
+        };
+    });
+    const purchaseMessage3 = ContractUtils.getPurchasesMessage(0, purchaseParams3, chainId);
+    const signatures3 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage3));
+    const tx3 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams3, signatures3);
+    await tx3.wait();
+
+    console.log(`Store Sample Purchase 1 - 4/4 ...`);
+    const purchaseParams4 = users.slice(50, 100).map((m: any) => {
+        return {
+            purchaseId: getPurchaseId(),
+            amount: purchaseAmount,
+            loyalty: loyaltyAmount,
+            currency: "php",
+            shopId: shops[shops.length - 1].shopId,
+            account: AddressZero,
+            phone: ContractUtils.getPhoneHash(m.phone),
+            sender: accounts.foundation.address,
+        };
+    });
+    const purchaseMessage4 = ContractUtils.getPurchasesMessage(0, purchaseParams4, chainId);
+    const signatures4 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage4));
+    const tx4 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams4, signatures4);
+    await tx4.wait();
+}
+
+async function storeSamplePurchase2(accounts: IAccount, deployment: Deployments) {
+    const contract = deployment.getContract("LoyaltyProvider") as LoyaltyProvider;
+    if (contract === undefined) {
+        console.error("LoyaltyProvider is not deployed!");
+        return;
+    }
+
+    console.log(`Store Sample Purchase 2 - 1/2...`);
+    const users = JSON.parse(fs.readFileSync("deploy/data/users_mobile.json", "utf8"));
+    const shops = JSON.parse(fs.readFileSync("deploy/data/shops.json", "utf8"));
+
+    const purchaseAmount = Amount.make(100_000_000, 18).value;
+    const loyaltyAmount = purchaseAmount.mul(5).div(100);
+    const phoneHash = ContractUtils.getPhoneHash("");
+    const purchaseParams = users.map((m: any) => {
+        return {
+            purchaseId: getPurchaseId(),
+            amount: purchaseAmount,
+            loyalty: loyaltyAmount,
+            currency: "php",
+            shopId: shops[shops.length - 1].shopId,
+            account: m.address,
+            phone: phoneHash,
+            sender: accounts.foundation.address,
+        };
+    });
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchaseParams, chainId);
+    const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage));
+    const tx1 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams, signatures);
+    await tx1.wait();
+
+    console.log(`Store Sample Purchase 2 - 2/2...`);
+    const purchaseParams3 = users.map((m: any) => {
+        return {
+            purchaseId: getPurchaseId(),
+            amount: purchaseAmount,
+            loyalty: loyaltyAmount,
+            currency: "php",
+            shopId: shops[shops.length - 1].shopId,
+            account: AddressZero,
+            phone: ContractUtils.getPhoneHash(m.phone),
+            sender: accounts.foundation.address,
+        };
+    });
+    const purchaseMessage3 = ContractUtils.getPurchasesMessage(0, purchaseParams3, chainId);
+    const signatures3 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage3));
+    const tx3 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams3, signatures3);
+    await tx3.wait();
+}
+
 async function main() {
     const deployments = new Deployments();
 
@@ -971,6 +1168,9 @@ async function main() {
     deployments.addDeployer(deployShop);
     deployments.addDeployer(deployLedger);
     deployments.addDeployer(deploySideChainBridge);
+    deployments.addDeployer(storeSampleExchangeRate);
+    deployments.addDeployer(storeSamplePurchase1);
+    deployments.addDeployer(storeSamplePurchase2);
 
     // await deployments.loadContractInfo();
 
