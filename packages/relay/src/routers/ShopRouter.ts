@@ -1266,7 +1266,7 @@ export class ShopRouter {
 
     /**
      * 상점의 반환가능한 정산금을 제공하는 엔드포인트
-     * GET /v1/shop/info/:shopId
+     * GET /v1/shop/refundable/:shopId
      * @private
      */
     private async shop_refundable(req: express.Request, res: express.Response) {

@@ -78,7 +78,6 @@ export class ETCRouter {
             this.mobile_register.bind(this)
         );
 
-        // 포인트의 종류를 선택하는 기능
         this.app.post(
             "/v1/mobile/send",
             [
@@ -91,7 +90,6 @@ export class ETCRouter {
             this.mobile_send.bind(this)
         );
 
-        // 포인트의 종류를 선택하는 기능
         this.app.get(
             "/v1/mobile/info/:account",
             [param("account").exists().trim().isEthereumAddress(), query("type").exists()],

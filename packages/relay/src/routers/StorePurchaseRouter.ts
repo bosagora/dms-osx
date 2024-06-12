@@ -13,7 +13,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 // tslint:disable-next-line:no-implicit-dependencies
 import { AddressZero } from "@ethersproject/constants";
 import express from "express";
-import { body, query, validationResult } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 
 export class StorePurchaseRouter {
     private web_service: WebService;
@@ -91,21 +91,21 @@ export class StorePurchaseRouter {
         );
 
         this.app.get(
-            "/v1/purchase/user/provide",
-            [query("account").exists().trim().isEthereumAddress()],
+            "/v1/purchase/user/provide/:account",
+            [param("account").exists().trim().isEthereumAddress()],
             this.purchase_user_provide.bind(this)
         );
 
         this.app.get(
-            "/v1/purchase/user/provide/total",
-            [query("account").exists().trim().isEthereumAddress()],
+            "/v1/purchase/user/provide/total/:account",
+            [param("account").exists().trim().isEthereumAddress()],
             this.purchase_user_provide_total.bind(this)
         );
 
         this.app.get(
-            "/v1/purchase/shop/provide",
+            "/v1/purchase/shop/provide/:shopId",
             [
-                query("shopId")
+                param("shopId")
                     .exists()
                     .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
@@ -114,9 +114,9 @@ export class StorePurchaseRouter {
         );
 
         this.app.get(
-            "/v1/purchase/shop/provide/total",
+            "/v1/purchase/shop/provide/total/:shopId",
             [
-                query("shopId")
+                param("shopId")
                     .exists()
                     .trim()
                     .matches(/^(0x)[0-9a-f]{64}$/i),
@@ -229,11 +229,11 @@ export class StorePurchaseRouter {
     }
 
     /**
-     * GET /v1/purchase/user/provide
+     * GET /v1/purchase/user/provide/:account
      * @private
      */
     private async purchase_user_provide(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/purchase/user/provide ${req.ip}:${JSON.stringify(req.query)}`);
+        logger.http(`GET /v1/purchase/user/provide/:account ${req.ip}:${JSON.stringify(req.params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -241,7 +241,7 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const account: string = String(req.query.account).trim();
+            const account: string = String(req.params.account).trim();
             const data = await this.storage.getToBeProvideOfUser(account);
             this.metrics.add("success", 1);
             return res.status(200).json(
@@ -262,18 +262,18 @@ export class StorePurchaseRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/purchase/user/provide : ${msg.error.message}`);
+            logger.error(`GET /v1/purchase/user/provide/:account : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
 
     /**
-     * GET /v1/purchase/user/provide/total
+     * GET /v1/purchase/user/provide/total/:account
      * @private
      */
     private async purchase_user_provide_total(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/purchase/user/provide/total ${req.ip}:${JSON.stringify(req.query)}`);
+        logger.http(`GET /v1/purchase/user/provide/total/:account ${req.ip}:${JSON.stringify(req.params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -281,7 +281,7 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const account: string = String(req.query.account).trim();
+            const account: string = String(req.params.account).trim();
             const data = await this.storage.getTotalToBeProvideOfUser(account);
             this.metrics.add("success", 1);
             return res.status(200).json(
@@ -293,18 +293,18 @@ export class StorePurchaseRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/purchase/user/provide/total : ${msg.error.message}`);
+            logger.error(`GET /v1/purchase/user/provide/total/:account : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
 
     /**
-     * GET /v1/purchase/shop/provide
+     * GET /v1/purchase/shop/provide/:shopId
      * @private
      */
     private async purchase_shop_provide(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/purchase/shop/provide ${req.ip}:${JSON.stringify(req.query)}`);
+        logger.http(`GET /v1/purchase/shop/provide/:shopId ${req.ip}:${JSON.stringify(req.params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -312,7 +312,7 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const shopId: string = String(req.query.shopId).trim();
+            const shopId: string = String(req.params.shopId).trim();
             const data = await this.storage.getToBeProvideOfShop(shopId);
             this.metrics.add("success", 1);
             return res.status(200).json(
@@ -331,18 +331,18 @@ export class StorePurchaseRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/purchase/shop/provide : ${msg.error.message}`);
+            logger.error(`GET /v1/purchase/shop/provide/:shopId : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
     }
 
     /**
-     * GET /v1/purchase/shop/provide/total
+     * GET /v1/purchase/shop/provide/total/:shopId
      * @private
      */
     private async purchase_shop_provide_total(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/purchase/shop/provide/total ${req.ip}:${JSON.stringify(req.query)}`);
+        logger.http(`GET /v1/purchase/shop/provide/total/:shopId ${req.ip}:${JSON.stringify(req.params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -350,7 +350,7 @@ export class StorePurchaseRouter {
         }
 
         try {
-            const shopId: string = String(req.query.shopId).trim();
+            const shopId: string = String(req.params.shopId).trim();
             const data = await this.storage.getTotalToBeProvideOfShop(shopId);
             this.metrics.add("success", 1);
             return res.status(200).json(
@@ -361,7 +361,7 @@ export class StorePurchaseRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`GET /v1/purchase/shop/provide/total : ${msg.error.message}`);
+            logger.error(`GET /v1/purchase/shop/provide/total/:shopId : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }
