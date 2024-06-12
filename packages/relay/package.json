@@ -10,6 +10,7 @@
         "test": "TESTING=true hardhat test",
         "clean": "hardhat clean",
         "build": "hardhat compile",
+        "docker": "./docker-build.sh",
         "start": "TESTING=false NODE_ENV=production hardhat run src/main.ts",
         "formatting:check": "prettier '**/*.{json,sol,ts,js}' -c",
         "formatting:write": "prettier '**/*.{json,sol,ts,js}' --write",
