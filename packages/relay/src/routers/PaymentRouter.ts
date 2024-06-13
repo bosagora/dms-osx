@@ -340,13 +340,10 @@ export class PaymentRouter {
 
             let balance: BigNumber;
             let paidPoint: BigNumber;
-            let paidToken: BigNumber;
             let paidValue: BigNumber;
             let feePoint: BigNumber;
-            let feeToken: BigNumber;
             let feeValue: BigNumber;
             let totalPoint: BigNumber;
-            let totalToken: BigNumber;
             let totalValue: BigNumber;
 
             const contract = this.contractManager.sideLedgerContract;
@@ -357,9 +354,6 @@ export class PaymentRouter {
             if (totalPoint.gt(balance)) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
             }
-            paidToken = BigNumber.from(0);
-            feeToken = BigNumber.from(0);
-            totalToken = BigNumber.from(0);
             paidValue = BigNumber.from(amount);
             feeValue = ContractUtils.zeroGWEI(paidValue.mul(feeRate).div(10000));
             totalValue = paidValue.add(feeValue);
@@ -399,7 +393,7 @@ export class PaymentRouter {
 
             const mobileData = await this.storage.getMobile(item.account, MobileType.USER_APP);
 
-            if (!process.env.TESTING && mobileData === undefined) {
+            if (!this.config.relay.testMode && mobileData === undefined) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
             }
 
@@ -959,7 +953,7 @@ export class PaymentRouter {
 
                 const mobileData = await this.storage.getMobile(shopInfo.account, MobileType.SHOP_APP);
 
-                if (!process.env.TESTING && mobileData === undefined) {
+                if (!this.config.relay.testMode && mobileData === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
                 }
 

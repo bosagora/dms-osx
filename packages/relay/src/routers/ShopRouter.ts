@@ -607,7 +607,7 @@ export class ShopRouter {
 
                 const mobileData = await this.storage.getMobile(item.account, MobileType.SHOP_APP);
 
-                if (!process.env.TESTING && mobileData === undefined) {
+                if (!this.config.relay.testMode && mobileData === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
                 }
 
@@ -874,7 +874,7 @@ export class ShopRouter {
                 /// 사용자에게 푸쉬 메세지 발송
                 const mobileData = await this.storage.getMobile(item.account, MobileType.SHOP_APP);
 
-                if (!process.env.TESTING && mobileData === undefined) {
+                if (!this.config.relay.testMode && mobileData === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2005"));
                 }
 

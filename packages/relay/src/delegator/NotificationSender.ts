@@ -31,7 +31,7 @@ export class NotificationSender implements INotificationSender {
             this.handler.receive(to, title, body, data);
         }
         if (!Expo.isExpoPushToken(to)) {
-            if (!process.env.TESTING) logger.error(`Push token ${to} is not a valid Expo push token`);
+            if (!this.config.relay.testMode) logger.error(`Push token ${to} is not a valid Expo push token`);
             return false;
         }
         const messages: ExpoPushMessage[] = [];

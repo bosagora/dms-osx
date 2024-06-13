@@ -198,6 +198,7 @@ export class RelayConfig implements IRelayConfig {
     public expoAccessToken: string;
     public relayEndpoint: string;
     public encryptKey: string;
+    public testMode: boolean;
 
     constructor() {
         const defaults = RelayConfig.defaultValue();
@@ -212,6 +213,7 @@ export class RelayConfig implements IRelayConfig {
         this.expoAccessToken = defaults.expoAccessToken;
         this.relayEndpoint = defaults.relayEndpoint;
         this.encryptKey = defaults.encryptKey;
+        this.testMode = defaults.testMode;
     }
 
     public static defaultValue(): IRelayConfig {
@@ -232,6 +234,7 @@ export class RelayConfig implements IRelayConfig {
             expoAccessToken: "",
             relayEndpoint: "",
             encryptKey: "",
+            testMode: false,
         };
     }
 
@@ -246,6 +249,7 @@ export class RelayConfig implements IRelayConfig {
         if (config.expoAccessToken !== undefined) this.expoAccessToken = config.expoAccessToken;
         if (config.relayEndpoint !== undefined) this.relayEndpoint = config.relayEndpoint;
         if (config.encryptKey !== undefined) this.encryptKey = config.encryptKey;
+        if (config.testMode !== undefined) this.testMode = Boolean(config.testMode);
     }
 }
 
@@ -467,6 +471,7 @@ export interface IRelayConfig {
     expoAccessToken: string;
     relayEndpoint: string;
     encryptKey: string;
+    testMode: boolean;
 }
 
 export interface IContractsConfig {

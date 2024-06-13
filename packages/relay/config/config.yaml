@@ -93,6 +93,7 @@ relay:
   expoAccessToken: "${EXPO_ACCESS_TOKEN}"
   relayEndpoint: "${RELAY_ENDPOINT}"
   encryptKey: "${RELAY_ENCRYPT_KEY}"
+  testMode: false
 
 contracts:
   sideChain:
