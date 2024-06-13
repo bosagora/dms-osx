@@ -86,6 +86,21 @@ export class PhoneLinkRouter {
             [param("account").exists().trim().isEthereumAddress()],
             this.phone_link_nonce.bind(this)
         );
+        this.app.get(
+            "/v1/link/to_account/:phone",
+            [
+                param("phone")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.phone_link_to_account.bind(this)
+        );
+        this.app.get(
+            "/v1/link/to_phone/:account",
+            [param("account").exists().trim().isEthereumAddress()],
+            this.phone_link_to_phone.bind(this)
+        );
         // 포인트의 종류를 선택하는 기능
         this.app.post(
             "/v1/link/removePhoneInfo",
@@ -101,12 +116,68 @@ export class PhoneLinkRouter {
     }
 
     private async phone_link_nonce(req: express.Request, res: express.Response) {
-        logger.http(`GET /v1/link/main/nonce ${req.ip}:${JSON.stringify(req.params)}`);
-        const account: string = String(req.params.account).trim();
-        const nonce = await this.contractManager.sidePhoneLinkerContract.nonceOf(account);
-        this.metrics.add("success", 1);
-        return res.status(200).json(this.makeResponseData(0, { account, nonce: nonce.toString() }));
+        logger.http(`GET /v1/link/nonce ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const account: string = String(req.params.account).trim();
+            const nonce = await this.contractManager.sidePhoneLinkerContract.nonceOf(account);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { account, nonce: nonce.toString() }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/link/nonce : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
     }
+
+    private async phone_link_to_account(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/link/to_account ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const phone: string = String(req.params.phone).trim();
+            const account = await this.contractManager.sidePhoneLinkerContract.toAddress(phone);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { phone, account }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/link/to_account : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
+    }
+
+    private async phone_link_to_phone(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/link/to_phone ${req.ip}:${JSON.stringify(req.params)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const account: string = String(req.params.account).trim();
+            const phone = await this.contractManager.sidePhoneLinkerContract.toPhone(account);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { phone, account }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/link/to_phone : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(msg);
+        }
+    }
+
     /**
      * 포인트의 종류를 선택한다.
      * POST /v1/link/removePhoneInfo
