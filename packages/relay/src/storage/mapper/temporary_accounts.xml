@@ -30,4 +30,8 @@
     <select id="removeExpiredAccount">
         DELETE FROM temporary_accounts WHERE EXTRACT(EPOCH FROM (now() - "timestamp")) <![CDATA[>]]> 300;
     </select>
+
+    <select id="removeAccount">
+        DELETE FROM temporary_accounts WHERE LOWER("temporary_account") = LOWER(#{temporary_account});
+    </select>
 </mapper>

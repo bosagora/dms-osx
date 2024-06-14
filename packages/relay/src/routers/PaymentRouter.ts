@@ -211,7 +211,7 @@ export class PaymentRouter {
             if (!ContractUtils.verifyMessage(account, message, signature)) {
                 return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
             }
-            const temporaryAccount = await this.storage.getTemporaryAccount(account);
+            const temporaryAccount = await this.storage.getAccountOnTemporary(account);
             this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
@@ -242,7 +242,7 @@ export class PaymentRouter {
         try {
             let account: string = String(req.query.account).trim();
             if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this.storage.getRealAccount(account);
+                const realAccount = await this.storage.getRealAccountOnTemporary(account);
                 if (realAccount === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
                 } else {
@@ -320,11 +320,13 @@ export class PaymentRouter {
             }
 
             let account: string = String(req.body.account).trim();
+            let temporaryAccount: string = "";
             if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this.storage.getRealAccount(account);
+                const realAccount = await this.storage.getRealAccountOnTemporary(account);
                 if (realAccount === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
                 } else {
+                    temporaryAccount = account;
                     account = realAccount;
                 }
             }
@@ -430,6 +432,12 @@ export class PaymentRouter {
                 contents.push(`${pointLabel} : ${new Amount(item.paidPoint, 18).toDisplayString(true, 0)} POINT`);
 
                 await this._sender.send(to, title, contents.join(", "), data);
+            }
+
+            try {
+                if (temporaryAccount !== "") await this.storage.removeAccountTemporary(temporaryAccount);
+            } catch (_) {
+                //
             }
 
             this.metrics.add("success", 1);

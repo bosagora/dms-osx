@@ -230,6 +230,6 @@ export class CloseScheduler extends Scheduler {
     }
 
     private async onRemoveExpiredAccount() {
-        await this.storage.removeExpiredAccount();
+        await this.storage.removeExpiredAccountOnTemporary();
     }
 }

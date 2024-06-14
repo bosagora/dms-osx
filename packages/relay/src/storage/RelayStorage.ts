@@ -840,19 +840,17 @@ export class RelayStorage extends Storage {
     }
     /// endregion
 
-    public async getTemporaryAccount(account: string): Promise<string> {
+    public async getAccountOnTemporary(account: string): Promise<string> {
         let temporary_account: string;
         while (true) {
             temporary_account = ContractUtils.getTemporaryAccount();
-            if ((await this.getRealAccount(temporary_account)) === undefined) break;
+            if ((await this.getRealAccountOnTemporary(temporary_account)) === undefined) break;
         }
 
-        const timestamp = ContractUtils.getTimeStampBigInt();
         return new Promise<string>(async (resolve, reject) => {
             this.queryForMapper("temporary_accounts", "postAccount", {
                 account: account.toLowerCase(),
                 temporary_account: temporary_account.toLowerCase(),
-                timestamp: timestamp.toString(),
             })
                 .then(() => {
                     return resolve(temporary_account);
@@ -864,11 +862,10 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public getRealAccount(temporary_account: string): Promise<string | undefined> {
+    public getRealAccountOnTemporary(temporary_account: string): Promise<string | undefined> {
         return new Promise<string | undefined>(async (resolve, reject) => {
             this.queryForMapper("temporary_accounts", "getRealAccount", {
                 temporary_account,
-                timestamp: (ContractUtils.getTimeStampBigInt() - BigInt(60)).toString(),
             })
                 .then((result) => {
                     if (result.rows.length > 0) {
@@ -884,9 +881,22 @@ export class RelayStorage extends Storage {
         });
     }
 
-    public removeExpiredAccount(): Promise<void> {
+    public removeExpiredAccountOnTemporary(): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             this.queryForMapper("temporary_accounts", "removeExpiredAccount", {})
+                .then((result) => {
+                    return resolve();
+                })
+                .catch((reason) => {
+                    if (reason instanceof Error) return reject(reason);
+                    return reject(new Error(reason));
+                });
+        });
+    }
+
+    public removeAccountTemporary(temporary_account: string): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            this.queryForMapper("temporary_accounts", "removeAccount", { temporary_account })
                 .then((result) => {
                     return resolve();
                 })

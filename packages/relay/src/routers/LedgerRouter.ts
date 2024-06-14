@@ -364,7 +364,7 @@ export class LedgerRouter {
         try {
             let account: string = String(req.params.account).trim();
             if (ContractUtils.isTemporaryAccount(account)) {
-                const realAccount = await this.storage.getRealAccount(account);
+                const realAccount = await this.storage.getRealAccountOnTemporary(account);
                 if (realAccount === undefined) {
                     return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
                 } else {
