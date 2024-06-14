@@ -605,6 +605,51 @@ export class ContractUtils {
         return arrayify(keccak256(encodedResult));
     }
 
+    public static getPurchasesProposeMessage(
+        height: BigNumberish,
+        purchases: {
+            purchaseId: string;
+            amount: BigNumberish;
+            loyalty: BigNumberish;
+            currency: string;
+            shopId: BytesLike;
+            account: string;
+            phone: BytesLike;
+            sender: string;
+        }[],
+        signatures: BytesLike[],
+        chainId: BigNumberish
+    ): Uint8Array {
+        const messages: BytesLike[] = [];
+        for (const elem of purchases) {
+            const encodedData = defaultAbiCoder.encode(
+                ["string", "uint256", "uint256", "string", "bytes32", "address", "bytes32", "address", "uint256"],
+                [
+                    elem.purchaseId,
+                    elem.amount,
+                    elem.loyalty,
+                    elem.currency,
+                    elem.shopId,
+                    elem.account,
+                    elem.phone,
+                    elem.sender,
+                    chainId,
+                ]
+            );
+            messages.push(keccak256(encodedData));
+        }
+        const signaturesMessages: BytesLike[] = [];
+        for (const elem of signatures) {
+            const encodedData = defaultAbiCoder.encode(["bytes32", "uint256"], [keccak256(elem), chainId]);
+            signaturesMessages.push(keccak256(encodedData));
+        }
+        const encodedResult = defaultAbiCoder.encode(
+            ["uint256", "uint256", "bytes32[]", "bytes32[]"],
+            [height, purchases.length, messages, signaturesMessages]
+        );
+        return arrayify(keccak256(encodedResult));
+    }
+
     public static getCurrencyMessage(
         height: BigNumberish,
         rates: { symbol: string; rate: BigNumberish }[],
@@ -621,6 +666,32 @@ export class ContractUtils {
         const encodedResult = defaultAbiCoder.encode(
             ["uint256", "uint256", "bytes32[]"],
             [height, rates.length, messages]
+        );
+        return arrayify(keccak256(encodedResult));
+    }
+
+    public static getCurrencyProposeMessage(
+        height: BigNumberish,
+        rates: { symbol: string; rate: BigNumberish }[],
+        signatures: BytesLike[],
+        chainId: BigNumberish
+    ): Uint8Array {
+        const messages: BytesLike[] = [];
+        for (const elem of rates) {
+            const encodedData = defaultAbiCoder.encode(
+                ["string", "uint256", "uint256"],
+                [elem.symbol, elem.rate, chainId]
+            );
+            messages.push(keccak256(encodedData));
+        }
+        const signaturesMessages: BytesLike[] = [];
+        for (const elem of signatures) {
+            const encodedData = defaultAbiCoder.encode(["bytes32", "uint256"], [keccak256(elem), chainId]);
+            signaturesMessages.push(keccak256(encodedData));
+        }
+        const encodedResult = defaultAbiCoder.encode(
+            ["uint256", "uint256", "bytes32[]", "bytes32[]"],
+            [height, rates.length, messages, signaturesMessages]
         );
         return arrayify(keccak256(encodedResult));
     }

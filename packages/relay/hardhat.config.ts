@@ -433,7 +433,7 @@ function getAccounts() {
         accounts.push(process.env.BRIDGE_VALIDATOR5);
     }
 
-    while (accounts.length < 100) {
+    while (accounts.length < 70) {
         accounts.push(Wallet.createRandom().privateKey);
     }
 

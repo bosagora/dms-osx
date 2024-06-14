@@ -8,7 +8,12 @@ interface ICurrencyRate {
         uint256 rate;
     }
 
-    function set(uint256 _timestamp, CurrencyData[] calldata _data, bytes[] calldata _signatures) external;
+    function set(
+        uint256 _timestamp,
+        CurrencyData[] calldata _data,
+        bytes[] calldata _signatures,
+        bytes calldata _proposerSignature
+    ) external;
 
     function get(string calldata _symbol) external view returns (uint256);
 

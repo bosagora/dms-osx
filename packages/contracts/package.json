@@ -1,6 +1,6 @@
 {
     "name": "dms-contracts-v2",
-    "version": "2.1.1",
+    "version": "2.1.3",
     "description": "Smart contracts that decentralized point systems",
     "files": [
         "**/*.sol"

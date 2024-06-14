@@ -81,18 +81,14 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
         require(_msgSender() == owner(), "Unauthorized access");
     }
 
-    modifier onlyValidator(address _account) {
-        require(validatorContract.isCurrentActiveValidator(_account), "1000");
-        _;
-    }
-
     /// @notice 구매내역을 저장합니다.
     /// @dev 이것은 검증자들에 의해 호출되어야 합니다.
     function savePurchase(
         uint256 _height,
         PurchaseData[] calldata _data,
-        bytes[] calldata _signatures
-    ) external onlyValidator(_msgSender()) {
+        bytes[] calldata _signatures,
+        bytes calldata _proposerSignature
+    ) external {
         // Check the number of voters and signatories
         uint256 numberOfVoters = validatorContract.lengthOfCurrentActiveValidator();
         require(numberOfVoters > 0, "1162");
@@ -125,6 +121,17 @@ contract LoyaltyProvider is LoyaltyProviderStorage, Initializable, OwnableUpgrad
                 )
             );
         }
+
+        bytes32[] memory signatureMessages = new bytes32[](_signatures.length);
+        for (uint256 i = 0; i < _signatures.length; i++) {
+            signatureMessages[i] = keccak256(abi.encode(keccak256(_signatures[i]), block.chainid));
+        }
+        bytes32 proposerDataHash = keccak256(abi.encode(_height, messages.length, messages, signatureMessages));
+
+        // Check Proposer Signature
+        address proposer = ECDSA.recover(ECDSA.toEthSignedMessageHash(proposerDataHash), _proposerSignature);
+        require(validatorContract.isCurrentActiveValidator(proposer), "1000");
+
         bytes32 dataHash = keccak256(abi.encode(_height, messages.length, messages));
 
         // Counting by signature

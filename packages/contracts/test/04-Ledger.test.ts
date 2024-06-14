@@ -266,13 +266,18 @@ describe("Test for Ledger", () => {
                         sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = deployments.accounts.validators.map((m) =>
-                        ContractUtils.signMessage(m, purchaseMessage)
+                    const signatures = await Promise.all(
+                        deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
+                    );
+                    const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                    const proposerSignature = await ContractUtils.signMessage(
+                        deployments.accounts.deployer,
+                        proposeMessage
                     );
                     await expect(
                         providerContract
-                            .connect(deployments.accounts.deployer)
-                            .savePurchase(0, [purchaseParam], signatures)
+                            .connect(deployments.accounts.certifiers[0])
+                            .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                     ).to.be.revertedWith("1000");
                 }
             });
@@ -300,13 +305,18 @@ describe("Test for Ledger", () => {
                             sender: deployments.accounts.foundation.address,
                         };
                         const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                        const signatures = deployments.accounts.validators.map((m) =>
-                            ContractUtils.signMessage(m, purchaseMessage)
+                        const signatures = await Promise.all(
+                            deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
+                        );
+                        const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                        const proposerSignature = await ContractUtils.signMessage(
+                            deployments.accounts.validators[0],
+                            proposeMessage
                         );
                         await expect(
                             providerContract
-                                .connect(deployments.accounts.validators[0])
-                                .savePurchase(0, [purchaseParam], signatures)
+                                .connect(deployments.accounts.certifiers[0])
+                                .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
@@ -338,13 +348,18 @@ describe("Test for Ledger", () => {
                             sender: deployments.accounts.foundation.address,
                         };
                         const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                        const signatures = deployments.accounts.validators.map((m) =>
-                            ContractUtils.signMessage(m, purchaseMessage)
+                        const signatures = await Promise.all(
+                            deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
+                        );
+                        const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                        const proposerSignature = await ContractUtils.signMessage(
+                            deployments.accounts.validators[0],
+                            proposeMessage
                         );
                         await expect(
                             providerContract
-                                .connect(deployments.accounts.validators[0])
-                                .savePurchase(0, [purchaseParam], signatures)
+                                .connect(deployments.accounts.certifiers[0])
+                                .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                         )
                             .to.emit(providerContract, "SavedPurchase")
                             .withArgs(
@@ -424,13 +439,18 @@ describe("Test for Ledger", () => {
                     sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
+                );
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
                 );
                 await expect(
                     providerContract
-                        .connect(deployments.accounts.validators[0])
-                        .savePurchase(0, [purchaseParam], signatures)
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
@@ -517,14 +537,18 @@ describe("Test for Ledger", () => {
                     sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
                 await expect(
                     providerContract
-                        .connect(deployments.accounts.validators[0])
-                        .savePurchase(0, [purchaseParam], signatures)
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
@@ -626,14 +650,18 @@ describe("Test for Ledger", () => {
                     sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
                 await expect(
                     providerContract
-                        .connect(deployments.accounts.validators[0])
-                        .savePurchase(0, [purchaseParam], signatures)
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
@@ -697,14 +725,18 @@ describe("Test for Ledger", () => {
                     sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
                 await expect(
                     providerContract
-                        .connect(deployments.accounts.validators[0])
-                        .savePurchase(0, [purchaseParam], signatures)
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
@@ -789,14 +821,18 @@ describe("Test for Ledger", () => {
                     sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
                 await expect(
                     providerContract
-                        .connect(deployments.accounts.validators[0])
-                        .savePurchase(0, [purchaseParam], signatures)
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
@@ -888,14 +924,18 @@ describe("Test for Ledger", () => {
                     sender: deployments.accounts.foundation.address,
                 };
                 const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
                 await expect(
                     providerContract
-                        .connect(deployments.accounts.validators[0])
-                        .savePurchase(0, [purchaseParam], signatures)
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                 )
                     .to.emit(providerContract, "SavedPurchase")
                     .withArgs(
@@ -1129,7 +1169,7 @@ describe("Test for Ledger", () => {
                 const tokenAmount = ContractUtils.zeroGWEI(pointAmount.mul(multiple).div(price));
 
                 const nonce = await ledgerContract.nonceOf(deployments.accounts.users[1].address);
-                const message = await ContractUtils.getChangePointToTokenMessage(
+                const message = ContractUtils.getChangePointToTokenMessage(
                     deployments.accounts.users[1].address,
                     pointAmount,
                     nonce
@@ -1202,12 +1242,17 @@ describe("Test for Ledger", () => {
             }
 
             const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchases);
-            const signatures = deployments.accounts.validators.map((m) =>
-                ContractUtils.signMessage(m, purchaseMessage)
+            const signatures = await Promise.all(
+                deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
+            );
+            const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, purchases, signatures);
+            const proposerSignature = await ContractUtils.signMessage(
+                deployments.accounts.validators[0],
+                proposeMessage
             );
             const tx = await providerContract
-                .connect(deployments.accounts.validators[0])
-                .savePurchase(0, purchases, signatures);
+                .connect(deployments.accounts.certifiers[0])
+                .savePurchase(0, purchases, signatures, proposerSignature);
             await tx.wait();
         });
 
@@ -1540,8 +1585,17 @@ describe("Test for Ledger", () => {
                 },
             ];
             const message = ContractUtils.getCurrencyMessage(height, rates);
-            const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures);
+            const signatures = await Promise.all(
+                deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message))
+            );
+            const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+            const proposerSignature = await ContractUtils.signMessage(
+                deployments.accounts.validators[0],
+                proposeMessage
+            );
+            await currencyContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature);
         });
 
         context("Save Purchase Data", () => {
@@ -1571,14 +1625,18 @@ describe("Test for Ledger", () => {
                         sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = deployments.accounts.validators.map((m) =>
-                        ContractUtils.signMessage(m, purchaseMessage)
+                    const signatures = await Promise.all(
+                        deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                     );
-
+                    const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                    const proposerSignature = await ContractUtils.signMessage(
+                        deployments.accounts.validators[0],
+                        proposeMessage
+                    );
                     await expect(
                         providerContract
-                            .connect(deployments.accounts.validators[0])
-                            .savePurchase(0, [purchaseParam], signatures)
+                            .connect(deployments.accounts.certifiers[0])
+                            .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -1811,14 +1869,18 @@ describe("Test for Ledger", () => {
                         sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = deployments.accounts.validators.map((m) =>
-                        ContractUtils.signMessage(m, purchaseMessage)
+                    const signatures = await Promise.all(
+                        deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                     );
-
+                    const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                    const proposerSignature = await ContractUtils.signMessage(
+                        deployments.accounts.validators[0],
+                        proposeMessage
+                    );
                     await expect(
                         providerContract
-                            .connect(deployments.accounts.validators[0])
-                            .savePurchase(0, [purchaseParam], signatures)
+                            .connect(deployments.accounts.certifiers[0])
+                            .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -2102,8 +2164,17 @@ describe("Test for Ledger", () => {
                 },
             ];
             const message = ContractUtils.getCurrencyMessage(height, rates);
-            const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-            await currencyContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures);
+            const signatures = await Promise.all(
+                deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message))
+            );
+            const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+            const proposerSignature = await ContractUtils.signMessage(
+                deployments.accounts.validators[0],
+                proposeMessage
+            );
+            await currencyContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature);
         });
 
         context("Save Purchase Data", () => {
@@ -2125,14 +2196,18 @@ describe("Test for Ledger", () => {
                         sender: deployments.accounts.foundation.address,
                     };
                     const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-                    const signatures = deployments.accounts.validators.map((m) =>
-                        ContractUtils.signMessage(m, purchaseMessage)
+                    const signatures = await Promise.all(
+                        deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                     );
-
+                    const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+                    const proposerSignature = await ContractUtils.signMessage(
+                        deployments.accounts.validators[0],
+                        proposeMessage
+                    );
                     await expect(
                         providerContract
-                            .connect(deployments.accounts.validators[0])
-                            .savePurchase(0, [purchaseParam], signatures)
+                            .connect(deployments.accounts.certifiers[0])
+                            .savePurchase(0, [purchaseParam], signatures, proposerSignature)
                     )
                         .to.emit(providerContract, "SavedPurchase")
                         .withArgs(
@@ -2359,7 +2434,7 @@ describe("Test for Ledger", () => {
             const transferAmount = amount.value;
             const nonce = await ledgerContract.nonceOf(deployments.accounts.foundation.address);
             const expiry = ContractUtils.getTimeStamp() + 3600;
-            const message = await ContractUtils.getTransferMessage(
+            const message = ContractUtils.getTransferMessage(
                 hre.ethers.provider.network.chainId,
                 transferContract.address,
                 deployments.accounts.foundation.address,
@@ -2368,7 +2443,7 @@ describe("Test for Ledger", () => {
                 nonce,
                 expiry
             );
-            const signature = ContractUtils.signMessage(deployments.accounts.foundation, message);
+            const signature = await ContractUtils.signMessage(deployments.accounts.foundation, message);
             await expect(
                 transferContract.transferToken(
                     deployments.accounts.foundation.address,
@@ -2384,7 +2459,7 @@ describe("Test for Ledger", () => {
             const transferAmount = amount.value;
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
             const expiry = ContractUtils.getTimeStamp() + 3600;
-            const message = await ContractUtils.getTransferMessage(
+            const message = ContractUtils.getTransferMessage(
                 hre.ethers.provider.network.chainId,
                 transferContract.address,
                 deployments.accounts.users[0].address,
@@ -2393,7 +2468,7 @@ describe("Test for Ledger", () => {
                 nonce,
                 expiry
             );
-            const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
+            const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
                 transferContract.transferToken(
                     deployments.accounts.users[0].address,
@@ -2410,7 +2485,7 @@ describe("Test for Ledger", () => {
             const transferAmount = fromBalance.mul(2);
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
             const expiry = ContractUtils.getTimeStamp() + 3600;
-            const message = await ContractUtils.getTransferMessage(
+            const message = ContractUtils.getTransferMessage(
                 hre.ethers.provider.network.chainId,
                 transferContract.address,
                 deployments.accounts.users[0].address,
@@ -2419,7 +2494,7 @@ describe("Test for Ledger", () => {
                 nonce,
                 expiry
             );
-            const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
+            const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
                 transferContract.transferToken(
                     deployments.accounts.users[0].address,
@@ -2438,7 +2513,7 @@ describe("Test for Ledger", () => {
             const transferAmount = oldTokenBalance0.sub(fee);
             const nonce = await ledgerContract.nonceOf(deployments.accounts.users[0].address);
             const expiry = ContractUtils.getTimeStamp() + 3600;
-            const message = await ContractUtils.getTransferMessage(
+            const message = ContractUtils.getTransferMessage(
                 hre.ethers.provider.network.chainId,
                 transferContract.address,
                 deployments.accounts.users[0].address,
@@ -2447,7 +2522,7 @@ describe("Test for Ledger", () => {
                 nonce,
                 expiry
             );
-            const signature = ContractUtils.signMessage(deployments.accounts.users[0], message);
+            const signature = await ContractUtils.signMessage(deployments.accounts.users[0], message);
             await expect(
                 transferContract.transferToken(
                     deployments.accounts.users[0].address,
@@ -2585,13 +2660,18 @@ describe("Test for Ledger", () => {
                 sender: deployments.accounts.foundation.address,
             };
             const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam]);
-            const signatures = deployments.accounts.validators.map((m) =>
-                ContractUtils.signMessage(m, purchaseMessage)
+            const signatures = await Promise.all(
+                deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
+            );
+            const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, [purchaseParam], signatures);
+            const proposerSignature = await ContractUtils.signMessage(
+                deployments.accounts.validators[0],
+                proposeMessage
             );
             await expect(
                 providerContract
-                    .connect(deployments.accounts.validators[0])
-                    .savePurchase(0, [purchaseParam], signatures)
+                    .connect(deployments.accounts.certifiers[0])
+                    .savePurchase(0, [purchaseParam], signatures, proposerSignature)
             )
                 .to.emit(providerContract, "SavedPurchase")
                 .withArgs(

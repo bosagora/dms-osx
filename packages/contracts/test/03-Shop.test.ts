@@ -5,7 +5,7 @@ import { ethers, upgrades } from "hardhat";
 
 import { ContractShopStatus } from "../src/types";
 import { ContractUtils, LoyaltyNetworkID } from "../src/utils/ContractUtils";
-import { CurrencyRate, ERC20, Shop, Validator } from "../typechain-types";
+import { CurrencyRate, Shop } from "../typechain-types";
 
 import chai, { expect } from "chai";
 import { solidity } from "ethereum-waffle";

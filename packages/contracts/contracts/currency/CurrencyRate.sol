@@ -37,36 +37,47 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
         require(_msgSender() == owner(), "Unauthorized access");
     }
 
-    modifier onlyValidator(address _account) {
-        require(validator.isCurrentActiveValidator(_account), "1000");
-        _;
-    }
-
     /// @notice 통화에 대한 가격을 저장한다.
     function set(
         uint256 _height,
         CurrencyData[] calldata _data,
-        bytes[] calldata _signatures
-    ) external override onlyValidator(_msgSender()) {
+        bytes[] calldata _signatures,
+        bytes calldata _proposerSignature
+    ) external override {
         require(_height >= prevHeight, "1171");
+
+        uint256 height = _height;
+        CurrencyData[] memory currencyData = _data;
+        bytes[] memory signatures = _signatures;
 
         // Check the number of voters and signatories
         uint256 numberOfVoters = validator.lengthOfCurrentActiveValidator();
         require(numberOfVoters > 0, "1172");
-        require(_signatures.length <= numberOfVoters, "1173");
+        require(signatures.length <= numberOfVoters, "1173");
 
         // Get a hash of all the data
-        bytes32[] memory messages = new bytes32[](_data.length);
-        for (uint256 i = 0; i < _data.length; i++) {
-            messages[i] = keccak256(abi.encode(_data[i].symbol, _data[i].rate, block.chainid));
+        bytes32[] memory messages = new bytes32[](currencyData.length);
+        for (uint256 i = 0; i < currencyData.length; i++) {
+            messages[i] = keccak256(abi.encode(currencyData[i].symbol, currencyData[i].rate, block.chainid));
         }
-        bytes32 dataHash = keccak256(abi.encode(_height, messages.length, messages));
+
+        bytes32[] memory signatureMessages = new bytes32[](signatures.length);
+        for (uint256 i = 0; i < signatures.length; i++) {
+            signatureMessages[i] = keccak256(abi.encode(keccak256(signatures[i]), block.chainid));
+        }
+        bytes32 proposerDataHash = keccak256(abi.encode(height, messages.length, messages, signatureMessages));
+
+        // Check Proposer Signature
+        address proposer = ECDSA.recover(ECDSA.toEthSignedMessageHash(proposerDataHash), _proposerSignature);
+        require(validator.isCurrentActiveValidator(proposer), "1000");
+
+        bytes32 dataHash = keccak256(abi.encode(height, messages.length, messages));
 
         // Counting by signature
-        address[] memory participants = new address[](_signatures.length);
+        address[] memory participants = new address[](signatures.length);
         uint256 length = 0;
-        for (uint256 idx = 0; idx < _signatures.length; idx++) {
-            address participant = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), _signatures[idx]);
+        for (uint256 idx = 0; idx < signatures.length; idx++) {
+            address participant = ECDSA.recover(ECDSA.toEthSignedMessageHash(dataHash), signatures[idx]);
             bool exist = false;
             for (uint256 j = 0; j < length; j++) {
                 if (participants[j] == participant) {
@@ -82,11 +93,12 @@ contract CurrencyRate is CurrencyStorage, Initializable, OwnableUpgradeable, UUP
 
         require(((length * 1000) / numberOfVoters) >= DMS.QUORUM, "1174");
 
-        prevHeight = _height;
+        prevHeight = height;
 
-        for (uint256 idx = 0; idx < _data.length; idx++) {
-            rates[_data[idx].symbol] = _data[idx].rate;
-            emit SetRate(_data[idx].symbol, _data[idx].rate);
+        for (uint256 idx = 0; idx < currencyData.length; idx++) {
+            string memory symbol = currencyData[idx].symbol;
+            rates[currencyData[idx].symbol] = currencyData[idx].rate;
+            emit SetRate(currencyData[idx].symbol, currencyData[idx].rate);
         }
         rates["point"] = MULTIPLE;
         rates["POINT"] = MULTIPLE;

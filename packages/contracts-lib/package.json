@@ -1,6 +1,6 @@
 {
     "name": "dms-contracts-lib-v2",
-    "version": "2.1.1",
+    "version": "2.1.3",
     "description": "",
     "main": "dist/bundle-cjs.js",
     "module": "dist/bundle-esm.js",

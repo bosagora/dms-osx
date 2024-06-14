@@ -63,9 +63,15 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [deployments.accounts.validators[0]].map((m) => ContractUtils.signMessage(m, message));
+        const signatures = await Promise.all(
+            [deployments.accounts.validators[0]].map((m) => ContractUtils.signMessage(m, message))
+        );
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
         await expect(
-            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
         ).to.be.revertedWith("1174");
     });
 
@@ -91,11 +97,17 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [deployments.accounts.validators[0], deployments.accounts.validators[0]].map((m) =>
-            ContractUtils.signMessage(m, message)
+        const signatures = await Promise.all(
+            [deployments.accounts.validators[0], deployments.accounts.validators[0]].map((m) =>
+                ContractUtils.signMessage(m, message)
+            )
         );
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
         await expect(
-            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
         ).to.be.revertedWith("1174");
     });
 
@@ -121,11 +133,17 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [deployments.accounts.validators[0], deployments.accounts.users[0]].map((m) =>
-            ContractUtils.signMessage(m, message)
+        const signatures = await Promise.all(
+            [deployments.accounts.validators[0], deployments.accounts.users[0]].map((m) =>
+                ContractUtils.signMessage(m, message)
+            )
         );
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
         await expect(
-            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
         ).to.be.revertedWith("1174");
     });
 
@@ -151,11 +169,17 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [deployments.accounts.deployer, deployments.accounts.users[0]].map((m) =>
-            ContractUtils.signMessage(m, message)
+        const signatures = await Promise.all(
+            [deployments.accounts.deployer, deployments.accounts.users[0]].map((m) =>
+                ContractUtils.signMessage(m, message)
+            )
         );
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
         await expect(
-            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
         ).to.be.revertedWith("1174");
     });
 
@@ -181,10 +205,18 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [deployments.accounts.validators[0], deployments.accounts.validators[1]].map((m) =>
-            ContractUtils.signMessage(m, message)
+        const signatures = await Promise.all(
+            [deployments.accounts.validators[0], deployments.accounts.validators[1]].map((m) =>
+                ContractUtils.signMessage(m, message)
+            )
         );
-        await expect(currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures))
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
+        await expect(
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
+        )
             .to.emit(currencyRateContract, "SetRate")
             .withNamedArgs({ currency: rates[0].symbol, rate: rates[0].rate })
             .to.emit(currencyRateContract, "SetRate")
@@ -217,14 +249,21 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = [
-            deployments.accounts.validators[0],
-            deployments.accounts.validators[1],
-            deployments.accounts.users[0],
-            deployments.accounts.deployer,
-        ].map((m) => ContractUtils.signMessage(m, message));
+        const signatures = await Promise.all(
+            [
+                deployments.accounts.validators[0],
+                deployments.accounts.validators[1],
+                deployments.accounts.users[0],
+                deployments.accounts.deployer,
+            ].map((m) => ContractUtils.signMessage(m, message))
+        );
+
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
         await expect(
-            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
         ).to.be.revertedWith("1173");
     });
 
@@ -250,9 +289,15 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
+        const signatures = await Promise.all(
+            deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message))
+        );
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
         await expect(
-            currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures)
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
         ).to.be.revertedWith("1171");
     });
 
@@ -285,8 +330,16 @@ describe("Test for CurrencyRate", () => {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-        await expect(currencyRateContract.connect(deployments.accounts.validators[0]).set(height, rates, signatures))
+        const signatures = await Promise.all(
+            deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, message))
+        );
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(deployments.accounts.validators[0], proposeMessage);
+        await expect(
+            currencyRateContract
+                .connect(deployments.accounts.certifiers[0])
+                .set(height, rates, signatures, proposerSignature)
+        )
             .to.emit(currencyRateContract, "SetRate")
             .withNamedArgs({ currency: rates[0].symbol, rate: rates[0].rate })
             .to.emit(currencyRateContract, "SetRate")

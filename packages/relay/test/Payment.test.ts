@@ -280,11 +280,24 @@ describe("Test of Server", function () {
                     [purchaseParam],
                     contractManager.sideChainId
                 );
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-
-                await expect(providerContract.connect(validators[0]).savePurchase(0, [purchaseParam], signatures))
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(
+                    0,
+                    [purchaseParam],
+                    signatures,
+                    contractManager.sideChainId
+                );
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -740,11 +753,24 @@ describe("Test of Server", function () {
                     [purchaseParam],
                     contractManager.sideChainId
                 );
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-
-                await expect(providerContract.connect(validators[0]).savePurchase(0, [purchaseParam], signatures))
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(
+                    0,
+                    [purchaseParam],
+                    signatures,
+                    contractManager.sideChainId
+                );
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1127,10 +1153,24 @@ describe("Test of Server", function () {
                     [purchaseParam],
                     contractManager.sideChainId
                 );
-                const signatures = deployments.accounts.validators.map((m) =>
-                    ContractUtils.signMessage(m, purchaseMessage)
+                const signatures = await Promise.all(
+                    deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
                 );
-                await expect(providerContract.connect(validators[0]).savePurchase(0, [purchaseParam], signatures))
+                const proposeMessage = ContractUtils.getPurchasesProposeMessage(
+                    0,
+                    [purchaseParam],
+                    signatures,
+                    contractManager.sideChainId
+                );
+                const proposerSignature = await ContractUtils.signMessage(
+                    deployments.accounts.validators[0],
+                    proposeMessage
+                );
+                await expect(
+                    providerContract
+                        .connect(deployments.accounts.certifiers[0])
+                        .savePurchase(0, [purchaseParam], signatures, proposerSignature)
+                )
                     .to.emit(providerContract, "SavedPurchase")
                     .withNamedArgs({
                         purchaseId: purchase.purchaseId,
@@ -1598,10 +1638,24 @@ describe("Test of Server", function () {
                 sender: deployments.accounts.foundation.address,
             };
             const purchaseMessage = ContractUtils.getPurchasesMessage(0, [purchaseParam], contractManager.sideChainId);
-            const signatures = deployments.accounts.validators.map((m) =>
-                ContractUtils.signMessage(m, purchaseMessage)
+            const signatures = await Promise.all(
+                deployments.accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage))
             );
-            await expect(providerContract.connect(validators[0]).savePurchase(0, [purchaseParam], signatures))
+            const proposeMessage = ContractUtils.getPurchasesProposeMessage(
+                0,
+                [purchaseParam],
+                signatures,
+                contractManager.sideChainId
+            );
+            const proposerSignature = await ContractUtils.signMessage(
+                deployments.accounts.validators[0],
+                proposeMessage
+            );
+            await expect(
+                providerContract
+                    .connect(deployments.accounts.certifiers[0])
+                    .savePurchase(0, [purchaseParam], signatures, proposerSignature)
+            )
                 .to.emit(providerContract, "SavedPurchase")
                 .withNamedArgs({
                     purchaseId: purchase.purchaseId,

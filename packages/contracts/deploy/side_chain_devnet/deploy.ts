@@ -461,9 +461,12 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
                 rate: multiple,
             },
         ];
-        const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-        const tx = await contract.connect(accounts.validators[0]).set(height, rates, signatures);
+        const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+        const message = ContractUtils.getCurrencyMessage(height, rates, chainId);
+        const signatures = await Promise.all(accounts.validators.map((m) => ContractUtils.signMessage(m, message)));
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures, chainId);
+        const proposerSignature = await ContractUtils.signMessage(accounts.validators[0], proposeMessage);
+        const tx = await contract.connect(accounts.certifiers[0]).set(height, rates, signatures, proposerSignature);
         console.log(`Set currency rate (tx: ${tx.hash})...`);
         // await tx.wait();
     }
@@ -997,8 +1000,10 @@ async function storeSampleExchangeRate(accounts: IAccount, deployment: Deploymen
     ];
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     const message = ContractUtils.getCurrencyMessage(height, rates, chainId);
-    const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-    const tx1 = await contract.connect(accounts.validators[0]).set(height, rates, signatures);
+    const signatures = await Promise.all(accounts.validators.map((m) => ContractUtils.signMessage(m, message)));
+    const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures, chainId);
+    const proposerSignature = await ContractUtils.signMessage(accounts.validators[0], proposeMessage);
+    const tx1 = await contract.connect(accounts.certifiers[0]).set(height, rates, signatures, proposerSignature);
     await tx1.wait();
 }
 
@@ -1038,8 +1043,12 @@ async function storeSamplePurchase1(accounts: IAccount, deployment: Deployments)
     });
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchaseParams, chainId);
-    const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage));
-    const tx1 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams, signatures);
+    const signatures = await Promise.all(accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage)));
+    const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, purchaseParams, signatures, chainId);
+    const proposerSignature = await ContractUtils.signMessage(accounts.validators[0], proposeMessage);
+    const tx1 = await contract
+        .connect(accounts.certifiers[0])
+        .savePurchase(0, purchaseParams, signatures, proposerSignature);
     await tx1.wait();
 
     console.log(`Store Sample Purchase 1 - 2/4 ...`);
@@ -1056,8 +1065,14 @@ async function storeSamplePurchase1(accounts: IAccount, deployment: Deployments)
         };
     });
     const purchaseMessage2 = ContractUtils.getPurchasesMessage(0, purchaseParams2, chainId);
-    const signatures2 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage2));
-    const tx2 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams2, signatures2);
+    const signatures2 = await Promise.all(
+        accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage2))
+    );
+    const proposeMessage2 = ContractUtils.getPurchasesProposeMessage(0, purchaseParams2, signatures2, chainId);
+    const proposerSignature2 = await ContractUtils.signMessage(accounts.validators[0], proposeMessage2);
+    const tx2 = await contract
+        .connect(accounts.certifiers[0])
+        .savePurchase(0, purchaseParams2, signatures2, proposerSignature2);
     await tx2.wait();
 
     console.log(`Store Sample Purchase 1 - 3/4 ...`);
@@ -1074,8 +1089,14 @@ async function storeSamplePurchase1(accounts: IAccount, deployment: Deployments)
         };
     });
     const purchaseMessage3 = ContractUtils.getPurchasesMessage(0, purchaseParams3, chainId);
-    const signatures3 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage3));
-    const tx3 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams3, signatures3);
+    const signatures3 = await Promise.all(
+        accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage3))
+    );
+    const proposeMessage3 = ContractUtils.getPurchasesProposeMessage(0, purchaseParams3, signatures3, chainId);
+    const proposerSignature3 = await ContractUtils.signMessage(accounts.validators[0], proposeMessage3);
+    const tx3 = await contract
+        .connect(accounts.certifiers[0])
+        .savePurchase(0, purchaseParams3, signatures3, proposerSignature3);
     await tx3.wait();
 
     console.log(`Store Sample Purchase 1 - 4/4 ...`);
@@ -1092,8 +1113,14 @@ async function storeSamplePurchase1(accounts: IAccount, deployment: Deployments)
         };
     });
     const purchaseMessage4 = ContractUtils.getPurchasesMessage(0, purchaseParams4, chainId);
-    const signatures4 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage4));
-    const tx4 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams4, signatures4);
+    const signatures4 = await Promise.all(
+        accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage4))
+    );
+    const proposeMessage4 = ContractUtils.getPurchasesProposeMessage(0, purchaseParams4, signatures4, chainId);
+    const proposerSignature4 = await ContractUtils.signMessage(accounts.validators[0], proposeMessage4);
+    const tx4 = await contract
+        .connect(accounts.certifiers[0])
+        .savePurchase(0, purchaseParams4, signatures4, proposerSignature4);
     await tx4.wait();
 }
 
@@ -1125,8 +1152,12 @@ async function storeSamplePurchase2(accounts: IAccount, deployment: Deployments)
     });
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     const purchaseMessage = ContractUtils.getPurchasesMessage(0, purchaseParams, chainId);
-    const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage));
-    const tx1 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams, signatures);
+    const signatures = await Promise.all(accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage)));
+    const proposeMessage = ContractUtils.getPurchasesProposeMessage(0, purchaseParams, signatures, chainId);
+    const proposerSignature = ContractUtils.signMessage(accounts.validators[0], proposeMessage);
+    const tx1 = await contract
+        .connect(accounts.certifiers[4])
+        .savePurchase(0, purchaseParams, signatures, proposerSignature);
     await tx1.wait();
 
     console.log(`Store Sample Purchase 2 - 2/2...`);
@@ -1143,8 +1174,14 @@ async function storeSamplePurchase2(accounts: IAccount, deployment: Deployments)
         };
     });
     const purchaseMessage3 = ContractUtils.getPurchasesMessage(0, purchaseParams3, chainId);
-    const signatures3 = accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage3));
-    const tx3 = await contract.connect(accounts.validators[4]).savePurchase(0, purchaseParams3, signatures3);
+    const signatures3 = await Promise.all(
+        accounts.validators.map((m) => ContractUtils.signMessage(m, purchaseMessage3))
+    );
+    const proposeMessage3 = ContractUtils.getPurchasesProposeMessage(0, purchaseParams3, signatures3, chainId);
+    const proposerSignature3 = await ContractUtils.signMessage(accounts.validators[0], proposeMessage3);
+    const tx3 = await contract
+        .connect(accounts.certifiers[4])
+        .savePurchase(0, purchaseParams3, signatures3, proposerSignature3);
     await tx3.wait();
 }
 

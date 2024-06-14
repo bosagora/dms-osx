@@ -450,8 +450,10 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
             },
         ];
         const message = ContractUtils.getCurrencyMessage(height, rates);
-        const signatures = accounts.validators.map((m) => ContractUtils.signMessage(m, message));
-        const tx1 = await contract.connect(accounts.validators[0]).set(height, rates, signatures);
+        const signatures = await Promise.all(accounts.validators.map((m) => ContractUtils.signMessage(m, message)));
+        const proposeMessage = ContractUtils.getCurrencyProposeMessage(height, rates, signatures);
+        const proposerSignature = await ContractUtils.signMessage(accounts.validators[0], proposeMessage);
+        const tx1 = await contract.connect(accounts.certifiers[0]).set(height, rates, signatures, proposerSignature);
         await tx1.wait();
     }
 }
