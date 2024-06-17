@@ -69,6 +69,29 @@ export class PaymentRouter {
     }
 
     public registerRoutes() {
+        this.app.get(
+            "/v1/payment/user/balance",
+            [query("account").exists().trim().isEthereumAddress()],
+            this.user_balance.bind(this)
+        );
+
+        this.app.get(
+            "/v1/payment/convert/currency",
+            [query("amount").exists().custom(Validation.isAmount), query("from").exists(), query("to").exists()],
+            this.convert_currency.bind(this)
+        );
+
+        this.app.get(
+            "/v1/payment/shop/info",
+            [
+                query("shopId")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{64}$/i),
+            ],
+            this.shop_info.bind(this)
+        );
+
         this.app.post(
             "/v1/payment/account/temporary",
             [
@@ -184,6 +207,107 @@ export class PaymentRouter {
         while (true) {
             const id = ContractUtils.getPaymentId(account, nonce);
             if (await this.contractManager.sideLoyaltyConsumerContract.isAvailablePaymentId(id)) return id;
+        }
+    }
+
+    /**
+     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
+     * GET /v1/payment/user/balance
+     * @private
+     */
+    private async user_balance(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/user/balance ${req.ip}:${JSON.stringify(req.query)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            let account: string = String(req.query.account).trim();
+            if (ContractUtils.isTemporaryAccount(account)) {
+                const realAccount = await this.storage.getRealAccountOnTemporary(account);
+                if (realAccount === undefined) {
+                    return res.status(200).json(ResponseMessage.getErrorMessage("2004"));
+                } else {
+                    account = realAccount;
+                }
+            }
+            const balance = await this.contractManager.sideLedgerContract.pointBalanceOf(account);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { account, balance: balance.toString() }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/user/balance : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    /**
+     * 사용자 정보 / 로열티 종류와 잔고를 제공하는 엔드포인트
+     * GET /v1/payment/convert/currency
+     * @private
+     */
+    private async convert_currency(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/convert/currency ${req.ip}:${JSON.stringify(req.query)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const amount: BigNumber = BigNumber.from(req.query.amount);
+            const from: string = String(req.query.from).trim();
+            const to: string = String(req.query.to).trim();
+
+            const result = await this.contractManager.sideCurrencyRateContract.convertCurrency(amount, from, to);
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, { amount: result.toString() }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/convert/currency : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        }
+    }
+
+    /**
+     * 상점 정보 / 상점의 기본적인 정보를 제공하는 엔드포인트
+     * GET /v1/payment/shop/info
+     * @private
+     */
+    private async shop_info(req: express.Request, res: express.Response) {
+        logger.http(`GET /v1/payment/shop/info ${req.ip}:${JSON.stringify(req.query)}`);
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        try {
+            const shopId: string = String(req.query.shopId).trim();
+            const info = await this.contractManager.sideShopContract.shopOf(shopId);
+
+            const shopInfo = {
+                shopId: info.shopId,
+                name: info.name,
+                currency: info.currency,
+                status: info.status,
+                account: info.account,
+                delegator: info.delegator,
+                providedAmount: info.providedAmount.toString(),
+                usedAmount: info.usedAmount.toString(),
+                refundedAmount: info.refundedAmount.toString(),
+            };
+            this.metrics.add("success", 1);
+            return res.status(200).json(this.makeResponseData(0, shopInfo));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`GET /v1/payment/shop/info : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         }
     }
 

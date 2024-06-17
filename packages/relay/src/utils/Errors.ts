@@ -14,7 +14,7 @@ export class ResponseMessage {
         ["1050", "Sender is not authorized to execute"],
         ["1051", "Unable to transfer from foundation account"],
         ["1052", "Unable to transfer to foundation account"],
-        ["1052", "Unable to withdraw from the foundation account"],
+        ["1053", "Unable to withdraw from the foundation account"],
         ["1160", "ProvideLoyalty-This is a purchase data that has already been processed"],
         ["1161", "ProvideLoyalty-Too much royalty paid"],
         ["1162", "ProvideLoyalty-Registered validator does not exist"],
