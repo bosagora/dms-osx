@@ -4035,7 +4035,7 @@ express@^4.17.1:
 
 extend@^3.0.2, extend@~3.0.2:
   version "3.0.2"
-  resolved "https://registry.npmjs.org/extend/-/extend-3.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/extend/-/extend-3.0.2.tgz#f8b1136b4071fbd8eb140aff858b1019ec2915fa"
   integrity sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==
 
 extsprintf@1.3.0:
@@ -5101,10 +5101,10 @@ ip-regex@^4.0.0:
   resolved "https://registry.npmjs.org/ip-regex/-/ip-regex-4.3.0.tgz"
   integrity sha512-B9ZWJxHHOHUhUjCPrMpLD4xEq35bUTClHM1S6CBU5ixQnkZmwipwgc96vAd7AAGM9TGHvJR+Uss+/Ak6UphK+Q==
 
-ip@^1.1.5:
-  version "1.1.8"
-  resolved "https://registry.npmjs.org/ip/-/ip-1.1.8.tgz"
-  integrity sha512-PuExPYUiu6qMBQb4l06ecm6T6ujzhmh+MeJcW9wa89PoAz5pvd4zPgN5WJV104mb6S2T1AwNIAaB70JNrLQWhg==
+ip@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/ip/-/ip-2.0.1.tgz#e8f3595d33a3ea66490204234b77636965307105"
+  integrity sha512-lJUL9imLTNi1ZfXT+DU6rBBdbiKGBuay9B6xGSPVjUeQwaH1RIGqef8RZkUtHioLmSNpPR5M4HVKJGm1j8FWVQ==
 
 ipaddr.js@1.9.1:
   version "1.9.1"
@@ -6235,7 +6235,7 @@ minimatch@^8.0.2:
   dependencies:
     brace-expansion "^2.0.1"
 
-minimist@^1.2.5, minimist@^1.2.6, minimist@^1.2.7:
+minimist@^1.2.0, minimist@^1.2.5, minimist@^1.2.6, minimist@^1.2.7:
   version "1.2.8"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz"
   integrity sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==
@@ -7702,6 +7702,13 @@ secp256k1@4.0.3, secp256k1@^4.0.1:
     elliptic "^6.5.4"
     node-addon-api "^2.0.0"
     node-gyp-build "^4.2.0"
+
+secure-env@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/secure-env/-/secure-env-1.2.0.tgz#a2ae5937d3b6edc87626f6a3289941b40ae73052"
+  integrity sha512-BNi4AlHP6sMZv3ybFWD5/eieFGcqt93VRLzceUdt3+PftgVnxN7eRY7POtFm5PQqaQn5aoRoxG3A4HH9kUmeKw==
+  dependencies:
+    minimist "^1.2.0"
 
 seedrandom@3.0.5:
   version "3.0.5"

@@ -1,7 +1,7 @@
 {
     "name": "dms-relay",
     "version": "2.0.0",
-    "description": "Relay the transaction for the decentralized mileage system",
+    "description": "Relay the transaction for the decentralized loyalty system",
     "main": "src/main.js",
     "directories": {
         "test": "test"
@@ -40,7 +40,7 @@
         "url": "https://github.com/bosagora/dms-osx/issues"
     },
     "homepage": "https://github.com/bosagora/dms-osx#readme",
-    "dependencies": {
+    "devDependencies": {
         "@ethersproject/experimental": "^5.7.0",
         "@nomiclabs/hardhat-ethers": "^2.2.3",
         "@nomiclabs/hardhat-waffle": "^2.0.2",
@@ -61,7 +61,9 @@
         "@types/node": "^12.20.43",
         "@types/node-cron": "^3.0.1",
         "@types/pg": "^8.10.7",
-        "@types/urijs": "^1.19.12",
+        "@types/urijs": "^1.19.12"
+    },
+    "dependencies": {
         "argparse": "^2.0.1",
         "assert": "^2.0.0",
         "axios": "^1.6.7",
@@ -82,7 +84,7 @@
         "google-libphonenumber": "^3.2.33",
         "hardhat": "^2.12.7",
         "hardhat-gas-reporter": "^1.0.7",
-        "ip": "^1.1.5",
+        "ip": "^2.0.1",
         "loyalty-tokens": "~2.0.0",
         "multisig-wallet-contracts": "~2.0.0",
         "mybatis-mapper": "^0.7.1",
@@ -92,6 +94,7 @@
         "prettier": "^2.5.1",
         "prettier-plugin-solidity": "^1.1.1",
         "prom-client": "^15.1.0",
+        "secure-env": "^1.2.0",
         "solhint": "^3.3.6",
         "solidity-coverage": "^0.8.2",
         "solidity-docgen": "^0.6.0-beta.35",

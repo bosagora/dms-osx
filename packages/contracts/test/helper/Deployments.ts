@@ -52,7 +52,6 @@ export interface IAccount {
     linkValidators: Wallet[];
     bridgeValidators: Wallet[];
     certifiers: Wallet[];
-    purchaseManager: Wallet;
     users: Wallet[];
     shops: Wallet[];
     tokenOwners: Wallet[];
@@ -73,20 +72,11 @@ export class Deployments {
         const raws = HardhatAccount.keys.map((m) => new Wallet(m, ethers.provider));
         const [
             deployer,
+            deployer_main_chain,
             owner,
             foundation,
             fee,
             txFee,
-            certifier01,
-            certifier02,
-            certifier03,
-            certifier04,
-            certifier05,
-            certifier06,
-            certifier07,
-            certifier08,
-            certifier09,
-            certifier10,
             validator01,
             validator02,
             validator03,
@@ -109,9 +99,21 @@ export class Deployments {
             bridgeValidator1,
             bridgeValidator2,
             bridgeValidator3,
-            bridgeValidator4,
-            bridgeValidator5,
-            purchaseManager,
+
+            tokenOwner1,
+            tokenOwner2,
+            tokenOwner3,
+
+            certifier01,
+            certifier02,
+            certifier03,
+            certifier04,
+            certifier05,
+            certifier06,
+            certifier07,
+            certifier08,
+            certifier09,
+            certifier10,
             user01,
             user02,
             user03,
@@ -155,7 +157,6 @@ export class Deployments {
                 certifier09,
                 certifier10,
             ],
-            purchaseManager,
             users: [user01, user02, user03, user04, user05, user06, user07, user08, user09, user10],
             shops: [shop01, shop02, shop03, shop04, shop05, shop06, shop07, shop08, shop09, shop10],
 
