@@ -102,7 +102,7 @@ export class ETCRouter {
      * @private
      */
     private async mobile_register(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/mobile/register`);
+        logger.http(`POST /v1/mobile/register ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -145,7 +145,7 @@ export class ETCRouter {
      * @private
      */
     private async mobile_send(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/mobile/send`);
+        logger.http(`POST /v1/mobile/send ${req.ip}:${JSON.stringify(req.body)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -180,11 +180,11 @@ export class ETCRouter {
     }
 
     /**
-     * POST /v1/mobile/info
+     * GET /v1/mobile/info
      * @private
      */
     private async mobile_info(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/mobile/info`);
+        logger.http(`GET /v1/mobile/info ${req.ip}:${JSON.stringify(req.params)}`);
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -216,7 +216,7 @@ export class ETCRouter {
             );
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/mobile/info : ${msg.error.message}`);
+            logger.error(`GET /v1/mobile/info : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(msg);
         }

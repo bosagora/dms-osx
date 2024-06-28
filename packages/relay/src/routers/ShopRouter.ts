@@ -1164,7 +1164,7 @@ export class ShopRouter {
                 message,
                 data,
             });
-            logger.info(res.data);
+            logger.info(JSON.stringify(res.data));
         } catch (error) {
             if (error instanceof Error) {
                 logger.error(`sendTaskResult : ${error.message}`);

@@ -285,7 +285,7 @@ export class WatchScheduler extends Scheduler {
                 message,
                 data,
             });
-            logger.info(res.data);
+            logger.info(JSON.stringify(res.data));
         } catch (error) {
             if (error instanceof Error) {
                 logger.error(`sendPaymentResult : ${error.message}`);
