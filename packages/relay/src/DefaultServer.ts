@@ -74,9 +74,7 @@ export class DefaultServer extends WebService {
         this.metrics.createGauge("shop_count_clear", "number of shops", ["currency"]);
         this.metrics.createGauge("shop_total_provided_amount_clear", "total provided amount of shops", ["currency"]);
         this.metrics.createGauge("shop_total_used_amount_clear", "total used amount of shops", ["currency"]);
-        this.metrics.createGauge("shop_total_withdrawable_amount_clear", "total withdrawable amount of shops", [
-            "currency",
-        ]);
+        this.metrics.createGauge("shop_total_refunded_amount_clear", "total refundable amount of shops", ["currency"]);
 
         this.config = config;
         this.contractManager = contractManager;
