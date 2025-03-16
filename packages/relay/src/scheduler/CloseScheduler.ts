@@ -85,7 +85,7 @@ export class CloseScheduler extends Scheduler {
             if (ContractUtils.getTimeStamp() - payment.openNewTimestamp < this.config.relay.forcedCloseSecond) continue;
             logger.info(`CloseScheduler.onNewPayment ${payment.paymentId}`);
 
-            const serverURL = this.config.relay.relayEndpoint;
+            const serverURL = `http://127.0.0.1:${this.config.server.port}`;
             const client = new HTTPClient({
                 headers: {
                     Authorization: this.config.relay.accessKey,
@@ -124,7 +124,7 @@ export class CloseScheduler extends Scheduler {
                 continue;
             logger.info(`CloseScheduler.onCancelPayment ${payment.paymentId}`);
 
-            const serverURL = this.config.relay.relayEndpoint;
+            const serverURL = `http://127.0.0.1:${this.config.server.port}`;
             const client = new HTTPClient({
                 headers: {
                     Authorization: this.config.relay.accessKey,
