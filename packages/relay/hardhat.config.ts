@@ -503,6 +503,11 @@ const config = {
             chainId: 24680,
             accounts: getAccounts(),
         },
+        production_outer: {
+            url: process.env.PRODUCTION_OUTER_URL || "",
+            chainId: Number(process.env.PRODUCTION_OUTER_CHAIN_ID || "79"),
+            accounts: getAccounts(),
+        },
         production_main: {
             url: process.env.PRODUCTION_MAIN_URL || "",
             chainId: Number(process.env.PRODUCTION_MAIN_CHAIN_ID || "2151"),
