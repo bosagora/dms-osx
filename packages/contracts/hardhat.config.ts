@@ -554,6 +554,11 @@ const config = {
             chainId: 2019,
             accounts: getAccounts(),
         },
+        outer_chain_devnet: {
+            url: "http://localhost:8500",
+            chainId: 24000,
+            accounts: getAccounts(),
+        },
         main_chain_devnet: {
             url: "http://localhost:8540",
             chainId: 24600,

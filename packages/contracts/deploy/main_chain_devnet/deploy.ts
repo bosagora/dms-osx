@@ -5,7 +5,14 @@ import "@openzeppelin/hardhat-upgrades";
 import { HardhatAccount } from "../../src/HardhatAccount";
 import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import { Bridge, BridgeValidator, LoyaltyToken, MultiSigWallet } from "../../typechain-types";
+import {
+    Bridge,
+    BridgeValidator,
+    NonDelegatedBridge,
+    LoyaltyToken,
+    MultiSigWallet,
+    ERC20,
+} from "../../typechain-types";
 
 import { BaseContract, Contract, Wallet } from "ethers";
 
@@ -218,30 +225,6 @@ class Deployments {
 
     static filename = "./deploy/main_chain_devnet/deployed_contracts.json";
 
-    public async loadContractInfo() {
-        if (!fs.existsSync(Deployments.filename)) return;
-
-        const data: any = JSON.parse(fs.readFileSync(Deployments.filename, "utf-8"));
-
-        for (const key of Object.keys(data)) {
-            let name: string;
-            if (key === "LoyaltyBridge") {
-                name = "Bridge";
-            } else if (key === "MainChainBridge") {
-                name = "Bridge";
-            } else {
-                name = key;
-            }
-            const address = data[key];
-            console.log(`Load ${name} - ${address}...`);
-            this.deployments.set(key, {
-                name,
-                address,
-                contract: (await hre.ethers.getContractFactory(name)).attach(address),
-            });
-        }
-    }
-
     public saveContractInfo() {
         const contents: any = {};
         for (const key of this.deployments.keys()) {
@@ -413,8 +396,8 @@ async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) 
     }
 }
 
-async function deployMainChainBridge(accounts: IAccount, deployment: Deployments) {
-    const contractName = "MainChainBridge";
+async function deployInnerChainBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "InnerChainBridge";
     console.log(`Deploy ${contractName}...`);
     if (deployment.getContract("BridgeValidator") === undefined) {
         console.error("Contract is not deployed!");
@@ -444,7 +427,7 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
 
         const nativeTokenAmount = Amount.make(500_000, 18).value;
         const tx2 = await accounts.owner.sendTransaction({ to: contract.address, value: nativeTokenAmount });
-        console.log(`Deposit Native Token to MainChainBridge Bridge (tx: ${tx2.hash})...`);
+        console.log(`Deposit Native Token to InnerChainBridge Bridge (tx: ${tx2.hash})...`);
         await tx2.wait();
 
         // BIP20 Token
@@ -454,11 +437,76 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
         console.log(`Register Loyalty Token (tx: ${tx3.hash})...`);
         await tx3.wait();
 
-        const assetAmount = Amount.make(100_000_000, 18).value;
+        const assetAmount = Amount.make(200_000_000, 18).value;
         const tx4 = await tokenContract.connect(accounts.owner).transfer(contract.address, assetAmount);
-        console.log(`Deposit Loyalty Token to MainChainBridge (tx: ${tx4.hash})...`);
+        console.log(`Deposit Loyalty Token to InnerChainBridge (tx: ${tx4.hash})...`);
         await tx4.wait();
     }
+}
+
+async function deployOuterChainBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "OuterChainBridge";
+    console.log(`Deploy ${contractName}...`);
+    if (deployment.getContract("BridgeValidator") === undefined) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+
+    const factory = await hre.ethers.getContractFactory("Bridge");
+    const contract = (await hre.upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [deployment.getContractAddress("BridgeValidator"), accounts.protocolFee.address],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as NonDelegatedBridge;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+
+    {
+        // BIP20 Token
+        const tokenContract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
+        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
+        const tx3 = await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
+        console.log(`Register Loyalty Token (tx: ${tx3.hash})...`);
+        await tx3.wait();
+
+        const assetAmount = Amount.make(200_000_000, 18).value;
+        const tx4 = await tokenContract.connect(accounts.owner).transfer(contract.address, assetAmount);
+        console.log(`Deposit Loyalty Token to OuterChainBridge (tx: ${tx4.hash})...`);
+        await tx4.wait();
+    }
+}
+
+async function writeTokenInfo(accounts: IAccount, deployment: Deployments) {
+    console.log(`Information of token`);
+    const tokenContract = deployment.getContract("LoyaltyToken") as ERC20;
+    console.log(`Name of token: ${await tokenContract.name()}`);
+    console.log(`Symbol of token: ${await tokenContract.symbol()}`);
+    console.log(`Address of token: ${tokenContract.address}`);
+    console.log(`Total supply of token: ${(new BOACoin(await tokenContract.totalSupply())).toDisplayString(true, 4)}`);
+}
+
+async function writeAccountInfo(accounts: IAccount, deployment: Deployments) {
+    console.log(`Information of accounts`);
+    console.log(`deployer      : ${accounts.deployer.address}`);
+    console.log(`owner         : ${accounts.owner.address}`);
+    console.log(`system        : ${accounts.system.address}`);
+    console.log(`paymentFee    : ${accounts.paymentFee.address}`);
+    console.log(`protocolFee   : ${accounts.protocolFee.address}`);
+    console.log(`adProtocolFee : ${accounts.protocolFee.address}`);
+}
+
+async function writeBalanceOfBridges(accounts: IAccount, deployment: Deployments) {
+    const tokenContract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
+    console.log(`Balance of owner's token          ${(new BOACoin(await tokenContract.balanceOf(accounts.owner.address))).toDisplayString(true, 4)}`);
+    console.log(`Balance of loyalty bridge's token ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("LoyaltyBridge") || ""))).toDisplayString(true, 4)}`);
+    console.log(`Balance of inner chain bridge's token   ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("InnerChainBridge") || ""))).toDisplayString(true, 4)}`);
+    console.log(`Balance of outer chain bridge's token   ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("OuterChainBridge") || ""))).toDisplayString(true, 4)}`);
 }
 
 async function main() {
@@ -468,9 +516,15 @@ async function main() {
 
     deployments.addDeployer(mintInitialSupplyToken);
     deployments.addDeployer(distributeToken);
+
+    deployments.addDeployer(writeTokenInfo);
+    deployments.addDeployer(writeAccountInfo);
+
     deployments.addDeployer(deployBridgeValidator);
     deployments.addDeployer(deployLoyaltyBridge);
-    deployments.addDeployer(deployMainChainBridge);
+    deployments.addDeployer(deployInnerChainBridge);
+    deployments.addDeployer(deployOuterChainBridge);
+    deployments.addDeployer(writeBalanceOfBridges);
 
     await deployments.doDeploy();
 

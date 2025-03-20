@@ -5822,10 +5822,10 @@ kind-of@^6.0.2:
   resolved "https://registry.npmjs.org/kind-of/-/kind-of-6.0.3.tgz"
   integrity sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==
 
-kios-bridge-contracts-v2@~2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/kios-bridge-contracts-v2/-/kios-bridge-contracts-v2-2.5.0.tgz#2bd610f79ba9b79e903466ece3104decb5e58b1b"
-  integrity sha512-GdKFGt83Db3avHxjZFL24ef7JsZnJcBBjaIwIhLAJTH3B4yGK3W2/lEDSpH2fVurPRhHk5fAHuqXcofIqnbNIg==
+kios-bridge-contracts-v2@~2.6.0:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/kios-bridge-contracts-v2/-/kios-bridge-contracts-v2-2.6.0.tgz#f0de86d7b1dd2ed43983f01cdaf79f1f510ee418"
+  integrity sha512-jj0BxqA034349OGwbLaJ8fT4wtD/HdDeeFWZznW7Dt2cSdtwlNhq+VHG+H8lAOALrybh2MWOGewum3nSCq2hiA==
   dependencies:
     "@openzeppelin/contracts" "^4.9.5"
     "@openzeppelin/contracts-upgradeable" "^4.9.5"

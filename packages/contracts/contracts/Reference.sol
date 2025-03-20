@@ -13,3 +13,4 @@ import "kios-bridge-contracts-v2/contracts/interfaces/IBridgeLiquidity.sol";
 import "kios-bridge-contracts-v2/contracts/interfaces/IBridgeValidator.sol";
 import "kios-bridge-contracts-v2/contracts/bridge/Bridge.sol";
 import "kios-bridge-contracts-v2/contracts/bridge/BridgeValidator.sol";
+import "kios-bridge-contracts-v2/contracts/bridge/NonDelegatedBridge.sol";

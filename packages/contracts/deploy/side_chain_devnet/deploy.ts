@@ -8,7 +8,7 @@ import { ContractUtils } from "../../src/utils/ContractUtils";
 import {
     Bridge,
     BridgeValidator,
-    CurrencyRate,
+    CurrencyRate, ERC20,
     Ledger,
     LoyaltyBridge,
     LoyaltyBurner,
@@ -231,23 +231,6 @@ class Deployments {
     }
 
     static filename = "./deploy/side_chain_devnet/deployed_contracts.json";
-
-    public async loadContractInfo() {
-        if (!fs.existsSync(Deployments.filename)) return;
-
-        const data: any = JSON.parse(fs.readFileSync(Deployments.filename, "utf-8"));
-
-        for (const key of Object.keys(data)) {
-            const name = key;
-            const address = data[key];
-            console.log(`Load ${name} - ${address}...`);
-            this.deployments.set(key, {
-                name,
-                address,
-                contract: (await hre.ethers.getContractFactory(name)).attach(address),
-            });
-        }
-    }
 
     public saveContractInfo() {
         const contents: any = {};
@@ -930,8 +913,8 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     }
 }
 
-async function deploySideChainBridge(accounts: IAccount, deployment: Deployments) {
-    const contractName = "SideChainBridge";
+async function deployInnerChainBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "InnerChainBridge";
     console.log(`Deploy ${contractName}...`);
     if (deployment.getContract("BridgeValidator") === undefined) {
         console.error("Contract is not deployed!");
@@ -970,9 +953,9 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
         console.log(`Register Loyalty Token (tx: ${tx3.hash})...`);
         await tx3.wait();
 
-        const assetAmount = Amount.make(500_000_000, 18).value;
+        const assetAmount = Amount.make(200_000_000, 18).value;
         const tx4 = await tokenContract.connect(accounts.owner).transfer(contract.address, assetAmount);
-        console.log(`Deposit Loyalty Token to Chain Bridge (tx: ${tx4.hash})...`);
+        console.log(`Deposit Loyalty Token to Inner Chain Bridge (tx: ${tx4.hash})...`);
         await tx4.wait();
     }
 
@@ -986,6 +969,32 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
             console.log(`Register provider (tx: ${tx10.hash})...`);
         }
     }
+}
+
+async function writeTokenInfo(accounts: IAccount, deployment: Deployments) {
+    console.log(`Information of token`);
+    const tokenContract = deployment.getContract("LoyaltyToken") as ERC20;
+    console.log(`Name of token: ${await tokenContract.name()}`);
+    console.log(`Symbol of token: ${await tokenContract.symbol()}`);
+    console.log(`Address of token: ${tokenContract.address}`);
+    console.log(`Total supply of token: ${(new BOACoin(await tokenContract.totalSupply())).toDisplayString(true, 4)}`);
+}
+
+async function writeAccountInfo(accounts: IAccount, deployment: Deployments) {
+    console.log(`Information of accounts`);
+    console.log(`deployer      : ${accounts.deployer.address}`);
+    console.log(`owner         : ${accounts.owner.address}`);
+    console.log(`system        : ${accounts.system.address}`);
+    console.log(`paymentFee    : ${accounts.paymentFee.address}`);
+    console.log(`protocolFee   : ${accounts.protocolFee.address}`);
+    console.log(`adProtocolFee : ${accounts.protocolFee.address}`);
+}
+
+async function writeBalanceOfBridges(accounts: IAccount, deployment: Deployments) {
+    const tokenContract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
+    console.log(`Balance of owner's token ${(new BOACoin(await tokenContract.balanceOf(accounts.owner.address))).toDisplayString(true, 4)}`);
+    console.log(`Balance of loyalty bridge's token ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("LoyaltyBridge") || ""))).toDisplayString(true, 4)}`);
+    console.log(`Balance of inner chain bridge's token   ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("InnerChainBridge") || ""))).toDisplayString(true, 4)}`);
 }
 
 async function storeSampleExchangeRate(accounts: IAccount, deployment: Deployments) {
@@ -1264,6 +1273,10 @@ async function main() {
     deployments.addDeployer(deployPhoneLink);
     deployments.addDeployer(mintInitialSupplyToken);
     deployments.addDeployer(distributeToken);
+
+    deployments.addDeployer(writeTokenInfo);
+    deployments.addDeployer(writeAccountInfo);
+
     deployments.addDeployer(deployValidator);
     deployments.addDeployer(deployCurrencyRate);
     deployments.addDeployer(deployLoyaltyBurner);
@@ -1275,12 +1288,11 @@ async function main() {
     deployments.addDeployer(deployLoyaltyBridge);
     deployments.addDeployer(deployShop);
     deployments.addDeployer(deployLedger);
-    deployments.addDeployer(deploySideChainBridge);
+    deployments.addDeployer(deployInnerChainBridge);
+    deployments.addDeployer(writeBalanceOfBridges);
     deployments.addDeployer(storeSampleExchangeRate);
     deployments.addDeployer(storeSamplePurchase1);
     deployments.addDeployer(storeSamplePurchase2);
-
-    // await deployments.loadContractInfo();
 
     await deployments.doDeploy();
 
