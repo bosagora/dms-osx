@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.2;
 
-import "loyalty-tokens/contracts/BIP20/BIP20DelegatedTransfer.sol";
+import "loyalty-tokens/contracts/BIP20/BIP20.sol";
 
-contract TestLYT is BIP20DelegatedTransfer {
-    constructor(address owner, address feeAccount) BIP20DelegatedTransfer("LYT", "LYT", owner, feeAccount) {
-        _mint(owner, 1e10 * 1e18);
+contract TestOuterKIOS is BIP20 {
+    constructor(address owner_) BIP20("KIOS", "KIOS") {
+        _mint(owner_, 1e10 * 1e18);
     }
 
     function multiTransfer(address[] calldata to, uint256 amount) public returns (bool) {
