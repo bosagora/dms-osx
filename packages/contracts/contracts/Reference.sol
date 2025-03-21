@@ -6,7 +6,6 @@ import "multisig-wallet-contracts/contracts/MultiSigWalletFactory.sol";
 import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
 
 import "loyalty-tokens/contracts/LoyaltyToken.sol";
-import "loyalty-tokens/contracts/LYT.sol";
 
 import "kios-bridge-contracts-v2/contracts/interfaces/IBridge.sol";
 import "kios-bridge-contracts-v2/contracts/interfaces/IBridgeLiquidity.sol";

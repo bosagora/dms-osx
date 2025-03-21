@@ -63,7 +63,7 @@ describe("Test for LoyaltyBridge", () => {
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
 
-        tokenContract = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
+        tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
         ledgerContract = deployments.getContract("Ledger") as Ledger;
         shopContract = deployments.getContract("Shop") as Shop;
         bridgeContract = deployments.getContract("Bridge") as Bridge;
@@ -234,7 +234,7 @@ describe("Test for LoyaltyBridge - withdrawal agent", () => {
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
 
-        tokenContract = deployments.getContract("TestLYT") as BIP20DelegatedTransfer;
+        tokenContract = deployments.getContract("TestKIOS") as BIP20DelegatedTransfer;
         ledgerContract = deployments.getContract("Ledger") as Ledger;
         shopContract = deployments.getContract("Shop") as Shop;
         bridgeContract = deployments.getContract("Bridge") as Bridge;

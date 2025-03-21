@@ -94,7 +94,7 @@ describe("Test for Ledger", () => {
     const deployAllContract = async (shopData: IShopData[]) => {
         await deployments.doDeployAll();
 
-        tokenContract = deployments.getContract("TestLYT") as ERC20;
+        tokenContract = deployments.getContract("TestKIOS") as ERC20;
         validatorContract = deployments.getContract("Validator") as Validator;
         currencyContract = deployments.getContract("CurrencyRate") as CurrencyRate;
 
