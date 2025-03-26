@@ -74,7 +74,7 @@
         "@typechain/ethers-v5": "^10.1.0",
         "@typechain/hardhat": "^6.1.2",
         "kios-bridge-contracts-v2": "~2.6.0",
-        "kios-contracts-v2": "~2.15.1",
+        "kios-contracts-v2": "~2.15.2",
         "argparse": "^2.0.1",
         "assert": "^2.0.0",
         "axios": "^1.6.7",
