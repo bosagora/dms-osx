@@ -212,6 +212,7 @@ export class RelayConfig implements IRelayConfig {
     public testMode: boolean;
     public allowedShopIdPrefix: string;
     public initialBalanceOfProvider: number;
+    public supportOuterChainBridge: boolean;
     public supportChainBridge: boolean;
     public supportLoyaltyBridge: boolean;
     public supportExchange: boolean;
@@ -234,6 +235,7 @@ export class RelayConfig implements IRelayConfig {
         this.testMode = defaults.testMode;
         this.allowedShopIdPrefix = defaults.allowedShopIdPrefix;
         this.initialBalanceOfProvider = defaults.initialBalanceOfProvider;
+        this.supportOuterChainBridge = defaults.supportOuterChainBridge;
         this.supportChainBridge = defaults.supportChainBridge;
         this.supportLoyaltyBridge = defaults.supportLoyaltyBridge;
         this.supportExchange = defaults.supportExchange;
@@ -262,6 +264,7 @@ export class RelayConfig implements IRelayConfig {
             testMode: false,
             allowedShopIdPrefix: "0x0001",
             initialBalanceOfProvider: 50000,
+            supportOuterChainBridge: true,
             supportChainBridge: true,
             supportLoyaltyBridge: true,
             supportExchange: true,
@@ -285,6 +288,8 @@ export class RelayConfig implements IRelayConfig {
         if (config.allowedShopIdPrefix !== undefined) this.allowedShopIdPrefix = config.allowedShopIdPrefix;
         if (config.initialBalanceOfProvider !== undefined)
             this.initialBalanceOfProvider = config.initialBalanceOfProvider;
+        if (config.supportOuterChainBridge !== undefined)
+            this.supportOuterChainBridge = config.supportOuterChainBridge.toString().toLowerCase() === "true";
         if (config.supportChainBridge !== undefined)
             this.supportChainBridge = config.supportChainBridge.toString().toLowerCase() === "true";
         if (config.supportLoyaltyBridge !== undefined)
@@ -315,7 +320,7 @@ export class ContractsConfig implements IContractsConfig {
         loyaltyExchangerAddress: string;
         loyaltyTransferAddress: string;
         loyaltyBridgeAddress: string;
-        chainBridgeAddress: string;
+        innerBridgeContract: string;
     };
     public mainChain: {
         network: string;
@@ -323,7 +328,14 @@ export class ContractsConfig implements IContractsConfig {
         tokenAddress: string;
         token2Address: string;
         loyaltyBridgeAddress: string;
-        chainBridgeAddress: string;
+        innerBridgeContract: string;
+        outerBridgeContract: string;
+    };
+    public outerChain: {
+        network: string;
+        url: string;
+        tokenAddress: string;
+        outerBridgeContract: string;
     };
 
     constructor() {
@@ -342,7 +354,7 @@ export class ContractsConfig implements IContractsConfig {
             loyaltyExchangerAddress: defaults.sideChain.loyaltyExchangerAddress,
             loyaltyTransferAddress: defaults.sideChain.loyaltyTransferAddress,
             loyaltyBridgeAddress: defaults.sideChain.loyaltyBridgeAddress,
-            chainBridgeAddress: defaults.sideChain.chainBridgeAddress,
+            innerBridgeContract: defaults.sideChain.innerBridgeContract,
         };
         this.mainChain = {
             network: defaults.mainChain.network,
@@ -350,7 +362,14 @@ export class ContractsConfig implements IContractsConfig {
             tokenAddress: defaults.mainChain.tokenAddress,
             token2Address: defaults.mainChain.token2Address,
             loyaltyBridgeAddress: defaults.mainChain.loyaltyBridgeAddress,
-            chainBridgeAddress: defaults.mainChain.chainBridgeAddress,
+            innerBridgeContract: defaults.mainChain.innerBridgeContract,
+            outerBridgeContract: defaults.mainChain.outerBridgeContract,
+        };
+        this.outerChain = {
+            network: defaults.outerChain.network,
+            url: defaults.outerChain.url,
+            tokenAddress: defaults.outerChain.tokenAddress,
+            outerBridgeContract: defaults.outerChain.outerBridgeContract,
         };
     }
 
@@ -359,17 +378,17 @@ export class ContractsConfig implements IContractsConfig {
             sideChain: {
                 network: "production_side",
                 url: "",
-                tokenAddress: process.env.TOKEN_CONTRACT_ADDRESS || "",
-                ledgerAddress: process.env.LEDGER_CONTRACT_ADDRESS || "",
-                phoneLinkerAddress: process.env.PHONE_LINKER_CONTRACT_ADDRESS || "",
-                shopAddress: process.env.SHOP_CONTRACT_ADDRESS || "",
-                currencyRateAddress: process.env.CURRENCY_RATE_CONTRACT_ADDRESS || "",
-                loyaltyProviderAddress: process.env.LOYALTY_PROVIDER_CONTRACT_ADDRESS || "",
-                loyaltyConsumerAddress: process.env.LOYALTY_CONSUMER_CONTRACT_ADDRESS || "",
-                loyaltyExchangerAddress: process.env.LOYALTY_EXCHANGER_CONTRACT_ADDRESS || "",
-                loyaltyTransferAddress: process.env.LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
+                tokenAddress: process.env.SIDE_CHAIN_TOKEN_CONTRACT_ADDRESS || "",
+                ledgerAddress: process.env.SIDE_CHAIN_LEDGER_CONTRACT_ADDRESS || "",
+                phoneLinkerAddress: process.env.SIDE_CHAIN_PHONE_LINKER_CONTRACT_ADDRESS || "",
+                shopAddress: process.env.SIDE_CHAIN_SHOP_CONTRACT_ADDRESS || "",
+                currencyRateAddress: process.env.SIDE_CHAIN_CURRENCY_RATE_CONTRACT_ADDRESS || "",
+                loyaltyProviderAddress: process.env.SIDE_CHAIN_LOYALTY_PROVIDER_CONTRACT_ADDRESS || "",
+                loyaltyConsumerAddress: process.env.SIDE_CHAIN_LOYALTY_CONSUMER_CONTRACT_ADDRESS || "",
+                loyaltyExchangerAddress: process.env.SIDE_CHAIN_LOYALTY_EXCHANGER_CONTRACT_ADDRESS || "",
+                loyaltyTransferAddress: process.env.SIDE_CHAIN_LOYALTY_TRANSFER_CONTRACT_ADDRESS || "",
                 loyaltyBridgeAddress: process.env.SIDE_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
-                chainBridgeAddress: process.env.SIDE_CHAIN_BRIDGE_CONTRACT_ADDRESS || "",
+                innerBridgeContract: process.env.SIDE_CHAIN_INNER_BRIDGE_CONTRACT_ADDRESS || "",
             },
             mainChain: {
                 network: "production_main",
@@ -377,7 +396,14 @@ export class ContractsConfig implements IContractsConfig {
                 tokenAddress: process.env.MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS || "",
                 token2Address: process.env.MAIN_CHAIN_TOKEN2_CONTRACT_ADDRESS || "",
                 loyaltyBridgeAddress: process.env.MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
-                chainBridgeAddress: process.env.MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS || "",
+                innerBridgeContract: process.env.MAIN_CHAIN_INNER_BRIDGE_CONTRACT_ADDRESS || "",
+                outerBridgeContract: process.env.MAIN_CHAIN_OUTER_BRIDGE_CONTRACT_ADDRESS || "",
+            },
+            outerChain: {
+                network: "production_outer",
+                url: "",
+                tokenAddress: process.env.OUTER_CHAIN_TOKEN_CONTRACT_ADDRESS || "",
+                outerBridgeContract: process.env.OUTER_CHAIN_OUTER_BRIDGE_CONTRACT_ADDRESS || "",
             },
         };
     }
@@ -402,16 +428,24 @@ export class ContractsConfig implements IContractsConfig {
             this.sideChain.loyaltyTransferAddress = config.sideChain.loyaltyTransferAddress;
         if (config.sideChain.loyaltyBridgeAddress !== undefined)
             this.sideChain.loyaltyBridgeAddress = config.sideChain.loyaltyBridgeAddress;
-        if (config.sideChain.chainBridgeAddress !== undefined)
-            this.sideChain.chainBridgeAddress = config.sideChain.chainBridgeAddress;
+        if (config.sideChain.innerBridgeContract !== undefined)
+            this.sideChain.innerBridgeContract = config.sideChain.innerBridgeContract;
 
         if (config.mainChain.network !== undefined) this.mainChain.network = config.mainChain.network;
         if (config.mainChain.url !== undefined) this.mainChain.url = config.mainChain.url;
         if (config.mainChain.tokenAddress !== undefined) this.mainChain.tokenAddress = config.mainChain.tokenAddress;
         if (config.mainChain.loyaltyBridgeAddress !== undefined)
             this.mainChain.loyaltyBridgeAddress = config.mainChain.loyaltyBridgeAddress;
-        if (config.mainChain.chainBridgeAddress !== undefined)
-            this.mainChain.chainBridgeAddress = config.mainChain.chainBridgeAddress;
+        if (config.mainChain.innerBridgeContract !== undefined)
+            this.mainChain.innerBridgeContract = config.mainChain.innerBridgeContract;
+        if (config.mainChain.outerBridgeContract !== undefined)
+            this.mainChain.outerBridgeContract = config.mainChain.outerBridgeContract;
+
+        if (config.outerChain.network !== undefined) this.outerChain.network = config.outerChain.network;
+        if (config.outerChain.url !== undefined) this.outerChain.url = config.outerChain.url;
+        if (config.outerChain.tokenAddress !== undefined) this.outerChain.tokenAddress = config.outerChain.tokenAddress;
+        if (config.outerChain.outerBridgeContract !== undefined)
+            this.outerChain.outerBridgeContract = config.outerChain.outerBridgeContract;
     }
 }
 
@@ -526,6 +560,7 @@ export interface IRelayConfig {
     testMode: boolean;
     allowedShopIdPrefix: string;
     initialBalanceOfProvider: number;
+    supportOuterChainBridge: boolean;
     supportChainBridge: boolean;
     supportLoyaltyBridge: boolean;
     supportExchange: boolean;
@@ -546,7 +581,7 @@ export interface IContractsConfig {
         currencyRateAddress: string;
         loyaltyTransferAddress: string;
         loyaltyBridgeAddress: string;
-        chainBridgeAddress: string;
+        innerBridgeContract: string;
     };
     mainChain: {
         network: string;
@@ -554,7 +589,14 @@ export interface IContractsConfig {
         tokenAddress: string;
         token2Address: string;
         loyaltyBridgeAddress: string;
-        chainBridgeAddress: string;
+        innerBridgeContract: string;
+        outerBridgeContract: string;
+    };
+    outerChain: {
+        network: string;
+        url: string;
+        tokenAddress: string;
+        outerBridgeContract: string;
     };
 }
 

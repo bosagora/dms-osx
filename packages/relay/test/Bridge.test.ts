@@ -38,7 +38,7 @@ describe("Test of Bridge", function () {
     });
 
     before("Create Config", async () => {
-        config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestLYT") || "";
+        config.contracts.sideChain.tokenAddress = deployments.getContractAddress("SideChainKIOS") || "";
         config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
         config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
         config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
@@ -48,13 +48,17 @@ describe("Test of Bridge", function () {
         config.contracts.sideChain.loyaltyExchangerAddress = deployments.getContractAddress("LoyaltyExchanger") || "";
         config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
         config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-        config.contracts.sideChain.chainBridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
+        config.contracts.sideChain.innerBridgeContract = deployments.getContractAddress("SideChainInnerBridge") || "";
 
         config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
         config.contracts.mainChain.token2Address = deployments.getContractAddress("MainChainKIOS2") || "";
         config.contracts.mainChain.loyaltyBridgeAddress =
             deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-        config.contracts.mainChain.chainBridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
+        config.contracts.mainChain.innerBridgeContract = deployments.getContractAddress("MainChainInnerBridge") || "";
+        config.contracts.mainChain.outerBridgeContract = deployments.getContractAddress("MainChainOuterBridge") || "";
+
+        config.contracts.outerChain.tokenAddress = deployments.getContractAddress("OuterChainKIOS") || "";
+        config.contracts.outerChain.outerBridgeContract = deployments.getContractAddress("OuterChainOuterBridge") || "";
 
         config.relay.certifiers = deployments.accounts.certifiers.map((m) => m.privateKey);
         config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
@@ -95,7 +99,7 @@ describe("Test of Bridge", function () {
 
         const balance0 = await contractManager.mainTokenContract.balanceOf(account.address);
         const balance1 = await contractManager.mainTokenContract.balanceOf(
-            contractManager.mainChainBridgeContract.address
+            contractManager.mainInnerChainBridgeContract.address
         );
         const balance2 = await contractManager.sideTokenContract.balanceOf(account.address);
 
@@ -105,7 +109,7 @@ describe("Test of Bridge", function () {
             contractManager.mainChainId,
             contractManager.mainTokenContract.address,
             account.address,
-            contractManager.mainChainBridgeContract.address,
+            contractManager.mainInnerChainBridgeContract.address,
             amount,
             nonce,
             expiry
@@ -125,25 +129,25 @@ describe("Test of Bridge", function () {
         expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
         /// Approve of Validators
-        await contractManager.sideChainBridgeContract
+        await contractManager.sideInnerChainBridgeContract
             .connect(deployments.accounts.bridgeValidators[0])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.sideChainBridgeContract
+        await contractManager.sideInnerChainBridgeContract
             .connect(deployments.accounts.bridgeValidators[1])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.sideChainBridgeContract
+        await contractManager.sideInnerChainBridgeContract
             .connect(deployments.accounts.bridgeValidators[2])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
         ///
 
         expect(await contractManager.mainTokenContract.balanceOf(account.address)).to.deep.equal(balance0.sub(amount));
         expect(
-            await contractManager.mainTokenContract.balanceOf(contractManager.mainChainBridgeContract.address)
+            await contractManager.mainTokenContract.balanceOf(contractManager.mainInnerChainBridgeContract.address)
         ).to.deep.equal(balance1.add(amount));
 
-        const fee = await contractManager.sideChainBridgeContract.getProtocolFee(tokenId);
+        const fee = await contractManager.sideInnerChainBridgeContract.getProtocolFee(tokenId);
         expect(await contractManager.sideTokenContract.balanceOf(account.address)).to.deep.equal(
             balance2.add(amount).sub(fee)
         );
@@ -160,7 +164,7 @@ describe("Test of Bridge", function () {
 
         const balance0 = await contractManager.mainTokenContract.balanceOf(account.address);
         const balance1 = await contractManager.mainTokenContract.balanceOf(
-            contractManager.mainChainBridgeContract.address
+            contractManager.mainInnerChainBridgeContract.address
         );
         const balance2 = await contractManager.sideTokenContract.balanceOf(account.address);
 
@@ -170,7 +174,7 @@ describe("Test of Bridge", function () {
             contractManager.sideChainId,
             contractManager.sideTokenContract.address,
             account.address,
-            contractManager.sideChainBridgeContract.address,
+            contractManager.sideInnerChainBridgeContract.address,
             amount,
             nonce,
             expiry
@@ -190,25 +194,25 @@ describe("Test of Bridge", function () {
         expect(response.data.data.txHash).to.match(/^0x[A-Fa-f0-9]{64}$/i);
 
         /// Approve of Validators
-        await contractManager.mainChainBridgeContract
+        await contractManager.mainInnerChainBridgeContract
             .connect(deployments.accounts.bridgeValidators[0])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.mainChainBridgeContract
+        await contractManager.mainInnerChainBridgeContract
             .connect(deployments.accounts.bridgeValidators[1])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
 
-        await contractManager.mainChainBridgeContract
+        await contractManager.mainInnerChainBridgeContract
             .connect(deployments.accounts.bridgeValidators[2])
             .withdrawFromBridge(response.data.data.tokenId, response.data.data.depositId, account.address, amount);
         ///
 
-        const fee = await contractManager.mainChainBridgeContract.getProtocolFee(tokenId);
+        const fee = await contractManager.mainInnerChainBridgeContract.getProtocolFee(tokenId);
         expect(await contractManager.mainTokenContract.balanceOf(account.address)).to.deep.equal(
             balance0.add(amount).sub(fee)
         );
         expect(
-            await contractManager.mainTokenContract.balanceOf(contractManager.mainChainBridgeContract.address)
+            await contractManager.mainTokenContract.balanceOf(contractManager.mainInnerChainBridgeContract.address)
         ).to.deep.equal(balance1.sub(amount));
         //
         expect(await contractManager.sideTokenContract.balanceOf(account.address)).to.deep.equal(balance2.sub(amount));

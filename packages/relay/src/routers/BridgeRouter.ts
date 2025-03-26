@@ -116,14 +116,14 @@ export class BridgeRouter {
     private async getDepositIdMainChain(account: string): Promise<string> {
         while (true) {
             const id = ContractUtils.getRandomId(account);
-            if (await this.contractManager.mainChainBridgeContract.isAvailableDepositId(id)) return id;
+            if (await this.contractManager.mainInnerChainBridgeContract.isAvailableDepositId(id)) return id;
         }
     }
 
     private async getDepositIdSideChain(account: string): Promise<string> {
         while (true) {
             const id = ContractUtils.getRandomId(account);
-            if (await this.contractManager.sideChainBridgeContract.isAvailableDepositId(id)) return id;
+            if (await this.contractManager.sideInnerChainBridgeContract.isAvailableDepositId(id)) return id;
         }
     }
 
@@ -154,7 +154,7 @@ export class BridgeRouter {
                 this.contractManager.sideChainId,
                 this.contractManager.sideTokenContract.address,
                 account,
-                this.contractManager.sideChainBridgeContract.address,
+                this.contractManager.sideInnerChainBridgeContract.address,
                 amount,
                 nonce,
                 expiry
@@ -167,7 +167,7 @@ export class BridgeRouter {
                 await this.contractManager.sideTokenContract.symbol()
             );
             const depositId = await this.getDepositIdSideChain(account);
-            const tx = await this.contractManager.sideChainBridgeContract
+            const tx = await this.contractManager.sideInnerChainBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
 
@@ -209,7 +209,7 @@ export class BridgeRouter {
                 this.contractManager.mainChainId,
                 this.contractManager.mainTokenContract.address,
                 account,
-                this.contractManager.mainChainBridgeContract.address,
+                this.contractManager.mainInnerChainBridgeContract.address,
                 amount,
                 nonce,
                 expiry
@@ -222,7 +222,7 @@ export class BridgeRouter {
                 await this.contractManager.mainTokenContract.symbol()
             );
             const depositId = await this.getDepositIdMainChain(account);
-            const tx = await this.contractManager.mainChainBridgeContract
+            const tx = await this.contractManager.mainInnerChainBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
 
