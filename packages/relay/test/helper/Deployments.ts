@@ -19,13 +19,17 @@ import {
     LoyaltyExchanger,
     LoyaltyProvider,
     LoyaltyTransfer,
+    NonDelegatedBridge,
     PhoneLinkCollection,
     Shop,
-    TestLYT,
+    TestKIOS,
+    TestOuterKIOS,
     Validator,
 } from "../../typechain-types";
 
 import * as hre from "hardhat";
+
+import { HashZero } from "@ethersproject/constants";
 
 interface IShopData {
     shopId: string;
@@ -213,23 +217,26 @@ export class Deployments {
 
     public async doDeploy() {
         const deployers: FnDeployer[] = [
-            deployToken,
-            deployPhoneLink,
-            deployValidator,
-            deployCurrencyRate,
-            deployLoyaltyProvider,
-            deployLoyaltyConsumer,
-            deployLoyaltyExchanger,
-            deployLoyaltyBurner,
-            deployLoyaltyTransfer,
-            deployBridgeValidator,
-            deploySideChainBridge,
-            deployLoyaltyBridge,
-            deployShop,
-            deployLedger,
+            deploySideChainToken,
+            deploySideChainPhoneLink,
+            deploySideChainValidator,
+            deploySideChainCurrencyRate,
+            deploySideChainLoyaltyProvider,
+            deploySideChainLoyaltyConsumer,
+            deploySideChainLoyaltyExchanger,
+            deploySideChainLoyaltyBurner,
+            deploySideChainLoyaltyTransfer,
+            deploySideChainBridgeValidator,
+            deploySideChainInnerBridge,
+            deploySideChainLoyaltyBridge,
+            deploySideChainShop,
+            deploySideChainLedger,
             deployMainChainToken,
-            deployMainChainBridge,
+            deployMainChainInnerBridge,
+            deployMainChainOuterBridge,
             deployMainChainLoyaltyBridge,
+            deployOuterChainToken,
+            deployOuterChainOuterBridge,
         ];
         for (const elem of deployers) {
             try {
@@ -241,7 +248,7 @@ export class Deployments {
     }
 }
 
-async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainPhoneLink(accounts: IAccount, deployment: Deployments) {
     const contractName = "PhoneLinkCollection";
     console.log(`Deploy ${contractName}...`);
 
@@ -261,21 +268,21 @@ async function deployPhoneLink(accounts: IAccount, deployment: Deployments) {
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployToken(accounts: IAccount, deployment: Deployments) {
-    const contractName = "TestLYT";
+async function deploySideChainToken(accounts: IAccount, deployment: Deployments) {
+    const contractName = "SideChainKIOS";
     console.log(`Deploy ${contractName}...`);
 
     await hre.changeNetwork(deployment.config.contracts.sideChain.network);
-    const factory = await hre.ethers.getContractFactory("TestLYT");
+    const factory = await hre.ethers.getContractFactory("TestKIOS");
     const contract = (await factory
         .connect(accounts.deployer)
-        .deploy(accounts.owner.address, accounts.protocolFee.address)) as TestLYT;
+        .deploy(accounts.owner.address, accounts.protocolFee.address)) as TestKIOS;
     await contract.deployed();
     await contract.deployTransaction.wait();
 
     const balance = await contract.balanceOf(accounts.owner.address);
-    console.log(`TestLYT token's owner: ${accounts.owner.address}`);
-    console.log(`TestLYT token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
+    console.log(`TestKIOS token's owner: ${accounts.owner.address}`);
+    console.log(`TestKIOS token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
 
     deployment.addContract(contractName, contract.address, contract);
     console.log(`Deployed ${contractName} to ${contract.address}`);
@@ -303,10 +310,10 @@ async function deployToken(accounts: IAccount, deployment: Deployments) {
     }
 }
 
-async function deployValidator(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainValidator(accounts: IAccount, deployment: Deployments) {
     const contractName = "Validator";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("TestLYT") === undefined) {
+    if (deployment.getContract("SideChainKIOS") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -315,7 +322,7 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     const factory = await hre.ethers.getContractFactory("Validator");
     const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [deployment.getContractAddress("TestLYT"), accounts.validators.map((m) => m.address)],
+        [deployment.getContractAddress("SideChainKIOS"), accounts.validators.map((m) => m.address)],
         {
             initializer: "initialize",
             kind: "uups",
@@ -331,13 +338,13 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
         const depositedToken = Amount.make(100_000, 18);
 
         for (const elem of accounts.validators) {
-            const tx1 = await (deployment.getContract("TestLYT") as TestLYT)
+            const tx1 = await (deployment.getContract("SideChainKIOS") as TestKIOS)
                 .connect(accounts.owner)
                 .transfer(elem.address, amount.value);
             console.log(`Transfer token to validator (tx: ${tx1.hash})...`);
             await tx1.wait();
 
-            const tx2 = await (deployment.getContract("TestLYT") as TestLYT)
+            const tx2 = await (deployment.getContract("SideChainKIOS") as TestKIOS)
                 .connect(elem)
                 .approve(contract.address, depositedToken.value);
             console.log(`Approve validator's amount (tx: ${tx2.hash})...`);
@@ -350,10 +357,10 @@ async function deployValidator(accounts: IAccount, deployment: Deployments) {
     }
 }
 
-async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainCurrencyRate(accounts: IAccount, deployment: Deployments) {
     const contractName = "CurrencyRate";
     console.log(`Deploy ${contractName}...`);
-    if (deployment.getContract("Validator") === undefined || deployment.getContract("TestLYT") === undefined) {
+    if (deployment.getContract("Validator") === undefined || deployment.getContract("SideChainKIOS") === undefined) {
         console.error("Contract is not deployed!");
         return;
     }
@@ -362,7 +369,10 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     const factory = await hre.ethers.getContractFactory("CurrencyRate");
     const contract = (await hre.upgrades.deployProxy(
         factory.connect(accounts.deployer),
-        [deployment.getContractAddress("Validator"), await (deployment.getContract("TestLYT") as TestLYT).symbol()],
+        [
+            deployment.getContractAddress("Validator"),
+            await (deployment.getContract("SideChainKIOS") as TestKIOS).symbol(),
+        ],
         {
             initializer: "initialize",
             kind: "uups",
@@ -412,7 +422,7 @@ async function deployCurrencyRate(accounts: IAccount, deployment: Deployments) {
     }
 }
 
-async function deployLoyaltyProvider(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainLoyaltyProvider(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyProvider";
     console.log(`Deploy ${contractName}...`);
     if (
@@ -445,7 +455,7 @@ async function deployLoyaltyProvider(accounts: IAccount, deployment: Deployments
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployLoyaltyConsumer(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainLoyaltyConsumer(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyConsumer";
     console.log(`Deploy ${contractName}...`);
     if (deployment.getContract("CurrencyRate") === undefined) {
@@ -469,7 +479,7 @@ async function deployLoyaltyConsumer(accounts: IAccount, deployment: Deployments
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployLoyaltyExchanger(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainLoyaltyExchanger(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyExchanger";
     console.log(`Deploy ${contractName}...`);
     if (
@@ -496,7 +506,7 @@ async function deployLoyaltyExchanger(accounts: IAccount, deployment: Deployment
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployLoyaltyBurner(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainLoyaltyBurner(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyBurner";
     console.log(`Deploy ${contractName}...`);
     if (
@@ -523,7 +533,7 @@ async function deployLoyaltyBurner(accounts: IAccount, deployment: Deployments) 
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployLoyaltyTransfer(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainLoyaltyTransfer(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyTransfer";
     console.log(`Deploy ${contractName}...`);
 
@@ -539,7 +549,7 @@ async function deployLoyaltyTransfer(accounts: IAccount, deployment: Deployments
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployBridgeValidator(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainBridgeValidator(accounts: IAccount, deployment: Deployments) {
     const contractName = "BridgeValidator";
     console.log(`Deploy ${contractName}...`);
 
@@ -558,8 +568,8 @@ async function deployBridgeValidator(accounts: IAccount, deployment: Deployments
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deploySideChainBridge(accounts: IAccount, deployment: Deployments) {
-    const contractName = "SideChainBridge";
+async function deploySideChainInnerBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "SideChainInnerBridge";
     console.log(`Deploy ${contractName}...`);
 
     if (deployment.getContract("BridgeValidator") === undefined) {
@@ -584,11 +594,11 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = deployment.getContract("TestLYT") as TestLYT;
+        const tokenContract = deployment.getContract("SideChainKIOS") as TestKIOS;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deployment.getContract("TestLYT") as TestLYT).nonceOf(accounts.owner.address);
+        const nonce = await (deployment.getContract("SideChainKIOS") as TestKIOS).nonceOf(accounts.owner.address);
         const expiry = ContractUtils.getTimeStamp() + 3600;
         const message = ContractUtils.getTransferMessage(
             chainId,
@@ -601,12 +611,12 @@ async function deploySideChainBridge(accounts: IAccount, deployment: Deployments
         );
         const signature = await ContractUtils.signMessage(accounts.owner, message);
         const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, expiry, signature);
-        console.log(`Deposit liquidity token to SideChainBridge (tx: ${tx1.hash})...`);
+        console.log(`Deposit liquidity token to SideChainInnerBridge (tx: ${tx1.hash})...`);
         await tx1.wait();
     }
 }
 
-async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainLoyaltyBridge(accounts: IAccount, deployment: Deployments) {
     const contractName = "LoyaltyBridge";
     console.log(`Deploy ${contractName}...`);
     if (deployment.getContract("BridgeValidator") === undefined) {
@@ -629,7 +639,7 @@ async function deployLoyaltyBridge(accounts: IAccount, deployment: Deployments) 
     console.log(`Deployed ${contractName} to ${contract.address}`);
 }
 
-async function deployShop(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainShop(accounts: IAccount, deployment: Deployments) {
     const contractName = "Shop";
     console.log(`Deploy ${contractName}...`);
     if (
@@ -688,11 +698,11 @@ async function deployShop(accounts: IAccount, deployment: Deployments) {
     }
 }
 
-async function deployLedger(accounts: IAccount, deployment: Deployments) {
+async function deploySideChainLedger(accounts: IAccount, deployment: Deployments) {
     const contractName = "Ledger";
     console.log(`Deploy ${contractName}...`);
     if (
-        deployment.getContract("TestLYT") === undefined ||
+        deployment.getContract("SideChainKIOS") === undefined ||
         deployment.getContract("PhoneLinkCollection") === undefined ||
         deployment.getContract("CurrencyRate") === undefined ||
         deployment.getContract("LoyaltyProvider") === undefined ||
@@ -718,7 +728,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
                 protocolFee: accounts.protocolFee.address,
             },
             {
-                token: deployment.getContractAddress("TestLYT"),
+                token: deployment.getContractAddress("SideChainKIOS"),
                 phoneLink: deployment.getContractAddress("PhoneLinkCollection"),
                 currencyRate: deployment.getContractAddress("CurrencyRate"),
                 provider: deployment.getContractAddress("LoyaltyProvider"),
@@ -783,7 +793,7 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
 
     {
         const assetAmount = Amount.make(100_000_000, 18);
-        const tx11 = await (deployment.getContract("TestLYT") as TestLYT)
+        const tx11 = await (deployment.getContract("SideChainKIOS") as TestKIOS)
             .connect(accounts.system)
             .approve(contract.address, assetAmount.value);
         console.log(`Approve system's amount (tx: ${tx11.hash})...`);
@@ -795,10 +805,10 @@ async function deployLedger(accounts: IAccount, deployment: Deployments) {
     }
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = deployment.getContract("TestLYT") as TestLYT;
+        const tokenContract = deployment.getContract("SideChainKIOS") as TestKIOS;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         const assetAmount = Amount.make(1_000_000_000, 18).value;
-        const nonce = await (deployment.getContract("TestLYT") as TestLYT).nonceOf(accounts.owner.address);
+        const nonce = await (deployment.getContract("SideChainKIOS") as TestKIOS).nonceOf(accounts.owner.address);
         const expiry = ContractUtils.getTimeStamp() + 3600;
         const message = ContractUtils.getTransferMessage(
             chainId,
@@ -821,10 +831,10 @@ async function deployMainChainToken(accounts: IAccount, deployment: Deployments)
     console.log(`Deploy ${contractName}...`);
 
     await hre.changeNetwork(deployment.config.contracts.mainChain.network);
-    const factory = await hre.ethers.getContractFactory("TestLYT");
+    const factory = await hre.ethers.getContractFactory("TestKIOS");
     const contract = (await factory
         .connect(accounts.deployer)
-        .deploy(accounts.owner.address, accounts.protocolFee.address)) as TestLYT;
+        .deploy(accounts.owner.address, accounts.protocolFee.address)) as TestKIOS;
     await contract.deployed();
     await contract.deployTransaction.wait();
 
@@ -853,8 +863,8 @@ async function deployMainChainToken(accounts: IAccount, deployment: Deployments)
     }
 }
 
-async function deployMainChainBridge(accounts: IAccount, deployment: Deployments) {
-    const contractName = "MainChainBridge";
+async function deployMainChainInnerBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "MainChainInnerBridge";
     console.log(`Deploy ${contractName}...`);
 
     if (deployment.getContract("BridgeValidator") === undefined) {
@@ -879,7 +889,7 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = deployment.getContract("MainChainKIOS") as TestLYT;
+        const tokenContract = deployment.getContract("MainChainKIOS") as TestKIOS;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(8_000_000_000, 18).value;
@@ -896,7 +906,55 @@ async function deployMainChainBridge(accounts: IAccount, deployment: Deployments
         );
         const signature = await ContractUtils.signMessage(accounts.owner, message);
         const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, expiry, signature);
-        console.log(`Deposit liquidity token to MainChainBridge (tx: ${tx1.hash})...`);
+        console.log(`Deposit liquidity token to MainChainInnerBridge (tx: ${tx1.hash})...`);
+        await tx1.wait();
+    }
+}
+
+async function deployMainChainOuterBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "MainChainOuterBridge";
+    console.log(`Deploy ${contractName}...`);
+
+    if (deployment.getContract("BridgeValidator") === undefined) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+
+    await hre.changeNetwork(deployment.config.contracts.mainChain.network);
+    const factory = await hre.ethers.getContractFactory("Bridge");
+    const contract = (await hre.upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [deployment.getContractAddress("BridgeValidator"), accounts.protocolFee.address],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as Bridge;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    {
+        const tokenContract = deployment.getContract("MainChainKIOS") as TestKIOS;
+        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
+        await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
+        const assetAmount = Amount.make(200_000_000, 18).value;
+        const nonce = await tokenContract.nonceOf(accounts.owner.address);
+        const expiry = ContractUtils.getTimeStamp() + 3600;
+        const message = ContractUtils.getTransferMessage(
+            chainId,
+            tokenContract.address,
+            accounts.owner.address,
+            contract.address,
+            assetAmount,
+            nonce,
+            expiry
+        );
+        const signature = await ContractUtils.signMessage(accounts.owner, message);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, expiry, signature);
+        console.log(`Deposit liquidity token to MainChainOuterBridge (tx: ${tx1.hash})...`);
         await tx1.wait();
     }
 }
@@ -927,7 +985,7 @@ async function deployMainChainLoyaltyBridge(accounts: IAccount, deployment: Depl
 
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     {
-        const tokenContract = deployment.getContract("MainChainKIOS") as TestLYT;
+        const tokenContract = deployment.getContract("MainChainKIOS") as TestKIOS;
         const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
         await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
         const assetAmount = Amount.make(1_000_000_000, 18).value;
@@ -945,6 +1003,61 @@ async function deployMainChainLoyaltyBridge(accounts: IAccount, deployment: Depl
         const signature = await ContractUtils.signMessage(accounts.owner, message);
         const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, expiry, signature);
         console.log(`Deposit liquidity token to MainChainLoyaltyBridge (tx: ${tx1.hash})...`);
+        await tx1.wait();
+    }
+}
+
+async function deployOuterChainToken(accounts: IAccount, deployment: Deployments) {
+    const contractName = "OuterChainKIOS";
+    console.log(`Deploy ${contractName}...`);
+
+    await hre.changeNetwork(deployment.config.contracts.outerChain.network);
+    const factory = await hre.ethers.getContractFactory("TestOuterKIOS");
+    const contract = (await factory.connect(accounts.deployer).deploy(accounts.owner.address)) as TestOuterKIOS;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+
+    const balance = await contract.balanceOf(accounts.owner.address);
+    console.log(`OuterChainKIOS token's owner: ${accounts.owner.address}`);
+    console.log(`OuterChainKIOS token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
+
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+}
+
+async function deployOuterChainOuterBridge(accounts: IAccount, deployment: Deployments) {
+    const contractName = "OuterChainOuterBridge";
+    console.log(`Deploy ${contractName}...`);
+
+    if (deployment.getContract("BridgeValidator") === undefined) {
+        console.error("Contract is not deployed!");
+        return;
+    }
+
+    await hre.changeNetwork(deployment.config.contracts.outerChain.network);
+    const factory = await hre.ethers.getContractFactory("NonDelegatedBridge");
+    const contract = (await hre.upgrades.deployProxy(
+        factory.connect(accounts.deployer),
+        [deployment.getContractAddress("BridgeValidator"), accounts.protocolFee.address],
+        {
+            initializer: "initialize",
+            kind: "uups",
+        }
+    )) as NonDelegatedBridge;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
+
+    {
+        const tokenContract = deployment.getContract("OuterChainKIOS") as TestOuterKIOS;
+        const tokenId = ContractUtils.getTokenId(await tokenContract.name(), await tokenContract.symbol());
+        await contract.connect(accounts.deployer).registerToken(tokenId, tokenContract.address);
+
+        const assetAmount = Amount.make(200_000_000, 18).value;
+        await tokenContract.connect(accounts.owner).approve(contract.address, assetAmount);
+        const tx1 = await contract.connect(accounts.owner).depositLiquidity(tokenId, assetAmount, 0, HashZero);
+        console.log(`Deposit liquidity token to OuterChainOuterBridge (tx: ${tx1.hash})...`);
         await tx1.wait();
     }
 }

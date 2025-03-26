@@ -18,3 +18,5 @@ contracts:
         shopAddress: "0x979a62090BDCff36F2e140F6915fbAdA7510cb6a"
     mainChain:
         network: "hardhat"
+    outerChain:
+        network: "hardhat"

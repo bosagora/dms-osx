@@ -13,7 +13,8 @@ import "kios-contracts-v2/contracts/phone/PhoneLinkCollection.sol";
 import "kios-contracts-v2/contracts/ledger/Ledger.sol";
 import "kios-contracts-v2/contracts/shop/Shop.sol";
 import "kios-contracts-v2/contracts/validator/Validator.sol";
-import "kios-contracts-v2/contracts/token/TestLYT.sol";
+import "kios-contracts-v2/contracts/token/TestKIOS.sol";
+import "kios-contracts-v2/contracts/token/TestOuterKIOS.sol";
 
 import "multisig-wallet-contracts/contracts/MultiSigWalletFactory.sol";
 import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
@@ -21,3 +22,4 @@ import "loyalty-tokens/contracts/LYT.sol";
 
 import "kios-bridge-contracts-v2/contracts/bridge/Bridge.sol";
 import "kios-bridge-contracts-v2/contracts/bridge/BridgeValidator.sol";
+import "kios-bridge-contracts-v2/contracts/bridge/NonDelegatedBridge.sol";

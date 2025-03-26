@@ -702,7 +702,7 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        if ((req.ip !== "127.0.0.1") && !this.config.relay.supportPaymentV1) {
+        if (req.ip !== "127.0.0.1" && !this.config.relay.supportPaymentV1) {
             return res.json(ResponseMessage.getErrorMessage("3004"));
         }
 
@@ -1034,7 +1034,7 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        if ((req.ip !== "127.0.0.1") && !this.config.relay.supportPaymentV1) {
+        if (req.ip !== "127.0.0.1" && !this.config.relay.supportPaymentV1) {
             return res.json(ResponseMessage.getErrorMessage("3004"));
         }
         let accessKey = req.get("Authorization");
@@ -1444,7 +1444,7 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        if ((req.ip !== "127.0.0.1") && !this.config.relay.supportPaymentV1) {
+        if (req.ip !== "127.0.0.1" && !this.config.relay.supportPaymentV1) {
             return res.json(ResponseMessage.getErrorMessage("3004"));
         }
 
@@ -1711,7 +1711,7 @@ export class PaymentRouter {
             return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
         }
 
-        if ((req.ip !== "127.0.0.1") && !this.config.relay.supportPaymentV1) {
+        if (req.ip !== "127.0.0.1" && !this.config.relay.supportPaymentV1) {
             return res.json(ResponseMessage.getErrorMessage("3004"));
         }
 

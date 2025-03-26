@@ -38,7 +38,7 @@ describe("Test of LoyaltyBridge", function () {
     });
 
     before("Create Config", async () => {
-        config.contracts.sideChain.tokenAddress = deployments.getContractAddress("TestLYT") || "";
+        config.contracts.sideChain.tokenAddress = deployments.getContractAddress("SideChainKIOS") || "";
         config.contracts.sideChain.currencyRateAddress = deployments.getContractAddress("CurrencyRate") || "";
         config.contracts.sideChain.phoneLinkerAddress = deployments.getContractAddress("PhoneLinkCollection") || "";
         config.contracts.sideChain.ledgerAddress = deployments.getContractAddress("Ledger") || "";
@@ -48,12 +48,16 @@ describe("Test of LoyaltyBridge", function () {
         config.contracts.sideChain.loyaltyExchangerAddress = deployments.getContractAddress("LoyaltyExchanger") || "";
         config.contracts.sideChain.loyaltyTransferAddress = deployments.getContractAddress("LoyaltyTransfer") || "";
         config.contracts.sideChain.loyaltyBridgeAddress = deployments.getContractAddress("LoyaltyBridge") || "";
-        config.contracts.sideChain.chainBridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
+        config.contracts.sideChain.innerBridgeContract = deployments.getContractAddress("SideChainInnerBridge") || "";
 
         config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
         config.contracts.mainChain.loyaltyBridgeAddress =
             deployments.getContractAddress("MainChainLoyaltyBridge") || "";
-        config.contracts.mainChain.chainBridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
+        config.contracts.mainChain.innerBridgeContract = deployments.getContractAddress("MainChainInnerBridge") || "";
+        config.contracts.mainChain.outerBridgeContract = deployments.getContractAddress("MainChainOuterBridge") || "";
+
+        config.contracts.outerChain.tokenAddress = deployments.getContractAddress("OuterChainKIOS") || "";
+        config.contracts.outerChain.outerBridgeContract = deployments.getContractAddress("OuterChainOuterBridge") || "";
 
         config.relay.certifiers = deployments.accounts.certifiers.map((m) => m.privateKey);
         config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;

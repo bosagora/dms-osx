@@ -2,6 +2,7 @@ import {
     BIP20DelegatedTransfer,
     Bridge,
     CurrencyRate,
+    ERC20,
     Ledger,
     LoyaltyBridge,
     LoyaltyConsumer,
@@ -9,6 +10,7 @@ import {
     LoyaltyProvider,
     LoyaltyToken,
     LoyaltyTransfer,
+    NonDelegatedBridge,
     PhoneLinkCollection,
     Shop,
 } from "../../typechain-types";
@@ -33,23 +35,31 @@ export class ContractManager {
     private _sideLoyaltyExchangerContract: LoyaltyExchanger | undefined;
     private _sideLoyaltyTransferContract: LoyaltyTransfer | undefined;
     private _sideLoyaltyBridgeContract: LoyaltyBridge | undefined;
-    private _sideChainBridgeContract: Bridge | undefined;
+    private _sideInnerChainBridgeContract: Bridge | undefined;
 
     private _mainTokenContract: BIP20DelegatedTransfer | undefined;
     private _mainLoyaltyBridgeContract: Bridge | undefined;
-    private _mainChainBridgeContract: Bridge | undefined;
+    private _mainInnerChainBridgeContract: Bridge | undefined;
+    private _mainOuterChainBridgeContract: Bridge | undefined;
+
+    private _outerTokenContract: ERC20 | undefined;
+    private _outerOuterChainBridgeContract: NonDelegatedBridge | undefined;
 
     private _sideChainProvider: ethers.providers.Provider | undefined;
     private _mainChainProvider: ethers.providers.Provider | undefined;
+    private _outerChainProvider: ethers.providers.Provider | undefined;
 
     private _sideChainId: number | undefined;
     private _mainChainId: number | undefined;
+    private _outerChainId: number | undefined;
 
     private _sideChainURL: string | undefined;
     private _mainChainURL: string | undefined;
+    private _outerChainURL: string | undefined;
 
     private _sideTokenId: string | undefined;
     private _mainTokenId: string | undefined;
+    private _outerTokenId: string | undefined;
 
     constructor(config: Config) {
         this.config = config;
@@ -139,10 +149,10 @@ export class ContractManager {
         logger.info(`SideChain.LoyaltyBridge: ${this._sideLoyaltyBridgeContract.address}`);
 
         const factory10 = await hre.ethers.getContractFactory("Bridge");
-        this._sideChainBridgeContract = factory10
-            .attach(this.config.contracts.sideChain.chainBridgeAddress)
+        this._sideInnerChainBridgeContract = factory10
+            .attach(this.config.contracts.sideChain.innerBridgeContract)
             .connect(this._sideChainProvider);
-        logger.info(`SideChain.ChainBridge: ${this._sideChainBridgeContract.address}`);
+        logger.info(`SideChain.InnerChainBridge: ${this._sideInnerChainBridgeContract.address}`);
 
         logger.info(`MainChain.Network: ${this.config.contracts.mainChain.network}`);
         await hre.changeNetwork(this.config.contracts.mainChain.network);
@@ -179,10 +189,82 @@ export class ContractManager {
         logger.info(`MainChain.LoyaltyBridge: ${this._mainLoyaltyBridgeContract.address}`);
 
         const factory13 = await hre.ethers.getContractFactory("Bridge");
-        this._mainChainBridgeContract = factory13
-            .attach(this.config.contracts.mainChain.chainBridgeAddress)
+        this._mainInnerChainBridgeContract = factory13
+            .attach(this.config.contracts.mainChain.innerBridgeContract)
             .connect(this._mainChainProvider);
-        logger.info(`MainChain.ChainBridge: ${this._mainChainBridgeContract.address}`);
+        logger.info(`MainChain.InnerBridge: ${this._mainInnerChainBridgeContract.address}`);
+
+        const factory14 = await hre.ethers.getContractFactory("Bridge");
+        this._mainOuterChainBridgeContract = factory14
+            .attach(this.config.contracts.mainChain.outerBridgeContract)
+            .connect(this._mainChainProvider);
+        logger.info(`MainChain.OuterBridge: ${this._mainInnerChainBridgeContract.address}`);
+
+        logger.info(`OuterChain.Network: ${this.config.contracts.outerChain.network}`);
+        await hre.changeNetwork(this.config.contracts.outerChain.network);
+        this._outerChainProvider = hre.ethers.provider;
+        this._outerChainId = (await this._outerChainProvider.getNetwork()).chainId;
+        logger.info(`OuterChain.ChainId: ${this._outerChainId}`);
+
+        this._outerChainURL = this.config.contracts.outerChain.url;
+        if (this._outerChainURL === "") {
+            const hardhatConfig2 = hre.config.networks[this.config.contracts.outerChain.network] as HttpNetworkConfig;
+            if (hardhatConfig2.url !== undefined) this._outerChainURL = hardhatConfig2.url;
+            else this._outerChainURL = "";
+        }
+        logger.info(`OuterChain.URL: ${this._outerChainURL}`);
+
+        const factory21 = await hre.ethers.getContractFactory("ERC20");
+        this._outerTokenContract = factory21
+            .attach(this.config.contracts.outerChain.tokenAddress)
+            .connect(this._outerChainProvider);
+        logger.info(`OuterChain.Token: ${this._outerTokenContract.address}`);
+        logger.info(`OuterChain.Token.Name: ${await this._outerTokenContract.name()}`);
+        logger.info(`OuterChain.Token.Symbol: ${await this._outerTokenContract.symbol()}`);
+
+        this._outerTokenId = ContractUtils.getTokenId(
+            await this._outerTokenContract.name(),
+            await this._outerTokenContract.symbol()
+        );
+        logger.info(`OuterChain.TokenId: ${this._outerTokenId}`);
+
+        const factory22 = await hre.ethers.getContractFactory("NonDelegatedBridge");
+        this._outerOuterChainBridgeContract = factory22
+            .attach(this.config.contracts.outerChain.outerBridgeContract)
+            .connect(this._outerChainProvider);
+        logger.info(`OuterChain.OuterBridge: ${this._outerOuterChainBridgeContract.address}`);
+    }
+
+    public get outerChainProvider(): ethers.providers.Provider {
+        if (this._outerChainProvider !== undefined) return this._outerChainProvider;
+        else {
+            logger.error("outerChainProvider is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get outerChainId(): number {
+        if (this._outerChainId !== undefined) return this._outerChainId;
+        else {
+            logger.error("outerChainId is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get outerChainURL(): string {
+        if (this._outerChainURL !== undefined) return this._outerChainURL;
+        else {
+            logger.error("outerChainURL is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get outerTokenId(): string {
+        if (this._outerTokenId !== undefined) return this._outerTokenId;
+        else {
+            logger.error("outerTokenId is not ready yet.");
+            process.exit(1);
+        }
     }
 
     public get mainChainProvider(): ethers.providers.Provider {
@@ -329,10 +411,10 @@ export class ContractManager {
         }
     }
 
-    public get sideChainBridgeContract(): Bridge {
-        if (this._sideChainBridgeContract !== undefined) return this._sideChainBridgeContract;
+    public get sideInnerChainBridgeContract(): Bridge {
+        if (this._sideInnerChainBridgeContract !== undefined) return this._sideInnerChainBridgeContract;
         else {
-            logger.error("sideChainBridgeContract is not ready yet.");
+            logger.error("sideInnerChainBridgeContract is not ready yet.");
             process.exit(1);
         }
     }
@@ -353,10 +435,34 @@ export class ContractManager {
         }
     }
 
-    public get mainChainBridgeContract(): Bridge {
-        if (this._mainChainBridgeContract !== undefined) return this._mainChainBridgeContract;
+    public get mainInnerChainBridgeContract(): Bridge {
+        if (this._mainInnerChainBridgeContract !== undefined) return this._mainInnerChainBridgeContract;
         else {
-            logger.error("mainChainBridgeContract is not ready yet.");
+            logger.error("mainInnerChainBridgeContract is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get mainOuterChainBridgeContract(): Bridge {
+        if (this._mainOuterChainBridgeContract !== undefined) return this._mainOuterChainBridgeContract;
+        else {
+            logger.error("mainOuterChainBridgeContract is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get outerTokenContract(): ERC20 {
+        if (this._outerTokenContract !== undefined) return this._outerTokenContract;
+        else {
+            logger.error("outerTokenContract is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get outerOuterChainBridgeContract(): NonDelegatedBridge {
+        if (this._outerOuterChainBridgeContract !== undefined) return this._outerOuterChainBridgeContract;
+        else {
+            logger.error("outerOuterChainBridgeContract is not ready yet.");
             process.exit(1);
         }
     }
