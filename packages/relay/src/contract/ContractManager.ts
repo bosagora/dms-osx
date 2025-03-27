@@ -201,13 +201,13 @@ export class ContractManager {
         this._mainInnerChainBridgeContract = factory13
             .attach(this.config.contracts.mainChain.innerBridgeContract)
             .connect(this._mainChainProvider);
-        logger.info(`MainChain.InnerBridge: ${this._mainInnerChainBridgeContract.address}`);
+        logger.info(`MainChain.InnerChainBridge: ${this._mainInnerChainBridgeContract.address}`);
 
         const factory14 = await hre.ethers.getContractFactory("Bridge");
         this._mainOuterChainBridgeContract = factory14
             .attach(this.config.contracts.mainChain.outerBridgeContract)
             .connect(this._mainChainProvider);
-        logger.info(`MainChain.OuterBridge: ${this._mainInnerChainBridgeContract.address}`);
+        logger.info(`MainChain.OuterChainBridge: ${this._mainOuterChainBridgeContract.address}`);
 
         logger.info(`OuterChain.Network: ${this.config.contracts.outerChain.network}`);
         await hre.changeNetwork(this.config.contracts.outerChain.network);
@@ -241,7 +241,7 @@ export class ContractManager {
         this._outerOuterChainBridgeContract = factory22
             .attach(this.config.contracts.outerChain.outerBridgeContract)
             .connect(this._outerChainProvider);
-        logger.info(`OuterChain.OuterBridge: ${this._outerOuterChainBridgeContract.address}`);
+        logger.info(`OuterChain.OuterChainBridge: ${this._outerOuterChainBridgeContract.address}`);
     }
 
     public get outerChainProvider(): ethers.providers.Provider {
