@@ -5,7 +5,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { HardhatAccount } from "../../src/HardhatAccount";
 import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import { BridgeValidator, ERC20, NonDelegatedBridge } from "../../typechain-types";
+import { BridgeValidator, ERC20, LoyaltyToken, NonDelegatedBridge } from "../../typechain-types";
 
 import { BaseContract, Contract, Wallet } from "ethers";
 
@@ -214,13 +214,31 @@ class Deployments {
     }
 }
 
+async function distributeToken(accounts: IAccount, deployment: Deployments) {
+    const contractName = "LoyaltyToken";
+
+    const contract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
+
+    {
+        const userAmount = BOACoin.make(200_000);
+        const users = JSON.parse(fs.readFileSync("./deploy/data/users.json", "utf8"));
+        for (const account of users) {
+            const tx = await contract.connect(accounts.owner).transfer(account.address, userAmount.value);
+            console.log(`Transfer token to users (tx: ${tx.hash})...`);
+            // await tx.wait();
+            await ContractUtils.delay(3000);
+        }
+    }
+    console.log(`Distribute ${contractName}`);
+}
+
 async function writeTokenInfo(accounts: IAccount, deployment: Deployments) {
     console.log(`Information of token`);
     const tokenContract = deployment.getContract("LoyaltyToken") as ERC20;
     console.log(`Name of token: ${await tokenContract.name()}`);
     console.log(`Symbol of token: ${await tokenContract.symbol()}`);
     console.log(`Address of token: ${tokenContract.address}`);
-    console.log(`Total supply of token: ${(new BOACoin(await tokenContract.totalSupply())).toDisplayString(true, 4)}`);
+    console.log(`Total supply of token: ${new BOACoin(await tokenContract.totalSupply()).toDisplayString(true, 4)}`);
 }
 
 async function writeAccountInfo(accounts: IAccount, deployment: Deployments) {
@@ -294,8 +312,17 @@ async function deployOuterChainBridge(accounts: IAccount, deployment: Deployment
 
 async function writeBalanceOfBridges(accounts: IAccount, deployment: Deployments) {
     const tokenContract = deployment.getContract("LoyaltyToken") as ERC20;
-    console.log(`Balance of owner's token ${(new BOACoin(await tokenContract.balanceOf(accounts.owner.address))).toDisplayString(true, 4)}`);
-    console.log(`Balance of outer chain bridge's token   ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("OuterChainBridge") || ""))).toDisplayString(true, 4)}`);
+    console.log(
+        `Balance of owner's token ${new BOACoin(await tokenContract.balanceOf(accounts.owner.address)).toDisplayString(
+            true,
+            4
+        )}`
+    );
+    console.log(
+        `Balance of outer chain bridge's token   ${new BOACoin(
+            await tokenContract.balanceOf(deployment.getContractAddress("OuterChainBridge") || "")
+        ).toDisplayString(true, 4)}`
+    );
 }
 
 async function main() {
@@ -303,6 +330,7 @@ async function main() {
 
     await deployments.attachPreviousContracts();
 
+    deployments.addDeployer(distributeToken);
     deployments.addDeployer(writeTokenInfo);
     deployments.addDeployer(writeAccountInfo);
     deployments.addDeployer(deployBridgeValidator);
