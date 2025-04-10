@@ -1,6 +1,6 @@
 {
     "name": "kios-contracts-v2",
-    "version": "2.15.2",
+    "version": "2.15.3",
     "description": "Smart contracts that decentralized loyalty systems",
     "files": [
         "**/*.sol"
@@ -73,7 +73,7 @@
         "@openzeppelin/contracts": "^4.9.5",
         "@openzeppelin/contracts-upgradeable": "^4.9.5",
         "@openzeppelin/hardhat-upgrades": "^1.28.0",
-        "kios-bridge-contracts-v2": "~2.6.0",
+        "kios-bridge-contracts-v2": "~2.6.1",
         "loyalty-tokens": "~2.3.0",
         "multisig-wallet-contracts": "~2.0.0"
     }

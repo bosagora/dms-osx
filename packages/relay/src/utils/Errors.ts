@@ -58,6 +58,7 @@ export class ResponseMessage {
         ["1554", "This shop is not registered with the settlement manager"],
         ["1711", "Already Exist Deposit"],
         ["1712", "No Exist Withdraw"],
+        ["1713", "This is not a registered token ID"],
         ["1714", "The value entered is not an appropriate value"],
         ["1715", "Already Confirm Withdraw"],
         ["1716", "The amount should be greater than the fee"],
