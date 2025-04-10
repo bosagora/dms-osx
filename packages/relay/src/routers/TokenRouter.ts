@@ -546,7 +546,7 @@ export class TokenRouter {
                     },
                     language,
                     support: {
-                        chainBridge: this.config.relay.supportChainBridge,
+                        chainBridge: this.config.relay.supportInnerBridge,
                         loyaltyBridge: this.config.relay.supportLoyaltyBridge,
                         exchange: this.config.relay.supportExchange,
                     },
@@ -1247,8 +1247,8 @@ export class TokenRouter {
                     },
                     language,
                     support: {
-                        outerChainBridge: this.config.relay.supportOuterChainBridge,
-                        innerChainBridge: this.config.relay.supportChainBridge,
+                        outerChainBridge: this.config.relay.supportOuterBridge,
+                        innerChainBridge: this.config.relay.supportInnerBridge,
                         loyaltyBridge: this.config.relay.supportLoyaltyBridge,
                         exchange: this.config.relay.supportExchange,
                     },

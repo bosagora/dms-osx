@@ -212,8 +212,8 @@ export class RelayConfig implements IRelayConfig {
     public testMode: boolean;
     public allowedShopIdPrefix: string;
     public initialBalanceOfProvider: number;
-    public supportOuterChainBridge: boolean;
-    public supportChainBridge: boolean;
+    public supportOuterBridge: boolean;
+    public supportInnerBridge: boolean;
     public supportLoyaltyBridge: boolean;
     public supportExchange: boolean;
     public supportPaymentV1: boolean;
@@ -235,8 +235,8 @@ export class RelayConfig implements IRelayConfig {
         this.testMode = defaults.testMode;
         this.allowedShopIdPrefix = defaults.allowedShopIdPrefix;
         this.initialBalanceOfProvider = defaults.initialBalanceOfProvider;
-        this.supportOuterChainBridge = defaults.supportOuterChainBridge;
-        this.supportChainBridge = defaults.supportChainBridge;
+        this.supportOuterBridge = defaults.supportOuterBridge;
+        this.supportInnerBridge = defaults.supportInnerBridge;
         this.supportLoyaltyBridge = defaults.supportLoyaltyBridge;
         this.supportExchange = defaults.supportExchange;
         this.supportPaymentV1 = defaults.supportPaymentV1;
@@ -264,8 +264,8 @@ export class RelayConfig implements IRelayConfig {
             testMode: false,
             allowedShopIdPrefix: "0x0001",
             initialBalanceOfProvider: 50000,
-            supportOuterChainBridge: true,
-            supportChainBridge: true,
+            supportOuterBridge: true,
+            supportInnerBridge: true,
             supportLoyaltyBridge: true,
             supportExchange: true,
             supportPaymentV1: true,
@@ -288,10 +288,10 @@ export class RelayConfig implements IRelayConfig {
         if (config.allowedShopIdPrefix !== undefined) this.allowedShopIdPrefix = config.allowedShopIdPrefix;
         if (config.initialBalanceOfProvider !== undefined)
             this.initialBalanceOfProvider = config.initialBalanceOfProvider;
-        if (config.supportOuterChainBridge !== undefined)
-            this.supportOuterChainBridge = config.supportOuterChainBridge.toString().toLowerCase() === "true";
-        if (config.supportChainBridge !== undefined)
-            this.supportChainBridge = config.supportChainBridge.toString().toLowerCase() === "true";
+        if (config.supportOuterBridge !== undefined)
+            this.supportOuterBridge = config.supportOuterBridge.toString().toLowerCase() === "true";
+        if (config.supportInnerBridge !== undefined)
+            this.supportInnerBridge = config.supportInnerBridge.toString().toLowerCase() === "true";
         if (config.supportLoyaltyBridge !== undefined)
             this.supportLoyaltyBridge = config.supportLoyaltyBridge.toString().toLowerCase() === "true";
         if (config.supportExchange !== undefined)
@@ -560,8 +560,8 @@ export interface IRelayConfig {
     testMode: boolean;
     allowedShopIdPrefix: string;
     initialBalanceOfProvider: number;
-    supportOuterChainBridge: boolean;
-    supportChainBridge: boolean;
+    supportOuterBridge: boolean;
+    supportInnerBridge: boolean;
     supportLoyaltyBridge: boolean;
     supportExchange: boolean;
     supportPaymentV1: boolean;

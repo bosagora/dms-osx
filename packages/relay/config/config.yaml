@@ -101,8 +101,8 @@ relay:
   initialBalanceOfProvider: 50000
   paymentSigners:
     - "0xBd8a48B11a576150E8772D6E9B658c60317CAdbc"
-  supportOuterChainBridge: true
-  supportChainBridge: true
+  supportOuterBridge: true
+  supportInnerBridge: true
   supportLoyaltyBridge: true
   supportExchange: true
   supportPaymentV1: true
