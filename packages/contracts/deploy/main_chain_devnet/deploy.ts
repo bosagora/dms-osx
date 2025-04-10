@@ -5,14 +5,7 @@ import "@openzeppelin/hardhat-upgrades";
 import { HardhatAccount } from "../../src/HardhatAccount";
 import { Amount, BOACoin } from "../../src/utils/Amount";
 import { ContractUtils } from "../../src/utils/ContractUtils";
-import {
-    Bridge,
-    BridgeValidator,
-    NonDelegatedBridge,
-    LoyaltyToken,
-    MultiSigWallet,
-    ERC20,
-} from "../../typechain-types";
+import { Bridge, BridgeValidator, ERC20, LoyaltyToken, MultiSigWallet } from "../../typechain-types";
 
 import { BaseContract, Contract, Wallet } from "ethers";
 
@@ -460,7 +453,7 @@ async function deployOuterChainBridge(accounts: IAccount, deployment: Deployment
             initializer: "initialize",
             kind: "uups",
         }
-    )) as NonDelegatedBridge;
+    )) as Bridge;
     await contract.deployed();
     await contract.deployTransaction.wait();
 
@@ -488,7 +481,7 @@ async function writeTokenInfo(accounts: IAccount, deployment: Deployments) {
     console.log(`Name of token: ${await tokenContract.name()}`);
     console.log(`Symbol of token: ${await tokenContract.symbol()}`);
     console.log(`Address of token: ${tokenContract.address}`);
-    console.log(`Total supply of token: ${(new BOACoin(await tokenContract.totalSupply())).toDisplayString(true, 4)}`);
+    console.log(`Total supply of token: ${new BOACoin(await tokenContract.totalSupply()).toDisplayString(true, 4)}`);
 }
 
 async function writeAccountInfo(accounts: IAccount, deployment: Deployments) {
@@ -503,10 +496,26 @@ async function writeAccountInfo(accounts: IAccount, deployment: Deployments) {
 
 async function writeBalanceOfBridges(accounts: IAccount, deployment: Deployments) {
     const tokenContract = deployment.getContract("LoyaltyToken") as LoyaltyToken;
-    console.log(`Balance of owner's token          ${(new BOACoin(await tokenContract.balanceOf(accounts.owner.address))).toDisplayString(true, 4)}`);
-    console.log(`Balance of loyalty bridge's token ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("LoyaltyBridge") || ""))).toDisplayString(true, 4)}`);
-    console.log(`Balance of inner chain bridge's token   ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("InnerChainBridge") || ""))).toDisplayString(true, 4)}`);
-    console.log(`Balance of outer chain bridge's token   ${(new BOACoin(await tokenContract.balanceOf(deployment.getContractAddress("OuterChainBridge") || ""))).toDisplayString(true, 4)}`);
+    console.log(
+        `Balance of owner's token          ${new BOACoin(
+            await tokenContract.balanceOf(accounts.owner.address)
+        ).toDisplayString(true, 4)}`
+    );
+    console.log(
+        `Balance of loyalty bridge's token ${new BOACoin(
+            await tokenContract.balanceOf(deployment.getContractAddress("LoyaltyBridge") || "")
+        ).toDisplayString(true, 4)}`
+    );
+    console.log(
+        `Balance of inner chain bridge's token   ${new BOACoin(
+            await tokenContract.balanceOf(deployment.getContractAddress("InnerChainBridge") || "")
+        ).toDisplayString(true, 4)}`
+    );
+    console.log(
+        `Balance of outer chain bridge's token   ${new BOACoin(
+            await tokenContract.balanceOf(deployment.getContractAddress("OuterChainBridge") || "")
+        ).toDisplayString(true, 4)}`
+    );
 }
 
 async function main() {
