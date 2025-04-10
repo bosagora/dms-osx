@@ -95,7 +95,20 @@ export class BridgeRouter {
                     .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.bridge_withdraw.bind(this)
+            this.inner_bridge_withdraw.bind(this)
+        );
+        this.app.post(
+            "/v1/inner/bridge/withdraw",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
+                body("expiry").exists().isNumeric(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.inner_bridge_withdraw.bind(this)
         );
 
         this.app.post(
@@ -109,28 +122,63 @@ export class BridgeRouter {
                     .trim()
                     .matches(/^(0x)[0-9a-f]{130}$/i),
             ],
-            this.bridge_deposit.bind(this)
+            this.inner_bridge_deposit.bind(this)
+        );
+
+        this.app.post(
+            "/v1/inner/bridge/deposit",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
+                body("expiry").exists().isNumeric(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.inner_bridge_deposit.bind(this)
+        );
+
+        this.app.post(
+            "/v1/outer/bridge/withdraw",
+            [
+                body("account").exists().trim().isEthereumAddress(),
+                body("amount").exists().custom(Validation.isAmount),
+                body("expiry").exists().isNumeric(),
+                body("signature")
+                    .exists()
+                    .trim()
+                    .matches(/^(0x)[0-9a-f]{130}$/i),
+            ],
+            this.outer_bridge_withdraw.bind(this)
         );
     }
 
-    private async getDepositIdMainChain(account: string): Promise<string> {
+    private async getInnerChainDepositIdMainChain(account: string): Promise<string> {
         while (true) {
             const id = ContractUtils.getRandomId(account);
             if (await this.contractManager.mainInnerChainBridgeContract.isAvailableDepositId(id)) return id;
         }
     }
 
-    private async getDepositIdSideChain(account: string): Promise<string> {
+    private async getInnerChainDepositIdSideChain(account: string): Promise<string> {
         while (true) {
             const id = ContractUtils.getRandomId(account);
             if (await this.contractManager.sideInnerChainBridgeContract.isAvailableDepositId(id)) return id;
         }
     }
 
-    private async bridge_withdraw(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/bridge/withdraw ${req.ip}:${JSON.stringify(req.body)}`);
+    private async getOuterChainDepositIdMainChain(account: string): Promise<string> {
+        while (true) {
+            const id = ContractUtils.getRandomId(account);
+            if (await this.contractManager.mainOuterChainBridgeContract.isAvailableDepositId(id)) return id;
+        }
+    }
 
-        if (!this.config.relay.supportChainBridge) {
+    private async inner_bridge_withdraw(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/inner/bridge/withdraw ${req.ip}:${JSON.stringify(req.body)}`);
+
+        if (!this.config.relay.supportInnerBridge) {
             return res.status(200).json(ResponseMessage.getErrorMessage("3001"));
         }
 
@@ -166,7 +214,7 @@ export class BridgeRouter {
                 await this.contractManager.sideTokenContract.name(),
                 await this.contractManager.sideTokenContract.symbol()
             );
-            const depositId = await this.getDepositIdSideChain(account);
+            const depositId = await this.getInnerChainDepositIdSideChain(account);
             const tx = await this.contractManager.sideInnerChainBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
@@ -174,7 +222,7 @@ export class BridgeRouter {
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/bridge/withdraw : ${msg.error.message}`);
+            logger.error(`POST /v1/inner/bridge/withdraw : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         } finally {
@@ -182,10 +230,10 @@ export class BridgeRouter {
         }
     }
 
-    private async bridge_deposit(req: express.Request, res: express.Response) {
-        logger.http(`POST /v1/bridge/deposit ${req.ip}:${JSON.stringify(req.body)}`);
+    private async inner_bridge_deposit(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/inner/bridge/deposit ${req.ip}:${JSON.stringify(req.body)}`);
 
-        if (!this.config.relay.supportChainBridge) {
+        if (!this.config.relay.supportInnerBridge) {
             return res.status(200).json(ResponseMessage.getErrorMessage("3001"));
         }
 
@@ -221,7 +269,7 @@ export class BridgeRouter {
                 await this.contractManager.mainTokenContract.name(),
                 await this.contractManager.mainTokenContract.symbol()
             );
-            const depositId = await this.getDepositIdMainChain(account);
+            const depositId = await this.getInnerChainDepositIdMainChain(account);
             const tx = await this.contractManager.mainInnerChainBridgeContract
                 .connect(signerItem.signer)
                 .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
@@ -229,7 +277,62 @@ export class BridgeRouter {
             return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
         } catch (error: any) {
             const msg = ResponseMessage.getEVMErrorMessage(error);
-            logger.error(`POST /v1/bridge/deposit : ${msg.error.message}`);
+            logger.error(`POST /v1/inner/bridge/deposit : ${msg.error.message}`);
+            this.metrics.add("failure", 1);
+            return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
+        } finally {
+            this.releaseRelaySigner(signerItem);
+        }
+    }
+
+    private async outer_bridge_withdraw(req: express.Request, res: express.Response) {
+        logger.http(`POST /v1/outer/bridge/withdraw ${req.ip}:${JSON.stringify(req.body)}`);
+
+        if (!this.config.relay.supportOuterBridge) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("3001"));
+        }
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(200).json(ResponseMessage.getErrorMessage("2001", { validation: errors.array() }));
+        }
+
+        const signerItem = await this.getRelaySigner(this.contractManager.mainChainProvider);
+        try {
+            const account: string = String(req.body.account).trim();
+            const amount: BigNumber = BigNumber.from(req.body.amount);
+            const expiry: number = Number(req.body.expiry);
+            const signature: string = String(req.body.signature).trim();
+
+            const balance = await this.contractManager.mainTokenContract.balanceOf(account);
+            if (balance.lt(amount)) return res.status(200).json(ResponseMessage.getErrorMessage("1511"));
+
+            const nonce = await this.contractManager.mainTokenContract.nonceOf(account);
+            const message = ContractUtils.getTransferMessage(
+                this.contractManager.mainChainId,
+                this.contractManager.mainTokenContract.address,
+                account,
+                this.contractManager.mainOuterChainBridgeContract.address,
+                amount,
+                nonce,
+                expiry
+            );
+            if (!ContractUtils.verifyMessage(account, message, signature))
+                return res.status(200).json(ResponseMessage.getErrorMessage("1501"));
+
+            const tokenId = ContractUtils.getTokenId(
+                await this.contractManager.mainTokenContract.name(),
+                await this.contractManager.mainTokenContract.symbol()
+            );
+            const depositId = await this.getOuterChainDepositIdMainChain(account);
+            const tx = await this.contractManager.mainOuterChainBridgeContract
+                .connect(signerItem.signer)
+                .depositToBridge(tokenId, depositId, account, amount, expiry, signature);
+
+            return res.status(200).json(this.makeResponseData(0, { tokenId, depositId, amount, txHash: tx.hash }));
+        } catch (error: any) {
+            const msg = ResponseMessage.getEVMErrorMessage(error);
+            logger.error(`POST /v1/outer/bridge/withdraw : ${msg.error.message}`);
             this.metrics.add("failure", 1);
             return res.status(200).json(this.makeResponseData(msg.code, undefined, msg.error));
         } finally {
