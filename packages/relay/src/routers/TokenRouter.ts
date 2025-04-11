@@ -1066,7 +1066,7 @@ export class TokenRouter {
             this.metrics.add("success", 1);
             return res.status(200).json(
                 this.makeResponseData(0, {
-                    url: this.contractManager.mainChainURL,
+                    url: this.contractManager.outerChainURL,
                     network: {
                         name: "outer-chain",
                         chainId: this.contractManager.outerChainId,
