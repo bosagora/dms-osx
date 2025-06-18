@@ -544,6 +544,7 @@ export class TokenRouter {
             const tokenValueInMainChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInMainChain
             );
+            const token2BalanceInMainChain = await this.contractManager.mainToken2Contract.balanceOf(account);
             const tokenBalanceInSideChain = await this.contractManager.sideTokenContract.balanceOf(account);
             const tokenValueInSideChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInSideChain
@@ -581,6 +582,10 @@ export class TokenRouter {
                     mainChain: {
                         point: { balance: "0", value: "0" },
                         token: { balance: tokenBalanceInMainChain.toString(), value: tokenValueInMainChain.toString() },
+                        token2: {
+                            balance: token2BalanceInMainChain.toString(),
+                            value: "0",
+                        },
                     },
                     sideChain: {
                         point: { balance: "0", value: "0" },
@@ -655,6 +660,7 @@ export class TokenRouter {
             const tokenValueInMainChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInMainChain
             );
+            const token2BalanceInMainChain = await this.contractManager.mainToken2Contract.balanceOf(account);
             const tokenBalanceInSideChain = await this.contractManager.sideTokenContract.balanceOf(account);
             const tokenValueInSideChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInSideChain
@@ -687,6 +693,10 @@ export class TokenRouter {
                     mainChain: {
                         point: { balance: "0", value: "0" },
                         token: { balance: tokenBalanceInMainChain.toString(), value: tokenValueInMainChain.toString() },
+                        token2: {
+                            balance: token2BalanceInMainChain.toString(),
+                            value: "0",
+                        },
                     },
                     sideChain: {
                         point: { balance: "0", value: "0" },
@@ -756,6 +766,7 @@ export class TokenRouter {
             const tokenValueInMainChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInMainChain
             );
+            const token2BalanceInMainChain = await this.contractManager.mainToken2Contract.balanceOf(account);
             const tokenBalanceInSideChain = await this.contractManager.sideTokenContract.balanceOf(account);
             const tokenValueInSideChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInSideChain
@@ -798,6 +809,10 @@ export class TokenRouter {
                     mainChain: {
                         point: { balance: "0", value: "0" },
                         token: { balance: tokenBalanceInMainChain.toString(), value: tokenValueInMainChain.toString() },
+                        token2: {
+                            balance: token2BalanceInMainChain.toString(),
+                            value: "0",
+                        },
                     },
                     sideChain: {
                         point: { balance: "0", value: "0" },
@@ -873,6 +888,7 @@ export class TokenRouter {
             const tokenValueInMainChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInMainChain
             );
+            const token2BalanceInMainChain = await this.contractManager.mainToken2Contract.balanceOf(account);
             const tokenBalanceInSideChain = await this.contractManager.sideTokenContract.balanceOf(account);
             const tokenValueInSideChain = await this.contractManager.sideCurrencyRateContract.convertTokenToPoint(
                 tokenBalanceInSideChain
@@ -919,6 +935,10 @@ export class TokenRouter {
                     mainChain: {
                         point: { balance: "0", value: "0" },
                         token: { balance: tokenBalanceInMainChain.toString(), value: tokenValueInMainChain.toString() },
+                        token2: {
+                            balance: token2BalanceInMainChain.toString(),
+                            value: "0",
+                        },
                     },
                     sideChain: {
                         point: { balance: "0", value: "0" },

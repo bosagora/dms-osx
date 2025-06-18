@@ -2,6 +2,7 @@ import {
     BIP20DelegatedTransfer,
     Bridge,
     CurrencyRate,
+    ERC20,
     Ledger,
     LoyaltyBridge,
     LoyaltyConsumer,
@@ -36,6 +37,7 @@ export class ContractManager {
     private _sideChainBridgeContract: Bridge | undefined;
 
     private _mainTokenContract: BIP20DelegatedTransfer | undefined;
+    private _mainToken2Contract: ERC20 | undefined;
     private _mainLoyaltyBridgeContract: Bridge | undefined;
     private _mainChainBridgeContract: Bridge | undefined;
 
@@ -165,6 +167,14 @@ export class ContractManager {
         logger.info(`MainChain.Token: ${this._mainTokenContract.address}`);
         logger.info(`MainChain.Token.Name: ${await this._mainTokenContract.name()}`);
         logger.info(`MainChain.Token.Symbol: ${await this._mainTokenContract.symbol()}`);
+
+        const factory112 = await hre.ethers.getContractFactory("ERC20");
+        this._mainToken2Contract = factory112
+            .attach(this.config.contracts.mainChain.token2Address)
+            .connect(this._mainChainProvider);
+        logger.info(`MainChain.Token2: ${this._mainToken2Contract.address}`);
+        logger.info(`MainChain.Token2.Name: ${await this._mainToken2Contract.name()}`);
+        logger.info(`MainChain.Token2.Symbol: ${await this._mainToken2Contract.symbol()}`);
 
         this._mainTokenId = ContractUtils.getTokenId(
             await this._mainTokenContract.name(),
@@ -341,6 +351,14 @@ export class ContractManager {
         if (this._mainTokenContract !== undefined) return this._mainTokenContract;
         else {
             logger.error("mainTokenContract is not ready yet.");
+            process.exit(1);
+        }
+    }
+
+    public get mainToken2Contract(): ERC20 {
+        if (this._mainToken2Contract !== undefined) return this._mainToken2Contract;
+        else {
+            logger.error("mainToken2Contract is not ready yet.");
             process.exit(1);
         }
     }

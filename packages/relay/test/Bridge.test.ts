@@ -51,6 +51,7 @@ describe("Test of Bridge", function () {
         config.contracts.sideChain.chainBridgeAddress = deployments.getContractAddress("SideChainBridge") || "";
 
         config.contracts.mainChain.tokenAddress = deployments.getContractAddress("MainChainKIOS") || "";
+        config.contracts.mainChain.token2Address = deployments.getContractAddress("MainChainKIOS2") || "";
         config.contracts.mainChain.loyaltyBridgeAddress =
             deployments.getContractAddress("MainChainLoyaltyBridge") || "";
         config.contracts.mainChain.chainBridgeAddress = deployments.getContractAddress("MainChainBridge") || "";

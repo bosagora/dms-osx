@@ -125,6 +125,7 @@ contracts:
     network: "production_main"
     url: "${MAIN_CHAIN_RPC_URL}"
     tokenAddress : "${MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS}"
+    token2Address : "${MAIN_CHAIN_TOKEN2_CONTRACT_ADDRESS}"
     loyaltyBridgeAddress: "${MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS}"
     chainBridgeAddress: "${MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS}"
 

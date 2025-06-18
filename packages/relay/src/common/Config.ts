@@ -321,6 +321,7 @@ export class ContractsConfig implements IContractsConfig {
         network: string;
         url: string;
         tokenAddress: string;
+        token2Address: string;
         loyaltyBridgeAddress: string;
         chainBridgeAddress: string;
     };
@@ -347,6 +348,7 @@ export class ContractsConfig implements IContractsConfig {
             network: defaults.mainChain.network,
             url: defaults.mainChain.url,
             tokenAddress: defaults.mainChain.tokenAddress,
+            token2Address: defaults.mainChain.token2Address,
             loyaltyBridgeAddress: defaults.mainChain.loyaltyBridgeAddress,
             chainBridgeAddress: defaults.mainChain.chainBridgeAddress,
         };
@@ -373,6 +375,7 @@ export class ContractsConfig implements IContractsConfig {
                 network: "production_main",
                 url: "",
                 tokenAddress: process.env.MAIN_CHAIN_TOKEN_CONTRACT_ADDRESS || "",
+                token2Address: process.env.MAIN_CHAIN_TOKEN2_CONTRACT_ADDRESS || "",
                 loyaltyBridgeAddress: process.env.MAIN_CHAIN_LOYALTY_BRIDGE_CONTRACT_ADDRESS || "",
                 chainBridgeAddress: process.env.MAIN_CHAIN_BRIDGE_CONTRACT_ADDRESS || "",
             },
@@ -549,6 +552,7 @@ export interface IContractsConfig {
         network: string;
         url: string;
         tokenAddress: string;
+        token2Address: string;
         loyaltyBridgeAddress: string;
         chainBridgeAddress: string;
     };

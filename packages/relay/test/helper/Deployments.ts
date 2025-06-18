@@ -21,6 +21,7 @@ import {
     LoyaltyTransfer,
     PhoneLinkCollection,
     Shop,
+    TestERC20,
     TestLYT,
     Validator,
 } from "../../typechain-types";
@@ -228,6 +229,7 @@ export class Deployments {
             deployShop,
             deployLedger,
             deployMainChainToken,
+            deployMainChainToken2,
             deployMainChainBridge,
             deployMainChainLoyaltyBridge,
         ];
@@ -947,4 +949,24 @@ async function deployMainChainLoyaltyBridge(accounts: IAccount, deployment: Depl
         console.log(`Deposit liquidity token to MainChainLoyaltyBridge (tx: ${tx1.hash})...`);
         await tx1.wait();
     }
+}
+
+async function deployMainChainToken2(accounts: IAccount, deployment: Deployments) {
+    const contractName = "MainChainKIOS2";
+    console.log(`Deploy ${contractName}...`);
+
+    await hre.changeNetwork(deployment.config.contracts.mainChain.network);
+    const factory = await hre.ethers.getContractFactory("TestERC20");
+    const contract = (await factory
+        .connect(accounts.deployer)
+        .deploy(accounts.owner.address, "KIOS2", "KIOS2")) as TestLYT;
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+
+    const balance = await contract.balanceOf(accounts.owner.address);
+    console.log(`MainChainKIOS2 token's owner: ${accounts.owner.address}`);
+    console.log(`MainChainKIOS2 token's balance of owner: ${new BOACoin(balance).toDisplayString(true, 2)}`);
+
+    deployment.addContract(contractName, contract.address, contract);
+    console.log(`Deployed ${contractName} to ${contract.address}`);
 }

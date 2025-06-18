@@ -14,6 +14,7 @@ import "kios-contracts-v2/contracts/ledger/Ledger.sol";
 import "kios-contracts-v2/contracts/shop/Shop.sol";
 import "kios-contracts-v2/contracts/validator/Validator.sol";
 import "kios-contracts-v2/contracts/token/TestLYT.sol";
+import "kios-contracts-v2/contracts/token/TestERC20.sol";
 
 import "multisig-wallet-contracts/contracts/MultiSigWalletFactory.sol";
 import "multisig-wallet-contracts/contracts/MultiSigWallet.sol";
