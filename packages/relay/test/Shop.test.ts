@@ -128,7 +128,7 @@ describe("Test for Shop", function () {
 
             config.relay.certifiers = deployments.accounts.certifiers.map((m) => m.privateKey);
             config.relay.callbackEndpoint = "http://127.0.0.1:3400/callback";
-            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+            config.relay.relayEndpoint = `http://127.0.0.1:${config.server.http.port}`;
 
             client = new TestClient({
                 headers: {
@@ -138,7 +138,7 @@ describe("Test for Shop", function () {
         });
 
         before("Create TestServer", async () => {
-            serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
+            serverURL = new URL(`http://127.0.0.1:${config.server.http.port}`);
             storage = await RelayStorage.make(config.database);
             const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
             const graph_mainchain = await GraphStorage.make(config.graph_mainchain);

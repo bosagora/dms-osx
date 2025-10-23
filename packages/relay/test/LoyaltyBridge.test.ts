@@ -57,7 +57,7 @@ describe("Test of LoyaltyBridge", function () {
         config.contracts.mainChain.chainBridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
         config.relay.certifiers = deployments.accounts.certifiers.map((m) => m.privateKey);
-        config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+        config.relay.relayEndpoint = `http://127.0.0.1:${config.server.http.port}`;
 
         client = new TestClient({
             headers: {
@@ -67,7 +67,7 @@ describe("Test of LoyaltyBridge", function () {
     });
 
     before("Create TestServer", async () => {
-        serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
+        serverURL = new URL(`http://127.0.0.1:${config.server.http.port}`);
         storage = await RelayStorage.make(config.database);
         const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
         const graph_mainchain = await GraphStorage.make(config.graph_mainchain);
@@ -101,7 +101,7 @@ describe("Test of LoyaltyBridge", function () {
 
         const nonce = await contractManager.mainTokenContract.nonceOf(account.address);
         const expiry = ContractUtils.getTimeStamp() * 600;
-        const message = await ContractUtils.getTransferMessage(
+        const message = ContractUtils.getTransferMessage(
             contractManager.mainChainId,
             contractManager.mainTokenContract.address,
             account.address,
@@ -166,7 +166,7 @@ describe("Test of LoyaltyBridge", function () {
 
         const nonce = await contractManager.sideLedgerContract.nonceOf(account.address);
         const expiry = ContractUtils.getTimeStamp() * 600;
-        const message = await ContractUtils.getTransferMessage(
+        const message = ContractUtils.getTransferMessage(
             contractManager.sideChainId,
             contractManager.sideTokenContract.address,
             account.address,

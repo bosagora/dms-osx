@@ -60,7 +60,7 @@ describe("Test of LoyaltyProvider", function () {
         config.contracts.mainChain.chainBridgeAddress = deployments.getContractAddress("MainChainBridge") || "";
 
         config.relay.certifiers = deployments.accounts.certifiers.map((m) => m.privateKey);
-        config.relay.relayEndpoint = `http://127.0.0.1:${config.server.port}`;
+        config.relay.relayEndpoint = `http://127.0.0.1:${config.server.http.port}`;
 
         client = new TestClient({
             headers: {
@@ -70,7 +70,7 @@ describe("Test of LoyaltyProvider", function () {
     });
 
     before("Create TestServer", async () => {
-        serverURL = new URL(`http://127.0.0.1:${config.server.port}`);
+        serverURL = new URL(`http://127.0.0.1:${config.server.http.port}`);
         storage = await RelayStorage.make(config.database);
         const graph_sidechain = await GraphStorage.make(config.graph_sidechain);
         const graph_mainchain = await GraphStorage.make(config.graph_mainchain);

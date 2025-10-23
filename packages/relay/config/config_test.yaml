@@ -4,8 +4,14 @@
 server:
   # Address to which we bind (default: 127.0.0.1)
   address: "${HOST_IP}"
-  # Port on which we bind (default: 7070)
-  port: 7777
+  http:
+    enable: "${HTTP_ENABLE}"
+    port: "${HTTP_PORT}"
+  https:
+    enable: false
+    port: "${HTTPS_PORT}"
+    cert: "${SSL_CERT_PATH}"
+    key: "${SSL_KEY_PATH}"
 
 ################################################################################
 ##                               Database options                             ##
